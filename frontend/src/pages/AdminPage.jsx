@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../api';
+import ParticleBackground from '../components/ParticleBackground';
 
 /* ─── CSS ───────────────────────────────────────────────────────── */
 const CSS = `
@@ -327,7 +328,9 @@ export default function AdminPage() {
   const initials = (user?.name || 'A').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
 
   return (
-    <div style={{ display:'flex', flexDirection:'column', minHeight:'100vh', background:'#060d1f', fontFamily:'inherit' }}>
+    <div style={{ display:'flex', flexDirection:'column', minHeight:'100vh', background:'#060d1f', fontFamily:'inherit', position:'relative' }}>
+      <ParticleBackground density={35} />
+      <div style={{ position:'relative', zIndex:1, display:'flex', flexDirection:'column', flex:1 }}>
       <style>{CSS}</style>
       {toast && <Toast msg={toast.msg} ok={toast.ok} sub={toast.sub} />}
 
@@ -401,6 +404,7 @@ export default function AdminPage() {
           {tab === 'partnerships' && <PartnershipsTab showToast={showToast} />}
           {tab === 'reports'      && <ReportsTab showToast={showToast} />}
         </main>
+      </div>
       </div>
     </div>
   );

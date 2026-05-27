@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
 import HaribonFull from '../components/HaribonFull';
+import ParticleBackground from '../components/ParticleBackground';
 import { useAuth } from '../context/AuthContext';
 
 // ── Animated particle canvas ──────────────────────────────────
@@ -158,8 +159,10 @@ const ADMIN_CSS = `
 
 function AdminHomePage({ navigate, user }) {
   return (
-    <div style={{ background: 'linear-gradient(180deg,#0d0014 0%,#0a0010 300px,#0f172a 100%)', minHeight: '100vh' }}>
+    <div style={{ background: 'linear-gradient(180deg,#0d0014 0%,#0a0010 300px,#0f172a 100%)', minHeight: '100vh', position: 'relative' }}>
       <style>{ADMIN_CSS}</style>
+      <ParticleBackground density={40} />
+      <div style={{ position: 'relative', zIndex: 1 }}>
 
       {/* ── ADMIN HERO ── */}
       <section style={{
@@ -262,6 +265,7 @@ function AdminHomePage({ navigate, user }) {
           </div>
         </div>
       </section>
+      </div>
     </div>
   );
 }
@@ -293,8 +297,10 @@ export default function HomePage() {
   if (user?.role === 'ADMIN') return <AdminHomePage navigate={navigate} user={user} />;
 
   return (
-    <div style={{ background: 'linear-gradient(180deg,#000d30 0%,#020817 100%)', minHeight: '100vh' }}>
+    <div style={{ background: 'linear-gradient(180deg,#000d30 0%,#020817 100%)', minHeight: '100vh', position: 'relative' }}>
       <style>{HOME_CSS}</style>
+      <ParticleBackground density={55} />
+      <div style={{ position: 'relative', zIndex: 1 }}>
 
       {/* ── MEMBER STATUS BANNER ── */}
       {user?.role === 'MEMBER' && (
@@ -716,6 +722,7 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+      </div>
     </div>
   );
 }

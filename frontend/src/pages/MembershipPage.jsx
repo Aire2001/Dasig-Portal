@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { api } from '../api';
 import HaribonFull from '../components/HaribonFull';
 import PageHeader from '../components/PageHeader';
+import ParticleBackground from '../components/ParticleBackground';
 
 function CertificateModal({ user, status, onClose }) {
   function handlePrint() {
@@ -140,7 +141,9 @@ export default function MembershipPage() {
 
   if (!user) {
     return (
-      <div style={{ background: 'linear-gradient(180deg,#000d30 0%,#020817 300px,#0f172a 100%)', minHeight: '100vh' }}>
+      <div style={{ background: 'linear-gradient(180deg,#000d30 0%,#020817 300px,#0f172a 100%)', minHeight: '100vh', position: 'relative' }}>
+        <ParticleBackground density={45} />
+        <div style={{ position: 'relative', zIndex: 1 }}>
         <PageHeader eyebrow="Consortium" title="Membership" backTo="/" />
         <div style={{ minHeight: '50vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
           <div style={{ fontSize: 48 }}>🦅</div>
@@ -151,14 +154,16 @@ export default function MembershipPage() {
             cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 6px 20px rgba(249,115,22,0.4)',
           }}>Log in →</button>
         </div>
+        </div>
       </div>
     );
   }
 
   if (loading) {
     return (
-      <div style={{ background: 'linear-gradient(180deg,#000d30 0%,#020817 100%)', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.4)' }}>
+      <div style={{ background: 'linear-gradient(180deg,#000d30 0%,#020817 100%)', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+        <ParticleBackground density={40} />
+        <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.4)', position: 'relative', zIndex: 1 }}>
           <div style={{ fontSize: 36, marginBottom: 12 }}>⏳</div>
           Loading membership status…
         </div>
@@ -191,7 +196,9 @@ export default function MembershipPage() {
   ] : [];
 
   return (
-    <div style={{ background: 'linear-gradient(180deg,#000d30 0%,#020817 300px,#0f172a 100%)', minHeight: '100vh' }}>
+    <div style={{ background: 'linear-gradient(180deg,#000d30 0%,#020817 300px,#0f172a 100%)', minHeight: '100vh', position: 'relative' }}>
+      <ParticleBackground density={45} />
+      <div style={{ position: 'relative', zIndex: 1 }}>
       <style>{MEMBERSHIP_CSS}</style>
       {showCert && <CertificateModal user={user} status={status} onClose={() => setShowCert(false)} />}
       <PageHeader eyebrow="Consortium" title="Membership" backTo="/" />
@@ -345,6 +352,7 @@ export default function MembershipPage() {
           </div>
         </div>
       </section>
+      </div>
     </div>
   );
 }

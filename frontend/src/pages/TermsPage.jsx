@@ -1,4 +1,5 @@
 import PageHeader from '../components/PageHeader';
+import ParticleBackground from '../components/ParticleBackground';
 
 const SECTIONS = [
   {
@@ -97,7 +98,9 @@ const TERMS_CSS = `
 
 export default function TermsPage() {
   return (
-    <div style={{ background:'linear-gradient(180deg,#000d30 0%,#020817 300px,#0f172a 100%)', minHeight:'100vh' }}>
+    <div style={{ background:'linear-gradient(180deg,#000d30 0%,#020817 300px,#0f172a 100%)', minHeight:'100vh', position:'relative' }}>
+      <ParticleBackground density={45} />
+      <div style={{ position:'relative', zIndex:1 }}>
       <style>{TERMS_CSS}</style>
       <PageHeader eyebrow="Legal" title="Terms of Use" backTo="/" />
 
@@ -177,6 +180,7 @@ export default function TermsPage() {
           </div>
         </div>
       </section>
+      </div>
     </div>
   );
 }

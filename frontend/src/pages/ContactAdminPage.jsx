@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import PageHeader from '../components/PageHeader';
+import ParticleBackground from '../components/ParticleBackground';
 
 const FIELDS = [
   { key: 'name',    label: 'Full Name',     type: 'text',  placeholder: 'Your full name',    required: true },
@@ -60,7 +61,9 @@ export default function ContactAdminPage() {
   }
 
   return (
-    <div style={{ background:'linear-gradient(180deg,#000d30 0%,#020817 300px,#0f172a 100%)', minHeight:'100vh' }}>
+    <div style={{ background:'linear-gradient(180deg,#000d30 0%,#020817 300px,#0f172a 100%)', minHeight:'100vh', position:'relative' }}>
+      <ParticleBackground density={45} />
+      <div style={{ position:'relative', zIndex:1 }}>
       <style>{CSS}</style>
       <PageHeader eyebrow="Support" title="Contact Admin" backTo="/" />
 
@@ -193,6 +196,7 @@ export default function ContactAdminPage() {
           )}
         </div>
       </section>
+      </div>
     </div>
   );
 }
