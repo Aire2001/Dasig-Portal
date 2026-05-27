@@ -281,19 +281,12 @@ export default function ChatbotPage() {
                           <HaribonFace size={22} />
                         </div>
                         <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>Haribon</span>
-                        {msg.intent && (
+                        {msg.intent && msg.matched !== false && (
                           <span style={{
                             background: 'rgba(79,70,229,0.2)', color: '#a5b4fc',
                             border: '1px solid rgba(79,70,229,0.3)', borderRadius: 5,
                             padding: '1px 7px', fontSize: 10, fontWeight: 700,
                           }}>{msg.intent.replace(/_/g, ' ')}</span>
-                        )}
-                        {msg.matched === false && msg.from === 'bot' && i > 0 && (
-                          <span style={{
-                            background: 'rgba(245,158,11,0.15)', color: '#fbbf24',
-                            border: '1px solid rgba(245,158,11,0.25)', borderRadius: 5,
-                            padding: '1px 7px', fontSize: 10, fontWeight: 700,
-                          }}>unmatched</span>
                         )}
                       </div>
                     )}
