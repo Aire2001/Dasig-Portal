@@ -27,7 +27,7 @@ const KB = [
   },
   {
     intent: 'event_register',
-    keywords: ['register event', 'event registration', 'sign up event', 'join event', 'attend event', 'how to register'],
+    keywords: ['register event', 'event registration', 'sign up event', 'join event', 'attend event', 'how to register', 'how do i register', 'register for an event', 'sign up for', 'how to join an event', 'event sign up'],
     reply: 'To register for an event: go to the Events module, click on the event you want to join, and click "Register." You must be logged in. Events have limited capacity — register early!',
   },
   {
@@ -37,12 +37,12 @@ const KB = [
   },
   {
     intent: 'membership',
-    keywords: ['membership', 'become member', 'apply member', 'join dasig', 'membership application', 'how to join', 'member benefits'],
+    keywords: ['membership', 'become member', 'become a member', 'apply member', 'join dasig', 'membership application', 'how to join', 'member benefits', 'how do i become', 'how to become a member', 'how do i join', 'i want to join'],
     reply: 'To become a DASIG member: log in, go to Membership, and click "Apply for Membership." Fill in your institution details, select a tier, and submit. Applications are reviewed and approved by the DASIG administrator.',
   },
   {
     intent: 'membership_status',
-    keywords: ['membership status', 'my membership', 'check membership', 'am i a member', 'membership tier', 'renewal'],
+    keywords: ['membership status', 'my membership', 'check membership', 'am i a member', 'membership tier', 'renewal', 'check my status', 'check status', 'my status', 'what is my status'],
     reply: 'Check your membership status in the Membership module under "My Status." It shows your role, tier, member-since date, and renewal due date. Contact your admin if renewal is approaching.',
   },
   {
@@ -57,12 +57,12 @@ const KB = [
   },
   {
     intent: 'policy',
-    keywords: ['policy', 'guidelines', 'rules', 'regulation', 'document', 'policy document', 'bylaws', 'charter'],
+    keywords: ['policy', 'policies', 'guidelines', 'rules', 'regulation', 'document', 'policy document', 'bylaws', 'charter', 'governance policy', 'governance policies', 'find policy'],
     reply: 'DASIG policies and guidelines are available in the Policies module. Active members can access all policy documents. Some documents are members-only. Archived policies are accessible to ADMIN users.',
   },
   {
     intent: 'funding',
-    keywords: ['funding', 'scholarship', 'grant', 'financial', 'dost scholarship', 'fund', 'budget', 'research grant', 'funding opportunity'],
+    keywords: ['funding', 'scholarship', 'grant', 'financial', 'dost scholarship', 'fund', 'budget', 'research grant', 'funding opportunity', 'deadline', 'application deadline', 'what scholarships'],
     reply: 'Funding opportunities — including DOST scholarships, research grants, and government programs — are listed in the Funding module. Filter by category or status (Open/Closed) and check eligibility requirements.',
   },
   {
@@ -217,7 +217,7 @@ const KB = [
   },
   {
     intent: 'news_members_only',
-    keywords: ['members only news', 'locked article', 'restricted news', 'cannot read news', 'upgrade access'],
+    keywords: ['members only news', 'locked article', 'restricted news', 'cannot read news', 'upgrade access', 'members only', 'members only article', 'restricted article', 'exclusive article', 'news locked'],
     reply: 'Some news articles are marked "Members Only" and require an active DASIG membership to read. If you see a locked article, apply for membership through the Membership module. Guest users can access all public announcements.',
   },
   {
@@ -235,22 +235,22 @@ const FOLLOWUPS = {
   events:               ['How do I register for an event?', 'What is the DASIG Annual Summit?', 'What if an event is full?'],
   event_register:       ['What events are upcoming?', 'How do I check my registrations?', 'How is attendance tracked?'],
   training:             ['How do I enroll in training?', 'Will I get a certificate?', 'What are the membership fees?'],
-  membership:           ['What are the membership tiers?', 'How much does membership cost?', 'How do I check my status?'],
-  membership_status:    ['How do I renew my membership?', 'What benefits do members get?', 'How do I update my profile?'],
+  membership:           ['What are the membership tiers?', 'How much does membership cost?', 'What is my membership status?'],
+  membership_status:    ['How do I renew my membership?', 'What are member benefits?', 'How do I update my profile?'],
   membership_renewal:   ['What are the membership fees?', 'How do I contact admin?', 'What are the membership tiers?'],
-  news:                 ['What are members-only articles?', 'What events are upcoming?', 'Tell me about funding'],
-  policy:               ['Who can access all policies?', 'What governance policies exist?', 'How do I contact admin?'],
-  funding:              ['How do I apply for a scholarship?', 'What research grants are available?', 'What is the deadline?'],
+  news:                 ['How do I read members only articles?', 'What events are upcoming?', 'Tell me about funding'],
+  policy:               ['What policies are available?', 'What governance policies exist?', 'How do I contact admin?'],
+  funding:              ['How do I apply for a scholarship?', 'What research grants are available?', 'What is the application deadline?'],
   partnerships:         ['Who are DASIG\'s key partners?', 'Tell me about the CHED partnership', 'How do I become a member?'],
-  login:                ['How do I register an account?', 'How do I reset my password?', 'What can guests access?'],
+  login:                ['How do I create a new account?', 'How do I reset my password?', 'What can guests access?'],
   register_account:     ['How do I become a member?', 'What are the membership tiers?', 'What can I do as a guest?'],
   contact:              ['How do I report a technical issue?', 'How do I apply for membership?', 'What events are upcoming?'],
   roles:                ['How do I become a member?', 'What modules can guests access?', 'What can admins do?'],
-  tiers:                ['How do I apply for membership?', 'What are the membership fees?', 'What benefits do members get?'],
-  fees:                 ['How do I apply for membership?', 'What scholarships are available?', 'How do I check my status?'],
+  tiers:                ['How do I apply for membership?', 'What are the membership fees?', 'What are member benefits?'],
+  fees:                 ['How do I apply for membership?', 'What scholarships are available?', 'What is my membership status?'],
   research:             ['Tell me about partnerships', 'What funding opportunities exist?', 'What events are upcoming?'],
   summit:               ['How do I register for the summit?', 'What events are upcoming?', 'How do I become a member?'],
-  forgot_password:      ['How do I log in?', 'How do I register an account?', 'How do I contact admin?'],
+  forgot_password:      ['How do I log in?', 'How do I create a new account?', 'How do I contact admin?'],
   haribon:              ['What can you help me with?', 'What events are upcoming?', 'How do I become a member?'],
   portal_features:      ['What events are upcoming?', 'How do I become a member?', 'What training is available?'],
   chatbot_capabilities: ['What events are upcoming?', 'How do I become a member?', 'Tell me about funding'],
@@ -260,6 +260,20 @@ const FOLLOWUPS = {
   data_privacy:         ['What policies are available?', 'How do I contact admin?', 'How do I update my profile?'],
   ched:                 ['Tell me about partnerships', 'What funding opportunities exist?', 'Who are the consortium members?'],
   consortium_history:   ['Who are the consortium members?', 'What is in the DASIG portal?', 'How do I join DASIG?'],
+  // Intents without dedicated entries — explicit entries prevent falling back to DEFAULT
+  region_7:             ['Who are the consortium members?', 'What events are upcoming?', 'Tell me about partnerships'],
+  admin_panel:          ['How do I become a member?', 'What are the membership tiers?', 'What can admins do?'],
+  it332:                ['What is in the DASIG portal?', 'What can you help me with?', 'What events are upcoming?'],
+  logout:               ['How do I log in?', 'What can I do as a guest?', 'How do I become a member?'],
+  change_password:      ['How do I log in?', 'How do I update my profile?', 'How do I contact admin?'],
+  update_profile:       ['How do I log in?', 'What is my membership status?', 'How do I contact admin?'],
+  my_events:            ['What events are upcoming?', 'How do I register for an event?', 'How is attendance tracked?'],
+  my_trainings:         ['What training is available?', 'How do I enroll in training?', 'Will I get a certificate?'],
+  mobile_access:        ['What is in the DASIG portal?', 'What events are upcoming?', 'How do I become a member?'],
+  technical_support:    ['How do I contact admin?', 'What is in the DASIG portal?', 'How do I log in?'],
+  feedback:             ['How do I contact admin?', 'What is in the DASIG portal?', 'What events are upcoming?'],
+  news_members_only:    ['How do I become a member?', 'What are the latest news?', 'What events are upcoming?'],
+  booking_confirmation: ['What events are upcoming?', 'How do I register for an event?', 'How do I check my registrations?'],
 };
 const DEFAULT_FOLLOWUPS = ['What events are upcoming?', 'How do I become a member?', 'What training is available?'];
 
@@ -313,37 +327,37 @@ router.post('/message', async (req, res) => {
   // Enrich reply with live DB data for key intents
   try {
     if (match.intent === 'events' || match.intent === 'summit') {
-      const today = new Date().toISOString().split('T')[0];
-      const { data } = await supabase.from('events').select('title, date, location').eq('archived', false).gte('date', today).order('date', { ascending: true }).limit(3);
+      // events.date is stored as TEXT (e.g. "Jun 18–20, 2026"), no archived column
+      const { data } = await supabase.from('events').select('title, date, venue').order('id', { ascending: true }).limit(4);
       if (data && data.length > 0) {
-        const list = data.map(e => {
-          const d = e.date ? new Date(e.date).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' }) : 'TBA';
-          return `• ${e.title} — ${d}${e.location ? ' @ ' + e.location : ''}`;
-        }).join('\n');
+        const list = data.map(e => `• ${e.title} — ${e.date || 'TBA'}${e.venue ? ' @ ' + e.venue : ''}`).join('\n');
         reply = `${match.reply}\n\n📅 Upcoming events:\n${list}\n\nRegister early — slots are limited!`;
       }
     } else if (match.intent === 'training') {
-      const { data } = await supabase.from('trainings').select('title, category, level').eq('archived', false).limit(4);
+      // trainings has no archived column
+      const { data } = await supabase.from('trainings').select('title, category, level').limit(4);
       if (data && data.length > 0) {
         const list = data.map(t => `• ${t.title}${t.category ? ' [' + t.category + ']' : ''}${t.level ? ' — ' + t.level : ''}`).join('\n');
         reply = `${match.reply}\n\n🎓 Featured programs:\n${list}\n\nBrowse all in the Training module!`;
       }
     } else if (match.intent === 'news') {
-      const { data } = await supabase.from('news').select('title, category').eq('archived', false).order('created_at', { ascending: false }).limit(4);
+      const { data } = await supabase.from('news').select('title, badge').eq('archived', false).order('created_at', { ascending: false }).limit(4);
       if (data && data.length > 0) {
-        const list = data.map(n => `• ${n.title}${n.category ? ' [' + n.category + ']' : ''}`).join('\n');
+        const list = data.map(n => `• ${n.title}${n.badge ? ' [' + n.badge + ']' : ''}`).join('\n');
         reply = `${match.reply}\n\n📰 Latest articles:\n${list}\n\nRead more in the News module!`;
       }
     } else if (match.intent === 'funding') {
-      const { data } = await supabase.from('funding').select('title, category, status').eq('archived', false).eq('status', 'Open').limit(4);
+      // table is funding_opportunities, not funding
+      const { data } = await supabase.from('funding_opportunities').select('title, category, status').eq('status', 'Open').limit(4);
       if (data && data.length > 0) {
         const list = data.map(f => `• ${f.title}${f.category ? ' [' + f.category + ']' : ''}`).join('\n');
         reply = `${match.reply}\n\n💰 Currently open:\n${list}\n\nView eligibility details in the Funding module!`;
       }
     } else if (match.intent === 'member_institutions') {
-      const { data } = await supabase.from('member_institutions').select('name, abbreviation').limit(8);
+      // table is members, columns are abbr and full_name
+      const { data } = await supabase.from('members').select('abbr, full_name').limit(8);
       if (data && data.length > 0) {
-        const list = data.map(m => `• ${m.abbreviation ? m.abbreviation + ' — ' : ''}${m.name}`).join('\n');
+        const list = data.map(m => `• ${m.abbr ? m.abbr + ' — ' : ''}${m.full_name}`).join('\n');
         reply = `The DASIG Consortium currently includes these Region VII member institutions:\n\n${list}\n\nView full profiles in the Members module.`;
       }
     }
