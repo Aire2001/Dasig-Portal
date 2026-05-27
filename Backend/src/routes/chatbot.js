@@ -332,39 +332,45 @@ router.post('/message', async (req, res) => {
   let reply = match.reply;
 
   // Enrich reply with live DB data for key intents
+  const uniq = (arr, key) => {
+    const seen = new Set();
+    return arr.filter(r => { const v = r[key]; return seen.has(v) ? false : seen.add(v); });
+  };
+
   try {
     if (match.intent === 'events' || match.intent === 'summit') {
-      // events.date is stored as TEXT (e.g. "Jun 18–20, 2026"), no archived column
-      const { data } = await supabase.from('events').select('title, date, venue').order('id', { ascending: true }).limit(4);
+      const { data } = await supabase.from('events').select('title, date, venue').order('id', { ascending: true }).limit(6);
       if (data && data.length > 0) {
-        const list = data.map(e => `• ${e.title} — ${e.date || 'TBA'}${e.venue ? ' @ ' + e.venue : ''}`).join('\n');
+        const items = uniq(data, 'title').slice(0, 3);
+        const list = items.map(e => `• ${e.title} — ${e.date || 'TBA'}${e.venue ? ' @ ' + e.venue : ''}`).join('\n');
         reply = `${match.reply}\n\n📅 Upcoming events:\n${list}\n\nRegister early — slots are limited!`;
       }
     } else if (match.intent === 'training') {
-      // trainings has no archived column
-      const { data } = await supabase.from('trainings').select('title, category, level').limit(4);
+      const { data } = await supabase.from('trainings').select('title, category, level').limit(6);
       if (data && data.length > 0) {
-        const list = data.map(t => `• ${t.title}${t.category ? ' [' + t.category + ']' : ''}${t.level ? ' — ' + t.level : ''}`).join('\n');
+        const items = uniq(data, 'title').slice(0, 3);
+        const list = items.map(t => `• ${t.title}${t.category ? ' [' + t.category + ']' : ''}${t.level ? ' — ' + t.level : ''}`).join('\n');
         reply = `${match.reply}\n\n🎓 Featured programs:\n${list}\n\nBrowse all in the Training module!`;
       }
     } else if (match.intent === 'news') {
-      const { data } = await supabase.from('news').select('title, badge').eq('archived', false).order('created_at', { ascending: false }).limit(4);
+      const { data } = await supabase.from('news').select('title, badge').eq('archived', false).order('created_at', { ascending: false }).limit(6);
       if (data && data.length > 0) {
-        const list = data.map(n => `• ${n.title}${n.badge ? ' [' + n.badge + ']' : ''}`).join('\n');
+        const items = uniq(data, 'title').slice(0, 3);
+        const list = items.map(n => `• ${n.title}${n.badge ? ' [' + n.badge + ']' : ''}`).join('\n');
         reply = `${match.reply}\n\n📰 Latest articles:\n${list}\n\nRead more in the News module!`;
       }
     } else if (match.intent === 'funding') {
-      // table is funding_opportunities, not funding
-      const { data } = await supabase.from('funding_opportunities').select('title, category, status').eq('status', 'Open').limit(4);
+      const { data } = await supabase.from('funding_opportunities').select('title, category, status').eq('status', 'Open').limit(6);
       if (data && data.length > 0) {
-        const list = data.map(f => `• ${f.title}${f.category ? ' [' + f.category + ']' : ''}`).join('\n');
+        const items = uniq(data, 'title').slice(0, 3);
+        const list = items.map(f => `• ${f.title}${f.category ? ' [' + f.category + ']' : ''}`).join('\n');
         reply = `${match.reply}\n\n💰 Currently open:\n${list}\n\nView eligibility details in the Funding module!`;
       }
     } else if (match.intent === 'member_institutions') {
-      // table is members, columns are abbr and full_name
-      const { data } = await supabase.from('members').select('abbr, full_name').limit(8);
+      const { data } = await supabase.from('members').select('abbr, full_name').limit(12);
       if (data && data.length > 0) {
-        const list = data.map(m => `• ${m.abbr ? m.abbr + ' — ' : ''}${m.full_name}`).join('\n');
+        const items = uniq(data, 'full_name');
+        const list = items.map(m => `• ${m.abbr ? m.abbr + ' — ' : ''}${m.full_name}`).join('\n');
         reply = `The DASIG Consortium currently includes these Region VII member institutions:\n\n${list}\n\nView full profiles in the Members module.`;
       }
     }

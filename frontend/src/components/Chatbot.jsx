@@ -91,7 +91,7 @@ export default function Chatbot() {
 
       {open && (
         <div style={{
-          position: 'fixed', bottom: 90, right: 22, width: 330,
+          position: 'fixed', bottom: 90, right: 22, width: 340,
           borderRadius: 20, overflow: 'hidden',
           background: 'linear-gradient(180deg,#0f172a,#020817)',
           boxShadow: '0 20px 60px rgba(0,0,0,0.6)',
@@ -135,7 +135,7 @@ export default function Chatbot() {
           </div>
 
           {/* Messages */}
-          <div ref={msgsRef} style={{ height: 220, overflowY: 'auto', padding: ended ? 0 : '14px 14px 8px', display: 'flex', flexDirection: 'column', gap: ended ? 0 : 8 }}>
+          <div ref={msgsRef} style={{ height: 280, overflowY: 'auto', padding: ended ? 0 : '14px 14px 8px', display: 'flex', flexDirection: 'column', gap: ended ? 0 : 8 }}>
             {ended ? (
               <div style={{
                 height: '100%', display: 'flex', flexDirection: 'column',
