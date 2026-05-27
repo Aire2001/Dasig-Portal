@@ -66,9 +66,9 @@ export default function Chatbot() {
     setThinking(true);
     try {
       const res = await api.chatbot.send(t);
-      setMessages(prev => [...prev, { from: 'bot', text: res.reply }]);
+      setMessages(prev => [...prev, { from: 'bot', text: res.reply, followups: res.followups || [] }]);
     } catch {
-      setMessages(prev => [...prev, { from: 'bot', text: 'Sorry, I could not reach the DASIG knowledge base right now.' }]);
+      setMessages(prev => [...prev, { from: 'bot', text: 'Sorry, I could not reach the DASIG knowledge base right now.', followups: [] }]);
     } finally {
       setThinking(false);
     }
@@ -113,7 +113,7 @@ export default function Chatbot() {
           {/* Messages */}
           <div ref={msgsRef} style={{ height: 220, overflowY: 'auto', padding: '14px 14px 8px', display: 'flex', flexDirection: 'column', gap: 8 }}>
             {messages.map((msg, i) => (
-              <div key={i} style={{ display: 'flex', justifyContent: msg.from === 'user' ? 'flex-end' : 'flex-start' }}>
+              <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: msg.from === 'user' ? 'flex-end' : 'flex-start' }}>
                 <div style={{
                   maxWidth: '88%', padding: '8px 12px', borderRadius: 12, fontSize: 12, lineHeight: 1.55,
                   whiteSpace: 'pre-line',
@@ -122,6 +122,13 @@ export default function Chatbot() {
                     : { background: 'linear-gradient(135deg,#001d5c,#1a56db)', color: '#fff', borderBottomRightRadius: 4 }
                   ),
                 }}>{msg.text}</div>
+                {msg.from === 'bot' && msg.followups && msg.followups.length > 0 && i === messages.length - 1 && !thinking && (
+                  <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginTop: 6, maxWidth: '95%' }}>
+                    {msg.followups.map(f => (
+                      <button key={f} className="w-chip" onClick={() => send(f)} disabled={thinking}>{f}</button>
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
             {thinking && (

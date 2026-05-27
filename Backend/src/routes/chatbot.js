@@ -227,6 +227,42 @@ const KB = [
   },
 ];
 
+// Follow-up suggestions per intent
+const FOLLOWUPS = {
+  greeting:             ['What events are upcoming?', 'How do I become a member?', 'What training is available?'],
+  about_dasig:          ['Who are the consortium members?', 'What modules does the portal have?', 'How do I join DASIG?'],
+  member_institutions:  ['How do I apply for membership?', 'What are the membership tiers?', 'Tell me about partnerships'],
+  events:               ['How do I register for an event?', 'What is the DASIG Annual Summit?', 'What if an event is full?'],
+  event_register:       ['What events are upcoming?', 'How do I check my registrations?', 'How is attendance tracked?'],
+  training:             ['How do I enroll in training?', 'Will I get a certificate?', 'What are the membership fees?'],
+  membership:           ['What are the membership tiers?', 'How much does membership cost?', 'How do I check my status?'],
+  membership_status:    ['How do I renew my membership?', 'What benefits do members get?', 'How do I update my profile?'],
+  membership_renewal:   ['What are the membership fees?', 'How do I contact admin?', 'What are the membership tiers?'],
+  news:                 ['What are members-only articles?', 'What events are upcoming?', 'Tell me about funding'],
+  policy:               ['Who can access all policies?', 'What governance policies exist?', 'How do I contact admin?'],
+  funding:              ['How do I apply for a scholarship?', 'What research grants are available?', 'What is the deadline?'],
+  partnerships:         ['Who are DASIG\'s key partners?', 'Tell me about the CHED partnership', 'How do I become a member?'],
+  login:                ['How do I register an account?', 'How do I reset my password?', 'What can guests access?'],
+  register_account:     ['How do I become a member?', 'What are the membership tiers?', 'What can I do as a guest?'],
+  contact:              ['How do I report a technical issue?', 'How do I apply for membership?', 'What events are upcoming?'],
+  roles:                ['How do I become a member?', 'What modules can guests access?', 'What can admins do?'],
+  tiers:                ['How do I apply for membership?', 'What are the membership fees?', 'What benefits do members get?'],
+  fees:                 ['How do I apply for membership?', 'What scholarships are available?', 'How do I check my status?'],
+  research:             ['Tell me about partnerships', 'What funding opportunities exist?', 'What events are upcoming?'],
+  summit:               ['How do I register for the summit?', 'What events are upcoming?', 'How do I become a member?'],
+  forgot_password:      ['How do I log in?', 'How do I register an account?', 'How do I contact admin?'],
+  haribon:              ['What can you help me with?', 'What events are upcoming?', 'How do I become a member?'],
+  portal_features:      ['What events are upcoming?', 'How do I become a member?', 'What training is available?'],
+  chatbot_capabilities: ['What events are upcoming?', 'How do I become a member?', 'Tell me about funding'],
+  attendance:           ['What events are upcoming?', 'How do I register for an event?', 'How do I check my registrations?'],
+  certificate:          ['What training is available?', 'How do I enroll in training?', 'What are the membership fees?'],
+  event_capacity:       ['What events are upcoming?', 'How do I register for an event?', 'What training is available?'],
+  data_privacy:         ['What policies are available?', 'How do I contact admin?', 'How do I update my profile?'],
+  ched:                 ['Tell me about partnerships', 'What funding opportunities exist?', 'Who are the consortium members?'],
+  consortium_history:   ['Who are the consortium members?', 'What is in the DASIG portal?', 'How do I join DASIG?'],
+};
+const DEFAULT_FOLLOWUPS = ['What events are upcoming?', 'How do I become a member?', 'What training is available?'];
+
 // Improved NLP: score-based matching — picks the entry with the most keyword hits
 function matchIntent(text) {
   const lower = text.toLowerCase().trim();
@@ -262,15 +298,63 @@ router.post('/message', async (req, res) => {
     intent: match ? match.intent : null,
   }).then(() => {}).catch(() => {});
 
-  if (match) {
-    return res.json({ reply: match.reply, matched: true, intent: match.intent, score: match.score });
+  if (!match) {
+    return res.json({
+      reply: `I couldn't find a specific answer for that in my DASIG knowledge base. I can help with:\n• 📅 Events & registration\n• 🎓 Training & enrollment\n• 👥 Membership & tiers\n• 📋 Policies & guidelines\n• 💰 Funding & scholarships\n• 🤝 Partnerships\n\nTry rephrasing, or email admin@dasig.ph for direct support.`,
+      matched: false,
+      intent: null,
+      score: 0,
+      followups: DEFAULT_FOLLOWUPS,
+    });
   }
 
-  res.json({
-    reply: `I couldn't find a specific answer for that in my DASIG knowledge base. I can help with:\n• 📅 Events & registration\n• 🎓 Training & enrollment\n• 👥 Membership & tiers\n• 📋 Policies & guidelines\n• 💰 Funding & scholarships\n• 🤝 Partnerships\n\nTry rephrasing, or email admin@dasig.ph for direct support.`,
-    matched: false,
-    intent: null,
-    score: 0,
+  let reply = match.reply;
+
+  // Enrich reply with live DB data for key intents
+  try {
+    if (match.intent === 'events' || match.intent === 'summit') {
+      const today = new Date().toISOString().split('T')[0];
+      const { data } = await supabase.from('events').select('title, date, location').eq('archived', false).gte('date', today).order('date', { ascending: true }).limit(3);
+      if (data && data.length > 0) {
+        const list = data.map(e => {
+          const d = e.date ? new Date(e.date).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' }) : 'TBA';
+          return `• ${e.title} — ${d}${e.location ? ' @ ' + e.location : ''}`;
+        }).join('\n');
+        reply = `${match.reply}\n\n📅 Upcoming events:\n${list}\n\nRegister early — slots are limited!`;
+      }
+    } else if (match.intent === 'training') {
+      const { data } = await supabase.from('trainings').select('title, category, level').eq('archived', false).limit(4);
+      if (data && data.length > 0) {
+        const list = data.map(t => `• ${t.title}${t.category ? ' [' + t.category + ']' : ''}${t.level ? ' — ' + t.level : ''}`).join('\n');
+        reply = `${match.reply}\n\n🎓 Featured programs:\n${list}\n\nBrowse all in the Training module!`;
+      }
+    } else if (match.intent === 'news') {
+      const { data } = await supabase.from('news').select('title, category').eq('archived', false).order('created_at', { ascending: false }).limit(4);
+      if (data && data.length > 0) {
+        const list = data.map(n => `• ${n.title}${n.category ? ' [' + n.category + ']' : ''}`).join('\n');
+        reply = `${match.reply}\n\n📰 Latest articles:\n${list}\n\nRead more in the News module!`;
+      }
+    } else if (match.intent === 'funding') {
+      const { data } = await supabase.from('funding').select('title, category, status').eq('archived', false).eq('status', 'Open').limit(4);
+      if (data && data.length > 0) {
+        const list = data.map(f => `• ${f.title}${f.category ? ' [' + f.category + ']' : ''}`).join('\n');
+        reply = `${match.reply}\n\n💰 Currently open:\n${list}\n\nView eligibility details in the Funding module!`;
+      }
+    } else if (match.intent === 'member_institutions') {
+      const { data } = await supabase.from('member_institutions').select('name, abbreviation').limit(8);
+      if (data && data.length > 0) {
+        const list = data.map(m => `• ${m.abbreviation ? m.abbreviation + ' — ' : ''}${m.name}`).join('\n');
+        reply = `The DASIG Consortium currently includes these Region VII member institutions:\n\n${list}\n\nView full profiles in the Members module.`;
+      }
+    }
+  } catch (_) {}
+
+  return res.json({
+    reply,
+    matched: true,
+    intent: match.intent,
+    score: match.score,
+    followups: FOLLOWUPS[match.intent] || DEFAULT_FOLLOWUPS,
   });
 });
 

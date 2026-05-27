@@ -103,6 +103,7 @@ export default function ChatbotPage() {
         text: res.reply,
         intent: res.intent,
         matched: res.matched,
+        followups: res.followups || [],
         time: new Date(),
       }]);
     } catch {
@@ -110,6 +111,7 @@ export default function ChatbotPage() {
         from: 'bot',
         text: 'I could not connect to the DASIG knowledge base right now. Please make sure the API server is running on port 4000.',
         matched: false,
+        followups: [],
         time: new Date(),
       }]);
     } finally {
@@ -231,6 +233,13 @@ export default function ChatbotPage() {
                     {msg.time && (
                       <div style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.25)', marginTop: 4 }}>
                         {formatTime(msg.time)}
+                      </div>
+                    )}
+                    {msg.from === 'bot' && msg.followups && msg.followups.length > 0 && i === messages.length - 1 && !thinking && (
+                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8, maxWidth: '80%' }}>
+                        {msg.followups.map(f => (
+                          <button key={f} className="chip-btn" onClick={() => send(f)} disabled={thinking}>{f}</button>
+                        ))}
                       </div>
                     )}
                   </div>
