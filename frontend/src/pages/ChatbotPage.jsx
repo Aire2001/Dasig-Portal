@@ -21,6 +21,10 @@ const CHAT_CSS = `
     from { transform: translateY(10px) scale(0.97); opacity: 0; }
     to   { transform: translateY(0) scale(1); opacity: 1; }
   }
+  @keyframes endedIn {
+    from { transform: scale(0.92) translateY(12px); opacity: 0; }
+    to   { transform: scale(1) translateY(0); opacity: 1; }
+  }
   @keyframes blink {
     0%,80%,100% { opacity: 0; }
     40%          { opacity: 1; }
@@ -76,6 +80,8 @@ export default function ChatbotPage() {
   const [matchRate, setMatchRate] = useState(null);
   const [totalAsked, setTotalAsked] = useState(0);
   const [totalMatched, setTotalMatched] = useState(0);
+  const [ended, setEnded] = useState(false);
+  const [showEndConfirm, setShowEndConfirm] = useState(false);
   const msgsEnd = useRef(null);
   const inputRef = useRef(null);
 
@@ -124,11 +130,18 @@ export default function ChatbotPage() {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
   }
 
-  function clearChat() {
+  function endChat() {
+    setShowEndConfirm(false);
+    setEnded(true);
+  }
+
+  function newChat() {
     setMessages([INIT_MSG]);
     setTotalAsked(0);
     setTotalMatched(0);
     setMatchRate(null);
+    setEnded(false);
+    setTimeout(() => inputRef.current?.focus(), 50);
   }
 
   return (
@@ -178,13 +191,57 @@ export default function ChatbotPage() {
                 }}>
                   {totalAsked} queries
                 </div>
-                <button onClick={clearChat} style={{
-                  background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)',
-                  borderRadius: 8, padding: '5px 12px', fontSize: 11.5, fontWeight: 700,
-                  color: 'rgba(255,255,255,0.5)', cursor: 'pointer', fontFamily: 'inherit',
-                }}>Clear</button>
+                {ended ? (
+                  <button onClick={newChat} style={{
+                    background: 'rgba(249,115,22,0.12)', border: '1px solid rgba(249,115,22,0.3)',
+                    borderRadius: 8, padding: '5px 12px', fontSize: 11.5, fontWeight: 700,
+                    color: '#f97316', cursor: 'pointer', fontFamily: 'inherit',
+                  }}>New Chat</button>
+                ) : (
+                  <button onClick={() => setShowEndConfirm(true)} style={{
+                    background: 'rgba(225,29,72,0.08)', border: '1px solid rgba(225,29,72,0.22)',
+                    borderRadius: 8, padding: '5px 12px', fontSize: 11.5, fontWeight: 700,
+                    color: '#f43f5e', cursor: 'pointer', fontFamily: 'inherit',
+                  }}>End Chat</button>
+                )}
               </div>
             </div>
+
+            {/* End-chat confirmation modal */}
+            {showEndConfirm && (
+              <div style={{
+                position: 'fixed', inset: 0, zIndex: 200,
+                background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(4px)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24,
+              }}>
+                <div style={{
+                  background: 'linear-gradient(180deg,#0f172a,#020817)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: 20, padding: '32px 28px', maxWidth: 360, width: '100%',
+                  textAlign: 'center', animation: 'msgIn 0.2s ease both',
+                }}>
+                  <div style={{ fontSize: 48, marginBottom: 12 }}>👋</div>
+                  <div style={{ color: '#fff', fontWeight: 900, fontSize: 18, marginBottom: 8 }}>End this session?</div>
+                  <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, lineHeight: 1.65, marginBottom: 24 }}>
+                    Your chat history will be cleared. You can start a new conversation anytime.
+                  </div>
+                  <div style={{ display: 'flex', gap: 10 }}>
+                    <button onClick={() => setShowEndConfirm(false)} style={{
+                      flex: 1, padding: '11px', borderRadius: 10,
+                      background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)',
+                      color: 'rgba(255,255,255,0.6)', fontSize: 13.5, fontWeight: 700,
+                      cursor: 'pointer', fontFamily: 'inherit',
+                    }}>Cancel</button>
+                    <button onClick={endChat} style={{
+                      flex: 1, padding: '11px', borderRadius: 10,
+                      background: 'linear-gradient(90deg,#e11d48,#be123c)',
+                      border: 'none', color: '#fff', fontSize: 13.5, fontWeight: 700,
+                      cursor: 'pointer', fontFamily: 'inherit',
+                    }}>Yes, End Chat</button>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Chat window */}
             <div style={{
@@ -193,7 +250,29 @@ export default function ChatbotPage() {
               boxShadow: '0 20px 60px rgba(0,0,0,0.4)',
             }}>
               {/* Messages area */}
-              <div style={{ height: 460, overflowY: 'auto', padding: '24px 24px 16px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div style={{ height: 460, overflowY: 'auto', padding: ended ? 0 : '24px 24px 16px', display: 'flex', flexDirection: 'column', gap: ended ? 0 : 14 }}>
+                {ended ? (
+                  <div style={{
+                    height: '100%', display: 'flex', flexDirection: 'column',
+                    alignItems: 'center', justifyContent: 'center', gap: 12, padding: '24px',
+                    animation: 'endedIn 0.35s ease both',
+                  }}>
+                    <div style={{ fontSize: 54, lineHeight: 1 }}>👋</div>
+                    <div style={{ color: '#fff', fontWeight: 900, fontSize: 18 }}>Chat Session Ended</div>
+                    <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 13, textAlign: 'center', lineHeight: 1.65, maxWidth: 280 }}>
+                      You asked <strong style={{ color: 'rgba(255,255,255,0.7)' }}>{totalAsked}</strong> {totalAsked === 1 ? 'question' : 'questions'} this session
+                      {matchRate !== null && <>, with <strong style={{ color: 'rgba(255,255,255,0.7)' }}>{matchRate}%</strong> intent accuracy</>}.
+                    </div>
+                    <button onClick={newChat} style={{
+                      marginTop: 8, padding: '12px 28px', borderRadius: 12,
+                      background: 'linear-gradient(90deg,#f97316,#e11d48)',
+                      border: 'none', color: '#fff', fontSize: 14, fontWeight: 800,
+                      cursor: 'pointer', fontFamily: 'inherit',
+                      boxShadow: '0 4px 16px rgba(249,115,22,0.4)',
+                    }}>Start New Conversation →</button>
+                  </div>
+                ) : (
+                  <>
                 {messages.map((msg, i) => (
                   <div key={i} className="chat-msg" style={{ display: 'flex', flexDirection: 'column', alignItems: msg.from === 'user' ? 'flex-end' : 'flex-start' }}>
                     {msg.from === 'bot' && (
@@ -265,10 +344,12 @@ export default function ChatbotPage() {
                   </div>
                 )}
                 <div ref={msgsEnd} />
+                  </>
+                )}
               </div>
 
               {/* Quick chips */}
-              {messages.length <= 2 && (
+              {!ended && messages.length <= 2 && (
                 <div style={{ padding: '0 24px 14px' }}>
                   <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', fontWeight: 700, marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                     Quick questions
@@ -284,7 +365,7 @@ export default function ChatbotPage() {
               )}
 
               {/* Input row */}
-              <div style={{
+              {!ended && <div style={{
                 padding: '14px 20px 18px',
                 borderTop: '1px solid rgba(255,255,255,0.06)',
                 background: 'rgba(255,255,255,0.02)',
@@ -316,7 +397,7 @@ export default function ChatbotPage() {
                     animation: !thinking && input.trim() ? 'pulseGlow 2s infinite' : 'none',
                   }}
                 >→</button>
-              </div>
+              </div>}
             </div>
 
             {/* Info strip */}

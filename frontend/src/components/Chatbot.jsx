@@ -19,6 +19,10 @@ const WIDGET_CSS = `
     from { transform: scale(0.88) translateY(16px); opacity: 0; }
     to   { transform: scale(1) translateY(0); opacity: 1; }
   }
+  @keyframes wEndedIn {
+    from { transform: scale(0.92) translateY(8px); opacity: 0; }
+    to   { transform: scale(1) translateY(0); opacity: 1; }
+  }
   @keyframes blink {
     0%,80%,100% { opacity: 0; }
     40%          { opacity: 1; }
@@ -52,11 +56,18 @@ export default function Chatbot() {
   const [messages, setMessages] = useState(INIT);
   const [input, setInput]       = useState('');
   const [thinking, setThinking] = useState(false);
+  const [ended, setEnded]       = useState(false);
   const msgsRef = useRef(null);
 
   useEffect(() => {
     if (msgsRef.current) msgsRef.current.scrollTop = msgsRef.current.scrollHeight;
   }, [messages, thinking]);
+
+  function newChat() {
+    setMessages(INIT);
+    setEnded(false);
+    setInput('');
+  }
 
   async function send(text) {
     const t = (text || input).trim();
@@ -108,10 +119,43 @@ export default function Chatbot() {
               borderRadius: 7, padding: '4px 9px', fontSize: 10.5, fontWeight: 700,
               color: '#fff', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0,
             }}>Full →</button>
+            {ended ? (
+              <button onClick={newChat} style={{
+                background: 'rgba(249,115,22,0.2)', border: '1px solid rgba(249,115,22,0.4)',
+                borderRadius: 7, padding: '4px 9px', fontSize: 10.5, fontWeight: 700,
+                color: '#f97316', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0,
+              }}>New Chat</button>
+            ) : (
+              <button onClick={() => setEnded(true)} style={{
+                background: 'rgba(225,29,72,0.15)', border: '1px solid rgba(225,29,72,0.3)',
+                borderRadius: 7, padding: '4px 9px', fontSize: 10.5, fontWeight: 700,
+                color: '#f43f5e', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0,
+              }}>End</button>
+            )}
           </div>
 
           {/* Messages */}
-          <div ref={msgsRef} style={{ height: 220, overflowY: 'auto', padding: '14px 14px 8px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div ref={msgsRef} style={{ height: 220, overflowY: 'auto', padding: ended ? 0 : '14px 14px 8px', display: 'flex', flexDirection: 'column', gap: ended ? 0 : 8 }}>
+            {ended ? (
+              <div style={{
+                height: '100%', display: 'flex', flexDirection: 'column',
+                alignItems: 'center', justifyContent: 'center', gap: 8, padding: '16px 12px',
+                animation: 'wEndedIn 0.28s ease both',
+              }}>
+                <div style={{ fontSize: 36 }}>👋</div>
+                <div style={{ color: '#fff', fontWeight: 800, fontSize: 13 }}>Chat ended</div>
+                <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11.5, textAlign: 'center', lineHeight: 1.55 }}>
+                  Thanks for chatting with Haribon!
+                </div>
+                <button onClick={newChat} style={{
+                  marginTop: 6, padding: '8px 18px', borderRadius: 10,
+                  background: 'linear-gradient(90deg,#f97316,#e11d48)',
+                  border: 'none', color: '#fff', fontSize: 12, fontWeight: 800,
+                  cursor: 'pointer', fontFamily: 'inherit',
+                }}>New Chat →</button>
+              </div>
+            ) : (
+              <>
             {messages.map((msg, i) => (
               <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: msg.from === 'user' ? 'flex-end' : 'flex-start' }}>
                 <div style={{
@@ -138,10 +182,12 @@ export default function Chatbot() {
                 </div>
               </div>
             )}
+              </>
+            )}
           </div>
 
           {/* Quick chips */}
-          {messages.length <= 2 && (
+          {!ended && messages.length <= 2 && (
             <div style={{ padding: '4px 12px 8px', display: 'flex', gap: 5, flexWrap: 'wrap' }}>
               {QUICK.map(q => (
                 <button key={q} className="w-chip" onClick={() => send(q)} disabled={thinking}>{q}</button>
@@ -150,7 +196,7 @@ export default function Chatbot() {
           )}
 
           {/* Input */}
-          <div style={{ padding: '8px 12px 14px', borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', gap: 7 }}>
+          {!ended && <div style={{ padding: '8px 12px 14px', borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', gap: 7 }}>
             <input
               className="w-input"
               value={input}
@@ -166,7 +212,7 @@ export default function Chatbot() {
               fontSize: 13, fontWeight: 800, cursor: thinking || !input.trim() ? 'not-allowed' : 'pointer',
               fontFamily: 'inherit', transition: 'all 0.15s',
             }}>→</button>
-          </div>
+          </div>}
         </div>
       )}
 
