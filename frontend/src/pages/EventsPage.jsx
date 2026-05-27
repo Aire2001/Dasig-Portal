@@ -166,6 +166,7 @@ export default function EventsPage() {
                 <div>
                   <label style={{ fontSize:11.5, fontWeight:700, color: fnameErr ? '#e11d48' : '#64748b', display:'block', marginBottom:5 }}>
                     FULL NAME <span style={{ color:'#e11d48' }}>*</span>
+                    <span style={{ fontSize:10.5, fontWeight:400, color:'#94a3b8', marginLeft:4 }}>required</span>
                   </label>
                   <input
                     className="reg-input"
@@ -192,7 +193,7 @@ export default function EventsPage() {
                 {/* phone */}
                 <div>
                   <label style={{ fontSize:11.5, fontWeight:700, color:'#64748b', display:'block', marginBottom:5 }}>
-                    PHONE NUMBER
+                    PHONE NUMBER <span style={{ fontSize:10.5, fontWeight:400, color:'#94a3b8' }}>(optional)</span>
                   </label>
                   <input
                     className="reg-input"
@@ -205,7 +206,7 @@ export default function EventsPage() {
                 {/* institution */}
                 <div>
                   <label style={{ fontSize:11.5, fontWeight:700, color:'#64748b', display:'block', marginBottom:5 }}>
-                    INSTITUTION / ORGANIZATION
+                    INSTITUTION / ORGANIZATION <span style={{ fontSize:10.5, fontWeight:400, color:'#94a3b8' }}>(optional)</span>
                   </label>
                   <input
                     className="reg-input"

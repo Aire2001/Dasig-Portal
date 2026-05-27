@@ -128,6 +128,7 @@ export default function MembershipPage() {
   const [loading, setLoading]     = useState(true);
   const [applyForm, setApplyForm] = useState({ institution: '', campus: '', tier: 'Tier 2' });
   const [applyMsg, setApplyMsg]   = useState('');
+  const [applyErrors, setApplyErrors] = useState({});
   const [applying, setApplying]   = useState(false);
   const [showCert, setShowCert]   = useState(false);
 
@@ -175,6 +176,11 @@ export default function MembershipPage() {
 
   async function handleApply(e) {
     e.preventDefault();
+    const errs = {};
+    if (!applyForm.institution.trim()) errs.institution = 'Institution name is required.';
+    if (!applyForm.campus.trim()) errs.campus = 'Campus / City is required.';
+    if (Object.keys(errs).length) { setApplyErrors(errs); return; }
+    setApplyErrors({});
     setApplying(true);
     try {
       const res = await api.membership.apply(applyForm);
@@ -302,11 +308,11 @@ export default function MembershipPage() {
 
                 <form onSubmit={handleApply}>
                   <ApplyField label="Institution" value={applyForm.institution}
-                    onChange={e => setApplyForm(f => ({ ...f, institution: e.target.value }))}
-                    placeholder="University / Agency name" />
+                    onChange={e => { setApplyForm(f => ({ ...f, institution: e.target.value })); if (applyErrors.institution) setApplyErrors(p => ({ ...p, institution: undefined })); }}
+                    placeholder="University / Agency name" error={applyErrors.institution} />
                   <ApplyField label="Campus / City" value={applyForm.campus}
-                    onChange={e => setApplyForm(f => ({ ...f, campus: e.target.value }))}
-                    placeholder="e.g. Cebu City" />
+                    onChange={e => { setApplyForm(f => ({ ...f, campus: e.target.value })); if (applyErrors.campus) setApplyErrors(p => ({ ...p, campus: undefined })); }}
+                    placeholder="e.g. Cebu City" error={applyErrors.campus} />
                   <div style={{ marginBottom: 20 }}>
                     <label style={{ display: 'block', fontSize: 11.5, fontWeight: 800, color: 'rgba(255,255,255,0.5)', marginBottom: 7, letterSpacing: '0.5px', textTransform: 'uppercase' }}>Membership Tier</label>
                     <select className="ms-input" value={applyForm.tier}
@@ -357,11 +363,19 @@ export default function MembershipPage() {
   );
 }
 
-function ApplyField({ label, value, onChange, placeholder }) {
+function ApplyField({ label, value, onChange, placeholder, error }) {
   return (
     <div style={{ marginBottom: 16 }}>
-      <label style={{ display: 'block', fontSize: 11.5, fontWeight: 800, color: 'rgba(255,255,255,0.5)', marginBottom: 7, letterSpacing: '0.5px', textTransform: 'uppercase' }}>{label}</label>
-      <input className="ms-input" value={value} onChange={onChange} placeholder={placeholder} required />
+      <label style={{ display: 'block', fontSize: 11.5, fontWeight: 800, color: error ? '#f87171' : 'rgba(255,255,255,0.5)', marginBottom: 7, letterSpacing: '0.5px', textTransform: 'uppercase' }}>
+        {label} <span style={{ color: '#f43f5e' }}>*</span>
+      </label>
+      <input className="ms-input" value={value} onChange={onChange} placeholder={placeholder}
+        style={{ borderColor: error ? '#e11d48' : undefined }} />
+      {error && (
+        <div style={{ marginTop: 5, fontSize: 12, color: '#f87171', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
+          ⚠ {error}
+        </div>
+      )}
     </div>
   );
 }

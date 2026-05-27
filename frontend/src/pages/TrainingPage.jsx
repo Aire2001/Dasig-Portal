@@ -139,6 +139,7 @@ export default function TrainingPage() {
                 <div>
                   <label style={{ fontSize:11.5, fontWeight:700, color: fnameErr ? '#f87171' : 'rgba(255,255,255,0.45)', display:'block', marginBottom:5, letterSpacing:'.4px' }}>
                     FULL NAME <span style={{ color:'#f87171' }}>*</span>
+                    <span style={{ fontSize:10.5, fontWeight:400, color:'rgba(255,255,255,0.3)', marginLeft:4 }}>required</span>
                   </label>
                   <input
                     className="tr-input"
@@ -157,7 +158,7 @@ export default function TrainingPage() {
                 {/* Email — fully editable */}
                 <div>
                   <label style={{ fontSize:11.5, fontWeight:700, color:'rgba(255,255,255,0.45)', display:'block', marginBottom:5, letterSpacing:'.4px' }}>
-                    EMAIL ADDRESS
+                    EMAIL ADDRESS <span style={{ fontSize:10.5, fontWeight:400, color:'rgba(255,255,255,0.3)' }}>(optional)</span>
                   </label>
                   <input
                     className="tr-input"
@@ -170,13 +171,13 @@ export default function TrainingPage() {
 
                 {/* Phone */}
                 <div>
-                  <label style={{ fontSize:11.5, fontWeight:700, color:'rgba(255,255,255,0.45)', display:'block', marginBottom:5, letterSpacing:'.4px' }}>PHONE NUMBER</label>
+                  <label style={{ fontSize:11.5, fontWeight:700, color:'rgba(255,255,255,0.45)', display:'block', marginBottom:5, letterSpacing:'.4px' }}>PHONE NUMBER <span style={{ fontSize:10.5, fontWeight:400, color:'rgba(255,255,255,0.3)' }}>(optional)</span></label>
                   <input className="tr-input" value={phone} onChange={e => setPhone(e.target.value)} placeholder="e.g. 09XX-XXX-XXXX" />
                 </div>
 
                 {/* Institution */}
                 <div>
-                  <label style={{ fontSize:11.5, fontWeight:700, color:'rgba(255,255,255,0.45)', display:'block', marginBottom:5, letterSpacing:'.4px' }}>INSTITUTION / ORGANIZATION</label>
+                  <label style={{ fontSize:11.5, fontWeight:700, color:'rgba(255,255,255,0.45)', display:'block', marginBottom:5, letterSpacing:'.4px' }}>INSTITUTION / ORGANIZATION <span style={{ fontSize:10.5, fontWeight:400, color:'rgba(255,255,255,0.3)' }}>(optional)</span></label>
                   <input className="tr-input" value={institution} onChange={e => setInstitution(e.target.value)} placeholder="e.g. University of the Philippines" />
                 </div>
 

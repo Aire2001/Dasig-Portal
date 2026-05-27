@@ -18,14 +18,19 @@ export default function ForgotPasswordPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [fe, setFe] = useState({});
 
   async function handleRequestReset(e) {
     e.preventDefault();
     setError('');
+    const errs = {};
+    if (!email.trim()) errs.email = 'Email address is required.';
+    else if (!/\S+@\S+\.\S+/.test(email)) errs.email = 'Enter a valid email address.';
+    if (Object.keys(errs).length) { setFe(errs); return; }
+    setFe({});
     setLoading(true);
     try {
       const data = await api.auth.forgotPassword(email);
-      // For demo purposes the token is returned in the response
       setToken(data.reset_token || '');
       setStep('reset');
     } catch (err) {
@@ -38,10 +43,14 @@ export default function ForgotPasswordPage() {
   async function handleResetPassword(e) {
     e.preventDefault();
     setError('');
-    if (newPassword !== confirmPassword) {
-      setError('Passwords do not match');
-      return;
-    }
+    const errs = {};
+    if (!tokenInput && !token) errs.token = 'Reset token is required.';
+    if (!newPassword) errs.newPassword = 'New password is required.';
+    else if (newPassword.length < 8) errs.newPassword = 'Password must be at least 8 characters.';
+    if (!confirmPassword) errs.confirmPassword = 'Please confirm your new password.';
+    else if (newPassword && newPassword !== confirmPassword) errs.confirmPassword = 'Passwords do not match.';
+    if (Object.keys(errs).length) { setFe(errs); return; }
+    setFe({});
     setLoading(true);
     try {
       await api.auth.resetPassword(tokenInput || token, newPassword);
@@ -102,7 +111,9 @@ export default function ForgotPasswordPage() {
               <p style={{ fontSize: 13, color: '#64748b', marginBottom: 20, lineHeight: 1.6 }}>
                 Enter the email address associated with your account and we'll send you a password reset link.
               </p>
-              <FPField label="Email address" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="your@institution.ph" />
+              <FPField label="Email address" type="email" value={email}
+                onChange={e => { setEmail(e.target.value); if (fe.email) setFe(p => ({ ...p, email: undefined })); }}
+                placeholder="your@institution.ph" error={fe.email} />
               <FPBtn loading={loading}>Send reset link →</FPBtn>
               <div style={{ textAlign: 'center', marginTop: 16, fontSize: 12, color: '#94a3b8' }}>
                 <Link to="/login" style={{ color: '#1a56db', fontWeight: 600, textDecoration: 'none' }}>← Back to login</Link>
@@ -126,9 +137,15 @@ export default function ForgotPasswordPage() {
                   </div>
                 </div>
               )}
-              <FPField label="Reset token" value={tokenInput || token} onChange={e => setTokenInput(e.target.value)} placeholder="Paste your reset token" />
-              <FPField label="New password" type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="Min. 8 characters" />
-              <FPField label="Confirm new password" type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="Repeat new password" />
+              <FPField label="Reset token" value={tokenInput || token}
+                onChange={e => { setTokenInput(e.target.value); if (fe.token) setFe(p => ({ ...p, token: undefined })); }}
+                placeholder="Paste your reset token" error={fe.token} />
+              <FPField label="New password" type="password" value={newPassword}
+                onChange={e => { setNewPassword(e.target.value); if (fe.newPassword) setFe(p => ({ ...p, newPassword: undefined })); }}
+                placeholder="Min. 8 characters" error={fe.newPassword} />
+              <FPField label="Confirm new password" type="password" value={confirmPassword}
+                onChange={e => { setConfirmPassword(e.target.value); if (fe.confirmPassword) setFe(p => ({ ...p, confirmPassword: undefined })); }}
+                placeholder="Repeat new password" error={fe.confirmPassword} />
               <FPBtn loading={loading}>Set new password →</FPBtn>
             </form>
           )}
@@ -158,20 +175,27 @@ export default function ForgotPasswordPage() {
   );
 }
 
-function FPField({ label, type = 'text', value, onChange, placeholder }) {
+function FPField({ label, type = 'text', value, onChange, placeholder, error }) {
   return (
     <div style={{ marginBottom: 16 }}>
-      <label style={{ display: 'block', fontSize: 12.5, fontWeight: 700, color: '#374151', marginBottom: 6 }}>{label}</label>
+      <label style={{ display: 'block', fontSize: 12.5, fontWeight: 700, color: error ? '#e11d48' : '#374151', marginBottom: 6 }}>{label}</label>
       <input
-        type={type} value={value} onChange={onChange} placeholder={placeholder} required
+        type={type} value={value} onChange={onChange} placeholder={placeholder}
         style={{
           width: '100%', padding: '10px 13px', borderRadius: 9,
-          border: '1.5px solid #e2e8f0', fontSize: 13.5, fontFamily: 'inherit',
+          border: `1.5px solid ${error ? '#e11d48' : '#e2e8f0'}`,
+          fontSize: 13.5, fontFamily: 'inherit',
           color: '#0f172a', outline: 'none', boxSizing: 'border-box',
+          background: error ? '#fff5f5' : '#fff',
         }}
-        onFocus={e => { e.target.style.borderColor = '#1a56db'; }}
-        onBlur={e => { e.target.style.borderColor = '#e2e8f0'; }}
+        onFocus={e => { e.target.style.borderColor = error ? '#e11d48' : '#1a56db'; }}
+        onBlur={e => { e.target.style.borderColor = error ? '#e11d48' : '#e2e8f0'; }}
       />
+      {error && (
+        <div style={{ marginTop: 5, fontSize: 12, color: '#e11d48', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
+          ⚠ {error}
+        </div>
+      )}
     </div>
   );
 }

@@ -16,6 +16,7 @@ const NAV_CSS = `
   @keyframes dropIn     { from{transform:translateY(-8px);opacity:0} to{transform:translateY(0);opacity:1} }
   @keyframes slideInRight { from{transform:translateX(110%);opacity:0} to{transform:translateX(0);opacity:1} }
   @keyframes fadeOut    { from{opacity:1;transform:translateX(0)} to{opacity:0;transform:translateX(60px)} }
+  @keyframes toastDeplete { from{transform:scaleX(1)} to{transform:scaleX(0)} }
   @keyframes modalIn    { from{transform:scale(0.88);opacity:0} to{transform:scale(1);opacity:1} }
 
   .nav-link {
@@ -204,7 +205,7 @@ export default function Nav() {
           <div style={{ position:'absolute', bottom:0, left:0, right:0, height:3, borderRadius:'0 0 16px 16px', background:'rgba(255,255,255,0.08)', overflow:'hidden' }}>
             <div style={{
               height:'100%', background:'linear-gradient(90deg,#f97316,#e11d48)',
-              animation:'slideInRight 3s linear forwards',
+              animation:'toastDeplete 3s linear forwards',
               transformOrigin:'left',
               width:'100%',
             }} />

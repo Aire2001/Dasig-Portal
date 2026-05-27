@@ -109,10 +109,17 @@ function LoginForm({ setError }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [fe, setFe] = useState({});
 
   async function handleSubmit(e) {
     e.preventDefault();
     setError('');
+    const errs = {};
+    if (!email.trim()) errs.email = 'Email is required.';
+    else if (!/\S+@\S+\.\S+/.test(email)) errs.email = 'Enter a valid email address.';
+    if (!password) errs.password = 'Password is required.';
+    if (Object.keys(errs).length) { setFe(errs); return; }
+    setFe({});
     setLoading(true);
     try {
       await login(email, password);
@@ -126,8 +133,12 @@ function LoginForm({ setError }) {
 
   return (
     <form onSubmit={handleSubmit}>
-      <Field label="Email" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="your@institution.ph" />
-      <Field label="Password" type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" />
+      <Field label="Email" type="email" value={email}
+        onChange={e => { setEmail(e.target.value); if (fe.email) setFe(p => ({ ...p, email: undefined })); }}
+        placeholder="your@institution.ph" error={fe.email} />
+      <Field label="Password" type="password" value={password}
+        onChange={e => { setPassword(e.target.value); if (fe.password) setFe(p => ({ ...p, password: undefined })); }}
+        placeholder="••••••••" error={fe.password} />
       <div style={{ textAlign: 'right', marginTop: -8, marginBottom: 12 }}>
         <Link to="/forgot-password" style={{ fontSize: 12, color: '#1a56db', textDecoration: 'none', fontWeight: 600 }}>
           Forgot password?
@@ -143,12 +154,24 @@ function RegisterForm({ setError }) {
   const navigate = useNavigate();
   const [form, setForm] = useState({ name: '', email: '', password: '', institution: '', campus: '' });
   const [loading, setLoading] = useState(false);
+  const [fe, setFe] = useState({});
 
-  const set = field => e => setForm(f => ({ ...f, [field]: e.target.value }));
+  const set = field => e => {
+    setForm(f => ({ ...f, [field]: e.target.value }));
+    if (fe[field]) setFe(p => ({ ...p, [field]: undefined }));
+  };
 
   async function handleSubmit(e) {
     e.preventDefault();
     setError('');
+    const errs = {};
+    if (!form.name.trim()) errs.name = 'Full name is required.';
+    if (!form.email.trim()) errs.email = 'Email is required.';
+    else if (!/\S+@\S+\.\S+/.test(form.email)) errs.email = 'Enter a valid email address.';
+    if (!form.password) errs.password = 'Password is required.';
+    else if (form.password.length < 8) errs.password = 'Password must be at least 8 characters.';
+    if (Object.keys(errs).length) { setFe(errs); return; }
+    setFe({});
     setLoading(true);
     try {
       await register(form);
@@ -162,30 +185,40 @@ function RegisterForm({ setError }) {
 
   return (
     <form onSubmit={handleSubmit}>
-      <Field label="Full Name" value={form.name} onChange={set('name')} placeholder="Juan dela Cruz" />
-      <Field label="Email" type="email" value={form.email} onChange={set('email')} placeholder="your@institution.ph" />
-      <Field label="Password" type="password" value={form.password} onChange={set('password')} placeholder="Min. 8 characters" />
-      <Field label="Institution" value={form.institution} onChange={set('institution')} placeholder="University / Agency" />
-      <Field label="Campus / City" value={form.campus} onChange={set('campus')} placeholder="e.g. Cebu City" />
+      <Field label="Full Name" value={form.name} onChange={set('name')} placeholder="Juan dela Cruz" error={fe.name} />
+      <Field label="Email" type="email" value={form.email} onChange={set('email')} placeholder="your@institution.ph" error={fe.email} />
+      <Field label="Password" type="password" value={form.password} onChange={set('password')} placeholder="Min. 8 characters" error={fe.password} />
+      <Field label="Institution" value={form.institution} onChange={set('institution')} placeholder="University / Agency" optional />
+      <Field label="Campus / City" value={form.campus} onChange={set('campus')} placeholder="e.g. Cebu City" optional />
       <SubmitBtn loading={loading}>Create account →</SubmitBtn>
     </form>
   );
 }
 
-function Field({ label, type = 'text', value, onChange, placeholder }) {
+function Field({ label, type = 'text', value, onChange, placeholder, error, optional }) {
   return (
     <div style={{ marginBottom: 16 }}>
-      <label style={{ display: 'block', fontSize: 12.5, fontWeight: 700, color: '#374151', marginBottom: 6 }}>{label}</label>
+      <label style={{ display: 'block', fontSize: 12.5, fontWeight: 700, color: error ? '#e11d48' : '#374151', marginBottom: 6 }}>
+        {label}
+        {optional && <span style={{ fontSize: 11, color: '#94a3b8', fontWeight: 400, marginLeft: 5 }}>(optional)</span>}
+      </label>
       <input
-        type={type} value={value} onChange={onChange} placeholder={placeholder} required
+        type={type} value={value} onChange={onChange} placeholder={placeholder}
         style={{
           width: '100%', padding: '10px 13px', borderRadius: 9,
-          border: '1.5px solid #e2e8f0', fontSize: 13.5, fontFamily: 'inherit',
+          border: `1.5px solid ${error ? '#e11d48' : '#e2e8f0'}`,
+          fontSize: 13.5, fontFamily: 'inherit',
           color: '#0f172a', outline: 'none', boxSizing: 'border-box',
+          background: error ? '#fff5f5' : '#fff',
         }}
-        onFocus={e => { e.target.style.borderColor = '#1a56db'; }}
-        onBlur={e => { e.target.style.borderColor = '#e2e8f0'; }}
+        onFocus={e => { e.target.style.borderColor = error ? '#e11d48' : '#1a56db'; }}
+        onBlur={e => { e.target.style.borderColor = error ? '#e11d48' : '#e2e8f0'; }}
       />
+      {error && (
+        <div style={{ marginTop: 5, fontSize: 12, color: '#e11d48', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
+          ⚠ {error}
+        </div>
+      )}
     </div>
   );
 }
