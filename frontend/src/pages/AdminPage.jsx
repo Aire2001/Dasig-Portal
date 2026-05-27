@@ -942,25 +942,38 @@ function NewsTab({ showToast }) {
 const TR_BLANK = { icon:'💻', category:'Technology', title:'', org:'', duration:'', level:'Beginner', total:20, description:'', schedule:'' };
 
 function TrainingTab({ showToast }) {
-  const [items, setItems]     = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [modal, setModal]     = useState(null);
-  const [form, setForm]       = useState(TR_BLANK);
-  const [saving, setSaving]   = useState(false);
-  const [confirm, setConfirm] = useState(null);
+  const [items, setItems]           = useState([]);
+  const [loading, setLoading]       = useState(true);
+  const [modal, setModal]           = useState(null);
+  const [form, setForm]             = useState(TR_BLANK);
+  const [saving, setSaving]         = useState(false);
+  const [confirm, setConfirm]       = useState(null);
+  const [enrolEvent, setEnrolEvent] = useState(null);
+  const [enrolList, setEnrolList]   = useState([]);
+  const [enrolLoading, setEnrolLoading] = useState(false);
 
-  const load = () => { setLoading(true); api.training.list().then(r => setItems(r.data || [])).catch(() => showToast('Failed', false)).finally(() => setLoading(false)); };
-  useEffect(load, []);
+  const load = useCallback(() => { setLoading(true); api.training.list({ limit: 1000 }).then(r => setItems(r.data || [])).catch(() => showToast('Failed', false)).finally(() => setLoading(false)); }, []);
+  useEffect(load, [load]);
   const fc = e => setForm(p => ({ ...p, [e.target.name]: e.target.value }));
+
+  async function openEnrollments(t) {
+    setEnrolEvent(t);
+    setEnrolLoading(true);
+    setEnrolList([]);
+    try { setEnrolList(await api.training.enrollments(t.id)); }
+    catch (e) { showToast(e.message, false); }
+    finally { setEnrolLoading(false); }
+  }
 
   async function save() {
     if (!form.title || !form.org || !form.duration) { showToast('Fill required fields', false); return; }
     setSaving(true);
     try {
       const body = { ...form, total: Number(form.total) || 20 };
-      if (modal === 'create') { const r = await api.training.create(body); setItems(p => [r.training || r, ...p]); showToast('Training program created successfully!', true, body.title); }
-      else { await api.training.update(modal.id, body); setItems(p => p.map(x => x.id === modal.id ? { ...x, ...body } : x)); showToast('Training program updated successfully!', true, body.title); }
+      if (modal === 'create') { await api.training.create(body); showToast('Training program created successfully!', true, body.title); }
+      else { await api.training.update(modal.id, body); showToast('Training program updated successfully!', true, body.title); }
       setModal(null);
+      load();
     } catch (e) { showToast(e.message, false); } finally { setSaving(false); }
   }
   async function del(id, title) {
@@ -975,6 +988,42 @@ function TrainingTab({ showToast }) {
     <div>
       <PageHeader title="Training Programs" desc="Manage professional development programs" action={<AddBtn onClick={() => { setForm(TR_BLANK); setModal('create'); }} />} />
       {confirm && <ConfirmModal msg={`Delete "${confirm.title}"?`} onConfirm={() => del(confirm.id, confirm.title)} onCancel={() => setConfirm(null)} />}
+
+      {/* Enrollments Modal */}
+      {enrolEvent && (
+        <Modal title={`Enrollments — ${enrolEvent.title}`} onClose={() => { setEnrolEvent(null); load(); }} wide>
+          <div style={{ marginBottom:14, display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+            <div>
+              <span style={{ fontSize:13, fontWeight:700, color:'#fff' }}>{enrolList.length} enrolled</span>
+              <span style={{ fontSize:12.5, color:'rgba(255,255,255,0.45)', marginLeft:6 }}>/ {enrolEvent.total} capacity</span>
+            </div>
+            <button onClick={() => { setEnrolLoading(true); api.training.enrollments(enrolEvent.id).then(setEnrolList).catch(() => {}).finally(() => setEnrolLoading(false)); }} className="ap-btn ap-btn-ghost" style={{ fontSize:11 }}>↻ Refresh</button>
+          </div>
+          {enrolLoading ? <Loading /> : enrolList.length === 0 ? (
+            <div style={{ textAlign:'center', padding:'28px 0', color:'rgba(255,255,255,0.35)', fontSize:13 }}>No enrollments yet</div>
+          ) : (
+            <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+              {enrolList.map(en => (
+                <div key={en.id} style={{
+                  display:'flex', alignItems:'center', justifyContent:'space-between',
+                  background:'rgba(255,255,255,0.04)', borderRadius:10,
+                  padding:'10px 14px', border:'1px solid rgba(255,255,255,0.07)',
+                }}>
+                  <div>
+                    <div style={{ fontWeight:700, color:'#fff', fontSize:13 }}>{en.users?.name}</div>
+                    <div style={{ fontSize:11.5, color:'rgba(255,255,255,0.4)' }}>{en.users?.email} · {en.users?.institution}</div>
+                  </div>
+                  <span style={{ fontSize:11, color:'rgba(255,255,255,0.35)' }}>{new Date(en.created_at).toLocaleDateString()}</span>
+                </div>
+              ))}
+            </div>
+          )}
+          <div style={{ marginTop:16, textAlign:'right' }}>
+            <button onClick={() => { setEnrolEvent(null); load(); }} className="ap-btn ap-btn-ghost">Close</button>
+          </div>
+        </Modal>
+      )}
+
       {modal && (
         <Modal title={modal === 'create' ? 'Create Program' : 'Edit Program'} onClose={() => setModal(null)} wide>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
@@ -1000,7 +1049,7 @@ function TrainingTab({ showToast }) {
               <TR key={t.id}>
                 <TD>
                   <div style={{ fontWeight:700, color:'#fff' }}>{t.title}</div>
-                  <div style={{ fontSize:11.5, color:'rgba(255,255,255,0.38)', marginTop:2 }}>{t.org} · {t.duration}</div>
+                  <div style={{ fontSize:11.5, color:'rgba(255,255,255,0.38)', marginTop:2 }}>{t.org} · {t.duration}{t.schedule ? ` · ${t.schedule}` : ''}</div>
                 </TD>
                 <TD><span className="ap-badge" style={{ background:`${cc}1a`, color:cc }}>{t.category}</span></TD>
                 <TD><span className="ap-badge" style={{ background:`${lc}1a`, color:lc }}>{t.level}</span></TD>
@@ -1009,11 +1058,12 @@ function TrainingTab({ showToast }) {
                     <div style={{ flex:1, height:6, background:'rgba(255,255,255,0.08)', borderRadius:3, overflow:'hidden', minWidth:60 }}>
                       <div style={{ height:'100%', width:`${Math.min(fill,100)}%`, background:'linear-gradient(90deg,#f43f5e,#f97316)', borderRadius:3 }} />
                     </div>
-                    <span style={{ fontSize:12, fontWeight:700, color:'rgba(255,255,255,0.55)', width:44 }}>{t.enrolled || 0}/{t.total}</span>
+                    <span style={{ fontSize:12, fontWeight:700, color:'rgba(255,255,255,0.55)', width:52 }}>{t.enrolled || 0}/{t.total}</span>
                   </div>
                 </TD>
                 <TD>
                   <div style={{ display:'flex', gap:6 }}>
+                    <button onClick={() => openEnrollments(t)} className="ap-btn ap-btn-green">Enrollees</button>
                     <button onClick={() => { setForm({ ...t }); setModal(t); }} className="ap-btn ap-btn-blue">Edit</button>
                     <button onClick={() => setConfirm(t)} className="ap-btn ap-btn-red">Delete</button>
                   </div>

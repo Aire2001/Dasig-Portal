@@ -6,9 +6,11 @@ const router = express.Router();
 
 // GET /api/training — list with pagination, category filter, search
 router.get('/', async (req, res) => {
-  const { category, level, search, page = 1, limit = 10 } = req.query;
+  const { category, level, search, page = 1, limit = 100 } = req.query;
 
-  let query = supabase.from('trainings').select('*', { count: 'exact' });
+  let query = supabase
+    .from('trainings')
+    .select('*, enrollments:training_enrollments(count)', { count: 'exact' });
   if (category && category !== 'All') query = query.eq('category', category);
   if (level && level !== 'All') query = query.eq('level', level);
   if (search) query = query.ilike('title', `%${search}%`);
@@ -18,7 +20,15 @@ router.get('/', async (req, res) => {
 
   const { data, error, count } = await query;
   if (error) return res.status(500).json({ error: error.message });
-  res.json({ data, total: count, page: Number(page), limit: Number(limit) });
+
+  // Use actual enrollment count as enrolled
+  const trainings = (data || []).map(t => ({
+    ...t,
+    enrolled: t.enrollments?.[0]?.count ?? t.enrolled,
+    enrollments: undefined,
+  }));
+
+  res.json({ data: trainings, total: count, page: Number(page), limit: Number(limit) });
 });
 
 // GET /api/training/:id

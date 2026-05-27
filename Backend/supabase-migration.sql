@@ -84,7 +84,7 @@ CREATE TABLE IF NOT EXISTS trainings (
   id          BIGSERIAL PRIMARY KEY,
   icon        TEXT,
   category    TEXT    NOT NULL,
-  title       TEXT    NOT NULL,
+  title       TEXT    NOT NULL UNIQUE,
   org         TEXT    NOT NULL,
   duration    TEXT    NOT NULL,
   level       TEXT    NOT NULL,
@@ -93,6 +93,17 @@ CREATE TABLE IF NOT EXISTS trainings (
   description TEXT,
   schedule    TEXT
 );
+
+-- Deduplicate trainings if migration was run multiple times
+DELETE FROM training_enrollments
+  WHERE training_id IN (
+    SELECT id FROM trainings t
+    WHERE t.id <> (SELECT MIN(id) FROM trainings t2 WHERE t2.title = t.title)
+  );
+DELETE FROM trainings
+  WHERE id <> (SELECT MIN(id) FROM trainings t2 WHERE t2.title = trainings.title);
+
+ALTER TABLE trainings ADD CONSTRAINT IF NOT EXISTS trainings_title_key UNIQUE (title);
 
 ALTER TABLE trainings ADD COLUMN IF NOT EXISTS schedule TEXT;
 
@@ -476,14 +487,14 @@ The consortium congratulates the research team on this milestone achievement.',
 ON CONFLICT DO NOTHING;
 
 
--- Training programs
+-- Training programs (ON CONFLICT on unique title — safe to re-run)
 INSERT INTO trainings (icon, category, title, org, duration, level, enrolled, total, schedule)
 VALUES
-  ('💻', 'Technology',  'Full-Stack Web Dev Bootcamp',           'DICT VII',  '6 weeks', 'Intermediate', 28, 30, 'Jul 7 – Aug 15, 2026 | Online'),
-  ('🔬', 'Research',    'Research Methods for STEM Educators',   'DOST VII',  '3 weeks', 'Beginner',     18, 25, 'Jul 14 – Aug 1, 2026 | Hybrid'),
-  ('🏛',  'Leadership', 'Strategic Leadership in Public Service', 'DTI VII',   '2 weeks', 'Advanced',     12, 20, 'Aug 3–16, 2026 | Cebu City'),
-  ('📱', 'Governance',  'Digital Governance & Policy',            'DepEd VII', '4 weeks', 'Intermediate',  9, 15, 'Jul 21 – Aug 14, 2026 | Online')
-ON CONFLICT DO NOTHING;
+  ('💻', 'Technology',  'Full-Stack Web Dev Bootcamp',           'DICT VII',  '6 weeks', 'Intermediate', 0, 30, 'Jul 7 – Aug 15, 2026 | Online'),
+  ('🔬', 'Research',    'Research Methods for STEM Educators',   'DOST VII',  '3 weeks', 'Beginner',     0, 25, 'Jul 14 – Aug 1, 2026 | Hybrid'),
+  ('🏛',  'Leadership', 'Strategic Leadership in Public Service', 'DTI VII',   '2 weeks', 'Advanced',     0, 20, 'Aug 3–16, 2026 | Cebu City'),
+  ('📱', 'Governance',  'Digital Governance & Policy',            'DepEd VII', '4 weeks', 'Intermediate', 0, 15, 'Jul 21 – Aug 14, 2026 | Online')
+ON CONFLICT (title) DO NOTHING;
 
 
 -- Consortium member institutions
