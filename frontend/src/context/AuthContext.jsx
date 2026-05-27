@@ -22,6 +22,7 @@ export function AuthProvider({ children }) {
   async function login(email, password) {
     const data = await api.auth.login(email, password);
     localStorage.setItem('dasig_token', data.token);
+    sessionStorage.setItem('dasig_welcome', data.user.name || 'back');
     setUser(data.user);
     return data.user;
   }
@@ -29,6 +30,7 @@ export function AuthProvider({ children }) {
   async function register(body) {
     const data = await api.auth.register(body);
     localStorage.setItem('dasig_token', data.token);
+    sessionStorage.setItem('dasig_welcome', data.user.name || 'back');
     setUser(data.user);
     return data.user;
   }

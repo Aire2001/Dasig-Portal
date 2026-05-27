@@ -13,7 +13,10 @@ const NAV_CSS = `
   @keyframes borderPulse{ 0%,100%{ opacity:0.07; } 50%{ opacity:0.18; } }
   @keyframes textShine  { 0%{ background-position: -200% center; } 100%{ background-position: 200% center; } }
   @keyframes ringPulse  { 0%{ transform:scale(1); opacity:0.6; } 100%{ transform:scale(1.9); opacity:0; } }
-  @keyframes dropIn { from{transform:translateY(-8px);opacity:0} to{transform:translateY(0);opacity:1} }
+  @keyframes dropIn     { from{transform:translateY(-8px);opacity:0} to{transform:translateY(0);opacity:1} }
+  @keyframes slideInRight { from{transform:translateX(110%);opacity:0} to{transform:translateX(0);opacity:1} }
+  @keyframes fadeOut    { from{opacity:1;transform:translateX(0)} to{opacity:0;transform:translateX(60px)} }
+  @keyframes modalIn    { from{transform:scale(0.88);opacity:0} to{transform:scale(1);opacity:1} }
 
   .nav-link {
     background: transparent; color: rgba(255,255,255,0.65);
@@ -60,6 +63,9 @@ export default function Nav() {
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
   const [logoHover, setLogoHover] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
+  const [logoutConfirm, setLogoutConfirm] = useState(false);
+  const [welcome, setWelcome] = useState(null);   // {name, role} | null
+  const welcomeTimer = useRef(null);
 
   useEffect(() => {
     function handleClick(e) {
@@ -68,6 +74,20 @@ export default function Nav() {
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
+
+  // Show welcome toast on fresh login (sessionStorage flag set by AuthContext.login/register)
+  useEffect(() => {
+    if (user) {
+      const name = sessionStorage.getItem('dasig_welcome');
+      if (name) {
+        sessionStorage.removeItem('dasig_welcome');
+        setWelcome({ name, role: user.role });
+        clearTimeout(welcomeTimer.current);
+        welcomeTimer.current = setTimeout(() => setWelcome(null), 5000);
+      }
+    }
+    return () => clearTimeout(welcomeTimer.current);
+  }, [user]);
 
   function onLogoMove(e) {
     const r  = logoRef.current.getBoundingClientRect();
@@ -84,11 +104,119 @@ export default function Nav() {
     setTilt({ x: 0, y: 0 });
   }
 
-  function handleLogout() { logout(); navigate('/'); }
+  function handleLogout() { setLogoutConfirm(true); }
+  function confirmLogout() { setLogoutConfirm(false); logout(); navigate('/'); }
+
+  const roleLabel = { ADMIN: 'Administrator', MEMBER: 'Member', GUEST: 'Guest' };
+  const roleIcon  = { ADMIN: '🛡️', MEMBER: '🎓', GUEST: '👤' };
 
   return (
     <>
       <style>{NAV_CSS}</style>
+
+      {/* ── Logout Confirmation Modal ── */}
+      {logoutConfirm && (
+        <div onClick={() => setLogoutConfirm(false)} style={{
+          position:'fixed', inset:0, background:'rgba(0,0,0,0.65)',
+          zIndex:9999, display:'flex', alignItems:'center', justifyContent:'center',
+          padding:24, backdropFilter:'blur(6px)',
+        }}>
+          <div onClick={e => e.stopPropagation()} style={{
+            background:'linear-gradient(180deg,#0f172a 0%,#020817 100%)',
+            border:'1px solid rgba(255,255,255,0.1)', borderRadius:22, maxWidth:380, width:'100%',
+            boxShadow:'0 32px 100px rgba(0,0,0,0.8)',
+            animation:'modalIn 0.22s cubic-bezier(.34,1.56,.64,1)',
+            overflow:'hidden',
+          }}>
+            {/* top band */}
+            <div style={{
+              background:'linear-gradient(135deg,#1e1b4b,#312e81)',
+              padding:'28px 24px 22px', textAlign:'center',
+            }}>
+              <div style={{ fontSize:48, marginBottom:8 }}>🚪</div>
+              <div style={{ color:'#fff', fontSize:20, fontWeight:900 }}>Log Out?</div>
+              <div style={{ color:'rgba(255,255,255,0.6)', fontSize:13, marginTop:4 }}>
+                You're logged in as <strong style={{ color:'#c7d2fe' }}>{user?.name}</strong>
+              </div>
+            </div>
+            {/* body */}
+            <div style={{ padding:'20px 24px 26px' }}>
+              <p style={{ color:'rgba(255,255,255,0.5)', fontSize:13.5, textAlign:'center', marginBottom:20, lineHeight:1.6 }}>
+                Are you sure you want to log out of the DASIG Portal?
+              </p>
+              <div style={{ display:'flex', gap:10 }}>
+                <button onClick={() => setLogoutConfirm(false)} style={{
+                  flex:1, background:'rgba(255,255,255,0.07)', color:'rgba(255,255,255,0.65)',
+                  border:'1px solid rgba(255,255,255,0.13)', borderRadius:12,
+                  padding:'12px', fontSize:14, fontWeight:700, cursor:'pointer', fontFamily:'inherit',
+                  transition:'all 0.15s',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background='rgba(255,255,255,0.13)'; e.currentTarget.style.color='#fff'; }}
+                onMouseLeave={e => { e.currentTarget.style.background='rgba(255,255,255,0.07)'; e.currentTarget.style.color='rgba(255,255,255,0.65)'; }}
+                >Stay</button>
+                <button onClick={confirmLogout} style={{
+                  flex:1, background:'linear-gradient(90deg,#e11d48,#7c3aed)',
+                  color:'#fff', border:'none', borderRadius:12,
+                  padding:'12px', fontSize:14, fontWeight:800, cursor:'pointer', fontFamily:'inherit',
+                  boxShadow:'0 4px 16px rgba(225,29,72,0.4)', transition:'all 0.15s',
+                }}
+                onMouseEnter={e => e.currentTarget.style.opacity='0.85'}
+                onMouseLeave={e => e.currentTarget.style.opacity='1'}
+                >Yes, Log Out</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Welcome Toast ── */}
+      {welcome && (
+        <div style={{
+          position:'fixed', top:80, right:24, zIndex:9998,
+          background:'linear-gradient(135deg,rgba(0,13,40,0.97),rgba(0,30,80,0.97))',
+          border:'1px solid rgba(249,115,22,0.3)',
+          borderRadius:16, padding:'14px 18px',
+          boxShadow:'0 16px 48px rgba(0,0,0,0.6), 0 0 0 1px rgba(249,115,22,0.1)',
+          display:'flex', alignItems:'center', gap:14, maxWidth:320,
+          animation:'slideInRight 0.35s cubic-bezier(.34,1.56,.64,1)',
+        }}>
+          {/* icon */}
+          <div style={{
+            width:44, height:44, borderRadius:12, flexShrink:0,
+            background:'linear-gradient(135deg,#f97316,#e11d48)',
+            display:'flex', alignItems:'center', justifyContent:'center',
+            fontSize:22, boxShadow:'0 4px 14px rgba(249,115,22,0.45)',
+          }}>
+            {roleIcon[welcome.role] || '👋'}
+          </div>
+          <div style={{ flex:1, minWidth:0 }}>
+            <div style={{ color:'rgba(255,255,255,0.5)', fontSize:11, fontWeight:700, marginBottom:2 }}>
+              WELCOME BACK
+            </div>
+            <div style={{ color:'#fff', fontSize:14, fontWeight:900, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+              {welcome.name}
+            </div>
+            <div style={{ color:'rgba(249,115,22,0.85)', fontSize:11.5, fontWeight:600, marginTop:1 }}>
+              {roleLabel[welcome.role] || welcome.role} — DASIG Portal
+            </div>
+          </div>
+          {/* progress bar */}
+          <div style={{ position:'absolute', bottom:0, left:0, right:0, height:3, borderRadius:'0 0 16px 16px', background:'rgba(255,255,255,0.08)', overflow:'hidden' }}>
+            <div style={{
+              height:'100%', background:'linear-gradient(90deg,#f97316,#e11d48)',
+              animation:'slideInRight 5s linear forwards',
+              transformOrigin:'left',
+              width:'100%',
+            }} />
+          </div>
+          <button onClick={() => setWelcome(null)} style={{
+            position:'absolute', top:8, right:10,
+            background:'none', border:'none', color:'rgba(255,255,255,0.3)',
+            fontSize:14, cursor:'pointer', lineHeight:1, padding:4,
+          }}>✕</button>
+        </div>
+      )}
+
       <nav style={{
         background: 'linear-gradient(90deg,rgba(0,10,40,0.97) 0%,rgba(0,20,70,0.97) 50%,rgba(0,10,40,0.97) 100%)',
         backdropFilter: 'blur(20px)',
