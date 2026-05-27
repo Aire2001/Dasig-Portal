@@ -688,8 +688,8 @@ function EventsTab({ showToast }) {
   const [attnList, setAttnList]   = useState([]);
   const [attnLoading, setAttnLoading] = useState(false);
 
-  const load = () => { setLoading(true); api.events.list().then(r => setItems(r.data || [])).catch(() => showToast('Failed', false)).finally(() => setLoading(false)); };
-  useEffect(load, []);
+  const load = useCallback(() => { setLoading(true); api.events.list({ limit: 1000 }).then(r => setItems(r.data || [])).catch(() => showToast('Failed', false)).finally(() => setLoading(false)); }, []);
+  useEffect(load, [load]);
   const fc = e => setForm(p => ({ ...p, [e.target.name]: e.target.type === 'checkbox' ? e.target.checked : e.target.value }));
 
   async function openAttendees(ev) {
@@ -710,14 +710,22 @@ function EventsTab({ showToast }) {
     } catch (e) { showToast(e.message, false); }
   }
 
+  async function reloadAttendees(ev) {
+    setAttnLoading(true);
+    try { setAttnList(await api.events.registrations(ev.id)); }
+    catch (e) { showToast(e.message, false); }
+    finally { setAttnLoading(false); }
+  }
+
   async function save() {
     if (!form.title || !form.date || !form.venue || !form.organizer) { showToast('Fill required fields', false); return; }
     setSaving(true);
     try {
       const body = { ...form, total: Number(form.total) || 50 };
-      if (modal === 'create') { const r = await api.events.create(body); setItems(p => [r.event || r, ...p]); showToast('Event created successfully!', true, body.title); }
-      else { await api.events.update(modal.id, body); setItems(p => p.map(x => x.id === modal.id ? { ...x, ...body } : x)); showToast('Event updated successfully!', true, body.title); }
+      if (modal === 'create') { await api.events.create(body); showToast('Event created successfully!', true, body.title); }
+      else { await api.events.update(modal.id, body); showToast('Event updated successfully!', true, body.title); }
       setModal(null);
+      load();
     } catch (e) { showToast(e.message, false); } finally { setSaving(false); }
   }
   async function del(id, title) {
@@ -734,11 +742,17 @@ function EventsTab({ showToast }) {
 
       {/* ── Attendees Modal ── */}
       {attnEvent && (
-        <Modal title={`Attendance — ${attnEvent.title}`} onClose={() => setAttnEvent(null)} wide>
+        <Modal title={`Attendance — ${attnEvent.title}`} onClose={() => { setAttnEvent(null); load(); }} wide>
           <div style={{ marginBottom:14, display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-            <span style={{ fontSize:12.5, color:'rgba(255,255,255,0.45)' }}>
-              {attnList.filter(r => r.attended).length} / {attnList.length} attended
-            </span>
+            <div>
+              <span style={{ fontSize:13, fontWeight:700, color:'#fff' }}>
+                {attnList.filter(r => r.attended).length} attended
+              </span>
+              <span style={{ fontSize:12.5, color:'rgba(255,255,255,0.45)', marginLeft:6 }}>
+                / {attnList.length} registered
+              </span>
+            </div>
+            <button onClick={() => reloadAttendees(attnEvent)} className="ap-btn ap-btn-ghost" style={{ fontSize:11 }}>↻ Refresh</button>
           </div>
           {attnLoading ? <Loading /> : attnList.length === 0 ? (
             <div style={{ textAlign:'center', padding:'28px 0', color:'rgba(255,255,255,0.35)', fontSize:13 }}>No registrations yet</div>

@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS users (
 
 CREATE TABLE IF NOT EXISTS events (
   id                    BIGSERIAL PRIMARY KEY,
-  title                 TEXT    NOT NULL,
+  title                 TEXT    NOT NULL UNIQUE,
   date                  TEXT    NOT NULL,
   venue                 TEXT    NOT NULL,
   organizer             TEXT    NOT NULL,
@@ -41,6 +41,18 @@ CREATE TABLE IF NOT EXISTS events (
   description           TEXT,
   registration_deadline DATE
 );
+
+-- Deduplicate events if migration was run multiple times (keeps the lowest id per title)
+DELETE FROM event_registrations
+  WHERE event_id IN (
+    SELECT id FROM events e
+    WHERE e.id <> (SELECT MIN(id) FROM events e2 WHERE e2.title = e.title)
+  );
+DELETE FROM events
+  WHERE id <> (SELECT MIN(id) FROM events e2 WHERE e2.title = events.title);
+
+-- Add unique constraint on existing deployments (safe if already exists)
+ALTER TABLE events ADD CONSTRAINT IF NOT EXISTS events_title_key UNIQUE (title);
 
 -- Add column to existing deployments (safe to run multiple times)
 ALTER TABLE events ADD COLUMN IF NOT EXISTS registration_deadline DATE;
@@ -225,38 +237,38 @@ VALUES
 ON CONFLICT (email) DO NOTHING;
 
 
--- Events
+-- Events (ON CONFLICT on unique title — safe to re-run)
 INSERT INTO events (title, date, venue, organizer, category, enrolled, total, description)
 VALUES
   (
     'DASIG Annual Summit 2026',
     'Jun 18–20, 2026',
     'Cebu City Convention Center',
-    'DASIG Consortium', 'Summit', 134, 180,
+    'DASIG Consortium', 'Summit', 0, 180,
     'The annual summit gathers all six Region VII consortium institutions for a three-day innovation forum, research showcase, and networking event in Cebu City.'
   ),
   (
     'Advanced Data Analytics Workshop',
     'Jun 5, 2026',
     'Online Zoom',
-    'DICT VII', 'Workshop', 38, 40,
+    'DICT VII', 'Workshop', 0, 40,
     'Hands-on training in data analytics tools and techniques for public sector professionals.'
   ),
   (
     'Governance & Innovation in ASEAN',
     'May 30, 2026',
     'University of San Agustin',
-    'USan Agustin', 'Seminar', 22, 60,
+    'USan Agustin', 'Seminar', 0, 60,
     'Regional seminar on governance innovation and ASEAN best practices.'
   ),
   (
     'DOST SEI Scholarship Information Day',
     'May 27, 2026',
     'UP Visayas',
-    'DOST Region VII', 'Funding', 67, 100,
+    'DOST Region VII', 'Funding', 0, 100,
     'Information session on DOST SEI scholarship programs for DASIG member institution nominees.'
   )
-ON CONFLICT DO NOTHING;
+ON CONFLICT (title) DO NOTHING;
 
 
 -- News articles (DELETE + fresh INSERT so content is always current)
