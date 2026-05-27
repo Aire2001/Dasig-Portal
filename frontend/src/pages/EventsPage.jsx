@@ -542,7 +542,12 @@ function EventCard({ ev, myReg, onRegister, onAttend }) {
             {ev.title}
           </h3>
           <div style={{ color:'rgba(255,255,255,0.6)', fontSize:12.5, marginBottom:4, zIndex:1, position:'relative' }}>📍 {ev.venue}</div>
-          <div style={{ color:'rgba(255,255,255,0.6)', fontSize:12.5, marginBottom:16, zIndex:1, position:'relative' }}>🏛 {ev.organizer}</div>
+          <div style={{ color:'rgba(255,255,255,0.6)', fontSize:12.5, marginBottom: ev.registration_deadline ? 4 : 16, zIndex:1, position:'relative' }}>🏛 {ev.organizer}</div>
+          {ev.registration_deadline && (
+            <div style={{ color: new Date(ev.registration_deadline) < new Date() ? '#f87171' : '#fbbf24', fontSize:12, marginBottom:16, zIndex:1, position:'relative', fontWeight:600 }}>
+              ⏰ Reg. deadline: {new Date(ev.registration_deadline).toLocaleDateString('en-PH', { year:'numeric', month:'short', day:'numeric' })}
+            </div>
+          )}
 
           <div style={{ marginBottom:16, position:'relative', zIndex:1 }}>
             <div style={{ display:'flex', justifyContent:'space-between', fontSize:11.5, color:'rgba(255,255,255,0.55)', marginBottom:6 }}>

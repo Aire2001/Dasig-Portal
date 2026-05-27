@@ -658,7 +658,7 @@ function ApplicationsTab({ showToast }) {
 /* ═══════════════════════════════════════════════════════════════════
    EVENTS
 ═══════════════════════════════════════════════════════════════════ */
-const EV_BLANK = { title:'', date:'', venue:'', organizer:'', category:'Summit', total:50, description:'' };
+const EV_BLANK = { title:'', date:'', venue:'', organizer:'', category:'Summit', total:50, description:'', registration_deadline:'' };
 
 function EventsTab({ showToast }) {
   const [items, setItems]         = useState([]);
@@ -762,6 +762,7 @@ function EventsTab({ showToast }) {
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
             <DInput label="Title *" name="title" value={form.title} onChange={fc} required span="1/-1" />
             <DInput label="Date *" name="date" value={form.date} onChange={fc} type="date" required />
+            <DInput label="Registration Deadline" name="registration_deadline" value={form.registration_deadline} onChange={fc} type="date" />
             <DInput label="Venue *" name="venue" value={form.venue} onChange={fc} required />
             <DInput label="Organizer *" name="organizer" value={form.organizer} onChange={fc} required />
             <DInput label="Category" name="category" value={form.category} onChange={fc} as="select" opts={['Summit','Workshop','Seminar','Funding']} />

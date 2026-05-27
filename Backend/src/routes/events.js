@@ -29,7 +29,7 @@ router.get('/:id', async (req, res) => {
 
 // POST /api/events — create (ADMIN only)
 router.post('/', verifyToken, requireRole('ADMIN'), async (req, res) => {
-  const { title, date, venue, organizer, category, total, description } = req.body;
+  const { title, date, venue, organizer, category, total, description, registration_deadline } = req.body;
   if (!title || !date || !venue || !organizer || !category || !total) {
     return res.status(400).json({ error: 'title, date, venue, organizer, category and total are required' });
   }
@@ -37,6 +37,7 @@ router.post('/', verifyToken, requireRole('ADMIN'), async (req, res) => {
     title, date, venue, organizer, category,
     enrolled: 0, total: Number(total),
     description: description || null,
+    registration_deadline: registration_deadline || null,
   }).select().single();
   if (error) return res.status(500).json({ error: error.message });
   res.status(201).json(data);
@@ -44,7 +45,7 @@ router.post('/', verifyToken, requireRole('ADMIN'), async (req, res) => {
 
 // PUT /api/events/:id — update (ADMIN only)
 router.put('/:id', verifyToken, requireRole('ADMIN'), async (req, res) => {
-  const { title, date, venue, organizer, category, total, description } = req.body;
+  const { title, date, venue, organizer, category, total, description, registration_deadline } = req.body;
   const updates = {};
   if (title !== undefined) updates.title = title;
   if (date !== undefined) updates.date = date;
@@ -53,6 +54,7 @@ router.put('/:id', verifyToken, requireRole('ADMIN'), async (req, res) => {
   if (category !== undefined) updates.category = category;
   if (total !== undefined) updates.total = Number(total);
   if (description !== undefined) updates.description = description;
+  if (registration_deadline !== undefined) updates.registration_deadline = registration_deadline || null;
 
   const { data, error } = await supabase.from('events').update(updates).eq('id', req.params.id).select().single();
   if (error) return res.status(404).json({ error: 'Event not found' });
