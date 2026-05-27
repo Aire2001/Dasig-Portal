@@ -321,7 +321,7 @@ export default function AdminPage() {
 
   function showToast(msg, ok = true, sub = '') {
     setToast({ msg, ok, sub });
-    setTimeout(() => setToast(null), 3800);
+    setTimeout(() => setToast(null), 3000);
   }
 
   const initials = (user?.name || user?.full_name || 'A').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();

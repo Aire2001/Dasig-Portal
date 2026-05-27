@@ -45,8 +45,8 @@ router.post('/login', async (req, res) => {
 
   clearAttempts(email);
   const expiresIn = user.role === 'ADMIN'
-    ? (process.env.JWT_EXPIRES_ADMIN || '4h')
-    : (process.env.JWT_EXPIRES_MEMBER || '8h');
+    ? (process.env.JWT_EXPIRES_ADMIN || '24h')
+    : (process.env.JWT_EXPIRES_MEMBER || '7d');
   const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn });
 
   const { password_hash, ...safeUser } = user;
@@ -77,7 +77,7 @@ router.post('/register', async (req, res) => {
 
   if (error) return res.status(500).json({ error: 'Registration failed' });
 
-  const token = jwt.sign({ id: newUser.id, role: newUser.role }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_MEMBER || '8h' });
+  const token = jwt.sign({ id: newUser.id, role: newUser.role }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_MEMBER || '7d' });
   const { password_hash: _, ...safeUser } = newUser;
   res.status(201).json({ token, user: safeUser });
 });

@@ -9,14 +9,20 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     const token = localStorage.getItem('dasig_token');
-    if (token) {
-      api.auth.me()
-        .then(setUser)
-        .catch(() => localStorage.removeItem('dasig_token'))
-        .finally(() => setLoading(false));
-    } else {
-      setLoading(false);
-    }
+    if (!token) { setLoading(false); return; }
+    fetch('http://localhost:4000/api/auth/me', {
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    })
+      .then(res => {
+        if (res.status === 401 || res.status === 403) {
+          localStorage.removeItem('dasig_token');
+          return null;
+        }
+        return res.ok ? res.json() : null;
+      })
+      .then(u => { if (u) setUser(u); })
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
 
   async function login(email, password) {
