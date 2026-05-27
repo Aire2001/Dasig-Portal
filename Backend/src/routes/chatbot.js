@@ -275,7 +275,14 @@ const FOLLOWUPS = {
   news_members_only:    ['How do I become a member?', 'What are the latest news?', 'What events are upcoming?'],
   booking_confirmation: ['What events are upcoming?', 'How do I register for an event?', 'How do I check my registrations?'],
 };
-const DEFAULT_FOLLOWUPS = ['What events are upcoming?', 'How do I become a member?', 'What training is available?'];
+const DEFAULT_FOLLOWUPS = [
+  '📅 What events are coming up?',
+  '🎓 What training is available?',
+  '👥 How do I become a member?',
+  '📋 What policies are available?',
+  '💰 What funding opportunities exist?',
+  '🤝 Tell me about partnerships',
+];
 
 // Improved NLP: score-based matching — picks the entry with the most keyword hits
 function matchIntent(text) {
@@ -314,7 +321,7 @@ router.post('/message', async (req, res) => {
 
   if (!match) {
     return res.json({
-      reply: `I couldn't find a specific answer for that in my DASIG knowledge base. I can help with:\n• 📅 Events & registration\n• 🎓 Training & enrollment\n• 👥 Membership & tiers\n• 📋 Policies & guidelines\n• 💰 Funding & scholarships\n• 🤝 Partnerships\n\nTry rephrasing, or email admin@dasig.ph for direct support.`,
+      reply: `I couldn't find a specific answer for that. Try rephrasing, or pick a topic below — I'm happy to help!`,
       matched: false,
       intent: null,
       score: 0,
