@@ -269,6 +269,26 @@ function AdminHomePage({ navigate, user }) {
 export default function HomePage() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [ctaToast, setCtaToast] = useState('');
+
+  function showToast(msg) {
+    setCtaToast(msg);
+    setTimeout(() => setCtaToast(''), 3000);
+  }
+
+  function handleCtaClick(route) {
+    if (route === '/admin') {
+      if (user?.role === 'ADMIN') { navigate('/admin?tab=reports'); return; }
+      showToast('📊 Live Analytics is available to DASIG Administrators only.');
+      return;
+    }
+    if (route === '/login') {
+      if (user) { navigate('/membership'); return; }
+      navigate('/login');
+      return;
+    }
+    navigate(route);
+  }
 
   if (user?.role === 'ADMIN') return <AdminHomePage navigate={navigate} user={user} />;
 
@@ -637,14 +657,23 @@ export default function HomePage() {
             padding: 36, display: 'flex', flexDirection: 'column',
             gap: 10, justifyContent: 'center', position: 'relative', zIndex: 1,
           }}>
+            {ctaToast && (
+              <div style={{
+                position: 'absolute', top: 12, left: 12, right: 12,
+                background: 'rgba(15,23,42,0.97)', border: '1px solid rgba(16,185,129,0.35)',
+                borderRadius: 10, padding: '10px 16px', fontSize: 12.5, fontWeight: 600,
+                color: 'rgba(255,255,255,0.85)', zIndex: 10,
+                animation: 'fadeUp 0.25s ease',
+              }}>{ctaToast}</div>
+            )}
             {[
-              { icon: '🦅', title: 'Ask Haribon',       sub: 'NLP AI chatbot, 80%+ accuracy',     route: '/chatbot',    accent: 'rgba(249,115,22,0.2)',  border: 'rgba(249,115,22,0.4)'  },
-              { icon: '🔒', title: 'Role-Based Access',  sub: 'GUEST · MEMBER · ADMIN',            route: '/membership', accent: 'rgba(79,70,229,0.2)',   border: 'rgba(79,70,229,0.4)'   },
-              { icon: '📊', title: 'Live Analytics',     sub: 'Real-time dashboards',               route: '/admin',      accent: 'rgba(16,185,129,0.2)',  border: 'rgba(16,185,129,0.4)'  },
-              { icon: '🌐', title: 'OAuth 2.0 SSO',      sub: 'RFC 6749 compliant',                route: '/login',      accent: 'rgba(96,165,250,0.2)',  border: 'rgba(96,165,250,0.4)'  },
+              { icon: '🦅', title: 'Ask Haribon',       sub: 'NLP AI chatbot, 80%+ accuracy',     route: '/chatbot',    accent: 'rgba(249,115,22,0.2)',  border: 'rgba(249,115,22,0.4)',  adminOnly: false },
+              { icon: '🔒', title: 'Role-Based Access',  sub: 'GUEST · MEMBER · ADMIN',            route: '/membership', accent: 'rgba(79,70,229,0.2)',   border: 'rgba(79,70,229,0.4)',   adminOnly: false },
+              { icon: '📊', title: 'Live Analytics',     sub: 'Real-time dashboards',               route: '/admin',      accent: 'rgba(16,185,129,0.2)',  border: 'rgba(16,185,129,0.4)',  adminOnly: true  },
+              { icon: '🌐', title: 'OAuth 2.0 SSO',      sub: 'RFC 6749 compliant',                route: '/login',      accent: 'rgba(96,165,250,0.2)',  border: 'rgba(96,165,250,0.4)',  adminOnly: false },
             ].map(f => (
               <div key={f.title}
-                onClick={() => navigate(f.route)}
+                onClick={() => handleCtaClick(f.route)}
                 style={{
                   background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)',
                   borderRadius: 12, padding: '13px 16px', display: 'flex', alignItems: 'center', gap: 12,
@@ -666,10 +695,22 @@ export default function HomePage() {
                   display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0,
                 }}>{f.icon}</div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ color: 'rgba(255,255,255,0.88)', fontSize: 13, fontWeight: 700 }}>{f.title}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                    <span style={{ color: 'rgba(255,255,255,0.88)', fontSize: 13, fontWeight: 700 }}>{f.title}</span>
+                    {f.adminOnly && (
+                      <span style={{
+                        fontSize: 9, fontWeight: 800, letterSpacing: '0.6px',
+                        background: 'rgba(225,29,72,0.2)', color: '#fca5a5',
+                        border: '1px solid rgba(225,29,72,0.3)', borderRadius: 4,
+                        padding: '1px 6px', textTransform: 'uppercase',
+                      }}>Admin</span>
+                    )}
+                  </div>
                   <div style={{ color: 'rgba(255,255,255,0.42)', fontSize: 11.5, marginTop: 2 }}>{f.sub}</div>
                 </div>
-                <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 13 }}>→</div>
+                <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 13 }}>
+                  {f.adminOnly && user?.role !== 'ADMIN' ? '🔒' : '→'}
+                </div>
               </div>
             ))}
           </div>
