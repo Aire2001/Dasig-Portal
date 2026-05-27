@@ -9,6 +9,9 @@ const QUICK = [
   'What training is available?',
   'Tell me about funding',
   'Latest news and announcements',
+  'What policies are available?',
+  'Tell me about partnerships',
+  'Who are the consortium members?',
 ];
 
 const WIDGET_CSS = `
