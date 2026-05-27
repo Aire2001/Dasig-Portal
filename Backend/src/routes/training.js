@@ -30,7 +30,7 @@ router.get('/:id', async (req, res) => {
 
 // POST /api/training — create (ADMIN only)
 router.post('/', verifyToken, requireRole('ADMIN'), async (req, res) => {
-  const { icon, category, title, org, duration, level, total, description } = req.body;
+  const { icon, category, title, org, duration, level, total, description, schedule } = req.body;
   if (!category || !title || !org || !duration || !level || !total) {
     return res.status(400).json({ error: 'category, title, org, duration, level and total are required' });
   }
@@ -39,6 +39,7 @@ router.post('/', verifyToken, requireRole('ADMIN'), async (req, res) => {
     category, title, org, duration, level,
     enrolled: 0, total: Number(total),
     description: description || null,
+    schedule: schedule || null,
   }).select().single();
   if (error) return res.status(500).json({ error: error.message });
   res.status(201).json(data);
@@ -46,7 +47,7 @@ router.post('/', verifyToken, requireRole('ADMIN'), async (req, res) => {
 
 // PUT /api/training/:id — update (ADMIN only)
 router.put('/:id', verifyToken, requireRole('ADMIN'), async (req, res) => {
-  const { icon, category, title, org, duration, level, total, description } = req.body;
+  const { icon, category, title, org, duration, level, total, description, schedule } = req.body;
   const updates = {};
   if (icon !== undefined) updates.icon = icon;
   if (category !== undefined) updates.category = category;
@@ -56,6 +57,7 @@ router.put('/:id', verifyToken, requireRole('ADMIN'), async (req, res) => {
   if (level !== undefined) updates.level = level;
   if (total !== undefined) updates.total = Number(total);
   if (description !== undefined) updates.description = description;
+  if (schedule !== undefined) updates.schedule = schedule || null;
 
   const { data, error } = await supabase.from('trainings').update(updates).eq('id', req.params.id).select().single();
   if (error) return res.status(404).json({ error: 'Training not found' });

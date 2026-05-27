@@ -829,7 +829,7 @@ function EventsTab({ showToast }) {
 /* ═══════════════════════════════════════════════════════════════════
    NEWS
 ═══════════════════════════════════════════════════════════════════ */
-const NW_BLANK = { icon:'📣', badge:'Announcement', date:'', title:'', excerpt:'', content:'', members_only:false };
+const NW_BLANK = { icon:'📣', badge:'Announcement', date:'', title:'', excerpt:'', content:'', members_only:false, archived:false };
 
 function NewsTab({ showToast }) {
   const [items, setItems]     = useState([]);
@@ -851,6 +851,13 @@ function NewsTab({ showToast }) {
       else { await api.news.update(modal.id, form); setItems(p => p.map(x => x.id === modal.id ? { ...x, ...form } : x)); showToast('Article updated successfully!', true, form.title); }
       setModal(null);
     } catch (e) { showToast(e.message, false); } finally { setSaving(false); }
+  }
+  async function toggleArchive(n) {
+    try {
+      await api.news.archive(n.id, !n.archived);
+      setItems(prev => prev.map(x => x.id === n.id ? { ...x, archived: !n.archived } : x));
+      showToast(n.archived ? 'Article restored successfully!' : 'Article archived successfully', !n.archived, n.title);
+    } catch (e) { showToast(e.message, false); }
   }
   async function del(id, title) {
     try { await api.news.delete(id); setItems(p => p.filter(x => x.id !== id)); showToast('Article deleted successfully!', true, title); setConfirm(null); }
@@ -878,14 +885,14 @@ function NewsTab({ showToast }) {
         </Modal>
       )}
       {loading ? <Loading /> : (
-        <DataTable head={['Title','Badge','Date','Access','Actions']}>
-          {items.length === 0 ? <EmptyTR cols={5} /> : items.map(n => {
+        <DataTable head={['Title','Badge','Date','Access','Status','Actions']}>
+          {items.length === 0 ? <EmptyTR cols={6} /> : items.map(n => {
             const c = BC[n.badge] || '#60a5fa';
             return (
               <TR key={n.id}>
                 <TD>
-                  <div style={{ fontWeight:700, color:'#fff', maxWidth:280, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{n.title}</div>
-                  <div style={{ fontSize:11.5, color:'rgba(255,255,255,0.38)', marginTop:2, maxWidth:280, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{n.excerpt}</div>
+                  <div style={{ fontWeight:700, color: n.archived ? 'rgba(255,255,255,0.38)' : '#fff', maxWidth:260, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{n.title}</div>
+                  <div style={{ fontSize:11.5, color:'rgba(255,255,255,0.38)', marginTop:2, maxWidth:260, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{n.excerpt}</div>
                 </TD>
                 <TD><span className="ap-badge" style={{ background:`${c}1a`, color:c }}>{n.badge}</span></TD>
                 <TD muted>{String(n.date).slice(0,10)}</TD>
@@ -895,9 +902,15 @@ function NewsTab({ showToast }) {
                   </span>
                 </TD>
                 <TD>
-                  <div style={{ display:'flex', gap:6 }}>
+                  <span className="ap-pill" style={{ background: n.archived ? 'rgba(255,255,255,0.06)' : 'rgba(16,185,129,0.15)', color: n.archived ? 'rgba(255,255,255,0.35)' : '#6ee7b7' }}>
+                    {n.archived ? 'Archived' : '● Active'}
+                  </span>
+                </TD>
+                <TD>
+                  <div style={{ display:'flex', gap:5 }}>
                     <button onClick={() => { setForm({ ...n }); setModal(n); }} className="ap-btn ap-btn-blue">Edit</button>
-                    <button onClick={() => setConfirm(n)} className="ap-btn ap-btn-red">Delete</button>
+                    <button onClick={() => toggleArchive(n)} className="ap-btn ap-btn-amber">{n.archived ? 'Restore' : 'Archive'}</button>
+                    <button onClick={() => setConfirm(n)} className="ap-btn ap-btn-red">Del</button>
                   </div>
                 </TD>
               </TR>
@@ -912,7 +925,7 @@ function NewsTab({ showToast }) {
 /* ═══════════════════════════════════════════════════════════════════
    TRAINING
 ═══════════════════════════════════════════════════════════════════ */
-const TR_BLANK = { icon:'💻', category:'Technology', title:'', org:'', duration:'', level:'Beginner', total:20, description:'' };
+const TR_BLANK = { icon:'💻', category:'Technology', title:'', org:'', duration:'', level:'Beginner', total:20, description:'', schedule:'' };
 
 function TrainingTab({ showToast }) {
   const [items, setItems]     = useState([]);
@@ -957,6 +970,7 @@ function TrainingTab({ showToast }) {
             <DInput label="Category" name="category" value={form.category} onChange={fc} as="select" opts={['Technology','Research','Leadership','Governance']} />
             <DInput label="Level" name="level" value={form.level} onChange={fc} as="select" opts={['Beginner','Intermediate','Advanced']} />
             <DInput label="Capacity" name="total" value={form.total} onChange={fc} type="number" />
+            <DInput label="Schedule" name="schedule" value={form.schedule} onChange={fc} span="1/-1" />
             <DInput label="Description" name="description" value={form.description} onChange={fc} as="textarea" span="1/-1" />
           </div>
           <FormActions onCancel={() => setModal(null)} onSave={save} saving={saving} saveLabel={modal === 'create' ? 'Create Program' : 'Save Changes'} />

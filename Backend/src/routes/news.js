@@ -13,6 +13,7 @@ router.get('/', optionalAuth, async (req, res) => {
   const { badge, search, page = 1, limit = 10 } = req.query;
 
   let query = supabase.from('news').select('*', { count: 'exact' });
+  if (!req.user || req.user.role !== 'ADMIN') query = query.eq('archived', false);
   if (badge && badge !== 'All') query = query.eq('badge', badge);
   if (search) query = query.ilike('title', `%${search}%`);
 
@@ -37,6 +38,9 @@ router.get('/', optionalAuth, async (req, res) => {
 router.get('/:id', optionalAuth, async (req, res) => {
   const { data, error } = await supabase.from('news').select('*').eq('id', req.params.id).single();
   if (error) return res.status(404).json({ error: 'Article not found' });
+  if (data.archived && (!req.user || req.user.role !== 'ADMIN')) {
+    return res.status(404).json({ error: 'Article not found' });
+  }
   if (data.members_only && !isMember(req.user)) {
     return res.status(403).json({ error: 'Members only content' });
   }
@@ -62,7 +66,7 @@ router.post('/', verifyToken, requireRole('ADMIN'), async (req, res) => {
 
 // PUT /api/news/:id — update (ADMIN only)
 router.put('/:id', verifyToken, requireRole('ADMIN'), async (req, res) => {
-  const { icon, badge, date, title, excerpt, content, members_only } = req.body;
+  const { icon, badge, date, title, excerpt, content, members_only, archived } = req.body;
   const updates = {};
   if (icon !== undefined) updates.icon = icon;
   if (badge !== undefined) updates.badge = badge;
@@ -71,8 +75,18 @@ router.put('/:id', verifyToken, requireRole('ADMIN'), async (req, res) => {
   if (excerpt !== undefined) updates.excerpt = excerpt;
   if (content !== undefined) updates.content = content;
   if (members_only !== undefined) updates.members_only = members_only;
+  if (archived !== undefined) updates.archived = Boolean(archived);
 
   const { data, error } = await supabase.from('news').update(updates).eq('id', req.params.id).select().single();
+  if (error) return res.status(404).json({ error: 'Article not found' });
+  res.json(data);
+});
+
+// PATCH /api/news/:id/archive — toggle archived (ADMIN only)
+router.patch('/:id/archive', verifyToken, requireRole('ADMIN'), async (req, res) => {
+  const { archived } = req.body;
+  const { data, error } = await supabase.from('news')
+    .update({ archived: Boolean(archived) }).eq('id', req.params.id).select().single();
   if (error) return res.status(404).json({ error: 'Article not found' });
   res.json(data);
 });

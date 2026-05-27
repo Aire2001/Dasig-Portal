@@ -48,17 +48,18 @@ export default function PoliciesPage() {
   const [policies, setPolicies] = useState([]);
   const [loading, setLoading]   = useState(true);
   const [active, setActive]     = useState('All');
+  const [search, setSearch]     = useState('');
   const [selected, setSelected] = useState(null);
 
   const isMember = user && (user.role === 'MEMBER' || user.role === 'ADMIN');
 
   useEffect(() => {
     if (!user) { setLoading(false); return; }
-    api.policies.list({ category: active })
+    api.policies.list({ category: active, search })
       .then(r => setPolicies(r.data || []))
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [user, active]);
+  }, [user, active, search]);
 
   if (!user) {
     return (
@@ -124,7 +125,22 @@ export default function PoliciesPage() {
             </div>
           )}
 
-          {/* Filter buttons */}
+          {/* Search + Filter */}
+          <div style={{ display: 'flex', gap: 12, marginBottom: 20, flexWrap: 'wrap', alignItems: 'center' }}>
+            <input
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search policies…"
+              style={{
+                flex: '1 1 220px', maxWidth: 340,
+                background: 'rgba(255,255,255,0.07)', border: '1.5px solid rgba(255,255,255,0.12)',
+                borderRadius: 10, padding: '9px 14px', fontSize: 13, color: '#fff',
+                outline: 'none', fontFamily: 'inherit',
+              }}
+              onFocus={e => e.target.style.borderColor = '#f97316'}
+              onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.12)'}
+            />
+          </div>
           <div style={{ display: 'flex', gap: 8, marginBottom: 28, flexWrap: 'wrap' }}>
             {categories.map(c => (
               <button key={c} className="filter-btn" onClick={() => setActive(c)} style={{

@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import PageHeader from '../components/PageHeader';
 import ParticleBackground from '../components/ParticleBackground';
 import { api } from '../api';
+import { useAuth } from '../context/AuthContext';
 
 const categories = ['All', 'Scholarship', 'Grant', 'Government Fund', 'Research Grant'];
 const statuses   = ['All', 'Open', 'Upcoming', 'Closed'];
@@ -47,6 +49,9 @@ const FUNDING_CSS = `
 `;
 
 export default function FundingPage() {
+  const { user }                  = useAuth();
+  const navigate                  = useNavigate();
+  const isMember                  = user && (user.role === 'MEMBER' || user.role === 'ADMIN');
   const [items, setItems]         = useState([]);
   const [loading, setLoading]     = useState(true);
   const [category, setCategory]   = useState('All');
@@ -54,11 +59,46 @@ export default function FundingPage() {
   const [selected, setSelected]   = useState(null);
 
   useEffect(() => {
+    if (!isMember) { setLoading(false); return; }
     api.funding.list({ category, status })
       .then(r => setItems(r.data || []))
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [category, status]);
+  }, [isMember, category, status]);
+
+  if (!user) {
+    return (
+      <div style={{ background:'linear-gradient(180deg,#000d30 0%,#020817 300px,#0f172a 100%)', minHeight:'100vh', position:'relative' }}>
+        <ParticleBackground density={40} />
+        <div style={{ position:'relative', zIndex:1 }}>
+          <PageHeader eyebrow="Funding & Investment" title="Funding Opportunities" />
+          <div style={{ minHeight:'50vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:16 }}>
+            <div style={{ fontSize:48 }}>💰</div>
+            <div style={{ fontSize:20, fontWeight:800, color:'#fff' }}>Sign in to view funding</div>
+            <p style={{ color:'rgba(255,255,255,0.5)', fontSize:14 }}>Funding opportunities are available to registered users.</p>
+            <button onClick={() => navigate('/login')} style={{ background:'linear-gradient(90deg,#f97316,#e11d48)', color:'#fff', border:'none', borderRadius:12, padding:'13px 32px', fontSize:14, fontWeight:700, cursor:'pointer', fontFamily:'inherit', boxShadow:'0 6px 20px rgba(249,115,22,0.4)' }}>Log in →</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isMember) {
+    return (
+      <div style={{ background:'linear-gradient(180deg,#000d30 0%,#020817 300px,#0f172a 100%)', minHeight:'100vh', position:'relative' }}>
+        <ParticleBackground density={40} />
+        <div style={{ position:'relative', zIndex:1 }}>
+          <PageHeader eyebrow="Funding & Investment" title="Funding Opportunities" />
+          <div style={{ minHeight:'50vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:16 }}>
+            <div style={{ fontSize:52 }}>🔒</div>
+            <div style={{ fontSize:20, fontWeight:800, color:'#fff' }}>Members Only</div>
+            <p style={{ color:'rgba(255,255,255,0.5)', fontSize:14, textAlign:'center', maxWidth:400 }}>Funding opportunities are exclusive to verified DASIG members.</p>
+            <button onClick={() => navigate('/membership')} style={{ background:'linear-gradient(90deg,#f97316,#e11d48)', color:'#fff', border:'none', borderRadius:12, padding:'13px 32px', fontSize:14, fontWeight:700, cursor:'pointer', fontFamily:'inherit', boxShadow:'0 6px 20px rgba(249,115,22,0.4)' }}>Apply for Membership →</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ background: 'linear-gradient(180deg,#000d30 0%,#020817 300px,#0f172a 100%)', minHeight: '100vh', position: 'relative' }}>

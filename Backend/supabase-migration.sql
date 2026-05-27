@@ -62,8 +62,11 @@ CREATE TABLE IF NOT EXISTS news (
   title        TEXT    NOT NULL,
   excerpt      TEXT,
   content      TEXT,
-  members_only BOOLEAN NOT NULL DEFAULT FALSE
+  members_only BOOLEAN NOT NULL DEFAULT FALSE,
+  archived     BOOLEAN NOT NULL DEFAULT FALSE
 );
+
+ALTER TABLE news ADD COLUMN IF NOT EXISTS archived BOOLEAN NOT NULL DEFAULT FALSE;
 
 CREATE TABLE IF NOT EXISTS trainings (
   id          BIGSERIAL PRIMARY KEY,
@@ -75,8 +78,11 @@ CREATE TABLE IF NOT EXISTS trainings (
   level       TEXT    NOT NULL,
   enrolled    INTEGER NOT NULL DEFAULT 0,
   total       INTEGER NOT NULL DEFAULT 0,
-  description TEXT
+  description TEXT,
+  schedule    TEXT
 );
+
+ALTER TABLE trainings ADD COLUMN IF NOT EXISTS schedule TEXT;
 
 CREATE TABLE IF NOT EXISTS training_enrollments (
   id          BIGSERIAL PRIMARY KEY,
@@ -459,12 +465,12 @@ ON CONFLICT DO NOTHING;
 
 
 -- Training programs
-INSERT INTO trainings (icon, category, title, org, duration, level, enrolled, total)
+INSERT INTO trainings (icon, category, title, org, duration, level, enrolled, total, schedule)
 VALUES
-  ('💻', 'Technology',  'Full-Stack Web Dev Bootcamp',           'DICT VII',  '6 weeks', 'Intermediate', 28, 30),
-  ('🔬', 'Research',    'Research Methods for STEM Educators',   'DOST VII',  '3 weeks', 'Beginner',     18, 25),
-  ('🏛',  'Leadership', 'Strategic Leadership in Public Service', 'DTI VII',   '2 weeks', 'Advanced',     12, 20),
-  ('📱', 'Governance',  'Digital Governance & Policy',            'DepEd VII', '4 weeks', 'Intermediate',  9, 15)
+  ('💻', 'Technology',  'Full-Stack Web Dev Bootcamp',           'DICT VII',  '6 weeks', 'Intermediate', 28, 30, 'Jul 7 – Aug 15, 2026 | Online'),
+  ('🔬', 'Research',    'Research Methods for STEM Educators',   'DOST VII',  '3 weeks', 'Beginner',     18, 25, 'Jul 14 – Aug 1, 2026 | Hybrid'),
+  ('🏛',  'Leadership', 'Strategic Leadership in Public Service', 'DTI VII',   '2 weeks', 'Advanced',     12, 20, 'Aug 3–16, 2026 | Cebu City'),
+  ('📱', 'Governance',  'Digital Governance & Policy',            'DepEd VII', '4 weeks', 'Intermediate',  9, 15, 'Jul 21 – Aug 14, 2026 | Online')
 ON CONFLICT DO NOTHING;
 
 

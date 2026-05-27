@@ -52,7 +52,7 @@ export default function TrainingPage() {
 
   function openForm(t) {
     if (!user) { setErrModal('login'); return; }
-    setFname(user.full_name || '');
+    setFname(user.name || '');
     setEmail(user.email || '');
     setPhone(user.phone || '');
     setInstitution(user.institution || '');
@@ -117,6 +117,7 @@ export default function TrainingPage() {
                   { icon:'🏛', val: formModal.org },
                   { icon:'⏱', val: formModal.duration },
                   { icon:'📊', val: formModal.level },
+                  ...(formModal.schedule ? [{ icon:'📅', val: formModal.schedule }] : []),
                 ].map(r => (
                   <div key={r.val} style={{ color:'rgba(255,255,255,0.85)', fontSize:12, display:'flex', alignItems:'center', gap:4 }}>
                     <span>{r.icon}</span>{r.val}
@@ -266,6 +267,7 @@ export default function TrainingPage() {
                 { icon:'🏛',  label:'ORG',        value: okModal.training.org },
                 { icon:'⏱',  label:'DURATION',   value: okModal.training.duration },
                 { icon:'📊', label:'LEVEL',       value: okModal.training.level },
+                ...(okModal.training.schedule ? [{ icon:'📅', label:'SCHEDULE', value: okModal.training.schedule }] : []),
                 { icon:'👥', label:'ENROLLMENT',  value: `${okModal.training.enrolled} / ${okModal.training.total} enrolled` },
               ].map(r => (
                 <div key={r.label} style={{ display:'flex', alignItems:'center', gap:10, background:'rgba(255,255,255,0.06)', borderRadius:10, padding:'9px 14px', border:'1px solid rgba(255,255,255,0.07)' }}>
@@ -472,10 +474,15 @@ function TrainingCard({ t, onEnroll }) {
         </div>
 
         {/* meta row */}
-        <div style={{ display:'flex', gap:16, marginBottom:16, position:'relative', zIndex:1 }}>
+        <div style={{ display:'flex', flexWrap:'wrap', gap:12, marginBottom: t.schedule ? 10 : 16, position:'relative', zIndex:1 }}>
           <div style={{ fontSize:12, color:'rgba(255,255,255,0.55)', display:'flex', alignItems:'center', gap:4 }}>⏱ {t.duration}</div>
           <div style={{ fontSize:12, color:'rgba(255,255,255,0.55)', display:'flex', alignItems:'center', gap:4 }}>📊 {t.level}</div>
         </div>
+        {t.schedule && (
+          <div style={{ fontSize:12, color:'rgba(255,255,255,0.55)', display:'flex', alignItems:'center', gap:4, marginBottom:16, position:'relative', zIndex:1 }}>
+            📅 {t.schedule}
+          </div>
+        )}
 
         {/* enrollment bar */}
         <div style={{ marginBottom:16, position:'relative', zIndex:1 }}>

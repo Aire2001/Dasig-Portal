@@ -62,6 +62,7 @@ export const api = {
     get: (id) => request(`/news/${id}`),
     create: (body) => request('/news', { method: 'POST', body: JSON.stringify(body) }),
     update: (id, body) => request(`/news/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
+    archive: (id, archived) => request(`/news/${id}/archive`, { method: 'PATCH', body: JSON.stringify({ archived }) }),
     delete: (id) => request(`/news/${id}`, { method: 'DELETE' }),
   },
   training: {
