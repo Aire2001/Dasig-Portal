@@ -402,7 +402,7 @@ export default function Nav() {
                 {/* Name — only show for MEMBER and GUEST */}
                 {user.role !== 'ADMIN' && (
                   <span style={{ color: 'rgba(255,255,255,0.65)', fontSize: 13, maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {user.full_name || user.name}
+                    {user.name}
                   </span>
                 )}
 
@@ -432,7 +432,7 @@ export default function Nav() {
                   onMouseLeave={e => e.currentTarget.style.background='rgba(225,29,72,0.14)'}
                   >
                     <span style={{ width:7, height:7, borderRadius:'50%', background:'#e11d48', boxShadow:'0 0 7px rgba(225,29,72,0.9)', display:'inline-block' }} />
-                    {user.full_name || user.name || 'Admin'}
+                    {user.name || 'Admin'}
                     <span style={{ fontSize:10, fontWeight:800, background:'rgba(225,29,72,0.35)', color:'#fca5a5', borderRadius:5, padding:'1px 7px' }}>ADMIN</span>
                   </button>
                 )}

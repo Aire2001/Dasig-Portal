@@ -6,7 +6,7 @@ const router = express.Router();
 
 // GET /api/funding — list funding opportunities (public with optional auth)
 router.get('/', async (req, res) => {
-  const { category, search, status, page = 1, limit = 10 } = req.query;
+  const { category, search, status, page = 1, limit = 100 } = req.query;
 
   let query = supabase.from('funding_opportunities').select('*', { count: 'exact' });
 

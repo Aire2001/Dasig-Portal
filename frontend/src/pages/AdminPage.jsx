@@ -324,7 +324,7 @@ export default function AdminPage() {
     setTimeout(() => setToast(null), 3000);
   }
 
-  const initials = (user?.name || user?.full_name || 'A').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
+  const initials = (user?.name || 'A').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
 
   return (
     <div style={{ display:'flex', flexDirection:'column', minHeight:'100vh', background:'#060d1f', fontFamily:'inherit' }}>
@@ -357,7 +357,7 @@ export default function AdminPage() {
         <div style={{ flex:1 }} />
         <div style={{ display:'flex', alignItems:'center', gap:10 }}>
           <div style={{ textAlign:'right' }}>
-            <div style={{ fontSize:12.5, fontWeight:700, color:'rgba(255,255,255,0.8)' }}>{user?.name || user?.full_name || 'Admin'}</div>
+            <div style={{ fontSize:12.5, fontWeight:700, color:'rgba(255,255,255,0.8)' }}>{user?.name || 'Admin'}</div>
             <div style={{ fontSize:10.5, color:'rgba(255,255,255,0.35)' }}>{user?.email}</div>
           </div>
           <div style={{ width:34, height:34, borderRadius:10, background:'linear-gradient(135deg,#1e3a8a,#4f46e5)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, fontWeight:900, color:'#fff' }}>{initials}</div>
@@ -853,28 +853,29 @@ function NewsTab({ showToast }) {
   const [saving, setSaving]   = useState(false);
   const [confirm, setConfirm] = useState(null);
 
-  const load = () => { setLoading(true); api.news.list().then(r => setItems(r.data || [])).catch(() => showToast('Failed', false)).finally(() => setLoading(false)); };
-  useEffect(load, []);
+  const load = useCallback(() => { setLoading(true); api.news.list({ limit: 1000 }).then(r => setItems(r.data || [])).catch(() => showToast('Failed', false)).finally(() => setLoading(false)); }, []);
+  useEffect(load, [load]);
   const fc = e => setForm(p => ({ ...p, [e.target.name]: e.target.type === 'checkbox' ? e.target.checked : e.target.value }));
 
   async function save() {
     if (!form.title || !form.date) { showToast('Fill required fields', false); return; }
     setSaving(true);
     try {
-      if (modal === 'create') { const r = await api.news.create(form); setItems(p => [r.article || r, ...p]); showToast('Article published successfully!', true, form.title); }
-      else { await api.news.update(modal.id, form); setItems(p => p.map(x => x.id === modal.id ? { ...x, ...form } : x)); showToast('Article updated successfully!', true, form.title); }
+      if (modal === 'create') { await api.news.create(form); showToast('Article published successfully!', true, form.title); }
+      else { await api.news.update(modal.id, form); showToast('Article updated successfully!', true, form.title); }
       setModal(null);
+      load();
     } catch (e) { showToast(e.message, false); } finally { setSaving(false); }
   }
   async function toggleArchive(n) {
     try {
       await api.news.archive(n.id, !n.archived);
-      setItems(prev => prev.map(x => x.id === n.id ? { ...x, archived: !n.archived } : x));
       showToast(n.archived ? 'Article restored successfully!' : 'Article archived successfully', !n.archived, n.title);
+      load();
     } catch (e) { showToast(e.message, false); }
   }
   async function del(id, title) {
-    try { await api.news.delete(id); setItems(p => p.filter(x => x.id !== id)); showToast('Article deleted successfully!', true, title); setConfirm(null); }
+    try { await api.news.delete(id); showToast('Article deleted successfully!', true, title); setConfirm(null); load(); }
     catch (e) { showToast(e.message, false); }
   }
 
@@ -1090,25 +1091,26 @@ function PoliciesTab({ showToast }) {
   const [saving, setSaving]   = useState(false);
   const [confirm, setConfirm] = useState(null);
 
-  const load = () => { setLoading(true); api.policies.list().then(r => setItems(r.data || [])).catch(() => showToast('Failed', false)).finally(() => setLoading(false)); };
-  useEffect(load, []);
+  const load = useCallback(() => { setLoading(true); api.policies.list({ limit: 1000 }).then(r => setItems(r.data || [])).catch(() => showToast('Failed', false)).finally(() => setLoading(false)); }, []);
+  useEffect(load, [load]);
   const fc = e => setForm(p => ({ ...p, [e.target.name]: e.target.type === 'checkbox' ? e.target.checked : e.target.value }));
 
   async function save() {
     if (!form.title || !form.content || !form.effective_date) { showToast('Fill required fields', false); return; }
     setSaving(true);
     try {
-      if (modal === 'create') { const r = await api.policies.create(form); setItems(p => [r.policy || r, ...p]); showToast('Policy created successfully!', true, form.title); }
-      else { await api.policies.update(modal.id, form); setItems(p => p.map(x => x.id === modal.id ? { ...x, ...form } : x)); showToast('Policy updated successfully!', true, form.title); }
+      if (modal === 'create') { await api.policies.create(form); showToast('Policy created successfully!', true, form.title); }
+      else { await api.policies.update(modal.id, form); showToast('Policy updated successfully!', true, form.title); }
       setModal(null);
+      load();
     } catch (e) { showToast(e.message, false); } finally { setSaving(false); }
   }
   async function toggleArchive(p) {
-    try { await api.policies.archive(p.id, !p.archived); setItems(prev => prev.map(x => x.id === p.id ? { ...x, archived: !p.archived } : x)); showToast(p.archived ? 'Policy restored successfully!' : 'Policy archived successfully', !p.archived, p.title); }
+    try { await api.policies.archive(p.id, !p.archived); showToast(p.archived ? 'Policy restored successfully!' : 'Policy archived successfully', !p.archived, p.title); load(); }
     catch (e) { showToast(e.message, false); }
   }
   async function del(id, title) {
-    try { await api.policies.delete(id); setItems(p => p.filter(x => x.id !== id)); showToast('Policy deleted successfully!', true, title); setConfirm(null); }
+    try { await api.policies.delete(id); showToast('Policy deleted successfully!', true, title); setConfirm(null); load(); }
     catch (e) { showToast(e.message, false); }
   }
 
@@ -1174,21 +1176,22 @@ function FundingTab({ showToast }) {
   const [saving, setSaving]   = useState(false);
   const [confirm, setConfirm] = useState(null);
 
-  const load = () => { setLoading(true); api.funding.list().then(r => setItems(r.data || [])).catch(() => showToast('Failed', false)).finally(() => setLoading(false)); };
-  useEffect(load, []);
+  const load = useCallback(() => { setLoading(true); api.funding.list({ limit: 1000 }).then(r => setItems(r.data || [])).catch(() => showToast('Failed', false)).finally(() => setLoading(false)); }, []);
+  useEffect(load, [load]);
   const fc = e => setForm(p => ({ ...p, [e.target.name]: e.target.value }));
 
   async function save() {
     if (!form.title || !form.provider || !form.deadline) { showToast('Fill required fields', false); return; }
     setSaving(true);
     try {
-      if (modal === 'create') { const r = await api.funding.create(form); setItems(p => [r.funding || r, ...p]); showToast('Funding opportunity created successfully!', true, form.title); }
-      else { await api.funding.update(modal.id, form); setItems(p => p.map(x => x.id === modal.id ? { ...x, ...form } : x)); showToast('Funding updated successfully!', true, form.title); }
+      if (modal === 'create') { await api.funding.create(form); showToast('Funding opportunity created successfully!', true, form.title); }
+      else { await api.funding.update(modal.id, form); showToast('Funding updated successfully!', true, form.title); }
       setModal(null);
+      load();
     } catch (e) { showToast(e.message, false); } finally { setSaving(false); }
   }
   async function del(id, title) {
-    try { await api.funding.delete(id); setItems(p => p.filter(x => x.id !== id)); showToast('Funding deleted successfully!', true, title); setConfirm(null); }
+    try { await api.funding.delete(id); showToast('Funding deleted successfully!', true, title); setConfirm(null); load(); }
     catch (e) { showToast(e.message, false); }
   }
 
@@ -1255,21 +1258,22 @@ function PartnershipsTab({ showToast }) {
   const [saving, setSaving]   = useState(false);
   const [confirm, setConfirm] = useState(null);
 
-  const load = () => { setLoading(true); api.partnerships.list().then(r => setItems(r.data || [])).catch(() => showToast('Failed', false)).finally(() => setLoading(false)); };
-  useEffect(load, []);
+  const load = useCallback(() => { setLoading(true); api.partnerships.list({ limit: 1000 }).then(r => setItems(r.data || [])).catch(() => showToast('Failed', false)).finally(() => setLoading(false)); }, []);
+  useEffect(load, [load]);
   const fc = e => setForm(p => ({ ...p, [e.target.name]: e.target.value }));
 
   async function save() {
     if (!form.partner_name || !form.start_date) { showToast('Fill required fields', false); return; }
     setSaving(true);
     try {
-      if (modal === 'create') { const r = await api.partnerships.create(form); setItems(p => [r.partnership || r, ...p]); showToast('Partnership created successfully!', true, form.partner_name); }
-      else { await api.partnerships.update(modal.id, form); setItems(p => p.map(x => x.id === modal.id ? { ...x, ...form } : x)); showToast('Partnership updated successfully!', true, form.partner_name); }
+      if (modal === 'create') { await api.partnerships.create(form); showToast('Partnership created successfully!', true, form.partner_name); }
+      else { await api.partnerships.update(modal.id, form); showToast('Partnership updated successfully!', true, form.partner_name); }
       setModal(null);
+      load();
     } catch (e) { showToast(e.message, false); } finally { setSaving(false); }
   }
   async function del(id, name) {
-    try { await api.partnerships.delete(id); setItems(p => p.filter(x => x.id !== id)); showToast('Partnership deleted successfully!', true, name); setConfirm(null); }
+    try { await api.partnerships.delete(id); showToast('Partnership deleted successfully!', true, name); setConfirm(null); load(); }
     catch (e) { showToast(e.message, false); }
   }
 

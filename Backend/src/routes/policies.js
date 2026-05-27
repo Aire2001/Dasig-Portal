@@ -6,7 +6,7 @@ const router = express.Router();
 
 // GET /api/policies — list policies (MEMBER+ full, GUEST sees public only)
 router.get('/', verifyToken, async (req, res) => {
-  const { category, search, page = 1, limit = 10 } = req.query;
+  const { category, search, page = 1, limit = 100 } = req.query;
   const isMember = req.user.role === 'MEMBER' || req.user.role === 'ADMIN';
 
   let query = supabase.from('policies').select('*', { count: 'exact' });

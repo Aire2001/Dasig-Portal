@@ -6,7 +6,7 @@ const router = express.Router();
 
 // GET /api/partnerships — list (MEMBER+ only)
 router.get('/', verifyToken, async (req, res) => {
-  const { type, search, page = 1, limit = 10 } = req.query;
+  const { type, search, page = 1, limit = 100 } = req.query;
   const isMember = req.user.role === 'MEMBER' || req.user.role === 'ADMIN';
   if (!isMember) return res.status(403).json({ error: 'Members only' });
 

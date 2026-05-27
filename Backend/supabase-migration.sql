@@ -52,7 +52,11 @@ DELETE FROM events
   WHERE id <> (SELECT MIN(id) FROM events e2 WHERE e2.title = events.title);
 
 -- Add unique constraint on existing deployments (safe if already exists)
-ALTER TABLE events ADD CONSTRAINT IF NOT EXISTS events_title_key UNIQUE (title);
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'events_title_key') THEN
+    ALTER TABLE events ADD CONSTRAINT events_title_key UNIQUE (title);
+  END IF;
+END $$;
 
 -- Add column to existing deployments (safe to run multiple times)
 ALTER TABLE events ADD COLUMN IF NOT EXISTS registration_deadline DATE;
@@ -103,7 +107,11 @@ DELETE FROM training_enrollments
 DELETE FROM trainings
   WHERE id <> (SELECT MIN(id) FROM trainings t2 WHERE t2.title = trainings.title);
 
-ALTER TABLE trainings ADD CONSTRAINT IF NOT EXISTS trainings_title_key UNIQUE (title);
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'trainings_title_key') THEN
+    ALTER TABLE trainings ADD CONSTRAINT trainings_title_key UNIQUE (title);
+  END IF;
+END $$;
 
 ALTER TABLE trainings ADD COLUMN IF NOT EXISTS schedule TEXT;
 

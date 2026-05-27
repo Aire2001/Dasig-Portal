@@ -10,7 +10,7 @@ function isMember(user) {
 
 // GET /api/news — list with pagination, search, badge filter
 router.get('/', optionalAuth, async (req, res) => {
-  const { badge, search, page = 1, limit = 10 } = req.query;
+  const { badge, search, page = 1, limit = 100 } = req.query;
 
   let query = supabase.from('news').select('*', { count: 'exact' });
   if (!req.user || req.user.role !== 'ADMIN') query = query.eq('archived', false);
