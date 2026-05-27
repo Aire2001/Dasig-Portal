@@ -8,7 +8,7 @@ const CSS = `
   @keyframes modalIn  { from{transform:scale(.94) translateY(12px);opacity:0} to{transform:scale(1) translateY(0);opacity:1} }
   @keyframes fadeIn   { from{opacity:0} to{opacity:1} }
   @keyframes statPop  { from{transform:translateY(14px);opacity:0} to{transform:translateY(0);opacity:1} }
-  @keyframes toastIn  { from{transform:translateX(-50%) translateY(20px);opacity:0} to{transform:translateX(-50%) translateY(0);opacity:1} }
+  @keyframes toastIn  { from{transform:translateX(70px) scale(0.9);opacity:0} to{transform:translateX(0) scale(1);opacity:1} }
 
   * { box-sizing: border-box; }
 
@@ -185,16 +185,33 @@ function ConfirmModal({ msg, onConfirm, onCancel }) {
   );
 }
 
-function Toast({ msg, ok }) {
+function Toast({ msg, ok, sub }) {
   return (
     <div style={{
-      position:'fixed', bottom:28, left:'50%', transform:'translateX(-50%)',
-      background: ok ? '#059669' : '#e11d48',
-      color:'#fff', borderRadius:10, padding:'11px 24px',
-      fontSize:13.5, fontWeight:700, zIndex:9999,
-      boxShadow:'0 8px 32px rgba(0,0,0,0.45)',
-      animation:'toastIn .28s ease', whiteSpace:'nowrap',
-    }}>{ok ? '✓' : '✕'} {msg}</div>
+      position:'fixed', bottom:28, right:28,
+      background: ok !== false
+        ? 'linear-gradient(135deg,#065f46,#059669)'
+        : 'linear-gradient(135deg,#9f1239,#e11d48)',
+      color:'#fff', borderRadius:14, padding:'14px 16px',
+      zIndex:9999, boxShadow:'0 12px 40px rgba(0,0,0,0.55)',
+      animation:'toastIn .3s cubic-bezier(.34,1.56,.64,1)',
+      display:'flex', alignItems:'flex-start', gap:12,
+      minWidth:240, maxWidth:360,
+      border: ok !== false ? '1px solid rgba(52,211,153,0.35)' : '1px solid rgba(252,165,165,0.3)',
+    }}>
+      <div style={{
+        width:32, height:32, borderRadius:9, flexShrink:0,
+        background:'rgba(255,255,255,0.18)',
+        display:'flex', alignItems:'center', justifyContent:'center',
+        fontSize:14, fontWeight:900,
+      }}>
+        {ok !== false ? '✓' : '✕'}
+      </div>
+      <div style={{ flex:1, minWidth:0 }}>
+        <div style={{ fontWeight:800, fontSize:13.5, lineHeight:1.35 }}>{msg}</div>
+        {sub && <div style={{ fontSize:12, opacity:0.75, marginTop:3, lineHeight:1.4 }}>{sub}</div>}
+      </div>
+    </div>
   );
 }
 
@@ -302,9 +319,9 @@ export default function AdminPage() {
     if (user.role !== 'ADMIN') navigate('/');
   }, [user]);
 
-  function showToast(msg, ok = true) {
-    setToast({ msg, ok });
-    setTimeout(() => setToast(null), 3200);
+  function showToast(msg, ok = true, sub = '') {
+    setToast({ msg, ok, sub });
+    setTimeout(() => setToast(null), 3800);
   }
 
   const initials = (user?.name || user?.full_name || 'A').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
@@ -312,7 +329,7 @@ export default function AdminPage() {
   return (
     <div style={{ display:'flex', flexDirection:'column', minHeight:'100vh', background:'#060d1f', fontFamily:'inherit' }}>
       <style>{CSS}</style>
-      {toast && <Toast msg={toast.msg} ok={toast.ok} />}
+      {toast && <Toast msg={toast.msg} ok={toast.ok} sub={toast.sub} />}
 
       {/* ── Top Bar ── */}
       <header style={{
@@ -505,7 +522,7 @@ function UsersTab({ showToast }) {
 
   async function changeRole(u, role) {
     setActing(u.id + 'r');
-    try { await api.admin.changeRole(u.id, role); setUsers(p => p.map(x => x.id === u.id ? { ...x, role } : x)); showToast(`${u.name} → ${role}`); }
+    try { await api.admin.changeRole(u.id, role); setUsers(p => p.map(x => x.id === u.id ? { ...x, role } : x)); showToast('Role updated successfully!', true, `${u.name} is now ${role}`); }
     catch (e) { showToast(e.message, false); } finally { setActing(null); }
   }
 
@@ -515,11 +532,11 @@ function UsersTab({ showToast }) {
       if (u.status === 'INACTIVE') {
         await api.admin.activate(u.id);
         setUsers(p => p.map(x => x.id === u.id ? { ...x, status: 'ACTIVE' } : x));
-        showToast(`${u.name} activated`);
+        showToast('Account activated successfully!', true, `${u.name} can now log in`);
       } else {
         await api.admin.suspend(u.id);
         setUsers(p => p.map(x => x.id === u.id ? { ...x, status: 'INACTIVE' } : x));
-        showToast(`${u.name} suspended`, false);
+        showToast('Account suspended', false, `${u.name} has been suspended`);
       }
     } catch (e) { showToast(e.message, false); } finally { setActing(null); }
   }
@@ -599,12 +616,12 @@ function ApplicationsTab({ showToast }) {
 
   async function approve(a) {
     setActing(a.id);
-    try { await api.membership.approve(a.id); setApps(p => p.map(x => x.id === a.id ? { ...x, status:'APPROVED' } : x)); showToast(`Approved ${a.name}`); }
+    try { await api.membership.approve(a.id); setApps(p => p.map(x => x.id === a.id ? { ...x, status:'APPROVED' } : x)); showToast('Application approved successfully!', true, `${a.name} is now a Member`); }
     catch (e) { showToast(e.message, false); } finally { setActing(null); }
   }
   async function reject(a) {
     setActing(a.id);
-    try { await api.membership.reject(a.id); setApps(p => p.map(x => x.id === a.id ? { ...x, status:'REJECTED' } : x)); showToast(`Rejected ${a.name}`, false); }
+    try { await api.membership.reject(a.id); setApps(p => p.map(x => x.id === a.id ? { ...x, status:'REJECTED' } : x)); showToast('Application rejected', false, `${a.name}'s request was declined`); }
     catch (e) { showToast(e.message, false); } finally { setActing(null); }
   }
 
@@ -689,7 +706,7 @@ function EventsTab({ showToast }) {
     try {
       await api.events.markAttendance(attnEvent.id, reg.user_id, attended);
       setAttnList(prev => prev.map(r => r.user_id === reg.user_id ? { ...r, attended } : r));
-      showToast(attended ? 'Marked as attended' : 'Marked as absent');
+      showToast(attended ? 'Attendance marked successfully!' : 'Marked as absent', attended, reg.users?.name);
     } catch (e) { showToast(e.message, false); }
   }
 
@@ -698,13 +715,13 @@ function EventsTab({ showToast }) {
     setSaving(true);
     try {
       const body = { ...form, total: Number(form.total) || 50 };
-      if (modal === 'create') { const r = await api.events.create(body); setItems(p => [r.event || r, ...p]); showToast('Event created!'); }
-      else { await api.events.update(modal.id, body); setItems(p => p.map(x => x.id === modal.id ? { ...x, ...body } : x)); showToast('Event updated!'); }
+      if (modal === 'create') { const r = await api.events.create(body); setItems(p => [r.event || r, ...p]); showToast('Event created successfully!', true, body.title); }
+      else { await api.events.update(modal.id, body); setItems(p => p.map(x => x.id === modal.id ? { ...x, ...body } : x)); showToast('Event updated successfully!', true, body.title); }
       setModal(null);
     } catch (e) { showToast(e.message, false); } finally { setSaving(false); }
   }
-  async function del(id) {
-    try { await api.events.delete(id); setItems(p => p.filter(x => x.id !== id)); showToast('Deleted'); setConfirm(null); }
+  async function del(id, title) {
+    try { await api.events.delete(id); setItems(p => p.filter(x => x.id !== id)); showToast('Event deleted successfully!', true, title); setConfirm(null); }
     catch (e) { showToast(e.message, false); }
   }
 
@@ -713,7 +730,7 @@ function EventsTab({ showToast }) {
   return (
     <div>
       <PageHeader title="Events" desc="Create and manage consortium events" action={<AddBtn onClick={() => { setForm(EV_BLANK); setModal('create'); }} />} />
-      {confirm && <ConfirmModal msg={`Delete "${confirm.title}"?`} onConfirm={() => del(confirm.id)} onCancel={() => setConfirm(null)} />}
+      {confirm && <ConfirmModal msg={`Delete "${confirm.title}"?`} onConfirm={() => del(confirm.id, confirm.title)} onCancel={() => setConfirm(null)} />}
 
       {/* ── Attendees Modal ── */}
       {attnEvent && (
@@ -830,13 +847,13 @@ function NewsTab({ showToast }) {
     if (!form.title || !form.date) { showToast('Fill required fields', false); return; }
     setSaving(true);
     try {
-      if (modal === 'create') { const r = await api.news.create(form); setItems(p => [r.article || r, ...p]); showToast('Article published!'); }
-      else { await api.news.update(modal.id, form); setItems(p => p.map(x => x.id === modal.id ? { ...x, ...form } : x)); showToast('Article updated!'); }
+      if (modal === 'create') { const r = await api.news.create(form); setItems(p => [r.article || r, ...p]); showToast('Article published successfully!', true, form.title); }
+      else { await api.news.update(modal.id, form); setItems(p => p.map(x => x.id === modal.id ? { ...x, ...form } : x)); showToast('Article updated successfully!', true, form.title); }
       setModal(null);
     } catch (e) { showToast(e.message, false); } finally { setSaving(false); }
   }
-  async function del(id) {
-    try { await api.news.delete(id); setItems(p => p.filter(x => x.id !== id)); showToast('Deleted'); setConfirm(null); }
+  async function del(id, title) {
+    try { await api.news.delete(id); setItems(p => p.filter(x => x.id !== id)); showToast('Article deleted successfully!', true, title); setConfirm(null); }
     catch (e) { showToast(e.message, false); }
   }
 
@@ -845,7 +862,7 @@ function NewsTab({ showToast }) {
   return (
     <div>
       <PageHeader title="News & Announcements" desc="Publish consortium news and updates" action={<AddBtn onClick={() => { setForm(NW_BLANK); setModal('create'); }} />} />
-      {confirm && <ConfirmModal msg={`Delete "${confirm.title}"?`} onConfirm={() => del(confirm.id)} onCancel={() => setConfirm(null)} />}
+      {confirm && <ConfirmModal msg={`Delete "${confirm.title}"?`} onConfirm={() => del(confirm.id, confirm.title)} onCancel={() => setConfirm(null)} />}
       {modal && (
         <Modal title={modal === 'create' ? 'Publish Article' : 'Edit Article'} onClose={() => setModal(null)} wide>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
@@ -914,13 +931,13 @@ function TrainingTab({ showToast }) {
     setSaving(true);
     try {
       const body = { ...form, total: Number(form.total) || 20 };
-      if (modal === 'create') { const r = await api.training.create(body); setItems(p => [r.training || r, ...p]); showToast('Program created!'); }
-      else { await api.training.update(modal.id, body); setItems(p => p.map(x => x.id === modal.id ? { ...x, ...body } : x)); showToast('Program updated!'); }
+      if (modal === 'create') { const r = await api.training.create(body); setItems(p => [r.training || r, ...p]); showToast('Training program created successfully!', true, body.title); }
+      else { await api.training.update(modal.id, body); setItems(p => p.map(x => x.id === modal.id ? { ...x, ...body } : x)); showToast('Training program updated successfully!', true, body.title); }
       setModal(null);
     } catch (e) { showToast(e.message, false); } finally { setSaving(false); }
   }
-  async function del(id) {
-    try { await api.training.delete(id); setItems(p => p.filter(x => x.id !== id)); showToast('Deleted'); setConfirm(null); }
+  async function del(id, title) {
+    try { await api.training.delete(id); setItems(p => p.filter(x => x.id !== id)); showToast('Training program deleted successfully!', true, title); setConfirm(null); }
     catch (e) { showToast(e.message, false); }
   }
 
@@ -930,7 +947,7 @@ function TrainingTab({ showToast }) {
   return (
     <div>
       <PageHeader title="Training Programs" desc="Manage professional development programs" action={<AddBtn onClick={() => { setForm(TR_BLANK); setModal('create'); }} />} />
-      {confirm && <ConfirmModal msg={`Delete "${confirm.title}"?`} onConfirm={() => del(confirm.id)} onCancel={() => setConfirm(null)} />}
+      {confirm && <ConfirmModal msg={`Delete "${confirm.title}"?`} onConfirm={() => del(confirm.id, confirm.title)} onCancel={() => setConfirm(null)} />}
       {modal && (
         <Modal title={modal === 'create' ? 'Create Program' : 'Edit Program'} onClose={() => setModal(null)} wide>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
@@ -1003,17 +1020,17 @@ function PoliciesTab({ showToast }) {
     if (!form.title || !form.content || !form.effective_date) { showToast('Fill required fields', false); return; }
     setSaving(true);
     try {
-      if (modal === 'create') { const r = await api.policies.create(form); setItems(p => [r.policy || r, ...p]); showToast('Policy created!'); }
-      else { await api.policies.update(modal.id, form); setItems(p => p.map(x => x.id === modal.id ? { ...x, ...form } : x)); showToast('Policy updated!'); }
+      if (modal === 'create') { const r = await api.policies.create(form); setItems(p => [r.policy || r, ...p]); showToast('Policy created successfully!', true, form.title); }
+      else { await api.policies.update(modal.id, form); setItems(p => p.map(x => x.id === modal.id ? { ...x, ...form } : x)); showToast('Policy updated successfully!', true, form.title); }
       setModal(null);
     } catch (e) { showToast(e.message, false); } finally { setSaving(false); }
   }
   async function toggleArchive(p) {
-    try { await api.policies.archive(p.id, !p.archived); setItems(prev => prev.map(x => x.id === p.id ? { ...x, archived: !p.archived } : x)); showToast(p.archived ? 'Restored' : 'Archived'); }
+    try { await api.policies.archive(p.id, !p.archived); setItems(prev => prev.map(x => x.id === p.id ? { ...x, archived: !p.archived } : x)); showToast(p.archived ? 'Policy restored successfully!' : 'Policy archived successfully', !p.archived, p.title); }
     catch (e) { showToast(e.message, false); }
   }
-  async function del(id) {
-    try { await api.policies.delete(id); setItems(p => p.filter(x => x.id !== id)); showToast('Deleted'); setConfirm(null); }
+  async function del(id, title) {
+    try { await api.policies.delete(id); setItems(p => p.filter(x => x.id !== id)); showToast('Policy deleted successfully!', true, title); setConfirm(null); }
     catch (e) { showToast(e.message, false); }
   }
 
@@ -1022,7 +1039,7 @@ function PoliciesTab({ showToast }) {
   return (
     <div>
       <PageHeader title="Policies & Guidelines" desc="Manage governance documents" action={<AddBtn onClick={() => { setForm(PL_BLANK); setModal('create'); }} />} />
-      {confirm && <ConfirmModal msg={`Delete "${confirm.title}"?`} onConfirm={() => del(confirm.id)} onCancel={() => setConfirm(null)} />}
+      {confirm && <ConfirmModal msg={`Delete "${confirm.title}"?`} onConfirm={() => del(confirm.id, confirm.title)} onCancel={() => setConfirm(null)} />}
       {modal && (
         <Modal title={modal === 'create' ? 'Create Policy' : 'Edit Policy'} onClose={() => setModal(null)} wide>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
@@ -1087,13 +1104,13 @@ function FundingTab({ showToast }) {
     if (!form.title || !form.provider || !form.deadline) { showToast('Fill required fields', false); return; }
     setSaving(true);
     try {
-      if (modal === 'create') { const r = await api.funding.create(form); setItems(p => [r.funding || r, ...p]); showToast('Funding created!'); }
-      else { await api.funding.update(modal.id, form); setItems(p => p.map(x => x.id === modal.id ? { ...x, ...form } : x)); showToast('Updated!'); }
+      if (modal === 'create') { const r = await api.funding.create(form); setItems(p => [r.funding || r, ...p]); showToast('Funding opportunity created successfully!', true, form.title); }
+      else { await api.funding.update(modal.id, form); setItems(p => p.map(x => x.id === modal.id ? { ...x, ...form } : x)); showToast('Funding updated successfully!', true, form.title); }
       setModal(null);
     } catch (e) { showToast(e.message, false); } finally { setSaving(false); }
   }
-  async function del(id) {
-    try { await api.funding.delete(id); setItems(p => p.filter(x => x.id !== id)); showToast('Deleted'); setConfirm(null); }
+  async function del(id, title) {
+    try { await api.funding.delete(id); setItems(p => p.filter(x => x.id !== id)); showToast('Funding deleted successfully!', true, title); setConfirm(null); }
     catch (e) { showToast(e.message, false); }
   }
 
@@ -1102,7 +1119,7 @@ function FundingTab({ showToast }) {
   return (
     <div>
       <PageHeader title="Funding Opportunities" desc="Post grants, scholarships and government funds" action={<AddBtn onClick={() => { setForm(FU_BLANK); setModal('create'); }} />} />
-      {confirm && <ConfirmModal msg={`Delete "${confirm.title}"?`} onConfirm={() => del(confirm.id)} onCancel={() => setConfirm(null)} />}
+      {confirm && <ConfirmModal msg={`Delete "${confirm.title}"?`} onConfirm={() => del(confirm.id, confirm.title)} onCancel={() => setConfirm(null)} />}
       {modal && (
         <Modal title={modal === 'create' ? 'Create Funding' : 'Edit Funding'} onClose={() => setModal(null)} wide>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
@@ -1168,13 +1185,13 @@ function PartnershipsTab({ showToast }) {
     if (!form.partner_name || !form.start_date) { showToast('Fill required fields', false); return; }
     setSaving(true);
     try {
-      if (modal === 'create') { const r = await api.partnerships.create(form); setItems(p => [r.partnership || r, ...p]); showToast('Partnership created!'); }
-      else { await api.partnerships.update(modal.id, form); setItems(p => p.map(x => x.id === modal.id ? { ...x, ...form } : x)); showToast('Updated!'); }
+      if (modal === 'create') { const r = await api.partnerships.create(form); setItems(p => [r.partnership || r, ...p]); showToast('Partnership created successfully!', true, form.partner_name); }
+      else { await api.partnerships.update(modal.id, form); setItems(p => p.map(x => x.id === modal.id ? { ...x, ...form } : x)); showToast('Partnership updated successfully!', true, form.partner_name); }
       setModal(null);
     } catch (e) { showToast(e.message, false); } finally { setSaving(false); }
   }
-  async function del(id) {
-    try { await api.partnerships.delete(id); setItems(p => p.filter(x => x.id !== id)); showToast('Deleted'); setConfirm(null); }
+  async function del(id, name) {
+    try { await api.partnerships.delete(id); setItems(p => p.filter(x => x.id !== id)); showToast('Partnership deleted successfully!', true, name); setConfirm(null); }
     catch (e) { showToast(e.message, false); }
   }
 
@@ -1183,7 +1200,7 @@ function PartnershipsTab({ showToast }) {
   return (
     <div>
       <PageHeader title="Partnerships" desc="Manage strategic consortium partnerships" action={<AddBtn onClick={() => { setForm(PA_BLANK); setModal('create'); }} />} />
-      {confirm && <ConfirmModal msg={`Delete "${confirm.partner_name}"?`} onConfirm={() => del(confirm.id)} onCancel={() => setConfirm(null)} />}
+      {confirm && <ConfirmModal msg={`Delete "${confirm.partner_name}"?`} onConfirm={() => del(confirm.id, confirm.partner_name)} onCancel={() => setConfirm(null)} />}
       {modal && (
         <Modal title={modal === 'create' ? 'Create Partnership' : 'Edit Partnership'} onClose={() => setModal(null)} wide>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
