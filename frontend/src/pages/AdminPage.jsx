@@ -944,7 +944,8 @@ function NewsTab({ showToast }) {
 /* ═══════════════════════════════════════════════════════════════════
    TRAINING
 ═══════════════════════════════════════════════════════════════════ */
-const TR_BLANK = { icon:'💻', category:'Technology', title:'', org:'', duration:'', level:'Beginner', total:20, description:'', schedule:'' };
+const TR_BLANK = { icon:'💻', category:'Technology', title:'', org:'', duration:'2 weeks', level:'Beginner', total:20, description:'', schedule:'' };
+const TR_DURATIONS = ['1 week','2 weeks','3 weeks','4 weeks','5 weeks','6 weeks','8 weeks','10 weeks','12 weeks','3 months','4 months','6 months'];
 
 function TrainingTab({ showToast }) {
   const [items, setItems]           = useState([]);
@@ -1034,11 +1035,11 @@ function TrainingTab({ showToast }) {
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
             <DInput label="Title *" name="title" value={form.title} onChange={fc} required span="1/-1" />
             <DInput label="Organization *" name="org" value={form.org} onChange={fc} required />
-            <DInput label="Duration *" name="duration" value={form.duration} onChange={fc} required />
+            <DInput label="Duration *" name="duration" value={form.duration} onChange={fc} as="select" opts={TR_DURATIONS} required />
             <DInput label="Category" name="category" value={form.category} onChange={fc} as="select" opts={['Technology','Research','Leadership','Governance']} />
             <DInput label="Level" name="level" value={form.level} onChange={fc} as="select" opts={['Beginner','Intermediate','Advanced']} />
             <DInput label="Capacity" name="total" value={form.total} onChange={fc} type="number" />
-            <DInput label="Schedule" name="schedule" value={form.schedule} onChange={fc} span="1/-1" />
+            <DInput label="Schedule (Start Date)" name="schedule" value={form.schedule} onChange={fc} type="date" span="1/-1" />
             <DInput label="Description" name="description" value={form.description} onChange={fc} as="textarea" span="1/-1" />
           </div>
           <FormActions onCancel={() => setModal(null)} onSave={save} saving={saving} saveLabel={modal === 'create' ? 'Create Program' : 'Save Changes'} />
