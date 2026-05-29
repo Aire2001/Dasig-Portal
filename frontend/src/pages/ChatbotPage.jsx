@@ -167,9 +167,10 @@ export default function ChatbotPage() {
         time: new Date(),
       }]);
     } catch {
+      setHasReplied(true);
       setMessages(prev => [...prev, {
         from: 'bot',
-        text: 'I could not connect to the DASIG knowledge base right now. Please make sure the API server is running on port 4000.',
+        text: 'I could not reach the DASIG knowledge base right now. Please check your connection or try again in a moment.',
         matched: false,
         followups: [],
         time: new Date(),

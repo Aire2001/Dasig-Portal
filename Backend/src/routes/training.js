@@ -90,10 +90,16 @@ router.post('/:id/enroll', verifyToken, async (req, res) => {
   if (t.enrolled >= t.total) return res.status(400).json({ error: 'Training is fully booked' });
 
   const { error: enErr } = await supabase.from('training_enrollments').insert({ training_id: trainingId, user_id: req.user.id });
-  if (enErr) return res.status(409).json({ error: 'Already enrolled in this training' });
+  if (enErr) {
+    const isDuplicate = enErr.code === '23505';
+    return res.status(isDuplicate ? 409 : 500).json({
+      error: isDuplicate ? 'Already enrolled in this training' : enErr.message,
+    });
+  }
 
   const { data: updated } = await supabase.from('trainings')
     .update({ enrolled: t.enrolled + 1 }).eq('id', trainingId).select('enrolled,total').single();
+  if (!updated) return res.status(500).json({ error: 'Failed to update enrollment count' });
 
   // Send confirmation email (fire-and-forget — never blocks the response)
   sendTrainingEnrollmentEmail(req.user.email, req.user.name, t).catch(() => {});

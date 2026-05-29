@@ -87,10 +87,16 @@ router.post('/:id/register', verifyToken, async (req, res) => {
   if (ev.enrolled >= ev.total) return res.status(400).json({ error: 'Event is fully booked' });
 
   const { error: regErr } = await supabase.from('event_registrations').insert({ event_id: eventId, user_id: req.user.id });
-  if (regErr) return res.status(409).json({ error: 'Already registered for this event' });
+  if (regErr) {
+    const isDuplicate = regErr.code === '23505';
+    return res.status(isDuplicate ? 409 : 500).json({
+      error: isDuplicate ? 'Already registered for this event' : regErr.message,
+    });
+  }
 
   const { data: updated } = await supabase.from('events')
     .update({ enrolled: ev.enrolled + 1 }).eq('id', eventId).select('enrolled,total').single();
+  if (!updated) return res.status(500).json({ error: 'Failed to update enrollment count' });
 
   // Send confirmation email (fire-and-forget — never blocks the response)
   sendEventRegistrationEmail(req.user.email, req.user.name, ev).catch(() => {});

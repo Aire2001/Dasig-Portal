@@ -461,8 +461,8 @@ function EventCard({ ev, myReg, onRegister, onAttend }) {
   const [shine, setShine]     = useState({ x: 50, y: 50 });
   const [hovered, setHovered] = useState(false);
   const cardRef               = useRef(null);
-  const pct       = Math.min(100, Math.round((ev.enrolled / ev.total) * 100));
-  const full      = ev.enrolled >= ev.total;
+  const pct       = ev.total > 0 ? Math.min(100, Math.round((ev.enrolled / ev.total) * 100)) : 0;
+  const full      = ev.total > 0 && ev.enrolled >= ev.total;
   const registered = !!myReg;
   const attended   = myReg?.attended === true;
 

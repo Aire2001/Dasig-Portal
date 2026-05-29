@@ -327,11 +327,13 @@ router.post('/message', async (req, res) => {
   if (!message || !message.trim()) return res.status(400).json({ error: 'Message is required' });
 
   const trimmed = message.trim();
-  const match = matchIntent(trimmed);
+  // Strip leading emoji (e.g. from DEFAULT_FOLLOWUP chips like "📅 What events...") before NLP matching
+  const normalized = trimmed.replace(/^[\p{Emoji_Presentation}\p{Extended_Pictographic}]+\s*/gu, '');
+  const match = matchIntent(normalized);
 
   // Log to DB for accuracy tracking (fire-and-forget)
   supabase.from('chatbot_logs').insert({
-    message: trimmed,
+    message: normalized,
     matched: !!match,
     intent: match ? match.intent : null,
   }).then(() => {}).catch(() => {});
