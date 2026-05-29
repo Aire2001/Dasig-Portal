@@ -135,11 +135,16 @@ CREATE TABLE IF NOT EXISTS training_enrollments (
 -- Consortium member institutions (reference data)
 CREATE TABLE IF NOT EXISTS members (
   id        BIGSERIAL PRIMARY KEY,
-  abbr      TEXT NOT NULL,
+  abbr      TEXT NOT NULL UNIQUE,
   full_name TEXT NOT NULL,
   campus    TEXT NOT NULL,
   type      TEXT NOT NULL
 );
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'members_abbr_key') THEN
+    ALTER TABLE members ADD CONSTRAINT members_abbr_key UNIQUE (abbr);
+  END IF;
+END $$;
 
 CREATE TABLE IF NOT EXISTS membership_applications (
   id          BIGSERIAL PRIMARY KEY,
@@ -157,7 +162,7 @@ CREATE TABLE IF NOT EXISTS membership_applications (
 -- Policy documents (UC-PM)
 CREATE TABLE IF NOT EXISTS policies (
   id             BIGSERIAL PRIMARY KEY,
-  title          TEXT    NOT NULL,
+  title          TEXT    NOT NULL UNIQUE,
   category       TEXT    NOT NULL,
   content        TEXT    NOT NULL,
   effective_date DATE    NOT NULL,
@@ -167,11 +172,16 @@ CREATE TABLE IF NOT EXISTS policies (
   created_at     TIMESTAMPTZ DEFAULT NOW(),
   updated_at     TIMESTAMPTZ
 );
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'policies_title_key') THEN
+    ALTER TABLE policies ADD CONSTRAINT policies_title_key UNIQUE (title);
+  END IF;
+END $$;
 
 -- Funding opportunities (UC-FM)
 CREATE TABLE IF NOT EXISTS funding_opportunities (
   id          BIGSERIAL PRIMARY KEY,
-  title       TEXT NOT NULL,
+  title       TEXT NOT NULL UNIQUE,
   category    TEXT NOT NULL,
   provider    TEXT NOT NULL,
   amount      TEXT,
@@ -184,11 +194,16 @@ CREATE TABLE IF NOT EXISTS funding_opportunities (
   created_at  TIMESTAMPTZ DEFAULT NOW(),
   updated_at  TIMESTAMPTZ
 );
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'funding_opportunities_title_key') THEN
+    ALTER TABLE funding_opportunities ADD CONSTRAINT funding_opportunities_title_key UNIQUE (title);
+  END IF;
+END $$;
 
 -- Strategic partnerships (UC-SP)
 CREATE TABLE IF NOT EXISTS partnerships (
   id             BIGSERIAL PRIMARY KEY,
-  partner_name   TEXT NOT NULL,
+  partner_name   TEXT NOT NULL UNIQUE,
   type           TEXT NOT NULL,
   description    TEXT,
   start_date     DATE NOT NULL,
@@ -201,6 +216,11 @@ CREATE TABLE IF NOT EXISTS partnerships (
   created_at     TIMESTAMPTZ DEFAULT NOW(),
   updated_at     TIMESTAMPTZ
 );
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'partnerships_partner_name_key') THEN
+    ALTER TABLE partnerships ADD CONSTRAINT partnerships_partner_name_key UNIQUE (partner_name);
+  END IF;
+END $$;
 
 -- Chatbot conversation logs (for accuracy metrics, UC-CB-03)
 CREATE TABLE IF NOT EXISTS chatbot_logs (
@@ -523,7 +543,7 @@ VALUES
   ('DICT',  'Department of Information & Communications Technology', 'Region VII',  'Government Agency'),
   ('DTI',   'Department of Trade & Industry',                        'Region VII',  'Government Agency'),
   ('DepEd', 'Department of Education',                               'Region VII',  'Government Agency')
-ON CONFLICT DO NOTHING;
+ON CONFLICT (abbr) DO NOTHING;
 
 
 -- Seed policies
@@ -561,7 +581,7 @@ VALUES
     TRUE,
     FALSE
   )
-ON CONFLICT DO NOTHING;
+ON CONFLICT (title) DO NOTHING;
 
 
 -- Seed funding opportunities
@@ -607,7 +627,7 @@ VALUES
     'Faculty members of UP member campuses and DASIG partner institutions.',
     'Upcoming'
   )
-ON CONFLICT DO NOTHING;
+ON CONFLICT (title) DO NOTHING;
 
 
 -- Seed partnerships
@@ -653,4 +673,4 @@ VALUES
     'itdc@up.edu.ph',
     'Active'
   )
-ON CONFLICT DO NOTHING;
+ON CONFLICT (partner_name) DO NOTHING;
