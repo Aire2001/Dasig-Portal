@@ -49,6 +49,7 @@ export default function EventsPage() {
   const [fnameErr, setFnameErr]       = useState(false);
 
   useEffect(() => {
+    setLoading(true);
     api.events.list({ category: active })
       .then(r => setEvents(r.data || []))
       .catch(() => {})
