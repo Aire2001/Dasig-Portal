@@ -219,81 +219,98 @@ export default function TrainingPage() {
       {/* ── STEP 2: Success Modal ── */}
       {okModal && (
         <div onClick={() => setOkModal(null)} style={{
-          position:'fixed', inset:0, background:'rgba(0,0,0,0.6)',
+          position:'fixed', inset:0, background:'rgba(0,0,0,0.65)',
           zIndex:9100, display:'flex', alignItems:'center', justifyContent:'center', padding:20,
         }}>
           <div onClick={e => e.stopPropagation()} style={{
-            background:'linear-gradient(180deg,#0f172a,#020817)', borderRadius:22, maxWidth:440, width:'100%',
-            boxShadow:'0 32px 100px rgba(0,0,0,0.7)', overflow:'hidden',
+            background:'#0f172a', borderRadius:24, maxWidth:520, width:'100%',
+            boxShadow:'0 40px 120px rgba(0,0,0,0.8)', overflow:'hidden',
             border:'1px solid rgba(255,255,255,0.1)',
-            animation:'modalIn 0.24s cubic-bezier(.34,1.56,.64,1)',
+            animation:'modalIn 0.28s cubic-bezier(.34,1.56,.64,1)',
           }}>
-            <div style={{ background: s(okModal.training).accent, padding:'28px 24px 50px', textAlign:'center', position:'relative' }}>
-              <div style={{ color:'#fff', fontSize:20, fontWeight:900 }}>Enrollment Confirmed! 🎉</div>
-              <div style={{ color:'rgba(255,255,255,0.75)', fontSize:12.5, marginTop:4 }}>{okModal.training.title}</div>
+            {/* Header */}
+            <div style={{ background: s(okModal.training).accent, padding:'36px 32px 60px', textAlign:'center', position:'relative' }}>
+              <div style={{ fontSize:13, color:'rgba(255,255,255,0.6)', fontWeight:700, letterSpacing:1, textTransform:'uppercase', marginBottom:8 }}>Enrollment Confirmed</div>
+              <div style={{ color:'#fff', fontSize:22, fontWeight:900, lineHeight:1.3 }}>{okModal.training.title}</div>
+              <div style={{ color:'rgba(255,255,255,0.65)', fontSize:13, marginTop:6 }}>{okModal.training.category}</div>
+              {/* Avatar */}
               <div style={{
-                position:'absolute', bottom:-34, left:'50%', transform:'translateX(-50%)',
-                width:68, height:68, borderRadius:'50%',
-                background:'linear-gradient(135deg,#f97316,#e11d48)',
-                border:'4px solid #fff',
+                position:'absolute', bottom:-40, left:'50%', transform:'translateX(-50%)',
+                width:80, height:80, borderRadius:'50%',
+                background:'linear-gradient(135deg,#059669,#0891b2)',
+                border:'4px solid #0f172a',
                 display:'flex', alignItems:'center', justifyContent:'center',
-                fontSize:28, fontWeight:900, color:'#fff',
-                boxShadow:'0 4px 18px rgba(0,0,0,0.25)',
+                fontSize:32, fontWeight:900, color:'#fff',
+                boxShadow:'0 8px 24px rgba(0,0,0,0.4)',
               }}>
                 {(okModal.name || 'U')[0].toUpperCase()}
               </div>
             </div>
 
-            <div style={{ paddingTop:46, paddingLeft:24, paddingRight:24, textAlign:'center' }}>
-              <div style={{ fontWeight:900, fontSize:17, color:'#fff' }}>{okModal.name}</div>
-              <div style={{ fontSize:12.5, color:'rgba(255,255,255,0.55)', marginTop:2 }}>{okModal.email}</div>
-              {okModal.institution && <div style={{ fontSize:12, color:'rgba(255,255,255,0.45)', marginTop:2 }}>🏛 {okModal.institution}</div>}
-              {okModal.phone && <div style={{ fontSize:12, color:'rgba(255,255,255,0.45)', marginTop:2 }}>📞 {okModal.phone}</div>}
+            {/* User info */}
+            <div style={{ paddingTop:54, paddingBottom:20, paddingLeft:32, paddingRight:32, textAlign:'center' }}>
+              <div style={{ fontWeight:900, fontSize:19, color:'#fff' }}>{okModal.name}</div>
+              <div style={{ fontSize:13, color:'rgba(255,255,255,0.5)', marginTop:3 }}>{okModal.email}</div>
+              {okModal.institution && <div style={{ fontSize:12.5, color:'rgba(255,255,255,0.4)', marginTop:3 }}>🏛 {okModal.institution}</div>}
+              {okModal.phone && <div style={{ fontSize:12.5, color:'rgba(255,255,255,0.4)', marginTop:3 }}>📞 {okModal.phone}</div>}
               <span style={{
-                display:'inline-block', marginTop:8,
-                background: okModal.role==='ADMIN' ? 'rgba(225,29,72,0.18)' : okModal.role==='MEMBER' ? 'rgba(16,185,129,0.18)' : 'rgba(59,130,246,0.18)',
-                color: okModal.role==='ADMIN' ? '#fca5a5' : okModal.role==='MEMBER' ? '#6ee7b7' : '#93c5fd',
-                border: `1px solid ${okModal.role==='ADMIN' ? 'rgba(225,29,72,0.35)' : okModal.role==='MEMBER' ? 'rgba(16,185,129,0.35)' : 'rgba(59,130,246,0.35)'}`,
-                borderRadius:20, padding:'3px 14px', fontSize:11.5, fontWeight:800,
+                display:'inline-block', marginTop:10,
+                background: okModal.role==='ADMIN' ? 'rgba(239,68,68,0.18)' : okModal.role==='MEMBER' ? 'rgba(16,185,129,0.18)' : 'rgba(99,102,241,0.18)',
+                color: okModal.role==='ADMIN' ? '#fca5a5' : okModal.role==='MEMBER' ? '#6ee7b7' : '#a5b4fc',
+                border: `1px solid ${okModal.role==='ADMIN' ? 'rgba(239,68,68,0.35)' : okModal.role==='MEMBER' ? 'rgba(16,185,129,0.35)' : 'rgba(99,102,241,0.35)'}`,
+                borderRadius:20, padding:'4px 16px', fontSize:11.5, fontWeight:800, letterSpacing:0.5,
               }}>
                 {okModal.role === 'ADMIN' ? '🛡 Administrator' : okModal.role === 'MEMBER' ? '✓ Member' : '○ Guest'}
               </span>
             </div>
 
-            <div style={{ height:1, background:'rgba(255,255,255,0.08)', margin:'16px 24px 0' }} />
+            <div style={{ height:1, background:'rgba(255,255,255,0.07)', margin:'0 32px' }} />
 
-            <div style={{ padding:'12px 24px 24px', display:'flex', flexDirection:'column', gap:8 }}>
+            {/* Training detail rows */}
+            <div style={{ padding:'20px 32px 28px', display:'flex', flexDirection:'column', gap:10 }}>
               {[
                 { icon:'🎓', label:'PROGRAM',    value: okModal.training.title },
-                { icon:'🏛',  label:'ORG',        value: okModal.training.org },
-                { icon:'⏱',  label:'DURATION',   value: okModal.training.duration },
-                { icon:'📊', label:'LEVEL',       value: okModal.training.level },
-                ...(okModal.training.schedule ? [{ icon:'📅', label:'SCHEDULE', value: okModal.training.schedule }] : []),
-                { icon:'👥', label:'ENROLLMENT',  value: `${okModal.training.enrolled} / ${okModal.training.total} enrolled` },
+                { icon:'🏛',  label:'ORGANIZER', value: okModal.training.org },
+                { icon:'⏱',  label:'DURATION',  value: okModal.training.duration },
+                { icon:'📊', label:'LEVEL',      value: okModal.training.level },
+                ...(okModal.training.schedule ? [{ icon:'📅', label:'START DATE', value: okModal.training.schedule }] : []),
+                { icon:'👥', label:'ENROLLMENT', value: `${okModal.training.enrolled} / ${okModal.training.total} enrolled` },
               ].map(r => (
-                <div key={r.label} style={{ display:'flex', alignItems:'center', gap:10, background:'rgba(255,255,255,0.06)', borderRadius:10, padding:'9px 14px', border:'1px solid rgba(255,255,255,0.07)' }}>
-                  <span style={{ fontSize:16 }}>{r.icon}</span>
+                <div key={r.label} style={{
+                  display:'flex', alignItems:'center', gap:14,
+                  background:'rgba(255,255,255,0.05)', borderRadius:12, padding:'12px 16px',
+                  border:'1px solid rgba(255,255,255,0.07)',
+                }}>
+                  <span style={{ fontSize:18, flexShrink:0 }}>{r.icon}</span>
                   <div>
-                    <div style={{ fontSize:10, color:'rgba(255,255,255,0.4)', fontWeight:700 }}>{r.label}</div>
-                    <div style={{ fontSize:13, color:'#fff', fontWeight:700 }}>{r.value}</div>
+                    <div style={{ fontSize:10, color:'rgba(255,255,255,0.35)', fontWeight:700, letterSpacing:0.8, textTransform:'uppercase' }}>{r.label}</div>
+                    <div style={{ fontSize:14, color:'#fff', fontWeight:700, marginTop:2 }}>{r.value}</div>
                   </div>
                 </div>
               ))}
 
+              {/* Confirmation notice */}
               <div style={{
-                background:'rgba(16,185,129,0.12)', border:'1px solid rgba(16,185,129,0.3)', borderRadius:10,
-                padding:'10px 14px', fontSize:12.5, color:'#34d399', fontWeight:600,
-                display:'flex', alignItems:'center', gap:8, marginTop:4,
+                background:'rgba(16,185,129,0.1)', border:'1px solid rgba(16,185,129,0.25)', borderRadius:12,
+                padding:'16px 18px', marginTop:2,
               }}>
-                <span style={{ animation:'checkPop 0.4s 0.15s both', display:'inline-block' }}>✅</span>
-                Your enrollment has been saved to the database.
+                <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:6 }}>
+                  <span style={{ animation:'checkPop 0.4s 0.15s both', display:'inline-block', fontSize:18 }}>✅</span>
+                  <span style={{ fontSize:14, color:'#34d399', fontWeight:800 }}>You&apos;re enrolled!</span>
+                </div>
+                <div style={{ fontSize:13, color:'rgba(52,211,153,0.75)', lineHeight:1.6 }}>
+                  A confirmation email has been sent to{' '}
+                  <strong style={{ color:'#34d399' }}>{okModal.email}</strong>.{' '}
+                  Check your inbox for program details and next steps.
+                </div>
               </div>
 
               <button onClick={() => setOkModal(null)} style={{
-                width:'100%', background:'linear-gradient(90deg,#f97316,#e11d48)',
-                color:'#fff', border:'none', borderRadius:12, padding:'13px',
-                fontSize:14.5, fontWeight:800, cursor:'pointer', fontFamily:'inherit', marginTop:4,
-              }}>Close</button>
+                width:'100%', background:'linear-gradient(90deg,#059669,#0891b2)',
+                color:'#fff', border:'none', borderRadius:14, padding:'15px',
+                fontSize:15, fontWeight:800, cursor:'pointer', fontFamily:'inherit', marginTop:4,
+                letterSpacing:0.3,
+              }}>Done</button>
             </div>
           </div>
         </div>
