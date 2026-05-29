@@ -82,6 +82,7 @@ export default function ChatbotPage() {
   const [totalMatched, setTotalMatched] = useState(0);
   const [ended, setEnded] = useState(false);
   const [showEndConfirm, setShowEndConfirm] = useState(false);
+  const [hasReplied, setHasReplied] = useState(false);
   const msgsEnd = useRef(null);
   const inputRef = useRef(null);
 
@@ -104,6 +105,7 @@ export default function ChatbotPage() {
       setTotalAsked(newTotal);
       setTotalMatched(newMatched);
       setMatchRate(Math.round((newMatched / newTotal) * 100));
+      setHasReplied(true);
       setMessages(prev => [...prev, {
         from: 'bot',
         text: res.reply,
@@ -141,7 +143,14 @@ export default function ChatbotPage() {
     setTotalMatched(0);
     setMatchRate(null);
     setEnded(false);
+    setHasReplied(false);
     setTimeout(() => inputRef.current?.focus(), 50);
+  }
+
+  function handleInputChange(e) {
+    setInput(e.target.value);
+    e.target.style.height = 'auto';
+    e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
   }
 
   return (
@@ -341,8 +350,8 @@ export default function ChatbotPage() {
                 )}
               </div>
 
-              {/* Quick chips */}
-              {!ended && messages.length <= 2 && (
+              {/* Quick chips — show until first bot reply arrives */}
+              {!ended && !hasReplied && (
                 <div style={{ padding: '0 24px 14px' }}>
                   <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', fontWeight: 700, marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                     Quick questions
@@ -369,11 +378,11 @@ export default function ChatbotPage() {
                   className="chat-input"
                   rows={1}
                   value={input}
-                  onChange={e => setInput(e.target.value)}
+                  onChange={handleInputChange}
                   onKeyDown={onKey}
                   placeholder="Ask Haribon about events, membership, training, policies…"
                   disabled={thinking}
-                  style={{ maxHeight: 100 }}
+                  style={{ maxHeight: 120, overflowY: 'auto' }}
                 />
                 <button
                   onClick={() => send()}

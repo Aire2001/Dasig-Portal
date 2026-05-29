@@ -67,7 +67,7 @@ const KB = [
   },
   {
     intent: 'partnerships',
-    keywords: ['partnership', 'partner', 'collaboration', 'mou', 'moa', 'strategic partner', 'bilateral', 'agreement'],
+    keywords: ['partnership', 'partnerships', 'partner', 'collaboration', 'mou', 'moa', 'strategic partner', 'bilateral', 'agreement', 'tell me about partnerships', 'dasig partnerships'],
     reply: 'DASIG strategic partnerships with external organizations are documented in the Partnerships module. This module is accessible to active DASIG members.',
   },
   {
@@ -127,7 +127,7 @@ const KB = [
   },
   {
     intent: 'it332',
-    keywords: ['it332', 'capstone', 'team 40', 'cit-u', 'cebu institute', 'school project'],
+    keywords: ['it332', 'capstone', 'team 40', 'cit-u', 'cebu institute', 'school project', 'who made this', 'who built this', 'who created this', 'who developed this', 'who made the portal', 'who built the portal', 'who created the portal', 'who built', 'who made', 'who created', 'project creator', 'developer'],
     reply: 'The DASIG Portal is the IT332 Capstone Project of Team 40 at CIT-U (Cebu Institute of Technology — University). It demonstrates enterprise-grade software engineering: NLP chatbot, role-based access control, Supabase backend, React frontend, and RESTful API design.',
   },
   {
@@ -225,6 +225,21 @@ const KB = [
     keywords: ['booking confirmation', 'confirmation email', 'registered successfully', 'proof of registration', 'event confirmation'],
     reply: 'After successfully registering for an event, your registration is saved in the system. You can confirm your registration by checking "My Registrations" in your Profile page. A confirmation record with the event name and date is stored there.',
   },
+  {
+    intent: 'cancel_registration',
+    keywords: ['cancel registration', 'cancel my registration', 'cancel my event', 'cancel my enrollment', 'unregister', 'cancel event', 'withdraw registration', 'cancel enrollment', 'unenroll', 'unenroll from training', 'remove registration', 'how to cancel', 'drop training', 'withdraw from training', 'cancel my', 'how do i cancel'],
+    reply: 'To cancel an event registration: go to the Events module, find your registered event, and click "Cancel Registration." To unenroll from a training program: go to the Training module and click "Unenroll." Cancellations are immediate — your slot may be taken by another participant.',
+  },
+  {
+    intent: 'profile_page',
+    keywords: ['profile page', 'my profile page', 'where is my profile', 'view profile', 'account page', 'profile section', 'my account'],
+    reply: 'Your Profile page is accessible by clicking your name or avatar in the navigation bar. It shows your account details, membership status, registered events, and enrolled training programs. You can edit your name, institution, and campus from there.',
+  },
+  {
+    intent: 'guest_access',
+    keywords: ['guest', 'guest user', 'not logged in', 'without account', 'what can guests do', 'guest access', 'free access', 'no account'],
+    reply: 'Guest users (not logged in) can browse public Events, News announcements, Training programs, and the Members directory. To access Policies, Partnerships, Funding, and members-only content, you need to register and apply for DASIG membership.',
+  },
 ];
 
 // Follow-up suggestions per intent
@@ -273,7 +288,10 @@ const FOLLOWUPS = {
   technical_support:    ['How do I contact admin?', 'What is in the DASIG portal?', 'How do I log in?'],
   feedback:             ['How do I contact admin?', 'What is in the DASIG portal?', 'What events are upcoming?'],
   news_members_only:    ['How do I become a member?', 'What are the latest news?', 'What events are upcoming?'],
-  booking_confirmation: ['What events are upcoming?', 'How do I register for an event?', 'How do I check my registrations?'],
+  booking_confirmation:  ['What events are upcoming?', 'How do I register for an event?', 'How do I check my registrations?'],
+  cancel_registration:   ['How do I register for an event?', 'What events are upcoming?', 'How do I check my registrations?'],
+  profile_page:          ['How do I update my profile?', 'What is my membership status?', 'How do I check my registrations?'],
+  guest_access:          ['How do I create a new account?', 'How do I become a member?', 'What events are upcoming?'],
 };
 const DEFAULT_FOLLOWUPS = [
   '📅 What events are coming up?',
@@ -353,7 +371,7 @@ router.post('/message', async (req, res) => {
         reply = `${match.reply}\n\n🎓 Featured programs:\n${list}\n\nBrowse all in the Training module!`;
       }
     } else if (match.intent === 'news') {
-      const { data } = await supabase.from('news').select('title, badge').eq('archived', false).order('created_at', { ascending: false }).limit(6);
+      const { data } = await supabase.from('news').select('title, badge').eq('archived', false).order('date', { ascending: false }).limit(6);
       if (data && data.length > 0) {
         const items = uniq(data, 'title').slice(0, 3);
         const list = items.map(n => `• ${n.title}${n.badge ? ' [' + n.badge + ']' : ''}`).join('\n');
@@ -365,6 +383,13 @@ router.post('/message', async (req, res) => {
         const items = uniq(data, 'title').slice(0, 3);
         const list = items.map(f => `• ${f.title}${f.category ? ' [' + f.category + ']' : ''}`).join('\n');
         reply = `${match.reply}\n\n💰 Currently open:\n${list}\n\nView eligibility details in the Funding module!`;
+      }
+    } else if (match.intent === 'partnerships') {
+      const { data } = await supabase.from('partnerships').select('partner_name, type, status').order('id', { ascending: true }).limit(6);
+      if (data && data.length > 0) {
+        const items = uniq(data, 'partner_name');
+        const list = items.map(p => `• ${p.partner_name} [${p.type}] — ${p.status}`).join('\n');
+        reply = `${match.reply}\n\n🤝 Current partnerships:\n${list}\n\nView full details in the Partnerships module.`;
       }
     } else if (match.intent === 'member_institutions') {
       const { data } = await supabase.from('members').select('abbr, full_name').limit(12);
