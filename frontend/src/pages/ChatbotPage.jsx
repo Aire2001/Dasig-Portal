@@ -4,6 +4,56 @@ import ParticleBackground from '../components/ParticleBackground';
 import HaribonFace from '../components/HaribonFace';
 import { api } from '../api';
 
+// Renders bot reply text with formatted bullets, numbered lists, and section headers
+function BotText({ text }) {
+  const blocks = text.split('\n\n').filter(Boolean);
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      {blocks.map((block, bi) => {
+        const lines = block.split('\n').filter(l => l.trim());
+        return (
+          <div key={bi} style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            {lines.map((line, li) => {
+              const t = line.trim();
+              // Bullet point
+              if (t.startsWith('•')) {
+                return (
+                  <div key={li} style={{ display: 'flex', gap: 9, alignItems: 'flex-start' }}>
+                    <span style={{ color: '#f97316', flexShrink: 0, fontSize: 12, marginTop: 3 }}>▸</span>
+                    <span style={{ color: 'rgba(255,255,255,0.88)', lineHeight: 1.6 }}>{t.slice(1).trim()}</span>
+                  </div>
+                );
+              }
+              // Numbered list
+              if (/^\d+\./.test(t)) {
+                const num = t.match(/^(\d+)\./)[1];
+                const content = t.replace(/^\d+\.\s*/, '');
+                return (
+                  <div key={li} style={{ display: 'flex', gap: 9, alignItems: 'flex-start' }}>
+                    <span style={{ color: '#f97316', flexShrink: 0, fontWeight: 800, minWidth: 18, lineHeight: 1.6 }}>{num}.</span>
+                    <span style={{ color: 'rgba(255,255,255,0.88)', lineHeight: 1.6 }}>{content}</span>
+                  </div>
+                );
+              }
+              // Section header (short line ending with colon, or starts with emoji)
+              if ((t.endsWith(':') && t.length < 60) || /^[\u{1F300}-\u{1FAFF}]/u.test(t)) {
+                return (
+                  <div key={li} style={{ fontWeight: 800, color: '#fff', fontSize: 13, marginTop: li > 0 ? 4 : 0 }}>
+                    {t}
+                  </div>
+                );
+              }
+              return (
+                <div key={li} style={{ color: 'rgba(255,255,255,0.85)', lineHeight: 1.65 }}>{t}</div>
+              );
+            })}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 const QUICK_CHIPS = [
   { label: '📅 Upcoming Events',        q: 'What events are coming up?' },
   { label: '🎓 Training Programs',      q: 'What training programs are available?' },
@@ -38,17 +88,19 @@ const CHAT_CSS = `
   .typing-dot:nth-child(2) { animation-delay: 0.2s; }
   .typing-dot:nth-child(3) { animation-delay: 0.4s; }
   .chip-btn {
-    border-radius: 20px; padding: 7px 14px; font-size: 12px; font-weight: 700;
+    border-radius: 10px; padding: 8px 14px; font-size: 12.5px; font-weight: 600;
     cursor: pointer; font-family: inherit; white-space: nowrap;
-    background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.75);
-    border: 1px solid rgba(255,255,255,0.14);
-    transition: all 0.18s;
+    background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.72);
+    border: 1px solid rgba(255,255,255,0.12);
+    transition: all 0.16s; text-align: left;
   }
   .chip-btn:hover {
-    background: rgba(249,115,22,0.18); color: #f97316;
-    border-color: rgba(249,115,22,0.4);
-    transform: translateY(-2px);
+    background: rgba(249,115,22,0.15); color: #fb923c;
+    border-color: rgba(249,115,22,0.35);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(249,115,22,0.15);
   }
+  .chip-btn:active { transform: translateY(0); }
   .chat-input {
     flex: 1; background: rgba(255,255,255,0.07); border: 1.5px solid rgba(255,255,255,0.15);
     border-radius: 14px; padding: 13px 18px; font-size: 14px;
@@ -284,43 +336,59 @@ export default function ChatbotPage() {
                   <>
                 {messages.map((msg, i) => (
                   <div key={i} className="chat-msg" style={{ display: 'flex', flexDirection: 'column', alignItems: msg.from === 'user' ? 'flex-end' : 'flex-start' }}>
+
+                    {/* Bot avatar row */}
                     {msg.from === 'bot' && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 5 }}>
-                        <div style={{ width: 22, height: 22, borderRadius: 6, overflow: 'hidden', flexShrink: 0 }}>
-                          <HaribonFace size={22} />
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 6 }}>
+                        <div style={{ width: 26, height: 26, borderRadius: 8, overflow: 'hidden', flexShrink: 0, border: '1.5px solid rgba(249,115,22,0.3)' }}>
+                          <HaribonFace size={26} />
                         </div>
-                        <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>Haribon</span>
-                        {msg.intent && msg.matched !== false && (
-                          <span style={{
-                            background: 'rgba(79,70,229,0.2)', color: '#a5b4fc',
-                            border: '1px solid rgba(79,70,229,0.3)', borderRadius: 5,
-                            padding: '1px 7px', fontSize: 10, fontWeight: 700,
-                          }}>{msg.intent.replace(/_/g, ' ')}</span>
+                        <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', fontWeight: 700, letterSpacing: '0.2px' }}>Haribon</span>
+                        {!msg.matched && msg.matched !== undefined && (
+                          <span style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.3)', fontStyle: 'italic' }}>no exact match</span>
                         )}
                       </div>
                     )}
+
+                    {/* Message bubble */}
                     <div style={{
-                      maxWidth: '78%', padding: '12px 16px', borderRadius: 16, fontSize: 13.5, lineHeight: 1.65,
+                      maxWidth: '80%', padding: msg.from === 'bot' ? '14px 18px' : '11px 16px',
+                      borderRadius: 18, fontSize: 13.5,
                       ...(msg.from === 'bot' ? {
-                        background: 'rgba(30,41,59,0.95)', color: 'rgba(255,255,255,0.85)',
-                        borderBottomLeftRadius: 4, border: '1px solid rgba(255,255,255,0.08)',
-                        whiteSpace: 'pre-line',
+                        background: 'rgba(20,30,50,0.96)',
+                        borderBottomLeftRadius: 5,
+                        border: '1px solid rgba(255,255,255,0.09)',
+                        boxShadow: '0 4px 20px rgba(0,0,0,0.25)',
                       } : {
-                        background: 'linear-gradient(135deg,#001d5c,#1a56db)',
-                        color: '#fff', borderBottomRightRadius: 4,
-                        boxShadow: '0 4px 16px rgba(0,29,92,0.35)',
+                        background: 'linear-gradient(135deg,#1e3a8a,#1a56db)',
+                        color: '#fff', borderBottomRightRadius: 5,
+                        boxShadow: '0 4px 16px rgba(30,58,138,0.4)',
                       }),
-                    }}>{msg.text}</div>
+                    }}>
+                      {msg.from === 'bot'
+                        ? <BotText text={msg.text} />
+                        : <span style={{ lineHeight: 1.55 }}>{msg.text}</span>
+                      }
+                    </div>
+
+                    {/* Timestamp */}
                     {msg.time && (
-                      <div style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.25)', marginTop: 4 }}>
+                      <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.22)', marginTop: 4, fontWeight: 500 }}>
                         {formatTime(msg.time)}
                       </div>
                     )}
-                    {msg.from === 'bot' && msg.followups && msg.followups.length > 0 && i === messages.length - 1 && !thinking && (
-                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8, maxWidth: '80%' }}>
-                        {msg.followups.map(f => (
-                          <button key={f} className="chip-btn" onClick={() => send(f)} disabled={thinking}>{f}</button>
-                        ))}
+
+                    {/* Follow-up suggestions — only on last bot message */}
+                    {msg.from === 'bot' && msg.followups?.length > 0 && i === messages.length - 1 && !thinking && (
+                      <div style={{ marginTop: 10, maxWidth: '82%' }}>
+                        <div style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.28)', fontWeight: 700, marginBottom: 6, letterSpacing: '0.4px', textTransform: 'uppercase' }}>
+                          Suggested follow-ups
+                        </div>
+                        <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap' }}>
+                          {msg.followups.map(f => (
+                            <button key={f} className="chip-btn" onClick={() => send(f)} disabled={thinking}>{f}</button>
+                          ))}
+                        </div>
                       </div>
                     )}
                   </div>
