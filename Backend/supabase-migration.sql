@@ -135,11 +135,16 @@ CREATE TABLE IF NOT EXISTS training_enrollments (
 -- Consortium member institutions (reference data)
 CREATE TABLE IF NOT EXISTS members (
   id        BIGSERIAL PRIMARY KEY,
-  abbr      TEXT NOT NULL UNIQUE,
+  abbr      TEXT NOT NULL,
   full_name TEXT NOT NULL,
   campus    TEXT NOT NULL,
   type      TEXT NOT NULL
 );
+
+-- Deduplicate members before adding unique constraint (keeps lowest id per abbr)
+DELETE FROM members
+  WHERE id <> (SELECT MIN(id) FROM members m2 WHERE m2.abbr = members.abbr);
+
 DO $$ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'members_abbr_key') THEN
     ALTER TABLE members ADD CONSTRAINT members_abbr_key UNIQUE (abbr);
@@ -172,6 +177,10 @@ CREATE TABLE IF NOT EXISTS policies (
   created_at     TIMESTAMPTZ DEFAULT NOW(),
   updated_at     TIMESTAMPTZ
 );
+-- Deduplicate policies before adding unique constraint
+DELETE FROM policies
+  WHERE id <> (SELECT MIN(id) FROM policies p2 WHERE p2.title = policies.title);
+
 DO $$ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'policies_title_key') THEN
     ALTER TABLE policies ADD CONSTRAINT policies_title_key UNIQUE (title);
@@ -194,6 +203,10 @@ CREATE TABLE IF NOT EXISTS funding_opportunities (
   created_at  TIMESTAMPTZ DEFAULT NOW(),
   updated_at  TIMESTAMPTZ
 );
+-- Deduplicate funding_opportunities before adding unique constraint
+DELETE FROM funding_opportunities
+  WHERE id <> (SELECT MIN(id) FROM funding_opportunities f2 WHERE f2.title = funding_opportunities.title);
+
 DO $$ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'funding_opportunities_title_key') THEN
     ALTER TABLE funding_opportunities ADD CONSTRAINT funding_opportunities_title_key UNIQUE (title);
@@ -216,6 +229,10 @@ CREATE TABLE IF NOT EXISTS partnerships (
   created_at     TIMESTAMPTZ DEFAULT NOW(),
   updated_at     TIMESTAMPTZ
 );
+-- Deduplicate partnerships before adding unique constraint
+DELETE FROM partnerships
+  WHERE id <> (SELECT MIN(id) FROM partnerships p2 WHERE p2.partner_name = partnerships.partner_name);
+
 DO $$ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'partnerships_partner_name_key') THEN
     ALTER TABLE partnerships ADD CONSTRAINT partnerships_partner_name_key UNIQUE (partner_name);
