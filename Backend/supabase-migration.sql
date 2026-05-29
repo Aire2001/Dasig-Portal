@@ -43,11 +43,16 @@ CREATE TABLE IF NOT EXISTS events (
 );
 
 -- Deduplicate events if migration was run multiple times (keeps the lowest id per title)
-DELETE FROM event_registrations
-  WHERE event_id IN (
-    SELECT id FROM events e
-    WHERE e.id <> (SELECT MIN(id) FROM events e2 WHERE e2.title = e.title)
-  );
+-- Wrapped in DO blocks so fresh-DB runs don't error on missing tables
+DO $$ BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'event_registrations') THEN
+    DELETE FROM event_registrations
+      WHERE event_id IN (
+        SELECT id FROM events e
+        WHERE e.id <> (SELECT MIN(id) FROM events e2 WHERE e2.title = e.title)
+      );
+  END IF;
+END $$;
 DELETE FROM events
   WHERE id <> (SELECT MIN(id) FROM events e2 WHERE e2.title = events.title);
 
@@ -99,11 +104,15 @@ CREATE TABLE IF NOT EXISTS trainings (
 );
 
 -- Deduplicate trainings if migration was run multiple times
-DELETE FROM training_enrollments
-  WHERE training_id IN (
-    SELECT id FROM trainings t
-    WHERE t.id <> (SELECT MIN(id) FROM trainings t2 WHERE t2.title = t.title)
-  );
+DO $$ BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'training_enrollments') THEN
+    DELETE FROM training_enrollments
+      WHERE training_id IN (
+        SELECT id FROM trainings t
+        WHERE t.id <> (SELECT MIN(id) FROM trainings t2 WHERE t2.title = t.title)
+      );
+  END IF;
+END $$;
 DELETE FROM trainings
   WHERE id <> (SELECT MIN(id) FROM trainings t2 WHERE t2.title = trainings.title);
 
