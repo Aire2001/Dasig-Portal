@@ -1,6 +1,7 @@
 const express = require('express');
 const supabase = require('../lib/supabase');
 const { verifyToken, requireRole } = require('../middleware/auth');
+const { sendEventRegistrationEmail } = require('../lib/mailer');
 
 const router = express.Router();
 
@@ -81,7 +82,7 @@ router.delete('/:id', verifyToken, requireRole('ADMIN'), async (req, res) => {
 // POST /api/events/:id/register — register user for event
 router.post('/:id/register', verifyToken, async (req, res) => {
   const eventId = Number(req.params.id);
-  const { data: ev } = await supabase.from('events').select('enrolled,total').eq('id', eventId).single();
+  const { data: ev } = await supabase.from('events').select('enrolled,total,title,date,venue,organizer,category').eq('id', eventId).single();
   if (!ev) return res.status(404).json({ error: 'Event not found' });
   if (ev.enrolled >= ev.total) return res.status(400).json({ error: 'Event is fully booked' });
 
@@ -90,6 +91,9 @@ router.post('/:id/register', verifyToken, async (req, res) => {
 
   const { data: updated } = await supabase.from('events')
     .update({ enrolled: ev.enrolled + 1 }).eq('id', eventId).select('enrolled,total').single();
+
+  // Send confirmation email (fire-and-forget — never blocks the response)
+  sendEventRegistrationEmail(req.user.email, req.user.name, ev).catch(() => {});
 
   res.json({ message: 'Registration successful', eventId, enrolled: updated.enrolled, total: updated.total });
 });

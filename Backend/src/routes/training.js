@@ -1,6 +1,7 @@
 const express = require('express');
 const supabase = require('../lib/supabase');
 const { verifyToken, requireRole } = require('../middleware/auth');
+const { sendTrainingEnrollmentEmail } = require('../lib/mailer');
 
 const router = express.Router();
 
@@ -84,7 +85,7 @@ router.delete('/:id', verifyToken, requireRole('ADMIN'), async (req, res) => {
 // POST /api/training/:id/enroll — enroll user
 router.post('/:id/enroll', verifyToken, async (req, res) => {
   const trainingId = Number(req.params.id);
-  const { data: t } = await supabase.from('trainings').select('enrolled,total').eq('id', trainingId).single();
+  const { data: t } = await supabase.from('trainings').select('enrolled,total,title,org,duration,category,level,schedule').eq('id', trainingId).single();
   if (!t) return res.status(404).json({ error: 'Training not found' });
   if (t.enrolled >= t.total) return res.status(400).json({ error: 'Training is fully booked' });
 
@@ -93,6 +94,9 @@ router.post('/:id/enroll', verifyToken, async (req, res) => {
 
   const { data: updated } = await supabase.from('trainings')
     .update({ enrolled: t.enrolled + 1 }).eq('id', trainingId).select('enrolled,total').single();
+
+  // Send confirmation email (fire-and-forget — never blocks the response)
+  sendTrainingEnrollmentEmail(req.user.email, req.user.name, t).catch(() => {});
 
   res.json({ message: 'Enrollment successful', trainingId, enrolled: updated.enrolled, total: updated.total });
 });
