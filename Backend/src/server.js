@@ -13,6 +13,7 @@ const policiesRoutes    = require('./routes/policies');
 const fundingRoutes     = require('./routes/funding');
 const partnershipsRoutes = require('./routes/partnerships');
 const adminRoutes       = require('./routes/admin');
+const contactRoutes     = require('./routes/contact');
 
 const app = express();
 
@@ -30,6 +31,7 @@ app.use('/api/policies',     policiesRoutes);
 app.use('/api/funding',      fundingRoutes);
 app.use('/api/partnerships', partnershipsRoutes);
 app.use('/api/admin',        adminRoutes);
+app.use('/api/contact',      contactRoutes);
 
 app.get('/', (req, res) => res.json({
   name: 'DASIG Portal API',

@@ -158,12 +158,12 @@ export default function Chatbot() {
     if (msgsRef.current) msgsRef.current.scrollTop = msgsRef.current.scrollHeight;
   }, [messages, thinking]);
 
-  // Increment unread badge when widget is closed and bot replies
+  // Increment unread badge only when widget is closed and a new bot reply arrives
   useEffect(() => {
     if (!open && messages.length > 1 && messages[messages.length - 1]?.from === 'bot') {
       setUnread(u => u + 1);
     }
-  }, [messages.length]);
+  }, [messages.length, open]);
 
   function openWidget() { setOpen(true); setUnread(0); }
   function newChat()    { setMessages([{ from:'bot', text: getGreeting(user) }]); setEnded(false); setInput(''); setHasReplied(false); }

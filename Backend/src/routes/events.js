@@ -111,9 +111,14 @@ router.delete('/:id/register', verifyToken, async (req, res) => {
     .select('enrolled,title,date,venue,organizer,category').eq('id', eventId).single();
   if (!ev) return res.status(404).json({ error: 'Event not found' });
 
+  // Check registration exists first — Supabase DELETE silently succeeds with 0 rows
+  const { data: existing } = await supabase.from('event_registrations')
+    .select('id').eq('event_id', eventId).eq('user_id', req.user.id).single();
+  if (!existing) return res.status(400).json({ error: 'Not registered for this event' });
+
   const { error } = await supabase.from('event_registrations')
     .delete().eq('event_id', eventId).eq('user_id', req.user.id);
-  if (error) return res.status(400).json({ error: 'Not registered for this event' });
+  if (error) return res.status(500).json({ error: error.message });
 
   const { data: updated } = await supabase.from('events')
     .update({ enrolled: Math.max(0, ev.enrolled - 1) }).eq('id', eventId).select('enrolled').single();

@@ -127,7 +127,8 @@ export default function MembershipPage() {
   const [status, setStatus]       = useState(null);
   const [loading, setLoading]     = useState(true);
   const [applyForm, setApplyForm] = useState({ institution: '', campus: '', tier: 'Tier 2' });
-  const [applyMsg, setApplyMsg]   = useState('');
+  const [applyMsg, setApplyMsg]     = useState('');
+  const [applyMsgOk, setApplyMsgOk] = useState(true);
   const [applyErrors, setApplyErrors] = useState({});
   const [applying, setApplying]   = useState(false);
   const [showCert, setShowCert]   = useState(false);
@@ -184,9 +185,11 @@ export default function MembershipPage() {
     setApplying(true);
     try {
       const res = await api.membership.apply(applyForm);
-      setApplyMsg(res.message);
+      setApplyMsg(res.message || 'Application submitted successfully!');
+      setApplyMsgOk(true);
     } catch (err) {
-      setApplyMsg(err.message);
+      setApplyMsg(err.message || 'Failed to submit application. Please try again.');
+      setApplyMsgOk(false);
     } finally {
       setApplying(false);
     }
@@ -240,7 +243,7 @@ export default function MembershipPage() {
                 </div>
                 <div style={{ color: 'rgba(255,255,255,0.55)', fontSize: 11, fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', marginBottom: 6 }}>DASIG Membership Status</div>
                 <div style={{ color: '#fff', fontSize: 32, fontWeight: 900, letterSpacing: '-1px' }}>{isMember ? 'Active' : 'Guest'}</div>
-                <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12.5, marginTop: 4 }}>{isMember ? '2026 Membership Year' : 'Apply to become a member'}</div>
+                <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12.5, marginTop: 4 }}>{isMember ? `${new Date().getFullYear()} Membership Year` : 'Apply to become a member'}</div>
               </div>
               <div style={{ position: 'relative', zIndex: 1 }}>
                 <HaribonFull width={85} />
@@ -300,9 +303,10 @@ export default function MembershipPage() {
 
                 {applyMsg && (
                   <div style={{
-                    background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.3)',
+                    background: applyMsgOk ? 'rgba(16,185,129,0.15)' : 'rgba(225,29,72,0.12)',
+                    border: `1px solid ${applyMsgOk ? 'rgba(16,185,129,0.3)' : 'rgba(225,29,72,0.35)'}`,
                     borderRadius: 10, padding: '12px 16px', marginBottom: 18,
-                    fontSize: 13.5, color: '#34d399',
+                    fontSize: 13.5, color: applyMsgOk ? '#34d399' : '#f87171',
                   }}>{applyMsg}</div>
                 )}
 

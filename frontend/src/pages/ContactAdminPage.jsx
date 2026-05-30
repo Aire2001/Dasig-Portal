@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import PageHeader from '../components/PageHeader';
 import ParticleBackground from '../components/ParticleBackground';
+import { api } from '../api';
 
 const FIELDS = [
   { key: 'name',    label: 'Full Name',     type: 'text',  placeholder: 'Your full name',    required: true },
@@ -52,12 +53,22 @@ export default function ContactAdminPage() {
     if (errors[k]) setErrors(e => ({ ...e, [k]: undefined }));
   }
 
-  function handleSubmit(e) {
+  const [submitErr, setSubmitErr] = useState('');
+
+  async function handleSubmit(e) {
     e.preventDefault();
     const errs = validate();
     if (Object.keys(errs).length) { setErrors(errs); return; }
     setSending(true);
-    setTimeout(() => { setSending(false); setSent(true); }, 1200);
+    setSubmitErr('');
+    try {
+      await api.contact.send(form);
+      setSent(true);
+    } catch (err) {
+      setSubmitErr(err.message || 'Failed to send message. Please try again or email admin@dasig.ph directly.');
+    } finally {
+      setSending(false);
+    }
   }
 
   return (
@@ -172,6 +183,12 @@ export default function ContactAdminPage() {
                 }}>
                   {sending ? '⏳ Sending…' : '📨 Send Message'}
                 </button>
+
+                {submitErr && (
+                  <div style={{ marginTop:12, background:'rgba(225,29,72,0.1)', border:'1px solid rgba(225,29,72,0.3)', borderRadius:10, padding:'12px 16px', color:'#f87171', fontSize:13.5, fontWeight:600 }}>
+                    ⚠️ {submitErr}
+                  </div>
+                )}
 
                 {/* Contact info */}
                 <div style={{

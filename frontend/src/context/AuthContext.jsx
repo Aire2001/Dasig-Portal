@@ -1,10 +1,10 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { api } from '../api';
 
-const AuthContext = createContext(null);
-
 const TOKEN_KEY = 'dasig_token';
 const USER_KEY  = 'dasig_user';
+
+const AuthContext = createContext(null);
 
 function getCachedUser() {
   try {
@@ -14,7 +14,6 @@ function getCachedUser() {
 }
 
 export function AuthProvider({ children }) {
-  // Initialise from cache so the UI never flashes "logged out" on refresh
   const [user, setUser]       = useState(getCachedUser);
   const [loading, setLoading] = useState(!!localStorage.getItem(TOKEN_KEY));
 
@@ -28,25 +27,19 @@ export function AuthProvider({ children }) {
     setUser(u);
   }
 
-  // Validate token in background on mount; don't clear until we get a 401
+  // Validate token via the api module (no hardcoded URL — works in production)
   useEffect(() => {
     const token = localStorage.getItem(TOKEN_KEY);
     if (!token) { setLoading(false); return; }
 
-    fetch('http://localhost:4000/api/auth/me', {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then(res => {
-        if (res.status === 401 || res.status === 403) {
-          // Token genuinely invalid — clear everything
-          applyUser(null);
-          return null;
-        }
-        return res.ok ? res.json() : null;
-      })
+    api.auth.me()
       .then(u => { if (u) applyUser(u); })
-      .catch(() => {
-        // Network error / backend down — keep cached user, don't force logout
+      .catch(err => {
+        // 401/403 = invalid token → clear session
+        if (err.message && (err.message.includes('401') || err.message.includes('403') || err.message.toLowerCase().includes('token') || err.message.toLowerCase().includes('unauthorized'))) {
+          applyUser(null);
+        }
+        // Network error → keep cached user, don't force logout
       })
       .finally(() => setLoading(false));
   }, []);
@@ -68,8 +61,6 @@ export function AuthProvider({ children }) {
   }
 
   async function refreshUser() {
-    const token = localStorage.getItem(TOKEN_KEY);
-    if (!token) return;
     try {
       const u = await api.auth.me();
       applyUser(u);

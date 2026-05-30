@@ -114,9 +114,14 @@ router.delete('/:id/enroll', verifyToken, async (req, res) => {
     .select('enrolled,title,org,duration,level,schedule,category').eq('id', trainingId).single();
   if (!t) return res.status(404).json({ error: 'Training not found' });
 
+  // Check enrollment exists first — Supabase DELETE silently succeeds with 0 rows
+  const { data: existing } = await supabase.from('training_enrollments')
+    .select('id').eq('training_id', trainingId).eq('user_id', req.user.id).single();
+  if (!existing) return res.status(400).json({ error: 'Not enrolled in this training' });
+
   const { error } = await supabase.from('training_enrollments')
     .delete().eq('training_id', trainingId).eq('user_id', req.user.id);
-  if (error) return res.status(400).json({ error: 'Not enrolled in this training' });
+  if (error) return res.status(500).json({ error: error.message });
 
   const { data: updated } = await supabase.from('trainings')
     .update({ enrolled: Math.max(0, t.enrolled - 1) }).eq('id', trainingId).select('enrolled').single();

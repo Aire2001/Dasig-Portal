@@ -140,4 +140,7 @@ export const api = {
     send: (message) => request('/chatbot/message', { method: 'POST', body: JSON.stringify({ message }) }),
     intents: () => request('/chatbot/intents'),
   },
+  contact: {
+    send: (body) => request('/contact', { method: 'POST', body: JSON.stringify(body) }),
+  },
 };

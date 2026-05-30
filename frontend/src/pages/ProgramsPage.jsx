@@ -698,7 +698,7 @@ function EventsTab({ user }) {
     api.auth.myRegistrations()
       .then(regs => {
         const m = {};
-        regs.forEach(r => { m[r.event_id] = { attended: r.attended }; });
+        regs.forEach(r => { m[+r.event_id] = { attended: r.attended }; });
         setMyRegs(m);
       })
       .catch(() => {});
@@ -1092,7 +1092,7 @@ function TrainingTab({ user }) {
   useEffect(() => {
     if (!user) return;
     api.auth.myEnrollments().then(enrs => {
-      const m = {}; enrs.forEach(e => { m[e.training_id] = true; }); setMyEnr(m);
+      const m = {}; enrs.forEach(e => { m[+e.training_id] = true; }); setMyEnr(m);
     }).catch(() => {});
   }, [user]);
 
@@ -1422,10 +1422,10 @@ function CalendarTab({ user }) {
   useEffect(() => {
     if (!user) return;
     api.auth.myRegistrations().then(r => {
-      const m = {}; r.forEach(x => { m[x.event_id] = true; }); setMyRegs(m);
+      const m = {}; r.forEach(x => { m[+x.event_id] = true; }); setMyRegs(m);
     }).catch(() => {});
     api.auth.myEnrollments().then(r => {
-      const m = {}; r.forEach(x => { m[x.training_id] = true; }); setMyEnr(m);
+      const m = {}; r.forEach(x => { m[+x.training_id] = true; }); setMyEnr(m);
     }).catch(() => {});
   }, [user]);
 
