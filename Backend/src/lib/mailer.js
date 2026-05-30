@@ -187,4 +187,113 @@ async function sendTrainingEnrollmentEmail(toEmail, userName, training) {
   });
 }
 
-module.exports = { sendPasswordResetEmail, sendEventRegistrationEmail, sendTrainingEnrollmentEmail };
+async function sendEventCancellationEmail(toEmail, userName, event) {
+  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) return;
+  const transporter = createTransporter();
+  await transporter.sendMail({
+    from: FROM,
+    to: toEmail,
+    subject: `❌ Registration Cancelled — ${event.title}`,
+    html: `
+      <!DOCTYPE html><html><head><meta charset="utf-8">
+      <style>
+        body{font-family:'Segoe UI',Arial,sans-serif;background:#f1f5f9;margin:0;padding:32px 0;}
+        .card{background:#fff;max-width:520px;margin:0 auto;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);}
+        .header{background:linear-gradient(135deg,#9f1239,#e11d48);padding:36px 32px;text-align:center;}
+        .header h1{color:#fff;margin:0 0 6px;font-size:24px;font-weight:900;}
+        .header p{color:rgba(255,255,255,0.7);margin:0;font-size:13px;}
+        .body{padding:32px;}
+        .body p{line-height:1.7;font-size:14px;color:#334155;margin:0 0 12px;}
+        .details{background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:20px 24px;margin:20px 0;}
+        .row{display:flex;align-items:flex-start;gap:12px;padding:8px 0;border-bottom:1px solid #f1f5f9;}
+        .row:last-child{border-bottom:none;}
+        .row-icon{font-size:18px;width:24px;flex-shrink:0;}
+        .row-label{font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px;}
+        .row-val{font-size:14px;color:#1e293b;font-weight:600;}
+        .notice{background:#fff1f2;border:1px solid #fecdd3;border-radius:10px;padding:14px 16px;margin-top:16px;}
+        .notice p{color:#9f1239;font-size:13px;margin:0;line-height:1.6;}
+        .btn{display:block;text-align:center;background:linear-gradient(90deg,#f97316,#e11d48);color:#fff !important;text-decoration:none;border-radius:10px;padding:14px 24px;font-weight:700;font-size:15px;margin:24px 0;}
+        .footer{text-align:center;padding:20px;font-size:11px;color:#94a3b8;border-top:1px solid #f1f5f9;}
+      </style></head><body>
+      <div class="card">
+        <div class="header">
+          <div style="font-size:44px;margin-bottom:10px;">❌</div>
+          <h1>Registration Cancelled</h1>
+          <p>DASIG Portal · Region VII Consortium</p>
+        </div>
+        <div class="body">
+          <p>Hi <strong>${userName}</strong>,</p>
+          <p>Your registration for the following event has been <strong>cancelled</strong>. Your slot has been returned to the available pool.</p>
+          <div class="details">
+            <div class="row"><span class="row-icon">📋</span><div><div class="row-label">Event</div><div class="row-val">${event.title}</div></div></div>
+            <div class="row"><span class="row-icon">📅</span><div><div class="row-label">Date</div><div class="row-val">${event.date || 'TBA'}</div></div></div>
+            ${event.venue ? `<div class="row"><span class="row-icon">📍</span><div><div class="row-label">Venue</div><div class="row-val">${event.venue}</div></div></div>` : ''}
+            ${event.organizer ? `<div class="row"><span class="row-icon">🏛️</span><div><div class="row-label">Organizer</div><div class="row-val">${event.organizer}</div></div></div>` : ''}
+          </div>
+          <div class="notice"><p>If you cancelled by mistake, you may re-register through the DASIG Portal — subject to available slots.</p></div>
+          <a href="${PORTAL_URL}/programs" class="btn">Browse Events Again →</a>
+        </div>
+        <div class="footer">DASIG Portal · Cebu Institute of Technology – University · IT332 Capstone<br>This is an automated message — please do not reply.</div>
+      </div>
+      </body></html>
+    `,
+    text: `Hi ${userName},\n\nYour registration for "${event.title}" has been cancelled.\n\nDate: ${event.date || 'TBA'}\nVenue: ${event.venue || 'TBA'}\n\nIf this was a mistake, you can re-register at: ${PORTAL_URL}/programs`,
+  });
+}
+
+async function sendTrainingCancellationEmail(toEmail, userName, training) {
+  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) return;
+  const transporter = createTransporter();
+  await transporter.sendMail({
+    from: FROM,
+    to: toEmail,
+    subject: `❌ Enrollment Cancelled — ${training.title}`,
+    html: `
+      <!DOCTYPE html><html><head><meta charset="utf-8">
+      <style>
+        body{font-family:'Segoe UI',Arial,sans-serif;background:#f1f5f9;margin:0;padding:32px 0;}
+        .card{background:#fff;max-width:520px;margin:0 auto;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);}
+        .header{background:linear-gradient(135deg,#7f1d1d,#dc2626);padding:36px 32px;text-align:center;}
+        .header h1{color:#fff;margin:0 0 6px;font-size:24px;font-weight:900;}
+        .header p{color:rgba(255,255,255,0.7);margin:0;font-size:13px;}
+        .body{padding:32px;}
+        .body p{line-height:1.7;font-size:14px;color:#334155;margin:0 0 12px;}
+        .details{background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:20px 24px;margin:20px 0;}
+        .row{display:flex;align-items:flex-start;gap:12px;padding:8px 0;border-bottom:1px solid #f1f5f9;}
+        .row:last-child{border-bottom:none;}
+        .row-icon{font-size:18px;width:24px;flex-shrink:0;}
+        .row-label{font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px;}
+        .row-val{font-size:14px;color:#1e293b;font-weight:600;}
+        .notice{background:#fff1f2;border:1px solid #fecdd3;border-radius:10px;padding:14px 16px;margin-top:16px;}
+        .notice p{color:#9f1239;font-size:13px;margin:0;line-height:1.6;}
+        .btn{display:block;text-align:center;background:linear-gradient(90deg,#059669,#0891b2);color:#fff !important;text-decoration:none;border-radius:10px;padding:14px 24px;font-weight:700;font-size:15px;margin:24px 0;}
+        .footer{text-align:center;padding:20px;font-size:11px;color:#94a3b8;border-top:1px solid #f1f5f9;}
+      </style></head><body>
+      <div class="card">
+        <div class="header">
+          <div style="font-size:44px;margin-bottom:10px;">❌</div>
+          <h1>Enrollment Cancelled</h1>
+          <p>DASIG Portal · Professional Development</p>
+        </div>
+        <div class="body">
+          <p>Hi <strong>${userName}</strong>,</p>
+          <p>Your enrollment in the following training program has been <strong>cancelled</strong>. Your slot has been returned to the available pool.</p>
+          <div class="details">
+            <div class="row"><span class="row-icon">📚</span><div><div class="row-label">Program</div><div class="row-val">${training.title}</div></div></div>
+            <div class="row"><span class="row-icon">🏛️</span><div><div class="row-label">Organizer</div><div class="row-val">${training.org}</div></div></div>
+            <div class="row"><span class="row-icon">⏱️</span><div><div class="row-label">Duration</div><div class="row-val">${training.duration}</div></div></div>
+            <div class="row"><span class="row-icon">📊</span><div><div class="row-label">Level</div><div class="row-val">${training.level}</div></div></div>
+            ${training.schedule ? `<div class="row"><span class="row-icon">📅</span><div><div class="row-label">Schedule</div><div class="row-val">${training.schedule}</div></div></div>` : ''}
+          </div>
+          <div class="notice"><p>If you cancelled by mistake, you may re-enroll through the DASIG Portal — subject to available slots.</p></div>
+          <a href="${PORTAL_URL}/programs?tab=training" class="btn">Browse Training Programs →</a>
+        </div>
+        <div class="footer">DASIG Portal · Cebu Institute of Technology – University · IT332 Capstone<br>This is an automated message — please do not reply.</div>
+      </div>
+      </body></html>
+    `,
+    text: `Hi ${userName},\n\nYour enrollment in "${training.title}" has been cancelled.\n\nOrganizer: ${training.org}\nDuration: ${training.duration}\n\nIf this was a mistake, you can re-enroll at: ${PORTAL_URL}/programs?tab=training`,
+  });
+}
+
+module.exports = { sendPasswordResetEmail, sendEventRegistrationEmail, sendTrainingEnrollmentEmail, sendEventCancellationEmail, sendTrainingCancellationEmail };

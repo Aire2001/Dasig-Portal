@@ -1,7 +1,7 @@
 const express = require('express');
 const supabase = require('../lib/supabase');
 const { verifyToken, requireRole } = require('../middleware/auth');
-const { sendEventRegistrationEmail } = require('../lib/mailer');
+const { sendEventRegistrationEmail, sendEventCancellationEmail } = require('../lib/mailer');
 
 const router = express.Router();
 
@@ -107,7 +107,8 @@ router.post('/:id/register', verifyToken, async (req, res) => {
 // DELETE /api/events/:id/register — cancel registration
 router.delete('/:id/register', verifyToken, async (req, res) => {
   const eventId = Number(req.params.id);
-  const { data: ev } = await supabase.from('events').select('enrolled').eq('id', eventId).single();
+  const { data: ev } = await supabase.from('events')
+    .select('enrolled,title,date,venue,organizer,category').eq('id', eventId).single();
   if (!ev) return res.status(404).json({ error: 'Event not found' });
 
   const { error } = await supabase.from('event_registrations')
@@ -117,7 +118,10 @@ router.delete('/:id/register', verifyToken, async (req, res) => {
   const { data: updated } = await supabase.from('events')
     .update({ enrolled: Math.max(0, ev.enrolled - 1) }).eq('id', eventId).select('enrolled').single();
 
-  res.json({ message: 'Registration cancelled', enrolled: updated.enrolled });
+  // Send cancellation email (fire-and-forget)
+  sendEventCancellationEmail(req.user.email, req.user.name, ev).catch(() => {});
+
+  res.json({ message: 'Registration cancelled', enrolled: updated?.enrolled ?? 0 });
 });
 
 // GET /api/events/:id/registrations — list registrations (ADMIN only)

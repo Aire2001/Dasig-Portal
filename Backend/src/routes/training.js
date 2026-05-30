@@ -1,7 +1,7 @@
 const express = require('express');
 const supabase = require('../lib/supabase');
 const { verifyToken, requireRole } = require('../middleware/auth');
-const { sendTrainingEnrollmentEmail } = require('../lib/mailer');
+const { sendTrainingEnrollmentEmail, sendTrainingCancellationEmail } = require('../lib/mailer');
 
 const router = express.Router();
 
@@ -110,7 +110,8 @@ router.post('/:id/enroll', verifyToken, async (req, res) => {
 // DELETE /api/training/:id/enroll — unenroll user
 router.delete('/:id/enroll', verifyToken, async (req, res) => {
   const trainingId = Number(req.params.id);
-  const { data: t } = await supabase.from('trainings').select('enrolled').eq('id', trainingId).single();
+  const { data: t } = await supabase.from('trainings')
+    .select('enrolled,title,org,duration,level,schedule,category').eq('id', trainingId).single();
   if (!t) return res.status(404).json({ error: 'Training not found' });
 
   const { error } = await supabase.from('training_enrollments')
@@ -120,7 +121,10 @@ router.delete('/:id/enroll', verifyToken, async (req, res) => {
   const { data: updated } = await supabase.from('trainings')
     .update({ enrolled: Math.max(0, t.enrolled - 1) }).eq('id', trainingId).select('enrolled').single();
 
-  res.json({ message: 'Enrollment cancelled', enrolled: updated.enrolled });
+  // Send cancellation email (fire-and-forget)
+  sendTrainingCancellationEmail(req.user.email, req.user.name, t).catch(() => {});
+
+  res.json({ message: 'Enrollment cancelled', enrolled: updated?.enrolled ?? 0 });
 });
 
 // GET /api/training/:id/enrollments — list enrollments (ADMIN only)
