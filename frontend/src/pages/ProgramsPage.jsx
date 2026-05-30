@@ -471,7 +471,7 @@ function EvCard({ ev, idx, registered, onRegister, onCancel, cancelling }) {
   );
 }
 
-function TrCard({ t, idx, enrolled, onEnroll }) {
+function TrCard({ t, idx, enrolled, onEnroll, onCancel, cancelling }) {
   const [hov, setHov] = useState(false);
   const pct  = t.total > 0 ? Math.min(100, Math.round(t.enrolled / t.total * 100)) : 0;
   const full = t.total > 0 && t.enrolled >= t.total;
@@ -502,13 +502,34 @@ function TrCard({ t, idx, enrolled, onEnroll }) {
             <div style={{ height:'100%', width:`${pct}%`, background: s.accent, borderRadius:3, transition:'width .6s' }} />
           </div>
         </div>
-        <div style={{ display:'flex', justifyContent:'flex-end' }}>
-          {enrolled
-            ? <span style={{ background:'rgba(16,185,129,0.12)', color:'#34d399', borderRadius:10, padding:'8px 14px', fontSize:12, fontWeight:700, border:'1px solid rgba(16,185,129,0.22)' }}>✓ Enrolled</span>
-            : <button onClick={onEnroll} disabled={full} style={{ background: full?'rgba(255,255,255,0.05)':s.accent, color: full?'rgba(255,255,255,0.3)':'#fff', border: full?'1px solid rgba(255,255,255,0.08)':'none', borderRadius:10, padding:'9px 20px', fontSize:13, fontWeight:800, cursor: full?'not-allowed':'pointer', fontFamily:'inherit', boxShadow: full?'none':`0 4px 12px ${s.color}40` }}>
-                {full?'Fully Booked':'Enroll →'}
-              </button>
-          }
+        <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+          <div style={{ display:'flex', justifyContent:'flex-end' }}>
+            {enrolled
+              ? <span style={{ background:'rgba(16,185,129,0.12)', color:'#34d399', borderRadius:10, padding:'8px 14px', fontSize:12.5, fontWeight:700, border:'1px solid rgba(16,185,129,0.22)' }}>✓ Enrolled</span>
+              : <button onClick={onEnroll} disabled={full} style={{ background: full?'rgba(255,255,255,0.05)':s.accent, color: full?'rgba(255,255,255,0.3)':'#fff', border: full?'1px solid rgba(255,255,255,0.08)':'none', borderRadius:10, padding:'9px 20px', fontSize:13, fontWeight:800, cursor: full?'not-allowed':'pointer', fontFamily:'inherit', boxShadow: full?'none':`0 4px 12px ${s.color}40` }}>
+                  {full?'Fully Booked':'Enroll →'}
+                </button>
+            }
+          </div>
+          {/* Cancel enrollment — shown for all enrolled users */}
+          {enrolled && (
+            <button
+              onClick={onCancel}
+              disabled={cancelling}
+              style={{
+                width:'100%', background:'transparent',
+                border:'1.5px solid rgba(225,29,72,0.35)',
+                borderRadius:10, padding:'8px', fontSize:12.5, fontWeight:700,
+                color: cancelling ? 'rgba(255,255,255,0.3)' : 'rgba(244,63,94,0.9)',
+                cursor: cancelling ? 'not-allowed' : 'pointer',
+                fontFamily:'inherit', transition:'all .15s',
+              }}
+              onMouseEnter={e => { if (!cancelling) { e.currentTarget.style.background='rgba(225,29,72,0.12)'; e.currentTarget.style.borderColor='rgba(225,29,72,0.6)'; } }}
+              onMouseLeave={e => { e.currentTarget.style.background='transparent'; e.currentTarget.style.borderColor='rgba(225,29,72,0.35)'; }}
+            >
+              {cancelling ? '⏳ Cancelling…' : '✕ Cancel Enrollment'}
+            </button>
+          )}
         </div>
       </div>
     </div>
@@ -915,6 +936,7 @@ function TrainingTab({ user }) {
   const [okModal, setOkModal]     = useState(null);
   const [errModal, setErrModal]   = useState('');
   const [submitting, setSub]      = useState(false);
+  const [cancellingEnrId, setCancellingEnrId] = useState(null);
   const [fname, setFname]         = useState('');
   const [email, setEmail]         = useState('');
   const [phone, setPhone]         = useState('');
@@ -982,6 +1004,20 @@ function TrainingTab({ user }) {
     setInst(user.institution || '');
     setPosition(user.campus || '');
     setFnameErr(false); setFormModal(t); setDetail(null);
+  }
+
+  async function cancelEnr(t) {
+    if (!window.confirm(`Cancel your enrollment in "${t.title}"?`)) return;
+    setCancellingEnrId(t.id);
+    try {
+      await api.training.unenroll(t.id);
+      setMyEnr(p => { const n = { ...p }; delete n[t.id]; return n; });
+      setTrainings(p => p.map(tr => tr.id === t.id ? { ...tr, enrolled: Math.max(0, tr.enrolled - 1) } : tr));
+    } catch (err) {
+      setErrModal(err.message || 'Failed to cancel enrollment');
+    } finally {
+      setCancellingEnrId(null);
+    }
   }
 
   async function submitEnroll() {
@@ -1205,7 +1241,7 @@ function TrainingTab({ user }) {
       {!loading && (
         <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(300px,1fr))', gap:18 }}>
           {filtered.map((t, idx) => (
-            <TrCard key={t.id} t={t} idx={idx} enrolled={!!myEnr[t.id]} onEnroll={() => openEnroll(t)} />
+            <TrCard key={t.id} t={t} idx={idx} enrolled={!!myEnr[t.id]} onEnroll={() => openEnroll(t)} onCancel={() => cancelEnr(t)} cancelling={cancellingEnrId === t.id} />
           ))}
         </div>
       )}
