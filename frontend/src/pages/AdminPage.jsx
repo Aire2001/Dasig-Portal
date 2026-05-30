@@ -77,7 +77,10 @@ const CSS = `
 const NAV_GROUPS = [
   {
     label: 'Overview',
-    items: [{ key:'dashboard', icon:'⊞', label:'Dashboard' }],
+    items: [
+      { key:'dashboard', icon:'⊞', label:'Dashboard' },
+      { key:'calendar',  icon:'📆', label:'Calendar'  },
+    ],
   },
   {
     label: 'People',
@@ -300,7 +303,7 @@ function FormActions({ onCancel, onSave, saving, saveLabel }) {
 }
 
 /* ─── Main page ─────────────────────────────────────────────────── */
-const VALID_TABS = ['dashboard','users','applications','events','news','training','policies','funding','partnerships','reports'];
+const VALID_TABS = ['dashboard','calendar','users','applications','events','news','training','policies','funding','partnerships','reports'];
 
 export default function AdminPage() {
   const { user, logout } = useAuth();
@@ -395,6 +398,7 @@ export default function AdminPage() {
         {/* Content area */}
         <main style={{ flex:1, overflowY:'auto', padding:'28px 32px', background:'#060d1f' }}>
           {tab === 'dashboard'    && <DashboardTab showToast={showToast} setTab={setTab} />}
+          {tab === 'calendar'     && <AdminCalendarTab showToast={showToast} setTab={setTab} />}
           {tab === 'users'        && <UsersTab showToast={showToast} />}
           {tab === 'applications' && <ApplicationsTab showToast={showToast} />}
           {tab === 'events'       && <EventsTab showToast={showToast} />}
@@ -1545,6 +1549,369 @@ function ReportsTab({ showToast }) {
           {!(trRep?.trainings?.length) && <EmptyTR cols={5} />}
         </DataTable>
       </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   ADMIN CALENDAR TAB — Outlook-style full calendar for admin
+═══════════════════════════════════════════════════════════════════ */
+const MONTH_NAMES_LONG = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const DAY_LABELS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+function parseAdminRange(str) {
+  if (!str) return null;
+  const M = { Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11 };
+  const yr = (str.match(/\b(\d{4})\b/) || [])[1]; if (!yr) return null;
+  const cross = str.match(/([A-Z][a-z]{2})\s+(\d+)\s*[–\-]\s*([A-Z][a-z]{2})\s+(\d+)/);
+  if (cross && M[cross[1]] !== undefined && M[cross[3]] !== undefined)
+    return { start: new Date(+yr, M[cross[1]], +cross[2]), end: new Date(+yr, M[cross[3]], +cross[4]) };
+  const same = str.match(/([A-Z][a-z]{2})\s+(\d+)[–\-](\d+)/);
+  if (same && M[same[1]] !== undefined)
+    return { start: new Date(+yr, M[same[1]], +same[2]), end: new Date(+yr, M[same[1]], +same[3]) };
+  const single = str.match(/([A-Z][a-z]{2})\s+(\d+)/);
+  if (single && M[single[1]] !== undefined) { const d = new Date(+yr, M[single[1]], +single[2]); return { start:d, end:d }; }
+  return null;
+}
+
+const EV_CAL_COLORS = {
+  Summit:   { bg:'rgba(79,70,229,0.4)', border:'rgba(99,102,241,0.7)', text:'#c4b5fd' },
+  Workshop: { bg:'rgba(5,150,105,0.4)', border:'rgba(16,185,129,0.7)', text:'#6ee7b7' },
+  Seminar:  { bg:'rgba(124,58,237,0.4)',border:'rgba(167,139,250,0.7)',text:'#ddd6fe' },
+  Funding:  { bg:'rgba(245,158,11,0.4)',border:'rgba(251,191,36,0.7)', text:'#fde68a' },
+};
+const TR_CAL_COLORS = {
+  Technology:'rgba(37,99,235,0.4)',
+  Research:  'rgba(5,150,105,0.4)',
+  Leadership:'rgba(217,119,6,0.4)',
+  Governance:'rgba(124,58,237,0.4)',
+};
+
+function AdminCalendarTab({ showToast, setTab }) {
+  const today      = new Date();
+  const [month, setMonth] = useState(today.getMonth());
+  const [year,  setYear]  = useState(today.getFullYear());
+  const [events,    setEvents]    = useState([]);
+  const [trainings, setTrainings] = useState([]);
+  const [loading,   setLoading]   = useState(true);
+  const [detail,    setDetail]    = useState(null);
+
+  useEffect(() => {
+    Promise.all([
+      api.events.list({ limit:1000 }),
+      api.training.list({ limit:1000 }),
+    ]).then(([ev, tr]) => {
+      setEvents(ev.data || []);
+      setTrainings(tr.data || []);
+    }).catch(() => showToast('Failed to load calendar data', false))
+      .finally(() => setLoading(false));
+  }, []);
+
+  // All calendar items
+  const allItems = [
+    ...events.map(e => {
+      const r = parseAdminRange(e.date);
+      const c = EV_CAL_COLORS[e.category] || EV_CAL_COLORS.Summit;
+      return { ...e, startDate:r?.start||null, endDate:r?.end||null, _type:'event', _bg:c.bg, _border:c.border, _text:c.text };
+    }),
+    ...trainings.map(t => {
+      const r = parseAdminRange(t.schedule);
+      const bg = TR_CAL_COLORS[t.category] || TR_CAL_COLORS.Technology;
+      return { ...t, startDate:r?.start||null, endDate:r?.end||null, _type:'training', _bg:bg, _border:bg.replace('0.4','0.75'), _text:'#fff' };
+    }),
+  ].filter(i => i.startDate);
+
+  function prevMon() { if (month===0){setMonth(11);setYear(y=>y-1);}else setMonth(m=>m-1); }
+  function nextMon() { if (month===11){setMonth(0);setYear(y=>y+1);}else setMonth(m=>m+1); }
+  function goToday() { setMonth(today.getMonth()); setYear(today.getFullYear()); }
+
+  // Build Mon-first 6-week grid
+  const firstDow   = (new Date(year, month, 1).getDay() + 6) % 7; // Mon=0
+  const daysInMon  = new Date(year, month+1, 0).getDate();
+  const weeks = [];
+  let d = 1 - firstDow;
+  for (let w = 0; w < 6; w++) {
+    const days = [];
+    for (let c = 0; c < 7; c++) { days.push(d++); }
+    weeks.push(days);
+    if (d - 1 > daysInMon && w >= 3) break;
+  }
+
+  // Per-week item bars with row assignment
+  function getWeekBars(weekDays) {
+    const wsDate = new Date(year, month, weekDays[0]);
+    const weDate = new Date(year, month, weekDays[6], 23, 59, 59);
+    const wsMs = wsDate.getTime(), weMs = weDate.getTime();
+    const active = allItems.filter(it => {
+      const e = it.endDate ? it.endDate.getTime() : it.startDate.getTime();
+      return it.startDate.getTime() <= weMs && e >= wsMs;
+    }).map(it => {
+      const e = it.endDate ? it.endDate.getTime() : it.startDate.getTime();
+      const sCol = Math.max(0, Math.round((it.startDate.getTime()-wsMs)/DAY_MS));
+      const eCol = Math.min(6, Math.round((e-wsMs)/DAY_MS));
+      const isStart = it.startDate.getTime() >= wsMs;
+      const isEnd   = e <= weMs;
+      return { ...it, sCol, eCol, isStart, isEnd };
+    }).sort((a,b)=>a.sCol-b.sCol);
+    const rowEnds = [];
+    return active.map(it => {
+      let row = rowEnds.findIndex(re => re < it.sCol);
+      if (row===-1){row=rowEnds.length;rowEnds.push(it.eCol);}else rowEnds[row]=it.eCol;
+      return { ...it, row };
+    });
+  }
+
+  // Items on a specific date (for "more" popover)
+  function itemsOnDay(day) {
+    if (day < 1 || day > daysInMon) return [];
+    const d = new Date(year, month, day);
+    return allItems.filter(it => {
+      const e = it.endDate||it.startDate;
+      return it.startDate <= d && e >= d;
+    });
+  }
+
+  // Mini calendar helpers
+  const miniFirst = (new Date(year, month, 1).getDay() + 6) % 7;
+  const miniDays  = new Date(year, month+1, 0).getDate();
+  const miniGrid  = [];
+  let md = 1 - miniFirst;
+  for (let r=0; r<6; r++) {
+    const row=[]; for(let c=0;c<7;c++) row.push(md++);
+    miniGrid.push(row);
+    if (md-1>miniDays && r>=3) break;
+  }
+
+  const evCount = allItems.filter(i=>i._type==='event').length;
+  const trCount = allItems.filter(i=>i._type==='training').length;
+
+  return (
+    <div style={{ display:'flex', gap:0, height:'calc(100vh - 140px)', overflow:'hidden' }}>
+
+      {/* ── Left sidebar ── */}
+      <div style={{ width:220, flexShrink:0, padding:'4px 16px 16px 0', overflowY:'auto', borderRight:'1px solid rgba(255,255,255,0.06)' }}>
+        {/* Mini calendar */}
+        <div style={{ background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:14, padding:'14px 12px', marginBottom:16 }}>
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10 }}>
+            <span style={{ color:'#fff', fontWeight:800, fontSize:13 }}>{MONTH_NAMES_LONG[month].slice(0,3)} {year}</span>
+            <div style={{ display:'flex', gap:2 }}>
+              <button onClick={prevMon} style={{ background:'none',border:'none',color:'rgba(255,255,255,0.5)',cursor:'pointer',fontSize:14,padding:'2px 5px',borderRadius:4 }}>‹</button>
+              <button onClick={nextMon} style={{ background:'none',border:'none',color:'rgba(255,255,255,0.5)',cursor:'pointer',fontSize:14,padding:'2px 5px',borderRadius:4 }}>›</button>
+            </div>
+          </div>
+          {/* Day-of-week labels Mon-Sun */}
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', marginBottom:4 }}>
+            {['M','T','W','T','F','S','S'].map((d,i) => (
+              <div key={i} style={{ textAlign:'center', fontSize:9.5, fontWeight:700, color:'rgba(255,255,255,0.28)' }}>{d}</div>
+            ))}
+          </div>
+          {miniGrid.map((row,ri) => (
+            <div key={ri} style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)' }}>
+              {row.map((d,ci) => {
+                const inM = d>=1 && d<=miniDays;
+                const isT = inM && d===today.getDate() && month===today.getMonth() && year===today.getFullYear();
+                const hasItems = inM && itemsOnDay(d).length > 0;
+                return (
+                  <div key={ci} style={{ textAlign:'center', padding:'2px 0', position:'relative' }}>
+                    <span style={{
+                      display:'inline-flex', alignItems:'center', justifyContent:'center',
+                      width:22, height:22, borderRadius:'50%', fontSize:10.5,
+                      fontWeight: isT ? 900 : 400,
+                      color: isT ? '#fff' : inM ? 'rgba(255,255,255,0.65)' : 'rgba(255,255,255,0.18)',
+                      background: isT ? '#f97316' : 'transparent',
+                    }}>{inM ? d : ''}</span>
+                    {hasItems && !isT && <span style={{ position:'absolute', bottom:1, left:'50%', transform:'translateX(-50%)', width:3, height:3, borderRadius:'50%', background:'#60a5fa' }} />}
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+
+        {/* Legend */}
+        <div style={{ marginBottom:14 }}>
+          <div style={{ fontSize:10, fontWeight:800, color:'rgba(255,255,255,0.3)', textTransform:'uppercase', letterSpacing:'.6px', marginBottom:8 }}>My Calendars</div>
+          {[
+            { color:'#818cf8', label:`Events (${evCount})`,   key:'event'    },
+            { color:'#34d399', label:`Training (${trCount})`, key:'training' },
+          ].map(l => (
+            <div key={l.key} style={{ display:'flex', alignItems:'center', gap:8, marginBottom:7 }}>
+              <div style={{ width:10, height:10, borderRadius:3, background:l.color, flexShrink:0 }} />
+              <span style={{ fontSize:12, color:'rgba(255,255,255,0.65)', fontWeight:600 }}>{l.label}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Quick actions */}
+        <div style={{ fontSize:10, fontWeight:800, color:'rgba(255,255,255,0.3)', textTransform:'uppercase', letterSpacing:'.6px', marginBottom:8 }}>Quick Actions</div>
+        {[
+          { label:'＋ Add Event', action:() => setTab('events') },
+          { label:'＋ Add Training', action:() => setTab('training') },
+        ].map(a => (
+          <button key={a.label} onClick={a.action} style={{
+            display:'block', width:'100%', textAlign:'left', background:'transparent',
+            border:'none', color:'rgba(255,255,255,0.55)', fontSize:12.5, fontWeight:600,
+            cursor:'pointer', padding:'6px 0', fontFamily:'inherit', transition:'color .13s',
+          }}
+          onMouseEnter={e=>e.currentTarget.style.color='#f97316'}
+          onMouseLeave={e=>e.currentTarget.style.color='rgba(255,255,255,0.55)'}
+          >{a.label}</button>
+        ))}
+      </div>
+
+      {/* ── Main calendar ── */}
+      <div style={{ flex:1, overflow:'hidden', display:'flex', flexDirection:'column', paddingLeft:20 }}>
+
+        {/* Toolbar */}
+        <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:14, flexShrink:0 }}>
+          <button onClick={goToday} style={{ background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.14)', borderRadius:8, padding:'7px 16px', color:'rgba(255,255,255,0.8)', fontSize:13, fontWeight:700, cursor:'pointer', fontFamily:'inherit', transition:'all .13s' }}
+            onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,0.13)'}
+            onMouseLeave={e=>e.currentTarget.style.background='rgba(255,255,255,0.07)'}
+          >Today</button>
+          <div style={{ display:'flex', gap:2 }}>
+            {[['‹',prevMon],['›',nextMon]].map(([ch,fn])=>(
+              <button key={ch} onClick={fn} style={{ background:'none',border:'1px solid rgba(255,255,255,0.12)',borderRadius:7,width:32,height:32,color:'rgba(255,255,255,0.65)',fontSize:16,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',transition:'all .13s' }}
+                onMouseEnter={e=>{e.currentTarget.style.background='rgba(255,255,255,0.09)';e.currentTarget.style.color='#fff';}}
+                onMouseLeave={e=>{e.currentTarget.style.background='none';e.currentTarget.style.color='rgba(255,255,255,0.65)';}}
+              >{ch}</button>
+            ))}
+          </div>
+          <h2 style={{ color:'#fff', fontWeight:900, fontSize:18, letterSpacing:'-0.3px', margin:0 }}>
+            {MONTH_NAMES_LONG[month]} {year}
+          </h2>
+          <div style={{ marginLeft:'auto', display:'flex', gap:8, alignItems:'center' }}>
+            <span style={{ fontSize:12, color:'rgba(255,255,255,0.35)' }}>
+              {allItems.filter(i=>{ const m=i.startDate?.getMonth(); return m===month; }).length} items this month
+            </span>
+            <button onClick={() => setTab('events')} style={{ background:'linear-gradient(90deg,#f97316,#e11d48)', color:'#fff', border:'none', borderRadius:9, padding:'8px 16px', fontSize:12.5, fontWeight:800, cursor:'pointer', fontFamily:'inherit', display:'flex', alignItems:'center', gap:6 }}>
+              ＋ New Event
+            </button>
+          </div>
+        </div>
+
+        {/* Day headers Mon–Sun */}
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', borderBottom:'1px solid rgba(255,255,255,0.08)', paddingBottom:6, marginBottom:0, flexShrink:0 }}>
+          {DAY_LABELS.map((d,i) => (
+            <div key={d} style={{ textAlign:'center', fontSize:11.5, fontWeight:700, color: i>=5 ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.45)', letterSpacing:'.5px', textTransform:'uppercase' }}>{d}</div>
+          ))}
+        </div>
+
+        {loading ? (
+          <div style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', color:'rgba(255,255,255,0.3)' }}>
+            <div style={{ textAlign:'center' }}><div style={{ fontSize:32, marginBottom:8 }}>⏳</div>Loading calendar…</div>
+          </div>
+        ) : (
+          /* Week rows */
+          <div style={{ flex:1, overflowY:'auto', display:'flex', flexDirection:'column' }}>
+            {weeks.map((wDays, wi) => {
+              const bars = getWeekBars(wDays);
+              const maxRow = bars.reduce((mx,b)=>Math.max(mx,b.row), -1);
+              return (
+                <div key={wi} style={{ flex:1, minHeight:90, borderBottom:'1px solid rgba(255,255,255,0.05)', display:'flex', flexDirection:'column' }}>
+                  {/* Event bars */}
+                  {bars.length > 0 && (
+                    <div style={{
+                      display:'grid', gridTemplateColumns:'repeat(7,1fr)',
+                      gridTemplateRows:`repeat(${maxRow+1}, 22px)`,
+                      gap:2, padding:'4px 4px 2px', flexShrink:0,
+                      minHeight:(maxRow+1)*24+8,
+                    }}>
+                      {bars.map((item,ii) => {
+                        const lR = item.isStart ? 5 : 0;
+                        const rR = item.isEnd   ? 5 : 0;
+                        return (
+                          <div
+                            key={`${item.id}-w${wi}-${ii}`}
+                            title={item.title}
+                            onClick={() => setDetail(item)}
+                            style={{
+                              gridColumnStart: item.sCol+1, gridColumnEnd: item.eCol+2,
+                              gridRowStart: item.row+1,
+                              background: item._bg,
+                              border: `1px solid ${item._border}`,
+                              borderRadius: `${lR}px ${rR}px ${rR}px ${lR}px`,
+                              padding: '1px 7px',
+                              cursor:'pointer', overflow:'hidden',
+                              display:'flex', alignItems:'center', gap:5,
+                              transition:'filter .12s',
+                            }}
+                            onMouseEnter={e=>e.currentTarget.style.filter='brightness(1.25)'}
+                            onMouseLeave={e=>e.currentTarget.style.filter='none'}
+                          >
+                            {item._type === 'training' && <span style={{ fontSize:8, flexShrink:0, opacity:0.8 }}>🎓</span>}
+                            {!item.isStart && <span style={{ fontSize:9, color:item._text, opacity:0.5, flexShrink:0 }}>◀</span>}
+                            <span style={{ fontSize:10.5, fontWeight:700, color:item._text, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', flex:1 }}>
+                              {item.title}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                  {/* Day number cells */}
+                  <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', flex:1 }}>
+                    {wDays.map((d, di) => {
+                      const inM = d >= 1 && d <= daysInMon;
+                      const isT = inM && d===today.getDate() && month===today.getMonth() && year===today.getFullYear();
+                      const isWE = di >= 5;
+                      return (
+                        <div key={di} style={{ borderLeft: di>0 ? '1px solid rgba(255,255,255,0.04)' : 'none', padding:'4px 7px', background: isT ? 'rgba(249,115,22,0.05)' : 'transparent' }}>
+                          <div style={{
+                            width:24, height:24, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center',
+                            background: isT ? '#f97316' : 'transparent',
+                            fontSize:12, fontWeight: isT ? 900 : 400,
+                            color: isT ? '#fff' : inM ? (isWE ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.65)') : 'rgba(255,255,255,0.18)',
+                          }}>
+                            {inM ? d : ''}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* ── Detail side panel ── */}
+      {detail && (
+        <div onClick={() => setDetail(null)} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.45)', zIndex:9100, display:'flex', alignItems:'flex-start', justifyContent:'flex-end', padding:20 }}>
+          <div onClick={e => e.stopPropagation()} style={{ background:'#0f172a', border:'1px solid rgba(255,255,255,0.12)', borderRadius:20, width:340, maxHeight:'80vh', overflow:'auto', animation:'modalIn .22s ease', boxShadow:'0 24px 80px rgba(0,0,0,0.7)' }}>
+            <div style={{ background: detail._type==='event' ? (EV_CAL_COLORS[detail.category]?.bg?.replace('0.4','0.7') || 'rgba(79,70,229,0.7)') : TR_CAL_COLORS[detail.category]?.replace('0.4','0.7'), padding:'18px 20px 16px', position:'relative' }}>
+              <button onClick={()=>setDetail(null)} style={{ position:'absolute',top:12,right:12,background:'rgba(255,255,255,0.18)',border:'none',borderRadius:'50%',width:28,height:28,color:'#fff',fontSize:14,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center' }}>✕</button>
+              <div style={{ fontSize:10.5, fontWeight:700, color:'rgba(255,255,255,0.65)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:5 }}>
+                {detail._type === 'event' ? `📅 ${detail.category}` : `🎓 ${detail.category}`}
+              </div>
+              <div style={{ color:'#fff', fontSize:16, fontWeight:900, lineHeight:1.35 }}>{detail.title}</div>
+            </div>
+            <div style={{ padding:'16px 20px' }}>
+              {detail._type === 'event'
+                ? [['📅','Date',detail.date],['📍','Venue',detail.venue],['🏛','Organizer',detail.organizer],['👥','Seats',`${detail.enrolled}/${detail.total}`]]
+                    .map(([ic,l,v]) => v && (
+                      <div key={l} style={{ display:'flex',gap:10,marginBottom:10 }}>
+                        <span style={{ fontSize:14,flexShrink:0 }}>{ic}</span>
+                        <div><div style={{ fontSize:10,color:'rgba(255,255,255,0.3)',fontWeight:700,textTransform:'uppercase',letterSpacing:'.5px' }}>{l}</div><div style={{ fontSize:13,color:'#fff',fontWeight:600 }}>{v}</div></div>
+                      </div>
+                    ))
+                : [['🏛','Organizer',detail.org],['⏱','Duration',detail.duration],['📊','Level',detail.level],['📅','Schedule',detail.schedule],['👥','Enrollment',`${detail.enrolled}/${detail.total}`]]
+                    .map(([ic,l,v]) => v && (
+                      <div key={l} style={{ display:'flex',gap:10,marginBottom:10 }}>
+                        <span style={{ fontSize:14,flexShrink:0 }}>{ic}</span>
+                        <div><div style={{ fontSize:10,color:'rgba(255,255,255,0.3)',fontWeight:700,textTransform:'uppercase',letterSpacing:'.5px' }}>{l}</div><div style={{ fontSize:13,color:'#fff',fontWeight:600 }}>{v}</div></div>
+                      </div>
+                    ))
+              }
+              {detail.description && <p style={{ color:'rgba(255,255,255,0.5)',fontSize:12.5,lineHeight:1.65,marginBottom:14 }}>{detail.description}</p>}
+              <button onClick={() => { setDetail(null); setTab(detail._type==='event'?'events':'training'); }} style={{ width:'100%', background:'linear-gradient(90deg,#f97316,#e11d48)', color:'#fff', border:'none', borderRadius:11, padding:'11px', fontSize:13.5, fontWeight:800, cursor:'pointer', fontFamily:'inherit' }}>
+                Edit in {detail._type==='event'?'Events':'Training'} tab →
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

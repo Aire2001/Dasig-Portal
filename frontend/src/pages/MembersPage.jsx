@@ -62,7 +62,7 @@ const INSTITUTION_ABOUT = {
 const MEMBER_ASSETS = {
   UP: {
     logo:     'https://logo.clearbit.com/up.edu.ph',
-    logo2:    'https://en.wikipedia.org/wiki/Special:FilePath/UP_seal.png',
+    logo2:    'https://en.wikipedia.org/wiki/University_of_the_Philippines',
     bg: 'linear-gradient(135deg,#6b1010 0%,#9b2020 60%,#7b1212 100%)',
     accent: '#ef4444',
     emoji: '🎓',
