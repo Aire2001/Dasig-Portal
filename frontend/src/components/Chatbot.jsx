@@ -134,16 +134,13 @@ export default function Chatbot() {
   const navigate     = useNavigate();
   const location     = useLocation();
 
-  // Don't show the floating widget on the full chatbot page
-  if (location.pathname === '/chatbot') return null;
   const role         = user?.role || 'GUEST';
   const quick        = QUICK_BY_ROLE[role] || QUICK_BY_ROLE.GUEST;
   const rb           = ROLE_BADGE[role] || ROLE_BADGE.GUEST;
 
-  const INIT = [{ from:'bot', text: getGreeting(user) }];
-
+  // All hooks MUST be declared before any conditional return
   const [open, setOpen]         = useState(false);
-  const [messages, setMessages] = useState(INIT);
+  const [messages, setMessages] = useState(() => [{ from:'bot', text: getGreeting(user) }]);
   const [input, setInput]       = useState('');
   const [thinking, setThinking] = useState(false);
   const [ended, setEnded]       = useState(false);
@@ -195,6 +192,9 @@ export default function Chatbot() {
   }
 
   const initials = user ? (user.name || 'U').split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase() : null;
+
+  // Hide widget on the full chatbot page — AFTER all hooks
+  if (location.pathname === '/chatbot') return null;
 
   return (
     <>
@@ -254,9 +254,9 @@ export default function Chatbot() {
 
             {/* Action buttons */}
             <div style={{ display:'flex', gap:5, flexShrink:0 }}>
-              <button onClick={() => navigate('/chatbot')} style={{
+              <button onClick={() => { setOpen(false); navigate('/chatbot'); }} style={{
                 background:'rgba(255,255,255,0.12)', border:'1px solid rgba(255,255,255,0.2)',
-                borderRadius:7, padding:'4px 9px', fontSize:10.5, fontWeight:700,
+                borderRadius:7, padding:'5px 11px', fontSize:11, fontWeight:700,
                 color:'#fff', cursor:'pointer', fontFamily:'inherit',
                 transition:'all .13s',
               }}
