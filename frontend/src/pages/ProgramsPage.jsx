@@ -75,6 +75,7 @@ const CSS = `
   @keyframes modalIn { from{transform:scale(.88);opacity:0} to{transform:scale(1);opacity:1} }
   @keyframes panelIn { from{transform:translateX(24px);opacity:0} to{transform:translateX(0);opacity:1} }
   @keyframes checkPop{ 0%{transform:scale(0)} 60%{transform:scale(1.3)} 100%{transform:scale(1)} }
+  @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
   .prog-input {
     width:100%; box-sizing:border-box;
     border:1.5px solid rgba(255,255,255,0.15); border-radius:10px;
@@ -502,8 +503,9 @@ function EventsTab({ user }) {
   const [active, setActive]       = useState('All');
   const [events, setEvents]       = useState([]);
   const [loading, setLoading]     = useState(true);
+  const [lastUpdated, setLastUp]  = useState(null);
   const [myRegs, setMyRegs]       = useState({});
-  const [detail, setDetail]       = useState(null);   // clicked calendar item
+  const [detail, setDetail]       = useState(null);
   const [formModal, setFormModal] = useState(null);
   const [conflict, setConflict]   = useState(null);
   const [okModal, setOkModal]     = useState(null);
@@ -517,13 +519,29 @@ function EventsTab({ user }) {
   const [fnameErr, setFnameErr]   = useState(false);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    setLoading(true);
+  const loadEvents = useCallback((showSpinner = false) => {
+    if (showSpinner) setLoading(true);
     api.events.list({ limit: 1000 })
-      .then(r => setEvents(r.data || []))
+      .then(r => { setEvents(r.data || []); setLastUp(new Date()); })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
+
+  // Initial load
+  useEffect(() => { loadEvents(true); }, [loadEvents]);
+
+  // Auto-refresh every 30 seconds
+  useEffect(() => {
+    const id = setInterval(() => loadEvents(false), 30000);
+    return () => clearInterval(id);
+  }, [loadEvents]);
+
+  // Refresh when user comes back to the tab
+  useEffect(() => {
+    function onVisible() { if (!document.hidden) loadEvents(false); }
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  }, [loadEvents]);
 
   useEffect(() => {
     if (!user) return;
@@ -779,18 +797,40 @@ function EventsTab({ user }) {
         </div>
       )}
 
-      {/* Category filter chips */}
-      <div style={{ display:'flex', gap:8, marginBottom:20, flexWrap:'wrap', marginTop:4 }}>
-        {EV_FILTERS.map(f => (
-          <button key={f} onClick={() => setActive(f)} style={{
-            background: active === f ? 'linear-gradient(90deg,#f97316,#e11d48)' : 'rgba(255,255,255,0.06)',
-            color: active === f ? '#fff' : 'rgba(255,255,255,0.6)',
-            border: active === f ? 'none' : '1px solid rgba(255,255,255,0.12)',
-            borderRadius:20, padding:'7px 18px', fontSize:12.5, fontWeight:700,
-            cursor:'pointer', fontFamily:'inherit', transition:'all .15s',
-            boxShadow: active === f ? '0 4px 14px rgba(249,115,22,0.3)' : 'none',
-          }}>{f}</button>
-        ))}
+      {/* Filter chips + live refresh bar */}
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:20, flexWrap:'wrap', gap:10, marginTop:4 }}>
+        <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+          {EV_FILTERS.map(f => (
+            <button key={f} onClick={() => setActive(f)} style={{
+              background: active === f ? 'linear-gradient(90deg,#f97316,#e11d48)' : 'rgba(255,255,255,0.06)',
+              color: active === f ? '#fff' : 'rgba(255,255,255,0.6)',
+              border: active === f ? 'none' : '1px solid rgba(255,255,255,0.12)',
+              borderRadius:20, padding:'7px 18px', fontSize:12.5, fontWeight:700,
+              cursor:'pointer', fontFamily:'inherit', transition:'all .15s',
+              boxShadow: active === f ? '0 4px 14px rgba(249,115,22,0.3)' : 'none',
+            }}>{f}</button>
+          ))}
+        </div>
+        <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+          {lastUpdated && (
+            <span style={{ fontSize:11.5, color:'rgba(255,255,255,0.3)', fontWeight:500 }}>
+              Updated {lastUpdated.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' })}
+            </span>
+          )}
+          <button onClick={() => loadEvents(true)} disabled={loading} style={{
+            background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.12)',
+            borderRadius:9, padding:'6px 13px', color:'rgba(255,255,255,0.65)',
+            fontSize:12, fontWeight:700, cursor: loading ? 'default' : 'pointer',
+            fontFamily:'inherit', display:'flex', alignItems:'center', gap:6,
+            transition:'all .14s',
+          }}
+          onMouseEnter={e => { if (!loading) { e.currentTarget.style.background='rgba(255,255,255,0.12)'; e.currentTarget.style.color='#fff'; } }}
+          onMouseLeave={e => { e.currentTarget.style.background='rgba(255,255,255,0.07)'; e.currentTarget.style.color='rgba(255,255,255,0.65)'; }}
+          >
+            <span style={{ display:'inline-block', animation: loading ? 'spin .7s linear infinite' : 'none' }}>↻</span>
+            {loading ? 'Refreshing…' : 'Refresh'}
+          </button>
+        </div>
       </div>
 
       {/* Event cards grid with Register buttons */}
@@ -816,6 +856,7 @@ const TR_CATS = ['All','Technology','Research','Leadership','Governance'];
 function TrainingTab({ user }) {
   const [trainings, setTrainings] = useState([]);
   const [loading, setLoading]     = useState(true);
+  const [lastUpdated, setLastUp]  = useState(null);
   const [catFilter, setCat]       = useState('All');
   const [myEnr, setMyEnr]         = useState({});
   const [detail, setDetail]       = useState(null);
@@ -831,9 +872,25 @@ function TrainingTab({ user }) {
   const [fnameErr, setFnameErr]   = useState(false);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    api.training.list().then(r => setTrainings(r.data || [])).catch(() => {}).finally(() => setLoading(false));
+  const loadTrainings = useCallback((showSpinner = false) => {
+    if (showSpinner) setLoading(true);
+    api.training.list().then(r => { setTrainings(r.data || []); setLastUp(new Date()); }).catch(() => {}).finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => { loadTrainings(true); }, [loadTrainings]);
+
+  // Auto-refresh every 30 seconds
+  useEffect(() => {
+    const id = setInterval(() => loadTrainings(false), 30000);
+    return () => clearInterval(id);
+  }, [loadTrainings]);
+
+  // Refresh when tab regains focus
+  useEffect(() => {
+    function onVisible() { if (!document.hidden) loadTrainings(false); }
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  }, [loadTrainings]);
   useEffect(() => {
     if (!user) return;
     api.auth.myEnrollments().then(enrs => {
@@ -1057,19 +1114,40 @@ function TrainingTab({ user }) {
 
       {loading && <div style={{ textAlign:'center', padding:'60px 0', color:'rgba(255,255,255,0.3)' }}><div style={{ fontSize:32, marginBottom:10 }}>⏳</div>Loading…</div>}
 
-      {/* Category filters */}
-      <div style={{ display:'flex', gap:8, marginBottom:20, flexWrap:'wrap', alignItems:'center', marginTop:4 }}>
-        <span style={{ fontSize:12, fontWeight:700, color:'rgba(255,255,255,0.35)' }}>Filter:</span>
-        {TR_CATS.map(c => (
-          <button key={c} onClick={() => setCat(c)} style={{
-            background: catFilter === c ? 'linear-gradient(90deg,#f97316,#e11d48)' : 'rgba(255,255,255,0.06)',
-            color: catFilter === c ? '#fff' : 'rgba(255,255,255,0.6)',
-            border: catFilter === c ? 'none' : '1px solid rgba(255,255,255,0.12)',
-            borderRadius:20, padding:'7px 18px', fontSize:12.5, fontWeight:700,
-            cursor:'pointer', fontFamily:'inherit', transition:'all .15s',
-            boxShadow: catFilter === c ? '0 4px 14px rgba(249,115,22,0.3)' : 'none',
-          }}>{c}</button>
-        ))}
+      {/* Category filters + refresh */}
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:20, flexWrap:'wrap', gap:10, marginTop:4 }}>
+        <div style={{ display:'flex', gap:8, flexWrap:'wrap', alignItems:'center' }}>
+          <span style={{ fontSize:12, fontWeight:700, color:'rgba(255,255,255,0.35)' }}>Filter:</span>
+          {TR_CATS.map(c => (
+            <button key={c} onClick={() => setCat(c)} style={{
+              background: catFilter === c ? 'linear-gradient(90deg,#f97316,#e11d48)' : 'rgba(255,255,255,0.06)',
+              color: catFilter === c ? '#fff' : 'rgba(255,255,255,0.6)',
+              border: catFilter === c ? 'none' : '1px solid rgba(255,255,255,0.12)',
+              borderRadius:20, padding:'7px 18px', fontSize:12.5, fontWeight:700,
+              cursor:'pointer', fontFamily:'inherit', transition:'all .15s',
+              boxShadow: catFilter === c ? '0 4px 14px rgba(249,115,22,0.3)' : 'none',
+            }}>{c}</button>
+          ))}
+        </div>
+        <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+          {lastUpdated && (
+            <span style={{ fontSize:11.5, color:'rgba(255,255,255,0.3)', fontWeight:500 }}>
+              Updated {lastUpdated.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' })}
+            </span>
+          )}
+          <button onClick={() => loadTrainings(true)} disabled={loading} style={{
+            background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.12)',
+            borderRadius:9, padding:'6px 13px', color:'rgba(255,255,255,0.65)',
+            fontSize:12, fontWeight:700, cursor: loading ? 'default' : 'pointer',
+            fontFamily:'inherit', display:'flex', alignItems:'center', gap:6, transition:'all .14s',
+          }}
+          onMouseEnter={e => { if (!loading) { e.currentTarget.style.background='rgba(255,255,255,0.12)'; e.currentTarget.style.color='#fff'; } }}
+          onMouseLeave={e => { e.currentTarget.style.background='rgba(255,255,255,0.07)'; e.currentTarget.style.color='rgba(255,255,255,0.65)'; }}
+          >
+            <span style={{ display:'inline-block', animation: loading ? 'spin .7s linear infinite' : 'none' }}>↻</span>
+            {loading ? 'Refreshing…' : 'Refresh'}
+          </button>
+        </div>
       </div>
 
       {/* Training cards */}
