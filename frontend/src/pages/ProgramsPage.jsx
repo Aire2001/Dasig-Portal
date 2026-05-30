@@ -441,7 +441,20 @@ function TrainingTab({ user }) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    api.training.list().then(r => setTrainings(r.data || [])).catch(() => {}).finally(() => setLoading(false));
+    api.training.list().then(r => {
+      const data = r.data || [];
+      setTrainings(data);
+      // Auto-jump calendar to first month that has training programs
+      let earliest = null;
+      data.forEach(t => {
+        const d = parseStartDate(t.schedule);
+        if (d && (!earliest || d < earliest)) earliest = d;
+      });
+      if (earliest) {
+        setMonth(earliest.getMonth());
+        setYear(earliest.getFullYear());
+      }
+    }).catch(() => {}).finally(() => setLoading(false));
   }, []);
   useEffect(() => {
     if (!user) return;
@@ -619,111 +632,206 @@ function TrainingTab({ user }) {
         </div>
       )}
 
-      {/* Two-column layout: calendar + list */}
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 340px', gap:24, alignItems:'start' }}>
+      {/* ── CALENDAR — full width ── */}
+      <div style={{ background:'rgba(15,23,42,0.75)', border:'1px solid rgba(255,255,255,0.09)', borderRadius:20, overflow:'hidden', marginBottom:28 }}>
 
-        {/* Calendar */}
-        <div style={{ background:'rgba(15,23,42,0.7)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:20, overflow:'hidden' }}>
-          {/* Month nav */}
-          <div style={{ padding:'16px 20px', display:'flex', justifyContent:'space-between', alignItems:'center', borderBottom:'1px solid rgba(255,255,255,0.06)' }}>
-            <button onClick={prevMon} style={{ background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:8, width:34, height:34, color:'rgba(255,255,255,0.6)', fontSize:18, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>‹</button>
-            <div style={{ textAlign:'center' }}>
-              <div style={{ color:'#fff', fontWeight:900, fontSize:16 }}>{MONTH_NAMES[month]}</div>
-              <div style={{ color:'rgba(255,255,255,0.35)', fontSize:12 }}>{year}</div>
-            </div>
-            <button onClick={nextMon} style={{ background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:8, width:34, height:34, color:'rgba(255,255,255,0.6)', fontSize:18, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>›</button>
+        {/* Month navigation header */}
+        <div style={{ padding:'18px 24px', display:'flex', justifyContent:'space-between', alignItems:'center', borderBottom:'1px solid rgba(255,255,255,0.07)' }}>
+          <button onClick={prevMon} style={{ background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.12)', borderRadius:10, width:38, height:38, color:'rgba(255,255,255,0.7)', fontSize:18, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', transition:'all .15s' }}
+            onMouseEnter={e => e.currentTarget.style.background='rgba(255,255,255,0.13)'}
+            onMouseLeave={e => e.currentTarget.style.background='rgba(255,255,255,0.07)'}
+          >‹</button>
+          <div style={{ textAlign:'center' }}>
+            <div style={{ color:'#fff', fontWeight:900, fontSize:20, letterSpacing:'-0.3px' }}>{MONTH_NAMES[month]}</div>
+            <div style={{ color:'rgba(255,255,255,0.38)', fontSize:13, marginTop:1 }}>{year}</div>
           </div>
+          <button onClick={nextMon} style={{ background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.12)', borderRadius:10, width:38, height:38, color:'rgba(255,255,255,0.7)', fontSize:18, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', transition:'all .15s' }}
+            onMouseEnter={e => e.currentTarget.style.background='rgba(255,255,255,0.13)'}
+            onMouseLeave={e => e.currentTarget.style.background='rgba(255,255,255,0.07)'}
+          >›</button>
+        </div>
 
-          {/* Day headers */}
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', padding:'10px 12px 4px', gap:4 }}>
-            {DAY_ABBR.map(d => (
-              <div key={d} style={{ textAlign:'center', fontSize:10.5, fontWeight:700, color:'rgba(255,255,255,0.28)', letterSpacing:'.4px' }}>{d}</div>
-            ))}
-          </div>
+        {/* Day-of-week headers */}
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', padding:'12px 16px 4px', gap:4 }}>
+          {DAY_ABBR.map(d => (
+            <div key={d} style={{ textAlign:'center', fontSize:11, fontWeight:700, color:'rgba(255,255,255,0.3)', letterSpacing:'.5px', textTransform:'uppercase' }}>{d}</div>
+          ))}
+        </div>
 
-          {/* Grid */}
-          <div style={{ padding:'4px 12px 16px', display:'flex', flexDirection:'column', gap:4 }}>
-            {calGrid.map((row, ri) => (
-              <div key={ri} style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', gap:4 }}>
-                {row.map((day, ci) => {
-                  const inMonth = day >= 1 && day <= daysInMonth;
-                  const isToday = inMonth && day === today.getDate() && month === today.getMonth() && year === today.getFullYear();
-                  const items   = inMonth && trainOnDay[day] ? trainOnDay[day] : [];
-                  return (
-                    <div
-                      key={ci}
-                      onClick={() => items.length > 0 && setCalSel({ day, trainings: items })}
-                      className={`cal-cell${isToday ? ' today' : ''}${items.length > 0 ? ' has-item' : ''}`}
-                      style={{ opacity: inMonth ? 1 : 0 }}
-                    >
-                      <div style={{ fontSize:11.5, fontWeight: isToday ? 900 : 500, color: isToday ? '#f97316' : 'rgba(255,255,255,0.6)', textAlign:'center', marginBottom:3 }}>
-                        {inMonth ? day : ''}
-                      </div>
-                      {items.slice(0,2).map(t => (
-                        <div key={t.id} style={{ background:`${ts(t).color}22`, border:`1px solid ${ts(t).color}40`, borderRadius:3, padding:'2px 3px', fontSize:9, color: ts(t).color, fontWeight:700, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', marginBottom:1 }}>
-                          {t.title.split(' ').slice(0,3).join(' ')}
-                        </div>
-                      ))}
-                      {items.length > 2 && <div style={{ fontSize:9, color:'rgba(255,255,255,0.3)', textAlign:'center' }}>+{items.length - 2}</div>}
+        {/* Calendar grid */}
+        <div style={{ padding:'4px 16px 16px', display:'flex', flexDirection:'column', gap:5 }}>
+          {calGrid.map((row, ri) => (
+            <div key={ri} style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', gap:5 }}>
+              {row.map((day, ci) => {
+                const inMonth = day >= 1 && day <= daysInMonth;
+                const isToday = inMonth && day === today.getDate() && month === today.getMonth() && year === today.getFullYear();
+                const items   = inMonth && trainOnDay[day] ? trainOnDay[day] : [];
+                const hasItems = items.length > 0;
+                return (
+                  <div
+                    key={ci}
+                    onClick={() => hasItems && setCalSel({ day, trainings: items })}
+                    style={{
+                      minHeight: 86,
+                      borderRadius: 10,
+                      padding: '7px 6px',
+                      border: isToday
+                        ? '2px solid rgba(249,115,22,0.6)'
+                        : hasItems
+                          ? '1px solid rgba(255,255,255,0.1)'
+                          : '1px solid rgba(255,255,255,0.04)',
+                      background: isToday
+                        ? 'rgba(249,115,22,0.08)'
+                        : hasItems
+                          ? 'rgba(255,255,255,0.04)'
+                          : 'transparent',
+                      cursor: hasItems ? 'pointer' : 'default',
+                      transition: 'all .13s',
+                      opacity: inMonth ? 1 : 0,
+                    }}
+                    onMouseEnter={e => { if (hasItems && inMonth) e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; }}
+                    onMouseLeave={e => { if (inMonth) e.currentTarget.style.background = isToday ? 'rgba(249,115,22,0.08)' : hasItems ? 'rgba(255,255,255,0.04)' : 'transparent'; }}
+                  >
+                    <div style={{
+                      fontSize: 12.5, fontWeight: isToday ? 900 : 500,
+                      color: isToday ? '#f97316' : hasItems ? '#fff' : 'rgba(255,255,255,0.5)',
+                      textAlign: 'center', marginBottom: 5,
+                    }}>
+                      {inMonth ? day : ''}
                     </div>
-                  );
-                })}
-              </div>
-            ))}
-          </div>
+                    {items.slice(0, 2).map(t => (
+                      <div key={t.id} title={t.title} style={{
+                        background: `${ts(t).color}28`,
+                        border: `1px solid ${ts(t).color}55`,
+                        borderRadius: 4, padding: '2px 5px', marginBottom: 2,
+                        fontSize: 9.5, color: ts(t).color, fontWeight: 700,
+                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                      }}>
+                        {t.title.split(' ').slice(0, 3).join(' ')}
+                      </div>
+                    ))}
+                    {items.length > 2 && (
+                      <div style={{ fontSize: 9.5, color: 'rgba(255,255,255,0.4)', textAlign: 'center', fontWeight: 600 }}>
+                        +{items.length - 2} more
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+        </div>
 
-          {/* Legend */}
-          <div style={{ padding:'8px 14px 14px', borderTop:'1px solid rgba(255,255,255,0.05)', display:'flex', gap:10, flexWrap:'wrap' }}>
+        {/* No-programs hint + Legend */}
+        <div style={{ padding:'10px 18px 14px', borderTop:'1px solid rgba(255,255,255,0.05)', display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap:8 }}>
+          <div style={{ display:'flex', gap:12, flexWrap:'wrap' }}>
             {Object.entries(TR_STYLES).map(([k, s]) => (
               <div key={k} style={{ display:'flex', alignItems:'center', gap:5 }}>
                 <div style={{ width:10, height:10, borderRadius:3, background:`${s.color}44`, border:`1px solid ${s.color}` }} />
-                <span style={{ fontSize:10.5, color:'rgba(255,255,255,0.4)', fontWeight:600 }}>{k}</span>
+                <span style={{ fontSize:11, color:'rgba(255,255,255,0.45)', fontWeight:600 }}>{k}</span>
               </div>
             ))}
           </div>
+          {Object.keys(trainOnDay).length === 0 && (
+            <span style={{ fontSize:11.5, color:'rgba(255,255,255,0.28)', fontStyle:'italic' }}>
+              No programs starting this month — try July or August →
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* ── TRAINING PROGRAMS LIST — below calendar ── */}
+      <div>
+        {/* Category filters */}
+        <div style={{ display:'flex', gap:8, marginBottom:20, flexWrap:'wrap', alignItems:'center' }}>
+          <span style={{ fontSize:12.5, fontWeight:700, color:'rgba(255,255,255,0.4)', marginRight:4 }}>Filter:</span>
+          {TR_CATS.map(c => (
+            <button key={c} onClick={() => setCat(c)} style={{
+              background: catFilter === c ? 'linear-gradient(90deg,#f97316,#e11d48)' : 'rgba(255,255,255,0.06)',
+              color: catFilter === c ? '#fff' : 'rgba(255,255,255,0.6)',
+              border: catFilter === c ? 'none' : '1px solid rgba(255,255,255,0.12)',
+              borderRadius: 20, padding: '7px 18px', fontSize: 12.5, fontWeight: 700,
+              cursor: 'pointer', fontFamily: 'inherit', transition: 'all .15s',
+              boxShadow: catFilter === c ? '0 4px 14px rgba(249,115,22,0.3)' : 'none',
+            }}>{c}</button>
+          ))}
         </div>
 
-        {/* Training list */}
-        <div>
-          <div style={{ display:'flex', gap:6, marginBottom:14, flexWrap:'wrap' }}>
-            {TR_CATS.map(c => (
-              <button key={c} onClick={() => setCat(c)} style={{
-                background: catFilter === c ? 'linear-gradient(90deg,#f97316,#e11d48)' : 'rgba(255,255,255,0.06)',
-                color: catFilter === c ? '#fff' : 'rgba(255,255,255,0.55)',
-                border: catFilter === c ? 'none' : '1px solid rgba(255,255,255,0.1)',
-                borderRadius:16, padding:'5px 13px', fontSize:11.5, fontWeight:700,
-                cursor:'pointer', fontFamily:'inherit',
-              }}>{c}</button>
-            ))}
+        {loading ? (
+          <div style={{ textAlign:'center', padding:'60px 0', color:'rgba(255,255,255,0.3)' }}>
+            <div style={{ fontSize:30, marginBottom:10 }}>⏳</div>Loading programs…
           </div>
-          {loading ? (
-            <div style={{ textAlign:'center', padding:'40px 0', color:'rgba(255,255,255,0.3)' }}>⏳</div>
-          ) : (
-            <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
-              {filtered.map(t => (
-                <div key={t.id} style={{ background:`linear-gradient(135deg,${ts(t).color}10,rgba(15,23,42,0.9))`, border:`1px solid ${ts(t).color}1a`, borderRadius:14, padding:'14px 16px' }}>
-                  <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:4 }}>
-                    <div style={{ flex:1, marginRight:8 }}>
-                      <div style={{ fontSize:13, fontWeight:800, color:'#fff', lineHeight:1.3 }}>{t.title}</div>
-                      <div style={{ fontSize:11, color:'rgba(255,255,255,0.4)', marginTop:2 }}>{t.org} · {t.duration}</div>
-                    </div>
-                    <span style={{ background:`${ts(t).color}20`, color: ts(t).color, borderRadius:5, padding:'2px 8px', fontSize:10, fontWeight:700, whiteSpace:'nowrap' }}>{t.level}</span>
+        ) : filtered.length === 0 ? (
+          <div style={{ textAlign:'center', padding:'40px 0', color:'rgba(255,255,255,0.28)', fontSize:13.5 }}>No programs in this category.</div>
+        ) : (
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(300px,1fr))', gap:18 }}>
+            {filtered.map((t, idx) => (
+              <div key={t.id} style={{
+                borderRadius: 18, overflow: 'hidden',
+                background: 'rgba(15,23,42,0.9)',
+                border: `1px solid ${ts(t).color}20`,
+                boxShadow: `0 4px 20px rgba(0,0,0,0.25)`,
+                transition: 'all .2s cubic-bezier(.34,1.56,.64,1)',
+                animation: `cardIn .35s ease ${idx * 0.05}s both`,
+              }}
+              onMouseEnter={e => { e.currentTarget.style.transform='translateY(-4px)'; e.currentTarget.style.boxShadow=`0 12px 36px ${ts(t).color}22`; e.currentTarget.style.borderColor=`${ts(t).color}50`; }}
+              onMouseLeave={e => { e.currentTarget.style.transform='none'; e.currentTarget.style.boxShadow='0 4px 20px rgba(0,0,0,0.25)'; e.currentTarget.style.borderColor=`${ts(t).color}20`; }}
+              >
+                {/* Cover */}
+                <div style={{ background: ts(t).accent, padding:'20px 20px 16px', position:'relative', overflow:'hidden' }}>
+                  <div style={{ position:'absolute', right:-8, bottom:-10, fontSize:76, opacity:0.12, lineHeight:1 }}>
+                    {{ Technology:'💻', Research:'🔬', Leadership:'🏛', Governance:'📋' }[t.category] || '🎓'}
                   </div>
-                  {t.schedule && <div style={{ fontSize:11, color:'rgba(255,255,255,0.35)', marginBottom:8 }}>📅 {t.schedule}</div>}
-                  <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-                    <span style={{ fontSize:11, color:'rgba(255,255,255,0.35)' }}>{t.enrolled}/{t.total}</span>
+                  <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:8 }}>
+                    <span style={{ background:'rgba(255,255,255,0.22)', color:'#fff', borderRadius:6, padding:'3px 10px', fontSize:10.5, fontWeight:700 }}>{t.category}</span>
+                    <span style={{ background:'rgba(255,255,255,0.18)', color:'#fff', borderRadius:6, padding:'3px 10px', fontSize:10.5, fontWeight:700 }}>{t.level}</span>
+                  </div>
+                  <div style={{ color:'#fff', fontSize:15, fontWeight:900, lineHeight:1.35, marginBottom:6 }}>{t.title}</div>
+                  <div style={{ display:'flex', gap:12, flexWrap:'wrap' }}>
+                    <span style={{ color:'rgba(255,255,255,0.8)', fontSize:11.5 }}>🏛 {t.org}</span>
+                    <span style={{ color:'rgba(255,255,255,0.8)', fontSize:11.5 }}>⏱ {t.duration}</span>
+                    {t.schedule && <span style={{ color:'rgba(255,255,255,0.8)', fontSize:11.5 }}>📅 {t.schedule.split('|')[0].trim()}</span>}
+                  </div>
+                </div>
+
+                {/* Body */}
+                <div style={{ padding:'14px 18px' }}>
+                  {t.description && (
+                    <p style={{ color:'rgba(255,255,255,0.45)', fontSize:12.5, lineHeight:1.6, marginBottom:12, overflow:'hidden', display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical' }}>
+                      {t.description}
+                    </p>
+                  )}
+                  {/* Fill bar */}
+                  <div style={{ marginBottom:12 }}>
+                    <div style={{ display:'flex', justifyContent:'space-between', marginBottom:4 }}>
+                      <span style={{ fontSize:11, color:'rgba(255,255,255,0.38)', fontWeight:600 }}>Enrollment</span>
+                      <span style={{ fontSize:11.5, color: t.enrolled >= t.total ? '#f87171' : '#6ee7b7', fontWeight:700 }}>{t.enrolled}/{t.total}</span>
+                    </div>
+                    <div style={{ height:5, background:'rgba(255,255,255,0.07)', borderRadius:3, overflow:'hidden' }}>
+                      <div style={{ height:'100%', width:`${t.total > 0 ? Math.min(100, Math.round(t.enrolled/t.total*100)) : 0}%`, background: ts(t).accent, borderRadius:3, transition:'width .6s ease' }} />
+                    </div>
+                  </div>
+                  <div style={{ display:'flex', justifyContent:'flex-end' }}>
                     {myEnr[t.id]
-                      ? <span style={{ fontSize:11.5, color:'#34d399', fontWeight:700 }}>✓ Enrolled</span>
-                      : <button onClick={() => openEnroll(t)} disabled={t.enrolled >= t.total} style={{ background: t.enrolled >= t.total ? 'rgba(255,255,255,0.04)' : ts(t).accent, color: t.enrolled >= t.total ? 'rgba(255,255,255,0.25)' : '#fff', border: t.enrolled >= t.total ? '1px solid rgba(255,255,255,0.07)' : 'none', borderRadius:8, padding:'6px 13px', fontSize:11.5, fontWeight:700, cursor: t.enrolled >= t.total ? 'not-allowed' : 'pointer', fontFamily:'inherit' }}>
-                          {t.enrolled >= t.total ? 'Full' : 'Enroll →'}
+                      ? <span style={{ background:'rgba(16,185,129,0.12)', color:'#34d399', borderRadius:10, padding:'8px 16px', fontSize:12.5, fontWeight:700, border:'1px solid rgba(16,185,129,0.22)' }}>✓ Enrolled</span>
+                      : <button onClick={() => openEnroll(t)} disabled={t.enrolled >= t.total} style={{
+                          background: t.enrolled >= t.total ? 'rgba(255,255,255,0.05)' : ts(t).accent,
+                          color: t.enrolled >= t.total ? 'rgba(255,255,255,0.3)' : '#fff',
+                          border: t.enrolled >= t.total ? '1px solid rgba(255,255,255,0.08)' : 'none',
+                          borderRadius: 10, padding: '9px 20px', fontSize: 13, fontWeight: 800,
+                          cursor: t.enrolled >= t.total ? 'not-allowed' : 'pointer',
+                          fontFamily: 'inherit',
+                          boxShadow: t.enrolled >= t.total ? 'none' : `0 4px 14px ${ts(t).color}40`,
+                        }}>
+                          {t.enrolled >= t.total ? 'Fully Booked' : 'Enroll →'}
                         </button>
                     }
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </>
   );
