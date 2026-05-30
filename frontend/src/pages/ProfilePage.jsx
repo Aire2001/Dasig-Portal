@@ -4,6 +4,53 @@ import { useAuth } from '../context/AuthContext';
 import { api } from '../api';
 import ParticleBackground from '../components/ParticleBackground';
 
+// ── Reusable confirmation modal ────────────────────────────────
+function ConfirmModal({ icon, title, subtitle, details, onConfirm, onCancel, confirmLabel, confirming, confirmColor = 'linear-gradient(90deg,#f97316,#e11d48)' }) {
+  return (
+    <div onClick={onCancel} style={{
+      position:'fixed', inset:0, background:'rgba(0,0,0,0.72)', zIndex:9999,
+      display:'flex', alignItems:'center', justifyContent:'center',
+      padding:20, backdropFilter:'blur(6px)',
+    }}>
+      <div onClick={e => e.stopPropagation()} style={{
+        background:'linear-gradient(180deg,#0f172a,#06091a)',
+        border:'1px solid rgba(255,255,255,0.12)', borderRadius:24,
+        maxWidth:440, width:'100%', padding:'36px 32px',
+        boxShadow:'0 40px 100px rgba(0,0,0,0.85)', textAlign:'center',
+      }}>
+        <div style={{ fontSize:52, marginBottom:16, lineHeight:1 }}>{icon}</div>
+        <div style={{ color:'#fff', fontWeight:900, fontSize:20, marginBottom:8 }}>{title}</div>
+        <p style={{ color:'rgba(255,255,255,0.55)', fontSize:14, lineHeight:1.7, marginBottom: details ? 16 : 28 }}>{subtitle}</p>
+
+        {/* Summary of changes */}
+        {details && details.length > 0 && (
+          <div style={{ background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:14, padding:'14px 16px', marginBottom:24, textAlign:'left' }}>
+            {details.map((d, i) => (
+              <div key={i} style={{ display:'flex', gap:10, marginBottom: i < details.length-1 ? 10 : 0 }}>
+                <span style={{ color:'rgba(255,255,255,0.35)', fontSize:12, fontWeight:700, textTransform:'uppercase', letterSpacing:'.4px', width:80, flexShrink:0, paddingTop:2 }}>{d.label}</span>
+                <div style={{ flex:1 }}>
+                  {d.old && <div style={{ color:'rgba(239,68,68,0.8)', fontSize:13, textDecoration:'line-through', marginBottom:2 }}>{d.old}</div>}
+                  <div style={{ color:'#34d399', fontSize:13, fontWeight:700 }}>{d.next}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div style={{ display:'flex', gap:12 }}>
+          <button onClick={onCancel} style={{ flex:1, background:'rgba(255,255,255,0.07)', color:'rgba(255,255,255,0.7)', border:'1px solid rgba(255,255,255,0.12)', borderRadius:13, padding:'13px', fontSize:14, fontWeight:700, cursor:'pointer', fontFamily:'inherit', transition:'all .15s' }}
+            onMouseEnter={e => e.currentTarget.style.background='rgba(255,255,255,0.13)'}
+            onMouseLeave={e => e.currentTarget.style.background='rgba(255,255,255,0.07)'}
+          >Cancel</button>
+          <button onClick={onConfirm} disabled={confirming} style={{ flex:1, background: confirming?'#475569':confirmColor, color:'#fff', border:'none', borderRadius:13, padding:'13px', fontSize:14, fontWeight:800, cursor: confirming?'not-allowed':'pointer', fontFamily:'inherit', boxShadow: confirming?'none':'0 4px 16px rgba(0,0,0,0.35)', transition:'all .15s' }}>
+            {confirming ? '⏳ Saving…' : confirmLabel}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // Compress & crop image to 240×240 JPEG, returns base64 data URI
 function compressAvatar(file) {
   return new Promise((resolve, reject) => {
@@ -258,9 +305,15 @@ function ProfileTab({ user, showToast, onSaved }) {
   const [phone,       setPhone]       = useState(user.phone       || '');
   const [saving,      setSaving]      = useState(false);
   const [nameErr,     setNameErr]     = useState('');
+  const [confirmOpen, setConfirmOpen] = useState(false);
+
+  function requestSave() {
+    if (!name.trim()) { setNameErr('Display name is required.'); return; }
+    setConfirmOpen(true);
+  }
 
   async function save() {
-    if (!name.trim()) { setNameErr('Display name is required.'); return; }
+    setConfirmOpen(false);
     setSaving(true);
     try {
       await api.auth.updateProfile({ name: name.trim(), institution, campus, phone });
@@ -273,7 +326,28 @@ function ProfileTab({ user, showToast, onSaved }) {
 
   const changed = name !== (user.name||'') || institution !== (user.institution||'') || campus !== (user.campus||'') || phone !== (user.phone||'');
 
+  // Build diff summary for confirmation modal
+  const diffDetails = [];
+  if (name.trim() !== (user.name||''))         diffDetails.push({ label:'Name',        old: user.name||'', next: name.trim() });
+  if (institution  !== (user.institution||'')) diffDetails.push({ label:'Institution', old: user.institution||'—', next: institution||'—' });
+  if (campus       !== (user.campus||''))       diffDetails.push({ label:'Campus',      old: user.campus||'—', next: campus||'—' });
+  if (phone        !== (user.phone||''))        diffDetails.push({ label:'Phone',       old: user.phone||'—', next: phone||'—' });
+
   return (
+    <>
+    {confirmOpen && (
+      <ConfirmModal
+        icon="👤"
+        title="Save profile changes?"
+        subtitle="Review what will be updated on your account:"
+        details={diffDetails}
+        onConfirm={save}
+        onCancel={() => setConfirmOpen(false)}
+        confirmLabel="Yes, Save Changes"
+        confirming={saving}
+        confirmColor="linear-gradient(90deg,#f97316,#e11d48)"
+      />
+    )}
     <div style={{ display:'flex', flexDirection:'column', gap:20, maxWidth:520 }}>
       {/* Name */}
       <div>
@@ -313,23 +387,25 @@ function ProfileTab({ user, showToast, onSaved }) {
       </div>
 
       <div style={{ display:'flex', gap:12, alignItems:'center', paddingTop:4, borderTop:'1px solid rgba(255,255,255,0.07)' }}>
-        <button className="pf-save" onClick={save} disabled={saving || !changed}>
+        <button className="pf-save" onClick={requestSave} disabled={saving || !changed}>
           {saving ? '⏳ Saving…' : '✅ Save Profile'}
         </button>
         {!changed && <span style={{ fontSize:12.5, color:'rgba(255,255,255,0.3)' }}>No unsaved changes</span>}
       </div>
     </div>
+    </>
   );
 }
 
 /* ─── SECURITY TAB ────────────────────────────────────────────── */
 function SecurityTab({ showToast }) {
-  const [current,  setCurrent]  = useState('');
-  const [next,     setNext]     = useState('');
-  const [confirm,  setConfirm]  = useState('');
-  const [saving,   setSaving]   = useState(false);
-  const [errors,   setErrors]   = useState({});
-  const [showPw,   setShowPw]   = useState({ c:false, n:false, cf:false });
+  const [current,       setCurrent]      = useState('');
+  const [next,          setNext]         = useState('');
+  const [confirm,       setConfirm]      = useState('');
+  const [saving,        setSaving]       = useState(false);
+  const [errors,        setErrors]       = useState({});
+  const [showPw,        setShowPw]       = useState({ c:false, n:false, cf:false });
+  const [confirmOpen,   setConfirmOpen]  = useState(false);
 
   function validate() {
     const e = {};
@@ -341,8 +417,13 @@ function SecurityTab({ showToast }) {
     return Object.keys(e).length === 0;
   }
 
-  async function save() {
+  function requestSave() {
     if (!validate()) return;
+    setConfirmOpen(true);
+  }
+
+  async function save() {
+    setConfirmOpen(false);
     setSaving(true);
     try {
       await api.auth.changePassword({ current_password: current, new_password: next });
@@ -394,6 +475,7 @@ function SecurityTab({ showToast }) {
   const strColor = ['', '#ef4444', '#f59e0b', '#3b82f6', '#10b981'];
 
   return (
+    <>
     <div style={{ display:'flex', flexDirection:'column', gap:20, maxWidth:440 }}>
       <div style={{ background:'rgba(59,130,246,0.07)', border:'1px solid rgba(59,130,246,0.2)', borderRadius:12, padding:'12px 16px', display:'flex', gap:10, alignItems:'flex-start' }}>
         <span style={{ fontSize:16, flexShrink:0 }}>ℹ️</span>
@@ -427,11 +509,28 @@ function SecurityTab({ showToast }) {
       )}
 
       <div style={{ paddingTop:4, borderTop:'1px solid rgba(255,255,255,0.07)' }}>
-        <button className="pf-save" onClick={save} disabled={saving}>
+        <button className="pf-save" onClick={requestSave} disabled={saving}
+          style={{ background:'linear-gradient(90deg,#7c3aed,#1a56db)' }}>
           {saving ? '⏳ Changing…' : '🔐 Change Password'}
         </button>
       </div>
     </div>
+
+    {/* Confirmation modal */}
+    {confirmOpen && (
+      <ConfirmModal
+        icon="🔐"
+        title="Change your password?"
+        subtitle="You will be asked to log in again the next time your session expires. Make sure you remember your new password."
+        details={[{ label:'New password', next: '●'.repeat(next.length) + ' (' + next.length + ' chars)' }]}
+        onConfirm={save}
+        onCancel={() => setConfirmOpen(false)}
+        confirmLabel="Yes, Change Password"
+        confirming={saving}
+        confirmColor="linear-gradient(90deg,#7c3aed,#1a56db)"
+      />
+    )}
+    </>
   );
 }
 
