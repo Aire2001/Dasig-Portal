@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import SunSeal from './SunSeal';
 import HaribonFace from './HaribonFace';
@@ -33,6 +33,10 @@ const NAV_CSS = `
   }
   .nav-link:hover { color:#fff; background: rgba(255,255,255,0.09); }
   .nav-link:hover::after { width: 60%; }
+
+  /* Active page — persistent orange underline */
+  .nav-link.active { color:#f97316 !important; background: rgba(249,115,22,0.08); }
+  .nav-link.active::after { width: 70% !important; }
 `;
 
 const navLinks = [
@@ -58,7 +62,20 @@ const roleColors = {
 
 export default function Nav() {
   const navigate    = useNavigate();
+  const location    = useLocation();
   const { user, logout } = useAuth();
+
+  // Check if a nav link matches the current route + query
+  function isActive(to) {
+    const [path, query] = to.split('?');
+    const currentPath = location.pathname;
+    const currentQuery = location.search;
+    // Calendar tab: /programs?tab=calendar
+    if (query) return currentPath === path && currentQuery.includes(query);
+    // Programs: exact match but NOT when on calendar tab
+    if (path === '/programs') return currentPath === '/programs' && !currentQuery.includes('tab=calendar');
+    return currentPath.startsWith(path);
+  }
   const logoRef     = useRef(null);
   const moreRef     = useRef(null);
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
@@ -326,14 +343,22 @@ export default function Nav() {
 
           {/* ── Nav Links ── */}
           <div style={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-            {navLinks.map(link => (
-              <button key={link.label} className="nav-link" onClick={() => navigate(link.to)} style={link.highlight ? {
-                background: 'rgba(249,115,22,0.1)', color: '#f97316',
-                border: '1px solid rgba(249,115,22,0.25)', borderRadius: 8,
-              } : {}}>
-                {link.label}
-              </button>
-            ))}
+            {navLinks.map(link => {
+              const active = !link.highlight && isActive(link.to);
+              return (
+                <button
+                  key={link.label}
+                  className={`nav-link${active ? ' active' : ''}`}
+                  onClick={() => navigate(link.to)}
+                  style={link.highlight ? {
+                    background: 'rgba(249,115,22,0.1)', color: '#f97316',
+                    border: '1px solid rgba(249,115,22,0.25)', borderRadius: 8,
+                  } : {}}
+                >
+                  {link.label}
+                </button>
+              );
+            })}
 
             {/* More dropdown */}
             <div ref={moreRef} style={{ position: 'relative' }}>
