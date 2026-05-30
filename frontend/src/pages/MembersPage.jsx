@@ -172,25 +172,30 @@ export default function MembersPage() {
             }}>
               <div onClick={e => e.stopPropagation()} style={{
                 background: '#0d1424', borderRadius: 24, maxWidth: 'min(580px,calc(100vw - 32px))', width: '100%',
-                boxShadow: '0 40px 120px rgba(0,0,0,0.85)', overflow: 'hidden',
+                boxShadow: '0 40px 120px rgba(0,0,0,0.85)',
                 border: '1px solid rgba(255,255,255,0.1)',
                 animation: 'modalIn 0.26s cubic-bezier(.34,1.3,.64,1)',
                 maxHeight: '92vh', display: 'flex', flexDirection: 'column', margin: 'auto',
+                position: 'relative',
               }}>
+                {/* ── ✕ always-visible close button — outside overflow:hidden ── */}
+                <button onClick={() => setSelected(null)} style={{
+                  position: 'absolute', top: 14, right: 14, zIndex: 100,
+                  background: 'rgba(0,0,0,0.70)', border: '2px solid rgba(255,255,255,0.5)',
+                  backdropFilter: 'blur(10px)', borderRadius: '50%', width: 40, height: 40,
+                  color: '#fff', fontSize: 18, fontWeight: 900, cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  boxShadow: '0 4px 16px rgba(0,0,0,0.6)', transition: 'all .15s',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background='rgba(225,29,72,0.85)'; e.currentTarget.style.borderColor='rgba(225,29,72,0.7)'; e.currentTarget.style.transform='scale(1.1)'; }}
+                onMouseLeave={e => { e.currentTarget.style.background='rgba(0,0,0,0.70)'; e.currentTarget.style.borderColor='rgba(255,255,255,0.5)'; e.currentTarget.style.transform='scale(1)'; }}
+                >✕</button>
 
                 {/* ── Hero: institution logo on official-color background ── */}
-                <div style={{ background: asset.bg, padding: '32px 24px 24px', position: 'relative', overflow: 'hidden', flexShrink: 0 }}>
+                <div style={{ background: asset.bg, padding: '32px 24px 24px', position: 'relative', overflow: 'hidden', flexShrink: 0, borderRadius: '24px 24px 0 0' }}>
                   <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at 50% 30%, rgba(255,255,255,0.15) 0%, transparent 65%)', pointerEvents: 'none' }} />
 
-                  {/* Close */}
-                  <button onClick={() => setSelected(null)} style={{
-                    position: 'absolute', top: 14, right: 14,
-                    background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.25)',
-                    backdropFilter: 'blur(8px)', borderRadius: '50%', width: 34, height: 34,
-                    color: '#fff', fontSize: 15, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  }}>✕</button>
-
-                  {/* Type badge */}
+                  {/* Type badge — left side only */}
                   <div style={{ position: 'absolute', top: 14, left: 14 }}>
                     <span style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(6px)', color: '#fff', borderRadius: 7, padding: '5px 13px', fontSize: 12, fontWeight: 800, border: '1px solid rgba(255,255,255,0.3)' }}>
                       {selected.type}

@@ -98,15 +98,15 @@ export default function TrainingPage() {
         }}>
           <div onClick={e => e.stopPropagation()} style={{
             background:'linear-gradient(180deg,#0f172a,#020817)', borderRadius:22, maxWidth:'min(480px,calc(100vw - 32px))', width:'100%',
-            boxShadow:'0 32px 100px rgba(0,0,0,0.7)', overflow:'hidden',
+            boxShadow:'0 32px 100px rgba(0,0,0,0.7)', position:'relative',
             border:'1px solid rgba(255,255,255,0.1)',
             animation:'modalIn 0.24s cubic-bezier(.34,1.56,.64,1)', margin:'auto',
           }}>
             {/* banner */}
-            <div style={{ background: s(formModal).accent, padding:'22px 24px 18px', position:'relative' }}>
+            <div style={{ background: s(formModal).accent, padding:'22px 24px 18px', position:'relative', overflow:'hidden', borderRadius:'22px 22px 0 0' }}>
               <button onClick={() => setFormModal(null)} style={{
                 position:'absolute', top:14, right:14,
-                background:'rgba(255,255,255,0.2)', border:'none', borderRadius:'50%',
+                background:'rgba(0,0,0,0.70)', border:'2px solid rgba(255,255,255,0.5)', backdropFilter:'blur(10px)', borderRadius:'50%',
                 width:30, height:30, color:'#fff', fontSize:16, cursor:'pointer',
                 display:'flex', alignItems:'center', justifyContent:'center',
               }}>✕</button>
@@ -224,7 +224,7 @@ export default function TrainingPage() {
         }}>
           <div onClick={e => e.stopPropagation()} style={{
             background:'#0f172a', borderRadius:24, maxWidth:'min(520px,calc(100vw - 32px))', width:'100%',
-            boxShadow:'0 40px 120px rgba(0,0,0,0.8)', overflow:'hidden',
+            boxShadow:'0 40px 120px rgba(0,0,0,0.8)', position:'relative',
             border:'1px solid rgba(255,255,255,0.1)',
             animation:'modalIn 0.28s cubic-bezier(.34,1.56,.64,1)',
           }}>
