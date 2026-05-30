@@ -167,14 +167,19 @@ function OutlookCal({ items, onClickItem, onClickDay, conflictIds, getColors, on
   const y = year  ?? todayDate.getFullYear();
 
   function prevMon() {
-    if (m === 0) { setMonth(11); setYear(y - 1); }
+    setShowPicker(false);
+    if (m === 0) { setMonth(11); setYear(y - 1); setPickerYear(y - 1); }
     else setMonth(m - 1);
   }
   function nextMon() {
-    if (m === 11) { setMonth(0); setYear(y + 1); }
+    setShowPicker(false);
+    if (m === 11) { setMonth(0); setYear(y + 1); setPickerYear(y + 1); }
     else setMonth(m + 1);
   }
-  function goToday() { setMonth(todayDate.getMonth()); setYear(todayDate.getFullYear()); setShowPicker(false); }
+  function goToday() {
+    setMonth(todayDate.getMonth()); setYear(todayDate.getFullYear());
+    setPickerYear(todayDate.getFullYear()); setShowPicker(false);
+  }
 
   function selectMonthYear(mon, yr) {
     setMonth(mon); setYear(yr); setShowPicker(false);
@@ -246,7 +251,7 @@ function OutlookCal({ items, onClickItem, onClickDay, conflictIds, getColors, on
         </div>
 
         {/* Clickable month/year → opens picker */}
-        <button onClick={() => { setPickerYear(y); setShowPicker(s => !s); }} style={{ background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:10, padding:'6px 14px', color:'#fff', fontWeight:900, fontSize:18, letterSpacing:'-0.3px', cursor:'pointer', fontFamily:'inherit', display:'flex', alignItems:'center', gap:6, transition:'all .13s' }}
+        <button onClick={() => { setPickerYear(y); setShowPicker(s => !s); }} style={{ background: showPicker?'rgba(249,115,22,0.12)':'rgba(255,255,255,0.06)', border:`1px solid ${showPicker?'rgba(249,115,22,0.35)':'rgba(255,255,255,0.1)'}`, borderRadius:10, padding:'6px 14px', color:'#fff', fontWeight:900, fontSize:18, letterSpacing:'-0.3px', cursor:'pointer', fontFamily:'inherit', display:'flex', alignItems:'center', gap:6, transition:'all .13s' }}
           onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,0.12)'}
           onMouseLeave={e=>e.currentTarget.style.background='rgba(255,255,255,0.06)'}
         >
@@ -259,9 +264,9 @@ function OutlookCal({ items, onClickItem, onClickDay, conflictIds, getColors, on
           <div onClick={e=>e.stopPropagation()} style={{ position:'absolute', top:54, left:120, zIndex:9999, background:'#0d1424', border:'1px solid rgba(255,255,255,0.15)', borderRadius:16, padding:'16px', boxShadow:'0 20px 60px rgba(0,0,0,0.7)', minWidth:280 }}>
             {/* Year selector */}
             <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:14 }}>
-              <button onClick={()=>setPickerYear(y=>y-1)} style={{ background:'rgba(255,255,255,0.07)', border:'none', borderRadius:8, width:32, height:32, color:'#fff', fontSize:16, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>‹</button>
-              <span style={{ color:'#fff', fontWeight:900, fontSize:16 }}>{pickerYear}</span>
-              <button onClick={()=>setPickerYear(y=>y+1)} style={{ background:'rgba(255,255,255,0.07)', border:'none', borderRadius:8, width:32, height:32, color:'#fff', fontSize:16, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>›</button>
+              <button onClick={()=>setPickerYear(p=>Math.max(2020, p-1))} style={{ background:'rgba(255,255,255,0.07)', border:'none', borderRadius:8, width:32, height:32, color: pickerYear<=2020?'rgba(255,255,255,0.2)':'#fff', fontSize:16, cursor: pickerYear<=2020?'not-allowed':'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>‹</button>
+              <span style={{ color:'#fff', fontWeight:900, fontSize:16, minWidth:50, textAlign:'center' }}>{pickerYear}</span>
+              <button onClick={()=>setPickerYear(p=>Math.min(2035, p+1))} style={{ background:'rgba(255,255,255,0.07)', border:'none', borderRadius:8, width:32, height:32, color: pickerYear>=2035?'rgba(255,255,255,0.2)':'#fff', fontSize:16, cursor: pickerYear>=2035?'not-allowed':'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>›</button>
             </div>
             {/* 12 months grid */}
             <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:6 }}>
@@ -773,7 +778,7 @@ function EventsTab({ user }) {
       setEvents(p => p.map(e => e.id === formModal.id ? updated : e));
       setMyRegs(p => ({ ...p, [formModal.id]: { attended: false } }));
       setFormModal(null);
-      setOkModal({ event: updated, name: fname, email: email || user.email, phone, institution, position, role: user.role });
+      setOkModal({ event: updated, name: fname, email: email || user?.email || '', phone, institution, position, role: user?.role || 'GUEST' });
     } catch (err) {
       const msg = err.message || '';
       setFormModal(null);
@@ -1155,7 +1160,7 @@ function TrainingTab({ user }) {
       setTrainings(p => p.map(t => t.id === formModal.id ? upd : t));
       setMyEnr(p => ({ ...p, [formModal.id]: true }));
       setFormModal(null);
-      setOkModal({ training: upd, name: fname, email, phone, institution, position, role: user.role });
+      setOkModal({ training: upd, name: fname, email, phone, institution, position, role: user?.role || 'GUEST' });
     } catch (err) {
       const msg = err.message || '';
       setFormModal(null);
@@ -1476,12 +1481,21 @@ function CalendarTab({ user }) {
                   {DAY_ABBR[dayPanel.date.getDay()]}, {MONTH_NAMES[dayPanel.date.getMonth()]} {dayPanel.date.getDate()}, {dayPanel.date.getFullYear()}
                 </div>
                 <div style={{ color:'#fff', fontWeight:900, fontSize:15 }}>
-                  {dayPanel.items.length} item{dayPanel.items.length !== 1 ? 's' : ''} scheduled
+                  {dayPanel.items.length === 0 ? 'No events on this day' : `${dayPanel.items.length} item${dayPanel.items.length !== 1 ? 's' : ''} scheduled`}
                 </div>
               </div>
               <button onClick={() => setDayPanel(null)} style={{ background:'rgba(255,255,255,0.07)', border:'none', borderRadius:'50%', width:32, height:32, color:'rgba(255,255,255,0.6)', fontSize:16, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>✕</button>
             </div>
             <div style={{ padding:'12px 14px', display:'flex', flexDirection:'column', gap:10 }}>
+              {dayPanel.items.length === 0 && (
+                <div style={{ textAlign:'center', padding:'24px 16px' }}>
+                  <div style={{ fontSize:40, marginBottom:10 }}>📅</div>
+                  <div style={{ color:'rgba(255,255,255,0.55)', fontSize:14, fontWeight:600, marginBottom:16 }}>No events or training scheduled on this date.</div>
+                  <button onClick={() => { setDayPanel(null); }} style={{ background:'linear-gradient(90deg,#f97316,#e11d48)', color:'#fff', border:'none', borderRadius:10, padding:'9px 20px', fontSize:13, fontWeight:800, cursor:'pointer', fontFamily:'inherit' }}>
+                    Browse Programs →
+                  </button>
+                </div>
+              )}
               {dayPanel.items.map(it => {
                 const isEv = it._type === 'event';
                 const grad  = isEv ? (EV_GRADS[it.category]||EV_GRADS.Summit) : (TR_STYLES[it.category]||TR_STYLES.Technology).accent;

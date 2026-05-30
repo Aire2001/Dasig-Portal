@@ -136,7 +136,7 @@ export default function EventsPage() {
       const updated = { ...formModal, enrolled: newEnrolled };
       setEvents(prev => prev.map(e => e.id === formModal.id ? updated : e));
       setFormModal(null);
-      setOkModal({ event: updated, name: fname, phone, institution, email: user.email, role: user.role });
+      setOkModal({ event: updated, name: fname, phone, institution, email: user?.email || '', role: user?.role || 'GUEST' });
     } catch (err) {
       const msg = err.message || '';
       setFormModal(null);
