@@ -400,21 +400,31 @@ export default function Nav() {
                   </div>
                 )}
 
-                {/* Name — clickable, opens profile page */}
-                {user.role !== 'ADMIN' && (
-                  <button onClick={() => navigate('/profile')} style={{
-                    color: 'rgba(255,255,255,0.75)', background: 'rgba(255,255,255,0.06)',
-                    border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8,
-                    padding: '5px 12px', fontSize: 13, fontWeight: 600,
-                    cursor: 'pointer', fontFamily: 'inherit', transition: 'all .15s',
-                    maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.color='#fff'; e.currentTarget.style.background='rgba(255,255,255,0.12)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.color='rgba(255,255,255,0.75)'; e.currentTarget.style.background='rgba(255,255,255,0.06)'; }}
-                  title="My Profile">
-                    {user.name}
-                  </button>
-                )}
+                {/* Name + avatar — clickable, opens profile page */}
+                {user.role !== 'ADMIN' && (() => {
+                  const initials = (user.name || 'U').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
+                  return (
+                    <button onClick={() => navigate('/profile')} style={{
+                      color: 'rgba(255,255,255,0.75)', background: 'rgba(255,255,255,0.06)',
+                      border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10,
+                      padding: '4px 10px 4px 4px', fontSize: 13, fontWeight: 600,
+                      cursor: 'pointer', fontFamily: 'inherit', transition: 'all .15s',
+                      display: 'flex', alignItems: 'center', gap: 8,
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.color='#fff'; e.currentTarget.style.background='rgba(255,255,255,0.12)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.color='rgba(255,255,255,0.75)'; e.currentTarget.style.background='rgba(255,255,255,0.06)'; }}
+                    title="My Profile">
+                      {/* Mini avatar */}
+                      <div style={{ width:28, height:28, borderRadius:8, overflow:'hidden', flexShrink:0 }}>
+                        {user.avatar_url
+                          ? <img src={user.avatar_url} alt="" style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }} />
+                          : <div style={{ width:'100%', height:'100%', background:'linear-gradient(135deg,#f97316,#e11d48)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:900, color:'#fff' }}>{initials}</div>
+                        }
+                      </div>
+                      <span style={{ maxWidth:100, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{user.name}</span>
+                    </button>
+                  );
+                })()}
 
                 {/* My Card — members only */}
                 {user.role === 'MEMBER' && (
@@ -429,19 +439,30 @@ export default function Nav() {
                   >My Card</button>
                 )}
 
-                {/* Profile link for Admin */}
-                {user.role === 'ADMIN' && (
-                  <button onClick={() => navigate('/profile')} style={{
-                    background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.12)',
-                    borderRadius:8, padding:'5px 12px', color:'rgba(255,255,255,0.7)',
-                    fontSize:13, fontWeight:600, cursor:'pointer', fontFamily:'inherit', transition:'all .15s',
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.color='#fff'; e.currentTarget.style.background='rgba(255,255,255,0.12)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.color='rgba(255,255,255,0.7)'; e.currentTarget.style.background='rgba(255,255,255,0.06)'; }}
-                  title="My Profile">
-                    {user.name}
-                  </button>
-                )}
+                {/* Profile link for Admin — with avatar */}
+                {user.role === 'ADMIN' && (() => {
+                  const initials = (user.name || 'A').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
+                  return (
+                    <button onClick={() => navigate('/profile')} style={{
+                      background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.12)',
+                      borderRadius:10, padding:'4px 10px 4px 4px',
+                      color:'rgba(255,255,255,0.75)', fontSize:13, fontWeight:600,
+                      cursor:'pointer', fontFamily:'inherit', transition:'all .15s',
+                      display:'flex', alignItems:'center', gap:8,
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.color='#fff'; e.currentTarget.style.background='rgba(255,255,255,0.12)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.color='rgba(255,255,255,0.75)'; e.currentTarget.style.background='rgba(255,255,255,0.06)'; }}
+                    title="My Profile">
+                      <div style={{ width:28, height:28, borderRadius:8, overflow:'hidden', flexShrink:0 }}>
+                        {user.avatar_url
+                          ? <img src={user.avatar_url} alt="" style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }} />
+                          : <div style={{ width:'100%', height:'100%', background:'linear-gradient(135deg,#e11d48,#9f1239)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:900, color:'#fff' }}>{initials}</div>
+                        }
+                      </div>
+                      <span style={{ maxWidth:100, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{user.name}</span>
+                    </button>
+                  );
+                })()}
                 {/* Admin panel button */}
                 {user.role === 'ADMIN' && (
                   <button onClick={() => navigate('/admin')} style={{

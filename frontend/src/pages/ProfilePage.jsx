@@ -1,8 +1,33 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../api';
 import ParticleBackground from '../components/ParticleBackground';
+
+// Compress & crop image to 240×240 JPEG, returns base64 data URI
+function compressAvatar(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = reject;
+    reader.onload = e => {
+      const img = new Image();
+      img.onerror = reject;
+      img.onload = () => {
+        const SIZE = 240;
+        const canvas = document.createElement('canvas');
+        canvas.width = SIZE; canvas.height = SIZE;
+        const ctx = canvas.getContext('2d');
+        // Center-crop the image
+        const scale = Math.max(SIZE / img.width, SIZE / img.height);
+        const w = img.width * scale, h = img.height * scale;
+        ctx.drawImage(img, (SIZE - w) / 2, (SIZE - h) / 2, w, h);
+        resolve(canvas.toDataURL('image/jpeg', 0.75));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
 
 const CSS = `
   @keyframes fadeIn  { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
@@ -87,6 +112,32 @@ export default function ProfilePage() {
   const sc = STATUS_COLORS[user.status] || STATUS_COLORS.GUEST;
   const initials = (user.name || 'U').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
 
+  async function handleAvatarUpload(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { showToast('Image must be under 5 MB', false); return; }
+    if (!file.type.startsWith('image/')) { showToast('Please select an image file', false); return; }
+    try {
+      showToast('Uploading photo…', true);
+      const dataUri = await compressAvatar(file);
+      await api.auth.updateProfile({ avatar_url: dataUri });
+      await refreshUser();
+      showToast('Profile photo updated!');
+    } catch (err) {
+      showToast(err.message || 'Upload failed', false);
+    }
+  }
+
+  async function removeAvatar() {
+    try {
+      await api.auth.updateProfile({ avatar_url: null });
+      await refreshUser();
+      showToast('Profile photo removed');
+    } catch (err) {
+      showToast(err.message || 'Failed to remove photo', false);
+    }
+  }
+
   return (
     <div style={{ background:'linear-gradient(180deg,#000d30 0%,#020817 280px,#0f172a 100%)', minHeight:'100vh', position:'relative' }}>
       <ParticleBackground density={35} />
@@ -130,9 +181,29 @@ export default function ProfilePage() {
           <div style={{ background:'linear-gradient(135deg,#001d5c,#1a3a8a 60%,#1e40af)', padding:'28px 28px 22px', position:'relative', overflow:'hidden' }}>
             <div style={{ position:'absolute', right:-12, bottom:-16, fontSize:110, opacity:0.07, lineHeight:1 }}>👤</div>
             <div style={{ display:'flex', alignItems:'center', gap:18 }}>
-              {/* Avatar */}
-              <div style={{ width:68, height:68, borderRadius:20, background:'linear-gradient(135deg,#f97316,#e11d48)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:24, fontWeight:900, color:'#fff', flexShrink:0, boxShadow:'0 6px 20px rgba(249,115,22,0.45)', border:'3px solid rgba(255,255,255,0.2)' }}>
-                {initials}
+              {/* Avatar — click to upload */}
+              <div style={{ position:'relative', flexShrink:0 }}>
+                <label htmlFor="avatar-upload" style={{ cursor:'pointer', display:'block' }} title="Click to change photo">
+                  <div style={{ width:72, height:72, borderRadius:20, overflow:'hidden', border:'3px solid rgba(255,255,255,0.25)', boxShadow:'0 6px 20px rgba(0,0,0,0.4)', position:'relative' }}>
+                    {user.avatar_url
+                      ? <img src={user.avatar_url} alt="avatar" style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }} />
+                      : <div style={{ width:'100%', height:'100%', background:'linear-gradient(135deg,#f97316,#e11d48)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:24, fontWeight:900, color:'#fff' }}>{initials}</div>
+                    }
+                    {/* Hover overlay */}
+                    <div style={{ position:'absolute', inset:0, background:'rgba(0,0,0,0.55)', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:3, opacity:0, transition:'opacity .18s' }}
+                      onMouseEnter={e => e.currentTarget.style.opacity=1}
+                      onMouseLeave={e => e.currentTarget.style.opacity=0}
+                    >
+                      <span style={{ fontSize:18 }}>📷</span>
+                      <span style={{ fontSize:9.5, color:'#fff', fontWeight:700 }}>CHANGE</span>
+                    </div>
+                  </div>
+                </label>
+                <input id="avatar-upload" type="file" accept="image/*" onChange={handleAvatarUpload} style={{ display:'none' }} />
+                {/* Remove button */}
+                {user.avatar_url && (
+                  <button onClick={removeAvatar} title="Remove photo" style={{ position:'absolute', top:-6, right:-6, width:20, height:20, borderRadius:'50%', background:'#e11d48', border:'2px solid #0f172a', color:'#fff', fontSize:10, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:900, lineHeight:1 }}>✕</button>
+                )}
               </div>
               <div style={{ flex:1, minWidth:0 }}>
                 <div style={{ color:'#fff', fontSize:20, fontWeight:900, marginBottom:4, letterSpacing:'-0.3px' }}>{user.name}</div>
