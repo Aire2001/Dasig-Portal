@@ -402,12 +402,30 @@ router.post('/message', async (req, res) => {
     }
   } catch (_) {}
 
+  // Page navigation hint — frontend shows a "Go to [page] →" button
+  const PAGE_LINKS = {
+    events: '/programs?tab=events', event_register: '/programs?tab=events',
+    summit: '/programs?tab=events', event_capacity: '/programs?tab=events',
+    attendance: '/programs?tab=events', booking_confirmation: '/programs?tab=events',
+    cancel_registration: '/programs?tab=events', my_events: '/programs?tab=events',
+    training: '/programs?tab=training', certificate: '/programs?tab=training',
+    my_trainings: '/programs?tab=training',
+    news: '/news', news_members_only: '/news',
+    funding: '/funding',
+    partnerships: '/partnerships',
+    policy: '/policies',
+    membership: '/membership', membership_status: '/membership',
+    membership_renewal: '/membership', tiers: '/membership',
+    haribon: '/chatbot', chatbot_capabilities: '/chatbot',
+  };
+
   return res.json({
     reply,
     matched: true,
     intent: match.intent,
     score: match.score,
     followups: FOLLOWUPS[match.intent] || DEFAULT_FOLLOWUPS,
+    navigate_to: PAGE_LINKS[match.intent] || null,
   });
 });
 

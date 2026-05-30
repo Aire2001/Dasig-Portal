@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import PageHeader from '../components/PageHeader';
 import ParticleBackground from '../components/ParticleBackground';
 import { api } from '../api';
@@ -19,6 +19,7 @@ const defaultBadge = badgeStyle.Announcement;
 const NEWS_CSS = `
   @keyframes modalIn { from{transform:scale(0.88) translateY(20px);opacity:0} to{transform:scale(1) translateY(0);opacity:1} }
   @keyframes fadeIn  { from{opacity:0} to{opacity:1} }
+  @keyframes cardUp  { from{transform:translateY(16px);opacity:0} to{transform:translateY(0);opacity:1} }
 `;
 
 export default function NewsPage() {
@@ -148,8 +149,8 @@ export default function NewsPage() {
           ) : articles.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '60px 0', color: 'rgba(255,255,255,0.3)' }}>No articles found.</div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              {articles.map(a => <NewsCard key={a.id} article={a} onOpen={() => openArticle(a)} />)}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(320px,1fr))', gap: 22 }}>
+              {articles.map((a, i) => <NewsCard key={a.id} article={a} idx={i} onOpen={() => openArticle(a)} />)}
             </div>
           )}
         </div>
@@ -159,96 +160,65 @@ export default function NewsPage() {
   );
 }
 
-function NewsCard({ article: a, onOpen }) {
-  const cardRef = useRef(null);
-  const [tilt, setTilt]     = useState({ x: 0, y: 0 });
-  const [hovered, setHov]   = useState(false);
+function NewsCard({ article: a, idx, onOpen }) {
+  const [hov, setHov] = useState(false);
   const bs = badgeStyle[a.badge] || defaultBadge;
 
-  function onMove(e) {
-    const r  = cardRef.current.getBoundingClientRect();
-    const cx = r.left + r.width  / 2;
-    const cy = r.top  + r.height / 2;
-    setTilt({
-      x: -((e.clientY - cy) / (r.height / 2)) * 5,
-      y:  ((e.clientX - cx) / (r.width  / 2)) * 5,
-    });
-  }
-
   return (
-    <div style={{ perspective: '600px' }}>
-      <div
-        ref={cardRef}
-        onClick={onOpen}
-        onMouseEnter={() => setHov(true)}
-        onMouseMove={onMove}
-        onMouseLeave={() => { setHov(false); setTilt({ x: 0, y: 0 }); }}
-        style={{
-          background: 'rgba(15,23,42,0.85)',
-          border: `1.5px solid ${hovered && !a.locked ? 'rgba(249,115,22,0.5)' : 'rgba(255,255,255,0.08)'}`,
-          borderRadius: 16, padding: '18px 20px', display: 'flex', gap: 16,
-          cursor: a.locked ? 'default' : 'pointer',
-          transition: hovered ? 'box-shadow 0.1s, border-color 0.1s' : 'all 0.4s ease',
-          transform: hovered
-            ? `rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) translateY(-3px) scale(1.01)`
-            : 'rotateX(0deg) rotateY(0deg) translateY(0) scale(1)',
-          boxShadow: hovered && !a.locked
-            ? '0 12px 36px rgba(0,29,92,0.13), 0 2px 8px rgba(0,0,0,0.06)'
-            : '0 1px 4px rgba(0,0,0,0.04)',
-          opacity: a.locked ? 0.72 : 1,
-          position: 'relative', overflow: 'hidden',
-        }}
-      >
-        {/* left accent bar */}
-        <div style={{
-          position: 'absolute', left: 0, top: 0, bottom: 0, width: 4,
-          background: bs.accent, borderRadius: '2px 0 0 2px',
-        }} />
-
-        {/* icon */}
-        <div style={{
-          width: 54, height: 54, borderRadius: 14, flexShrink: 0,
-          background: bs.accent,
-          display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24,
-          boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
-          transform: hovered ? 'scale(1.08) rotate(-4deg)' : 'scale(1) rotate(0deg)',
-          transition: 'transform 0.3s ease',
-        }}>{a.icon || bs.icon}</div>
-
-        {/* content */}
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
-            <span style={{
-              background: bs.bg, color: bs.color,
-              borderRadius: 6, padding: '3px 10px', fontSize: 11, fontWeight: 700,
-            }}>{a.badge}</span>
-            <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>{a.date}</span>
-            {a.locked && (
-              <span style={{
-                background: '#fef3c7', color: '#92400e',
-                borderRadius: 6, padding: '2px 8px', fontSize: 10, fontWeight: 700,
-              }}>🔒 Members Only</span>
-            )}
-          </div>
-          <h3 style={{
-            fontWeight: 800, fontSize: 15.5,
-            lineHeight: 1.35, marginBottom: 6,
-            color: hovered && !a.locked ? '#f97316' : '#fff',
-            transition: 'color 0.2s',
-          }}>{a.title}</h3>
-          <p style={{ fontSize: 13.5, color: 'rgba(255,255,255,0.55)', lineHeight: 1.65, margin: 0 }}>{a.excerpt}</p>
+    <div
+      onClick={onOpen}
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+      style={{
+        borderRadius: 18, overflow: 'hidden',
+        background: 'rgba(15,23,42,0.92)',
+        border: `1px solid ${hov && !a.locked ? 'rgba(249,115,22,0.4)' : 'rgba(255,255,255,0.07)'}`,
+        boxShadow: hov && !a.locked ? '0 14px 42px rgba(249,115,22,0.12)' : '0 4px 16px rgba(0,0,0,0.3)',
+        transform: hov && !a.locked ? 'translateY(-5px)' : 'none',
+        transition: 'all .22s cubic-bezier(.34,1.56,.64,1)',
+        cursor: a.locked ? 'default' : 'pointer',
+        opacity: a.locked ? 0.78 : 1,
+        animation: `cardUp .35s ease ${idx * 0.05}s both`,
+      }}
+    >
+      {/* Cover image */}
+      <div style={{ background: bs.accent, padding: '26px 22px 20px', position: 'relative', overflow: 'hidden', minHeight: 148, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+        <div style={{ position:'absolute', inset:0, backgroundImage:`radial-gradient(circle at 72% 28%, rgba(255,255,255,0.14) 0%, transparent 58%)`, pointerEvents:'none' }} />
+        <div style={{ position:'absolute', right:-6, top:-6, fontSize:96, opacity:0.13, lineHeight:1, userSelect:'none', transform: hov ? 'scale(1.07) rotate(5deg)' : 'scale(1)', transition:'transform .3s ease' }}>
+          {a.icon || bs.icon}
         </div>
+        {a.locked && (
+          <div style={{ position:'absolute', inset:0, background:'rgba(0,0,0,0.5)', display:'flex', alignItems:'center', justifyContent:'center', flexDirection:'column', gap:6, zIndex:2 }}>
+            <div style={{ fontSize:26 }}>🔒</div>
+            <div style={{ color:'rgba(255,255,255,0.75)', fontSize:11.5, fontWeight:700 }}>Members Only</div>
+          </div>
+        )}
+        <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:10, position:'relative', zIndex:1 }}>
+          <span style={{ background:'rgba(255,255,255,0.22)', color:'#fff', borderRadius:6, padding:'3px 10px', fontSize:10.5, fontWeight:700 }}>
+            {bs.icon} {a.badge}
+          </span>
+          <span style={{ color:'rgba(255,255,255,0.65)', fontSize:11.5 }}>{String(a.date).slice(0,10)}</span>
+        </div>
+        <div style={{ color:'#fff', fontSize:15.5, fontWeight:900, lineHeight:1.35, position:'relative', zIndex:1, textShadow:'0 1px 8px rgba(0,0,0,0.45)' }}>
+          {a.title}
+        </div>
+      </div>
 
-        {/* arrow */}
-        <div style={{
-          alignSelf: 'center', flexShrink: 0,
-          width: 32, height: 32, borderRadius: '50%',
-          background: hovered && !a.locked ? bs.accent : '#f1f5f9',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 14, color: hovered && !a.locked ? '#fff' : '#94a3b8',
-          transition: 'all 0.2s',
-          transform: hovered && !a.locked ? 'translateX(3px)' : 'translateX(0)',
-        }}>→</div>
+      {/* Card body */}
+      <div style={{ padding:'15px 20px 17px' }}>
+        {a.excerpt && (
+          <p style={{ color:'rgba(255,255,255,0.5)', fontSize:12.5, lineHeight:1.65, marginBottom:12, overflow:'hidden', display:'-webkit-box', WebkitLineClamp:3, WebkitBoxOrient:'vertical' }}>
+            {a.excerpt}
+          </p>
+        )}
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+          <span style={{ fontSize:11, color:'rgba(255,255,255,0.28)' }}>DASIG Consortium</span>
+          {!a.locked && (
+            <span style={{ fontSize:12.5, color: hov ? '#f97316' : 'rgba(255,255,255,0.4)', fontWeight:700, transition:'color .15s' }}>
+              Read more →
+            </span>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -7,6 +7,7 @@ import HomePage from './pages/HomePage';
 import EventsPage from './pages/EventsPage';
 import NewsPage from './pages/NewsPage';
 import TrainingPage from './pages/TrainingPage';
+import ProgramsPage from './pages/ProgramsPage';
 import MembersPage from './pages/MembersPage';
 import MembershipPage from './pages/MembershipPage';
 import AdminPage from './pages/AdminPage';
@@ -31,6 +32,7 @@ export default function App() {
               <Nav />
               <Routes>
                 <Route path="/"             element={<HomePage />} />
+                <Route path="/programs"     element={<ProgramsPage />} />
                 <Route path="/events"       element={<EventsPage />} />
                 <Route path="/news"         element={<NewsPage />} />
                 <Route path="/training"     element={<TrainingPage />} />

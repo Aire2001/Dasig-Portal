@@ -36,9 +36,8 @@ const NAV_CSS = `
 `;
 
 const navLinks = [
-  { label: 'Events',   to: '/events'   },
+  { label: 'Programs', to: '/programs' },
   { label: 'News',     to: '/news'     },
-  { label: 'Training', to: '/training' },
   { label: 'Members',  to: '/members'  },
   { label: '🦅 Haribon AI', to: '/chatbot', highlight: true },
 ];

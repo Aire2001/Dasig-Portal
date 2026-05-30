@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import PageHeader from '../components/PageHeader';
 import ParticleBackground from '../components/ParticleBackground';
 import HaribonFace from '../components/HaribonFace';
@@ -126,6 +127,7 @@ function formatTime(d) {
 }
 
 export default function ChatbotPage() {
+  const navigate = useNavigate();
   const [messages, setMessages] = useState([INIT_MSG]);
   const [input, setInput]       = useState('');
   const [thinking, setThinking] = useState(false);
@@ -164,6 +166,7 @@ export default function ChatbotPage() {
         intent: res.intent,
         matched: res.matched,
         followups: res.followups || [],
+        navigate_to: res.navigate_to || null,
         time: new Date(),
       }]);
     } catch {
@@ -379,17 +382,41 @@ export default function ChatbotPage() {
                       </div>
                     )}
 
-                    {/* Follow-up suggestions — only on last bot message */}
-                    {msg.from === 'bot' && msg.followups?.length > 0 && i === messages.length - 1 && !thinking && (
-                      <div style={{ marginTop: 10, maxWidth: '82%' }}>
-                        <div style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.28)', fontWeight: 700, marginBottom: 6, letterSpacing: '0.4px', textTransform: 'uppercase' }}>
-                          Suggested follow-ups
-                        </div>
-                        <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap' }}>
-                          {msg.followups.map(f => (
-                            <button key={f} className="chip-btn" onClick={() => send(f)} disabled={thinking}>{f}</button>
-                          ))}
-                        </div>
+                    {/* Follow-up suggestions + navigation CTA — only on last bot message */}
+                    {msg.from === 'bot' && i === messages.length - 1 && !thinking && (
+                      <div style={{ marginTop: 10, maxWidth: '84%', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                        {msg.navigate_to && (
+                          <button
+                            onClick={() => navigate(msg.navigate_to)}
+                            style={{
+                              alignSelf: 'flex-start',
+                              background: 'linear-gradient(90deg,rgba(249,115,22,0.18),rgba(225,29,72,0.14))',
+                              border: '1px solid rgba(249,115,22,0.4)',
+                              borderRadius: 10, padding: '9px 16px',
+                              color: '#fb923c', fontSize: 13, fontWeight: 800,
+                              cursor: 'pointer', fontFamily: 'inherit',
+                              display: 'flex', alignItems: 'center', gap: 7,
+                              transition: 'all .15s',
+                            }}
+                            onMouseEnter={e => { e.currentTarget.style.background = 'linear-gradient(90deg,rgba(249,115,22,0.28),rgba(225,29,72,0.22))'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
+                            onMouseLeave={e => { e.currentTarget.style.background = 'linear-gradient(90deg,rgba(249,115,22,0.18),rgba(225,29,72,0.14))'; e.currentTarget.style.transform = 'none'; }}
+                          >
+                            <span>↗</span>
+                            Open page
+                          </button>
+                        )}
+                        {msg.followups?.length > 0 && (
+                          <>
+                            <div style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.28)', fontWeight: 700, letterSpacing: '0.4px', textTransform: 'uppercase' }}>
+                              Suggested follow-ups
+                            </div>
+                            <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap' }}>
+                              {msg.followups.map(f => (
+                                <button key={f} className="chip-btn" onClick={() => send(f)} disabled={thinking}>{f}</button>
+                              ))}
+                            </div>
+                          </>
+                        )}
                       </div>
                     )}
                   </div>
