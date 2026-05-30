@@ -10,6 +10,7 @@ const CSS = `
   @keyframes fadeIn   { from{opacity:0} to{opacity:1} }
   @keyframes statPop  { from{transform:translateY(14px);opacity:0} to{transform:translateY(0);opacity:1} }
   @keyframes toastIn  { from{transform:translateX(70px) scale(0.9);opacity:0} to{transform:translateX(0) scale(1);opacity:1} }
+  @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
 
   * { box-sizing: border-box; }
 
@@ -1419,17 +1420,22 @@ function PartnershipsTab({ showToast }) {
    REPORTS
 ═══════════════════════════════════════════════════════════════════ */
 function ReportsTab({ showToast }) {
-  const [chatbot, setChatbot] = useState(null);
-  const [evRep, setEvRep]     = useState(null);
-  const [trRep, setTrRep]     = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [chatbot, setChatbot]   = useState(null);
+  const [evRep, setEvRep]       = useState(null);
+  const [trRep, setTrRep]       = useState(null);
+  const [loading, setLoading]   = useState(true);
+  const [refreshing, setRef]    = useState(false);
+  const [lastFetched, setLast]  = useState(null);
 
-  useEffect(() => {
+  const load = useCallback((isRefresh = false) => {
+    if (isRefresh) setRef(true); else setLoading(true);
     Promise.all([api.admin.reportChatbot(), api.admin.reportEvents(), api.admin.reportTraining()])
-      .then(([c,e,t]) => { setChatbot(c); setEvRep(e); setTrRep(t); })
+      .then(([c,e,t]) => { setChatbot(c); setEvRep(e); setTrRep(t); setLast(new Date()); })
       .catch(() => showToast('Failed to load reports', false))
-      .finally(() => setLoading(false));
+      .finally(() => { setLoading(false); setRef(false); });
   }, []);
+
+  useEffect(() => { load(); }, [load]);
 
   if (loading) return <Loading />;
 
@@ -1437,7 +1443,15 @@ function ReportsTab({ showToast }) {
 
   return (
     <div>
-      <PageHeader title="Analytics & Reports" desc="Portal performance and usage insights" />
+      <PageHeader title="Analytics & Reports" desc="Portal performance and usage insights" action={
+        <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+          {lastFetched && <span style={{ fontSize:11.5, color:'rgba(255,255,255,0.35)' }}>Live data · {lastFetched.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit', second:'2-digit' })}</span>}
+          <button onClick={() => load(true)} disabled={refreshing} className="ap-btn ap-btn-ghost" style={{ display:'flex', alignItems:'center', gap:6 }}>
+            <span style={{ display:'inline-block', animation: refreshing ? 'spin .7s linear infinite' : 'none' }}>↻</span>
+            {refreshing ? 'Refreshing…' : 'Refresh'}
+          </button>
+        </div>
+      } />
 
       {/* Chatbot accuracy panel */}
       <div style={{ background:'rgba(79,70,229,0.07)', border:'1px solid rgba(79,70,229,0.2)', borderRadius:16, padding:'22px 24px', marginBottom:22 }}>

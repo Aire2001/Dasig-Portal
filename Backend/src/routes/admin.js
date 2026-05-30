@@ -141,17 +141,23 @@ router.patch('/users/:id/activate', async (req, res) => {
   res.json({ message: 'User activated', user: data });
 });
 
-// GET /api/admin/reports/events — event attendance report
+// GET /api/admin/reports/events — event attendance report (uses actual registration count)
 router.get('/reports/events', async (req, res) => {
   const { data: events, error } = await supabase.from('events')
-    .select('id, title, date, category, enrolled, total, organizer');
+    .select('id, title, date, category, total, organizer, registrations:event_registrations(count)');
   if (error) return res.status(500).json({ error: error.message });
 
-  const report = events.map(ev => ({
-    ...ev,
-    fillRate: ev.total > 0 ? Math.round((ev.enrolled / ev.total) * 100) : 0,
-    spotsLeft: ev.total - ev.enrolled,
-  }));
+  const report = (events || []).map(ev => {
+    const actualEnrolled = ev.registrations?.[0]?.count ?? 0;
+    return {
+      id: ev.id, title: ev.title, date: ev.date,
+      category: ev.category, organizer: ev.organizer,
+      enrolled: actualEnrolled,
+      total: ev.total,
+      fillRate: ev.total > 0 ? Math.round((actualEnrolled / ev.total) * 100) : 0,
+      spotsLeft: ev.total - actualEnrolled,
+    };
+  });
 
   const totalEnrolled = report.reduce((s, e) => s + e.enrolled, 0);
   const totalCapacity = report.reduce((s, e) => s + e.total, 0);
@@ -167,17 +173,23 @@ router.get('/reports/events', async (req, res) => {
   });
 });
 
-// GET /api/admin/reports/training — training enrollment report
+// GET /api/admin/reports/training — training enrollment report (uses actual enrollment count)
 router.get('/reports/training', async (req, res) => {
   const { data: trainings, error } = await supabase.from('trainings')
-    .select('id, title, category, org, enrolled, total, level');
+    .select('id, title, category, org, total, level, enrollments:training_enrollments(count)');
   if (error) return res.status(500).json({ error: error.message });
 
-  const report = trainings.map(t => ({
-    ...t,
-    fillRate: t.total > 0 ? Math.round((t.enrolled / t.total) * 100) : 0,
-    spotsLeft: t.total - t.enrolled,
-  }));
+  const report = (trainings || []).map(t => {
+    const actualEnrolled = t.enrollments?.[0]?.count ?? 0;
+    return {
+      id: t.id, title: t.title, category: t.category,
+      org: t.org, level: t.level,
+      enrolled: actualEnrolled,
+      total: t.total,
+      fillRate: t.total > 0 ? Math.round((actualEnrolled / t.total) * 100) : 0,
+      spotsLeft: t.total - actualEnrolled,
+    };
+  });
 
   res.json({
     trainings: report,
