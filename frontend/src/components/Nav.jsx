@@ -37,7 +37,7 @@ const NAV_CSS = `
 
 const navLinks = [
   { label: 'Programs', to: '/programs'              },
-  { label: 'Calendar', to: '/programs?tab=training' },
+  { label: 'Calendar', to: '/programs?tab=calendar' },
   { label: 'News',     to: '/news'                  },
   { label: 'Members',  to: '/members'               },
   { label: '🦅 Haribon AI', to: '/chatbot', highlight: true },

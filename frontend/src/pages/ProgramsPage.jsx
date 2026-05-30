@@ -353,39 +353,48 @@ function OutlookCal({ items, onClickItem, onClickDay, conflictIds, getColors }) 
 ═══════════════════════════════════════════════════════════ */
 export default function ProgramsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const tab = searchParams.get('tab') === 'training' ? 'training' : 'events';
+  const rawTab = searchParams.get('tab');
+  const tab = ['events','training','calendar'].includes(rawTab) ? rawTab : 'events';
   const { user } = useAuth();
   const setTab = t => setSearchParams({ tab: t }, { replace: true });
+
+  const isCalendar = tab === 'calendar';
 
   return (
     <div style={{ background:'linear-gradient(180deg,#000d30 0%,#020817 300px,#0f172a 100%)', minHeight:'100vh', position:'relative' }}>
       <ParticleBackground density={45} />
       <style>{CSS}</style>
       <div style={{ position:'relative', zIndex:1 }}>
-        <PageHeader eyebrow="DASIG Programs" title="Events & Training" />
+        <PageHeader
+          eyebrow={isCalendar ? 'DASIG Calendar' : 'DASIG Programs'}
+          title={isCalendar ? 'Events & Training Calendar' : 'Events & Training'}
+        />
         <div style={{ maxWidth:1120, margin:'0 auto', padding:'0 24px 80px' }}>
 
-          {/* Tab switcher */}
-          <div style={{ display:'flex', gap:10, marginBottom:28, flexWrap:'wrap' }}>
-            {[
-              { key:'events',   label:'📅 Events',            sub:'Summits, workshops & seminars' },
-              { key:'training', label:'🎓 Training Programs',  sub:'Professional development calendar' },
-            ].map(t => (
-              <button key={t.key} onClick={() => setTab(t.key)} style={{
-                flex:'0 0 auto', minWidth:220, padding:'14px 22px', borderRadius:16,
-                background: tab === t.key ? 'linear-gradient(135deg,rgba(249,115,22,0.18),rgba(225,29,72,0.12))' : 'rgba(255,255,255,0.04)',
-                border: tab === t.key ? '1.5px solid rgba(249,115,22,0.45)' : '1.5px solid rgba(255,255,255,0.08)',
-                cursor:'pointer', fontFamily:'inherit', textAlign:'left', transition:'all .18s',
-                boxShadow: tab === t.key ? '0 4px 20px rgba(249,115,22,0.13)' : 'none',
-              }}>
-                <div style={{ fontSize:14.5, fontWeight:800, color: tab === t.key ? '#fb923c' : 'rgba(255,255,255,0.72)', marginBottom:3 }}>{t.label}</div>
-                <div style={{ fontSize:11.5, color:'rgba(255,255,255,0.35)', fontWeight:500 }}>{t.sub}</div>
-              </button>
-            ))}
-          </div>
+          {/* Tab switcher — only show on Programs (not Calendar) */}
+          {!isCalendar && (
+            <div style={{ display:'flex', gap:10, marginBottom:28, flexWrap:'wrap' }}>
+              {[
+                { key:'events',   label:'📅 Events',           sub:'Summits, workshops & seminars' },
+                { key:'training', label:'🎓 Training Programs', sub:'Professional development programs' },
+              ].map(t => (
+                <button key={t.key} onClick={() => setTab(t.key)} style={{
+                  flex:'0 0 auto', minWidth:220, padding:'14px 22px', borderRadius:16,
+                  background: tab === t.key ? 'linear-gradient(135deg,rgba(249,115,22,0.18),rgba(225,29,72,0.12))' : 'rgba(255,255,255,0.04)',
+                  border: tab === t.key ? '1.5px solid rgba(249,115,22,0.45)' : '1.5px solid rgba(255,255,255,0.08)',
+                  cursor:'pointer', fontFamily:'inherit', textAlign:'left', transition:'all .18s',
+                  boxShadow: tab === t.key ? '0 4px 20px rgba(249,115,22,0.13)' : 'none',
+                }}>
+                  <div style={{ fontSize:14.5, fontWeight:800, color: tab === t.key ? '#fb923c' : 'rgba(255,255,255,0.72)', marginBottom:3 }}>{t.label}</div>
+                  <div style={{ fontSize:11.5, color:'rgba(255,255,255,0.35)', fontWeight:500 }}>{t.sub}</div>
+                </button>
+              ))}
+            </div>
+          )}
 
           {tab === 'events'   && <EventsTab   user={user} />}
           {tab === 'training' && <TrainingTab user={user} />}
+          {tab === 'calendar' && <CalendarTab user={user} />}
         </div>
       </div>
     </div>
@@ -495,7 +504,6 @@ function EventsTab({ user }) {
   const [loading, setLoading]     = useState(true);
   const [myRegs, setMyRegs]       = useState({});
   const [detail, setDetail]       = useState(null);   // clicked calendar item
-  const [dayPanel, setDayPanel]   = useState(null);   // { date, items }
   const [formModal, setFormModal] = useState(null);
   const [conflict, setConflict]   = useState(null);
   const [okModal, setOkModal]     = useState(null);
@@ -526,31 +534,7 @@ function EventsTab({ user }) {
       .catch(() => {});
   }, [user]);
 
-  // Attach parsed date range to each event
   const filteredEvents = active === 'All' ? events : events.filter(ev => ev.category === active);
-
-  const calItems = events.map(ev => {
-    const range = parseRange(ev.date);
-    return { ...ev, startDate: range?.start || null, endDate: range?.end || null, _type: 'event' };
-  });
-
-  // Conflict IDs: events the user is registered for that overlap with others they're registered for
-  const registeredItems = calItems.filter(ev => myRegs[ev.id]);
-  const conflictIds = new Set();
-  for (let i = 0; i < registeredItems.length; i++) {
-    for (let j = i + 1; j < registeredItems.length; j++) {
-      const a = registeredItems[i], b = registeredItems[j];
-      if (!a.startDate || !b.startDate) continue;
-      const aEnd = a.endDate || a.startDate, bEnd = b.endDate || b.startDate;
-      if (a.startDate <= bEnd && b.startDate <= aEnd) {
-        conflictIds.add(a.id); conflictIds.add(b.id);
-      }
-    }
-  }
-
-  function evColors(it) {
-    return EV_COLORS[it.category] || EV_COLORS.Summit;
-  }
 
   // Check conflict before opening form
   function openForm(ev) {
@@ -738,83 +722,6 @@ function EventsTab({ user }) {
           </div>
         </div>
       )}
-
-      {/* Day-click panel */}
-      {dayPanel && !detail && !formModal && (
-        <div onClick={() => setDayPanel(null)} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.55)', zIndex:9100, display:'flex', alignItems:'flex-start', justifyContent:'flex-end', padding:20 }}>
-          <div onClick={e => e.stopPropagation()} style={{ background:'#0d1424', border:'1px solid rgba(255,255,255,0.12)', borderRadius:20, width:380, maxHeight:'82vh', overflow:'auto', animation:'panelIn .22s ease', boxShadow:'0 24px 80px rgba(0,0,0,0.7)' }}>
-            <div style={{ padding:'20px 22px 16px', borderBottom:'1px solid rgba(255,255,255,0.07)', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-              <div>
-                <div style={{ color:'rgba(255,255,255,0.45)', fontSize:11, fontWeight:700, letterSpacing:'.5px', textTransform:'uppercase', marginBottom:3 }}>
-                  {DAY_ABBR[dayPanel.date.getDay()]}, {MONTH_NAMES[dayPanel.date.getMonth()]} {dayPanel.date.getDate()}, {dayPanel.date.getFullYear()}
-                </div>
-                <div style={{ color:'#fff', fontWeight:900, fontSize:16 }}>
-                  {dayPanel.items.length === 0 ? 'No events' : `${dayPanel.items.length} event${dayPanel.items.length > 1 ? 's' : ''}`}
-                </div>
-              </div>
-              <button onClick={() => setDayPanel(null)} style={{ background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:'50%', width:32, height:32, color:'rgba(255,255,255,0.6)', fontSize:16, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>✕</button>
-            </div>
-
-            {dayPanel.items.length === 0 ? (
-              <div style={{ padding:'32px 22px', textAlign:'center' }}>
-                <div style={{ fontSize:40, marginBottom:10 }}>📅</div>
-                <div style={{ color:'rgba(255,255,255,0.35)', fontSize:13.5 }}>No events on this date.</div>
-                <div style={{ color:'rgba(255,255,255,0.22)', fontSize:12, marginTop:6 }}>Check another date or the next month.</div>
-              </div>
-            ) : (
-              <div style={{ padding:'14px 16px', display:'flex', flexDirection:'column', gap:12 }}>
-                {dayPanel.items.map(ev => {
-                  const grad = EV_GRADS[ev.category] || EV_GRADS.Summit;
-                  const registered = !!myRegs[ev.id];
-                  const full = ev.total > 0 && ev.enrolled >= ev.total;
-                  return (
-                    <div key={ev.id} style={{ borderRadius:14, overflow:'hidden', border:'1px solid rgba(255,255,255,0.08)' }}>
-                      <div style={{ background: grad, padding:'14px 16px 12px', position:'relative', overflow:'hidden' }}>
-                        <div style={{ position:'absolute', right:-6, bottom:-8, fontSize:52, opacity:0.12 }}>{EV_ICONS[ev.category]||'📅'}</div>
-                        <div style={{ display:'flex', justifyContent:'space-between', marginBottom:5 }}>
-                          <span style={{ background:'rgba(255,255,255,0.22)', color:'#fff', borderRadius:5, padding:'2px 9px', fontSize:10, fontWeight:700 }}>{ev.category}</span>
-                          {registered && <span style={{ background:'rgba(16,185,129,0.28)', color:'#34d399', borderRadius:5, padding:'2px 9px', fontSize:10, fontWeight:700 }}>✓ Registered</span>}
-                          {full && !registered && <span style={{ background:'rgba(225,29,72,0.28)', color:'#f87171', borderRadius:5, padding:'2px 9px', fontSize:10, fontWeight:700 }}>Full</span>}
-                        </div>
-                        <div style={{ color:'#fff', fontSize:14.5, fontWeight:900, lineHeight:1.3, marginBottom:4 }}>{ev.title}</div>
-                        <div style={{ display:'flex', gap:10, flexWrap:'wrap' }}>
-                          <span style={{ color:'rgba(255,255,255,0.8)', fontSize:11 }}>📅 {ev.date}</span>
-                          <span style={{ color:'rgba(255,255,255,0.8)', fontSize:11 }}>📍 {ev.venue}</span>
-                        </div>
-                      </div>
-                      <div style={{ padding:'12px 16px', background:'rgba(15,23,42,0.9)' }}>
-                        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8 }}>
-                          <span style={{ fontSize:11.5, color:'rgba(255,255,255,0.35)' }}>🏛 {ev.organizer}</span>
-                          <span style={{ fontSize:11.5, color: full ? '#f87171' : 'rgba(255,255,255,0.45)', fontWeight:600 }}>{ev.enrolled}/{ev.total} seats</span>
-                        </div>
-                        {ev.description && <p style={{ color:'rgba(255,255,255,0.45)', fontSize:12, lineHeight:1.55, marginBottom:10, overflow:'hidden', display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical' }}>{ev.description}</p>}
-                        {!registered
-                          ? <button onClick={() => { setDayPanel(null); openForm(ev); }} disabled={full} style={{ width:'100%', background: full ? 'rgba(255,255,255,0.05)' : 'linear-gradient(90deg,#f97316,#e11d48)', color: full ? 'rgba(255,255,255,0.3)' : '#fff', border: full ? '1px solid rgba(255,255,255,0.08)' : 'none', borderRadius:10, padding:'10px', fontSize:13.5, fontWeight:800, cursor: full ? 'not-allowed' : 'pointer', fontFamily:'inherit', boxShadow: full ? 'none' : '0 4px 14px rgba(249,115,22,0.35)' }}>
-                              {full ? 'Fully Booked' : 'Register for this event →'}
-                            </button>
-                          : <div style={{ textAlign:'center', padding:'10px', background:'rgba(16,185,129,0.1)', border:'1px solid rgba(16,185,129,0.25)', borderRadius:10, color:'#34d399', fontWeight:700, fontSize:13 }}>✓ You are registered</div>
-                        }
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Outlook Calendar */}
-      {!loading && (
-        <OutlookCal
-          items={calItems}
-          onClickItem={setDetail}
-          onClickDay={(date, its) => { setDayPanel({ date, items: its }); setDetail(null); }}
-          conflictIds={conflictIds}
-          getColors={evColors}
-        />
-      )}
-      {loading && <div style={{ textAlign:'center', padding:'60px 0', color:'rgba(255,255,255,0.3)' }}><div style={{ fontSize:32, marginBottom:10 }}>⏳</div>Loading…</div>}
 
       {/* Category filter chips */}
       <div style={{ display:'flex', gap:8, marginBottom:20, flexWrap:'wrap', marginTop:4 }}>
@@ -1046,16 +953,6 @@ function TrainingTab({ user }) {
         </div>
       )}
 
-      {/* Outlook Calendar */}
-      {!loading && (
-        <OutlookCal
-          items={calItems}
-          onClickItem={setDetail}
-          onClickDay={(date, its) => its.length > 0 && setDetail(its[0])}
-          conflictIds={conflictIds}
-          getColors={trColors}
-        />
-      )}
       {loading && <div style={{ textAlign:'center', padding:'60px 0', color:'rgba(255,255,255,0.3)' }}><div style={{ fontSize:32, marginBottom:10 }}>⏳</div>Loading…</div>}
 
       {/* Category filters */}
@@ -1080,6 +977,190 @@ function TrainingTab({ user }) {
             <TrCard key={t.id} t={t} idx={idx} enrolled={!!myEnr[t.id]} onEnroll={() => openEnroll(t)} />
           ))}
         </div>
+      )}
+    </>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════
+   CALENDAR TAB — Outlook calendar only, no cards below
+   Shows BOTH events and training. Click bar or date = detail.
+═══════════════════════════════════════════════════════════ */
+function CalendarTab({ user }) {
+  const [events, setEvents]     = useState([]);
+  const [trainings, setTrain]   = useState([]);
+  const [myRegs, setMyRegs]     = useState({});
+  const [myEnr, setMyEnr]       = useState({});
+  const [loading, setLoading]   = useState(true);
+  const [detail, setDetail]     = useState(null);
+  const [dayPanel, setDayPanel] = useState(null); // { date, items }
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    Promise.all([
+      api.events.list({ limit: 1000 }),
+      api.training.list({ limit: 1000 }),
+    ]).then(([ev, tr]) => {
+      setEvents(ev.data || []);
+      setTrain(tr.data || []);
+    }).catch(() => {}).finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    if (!user) return;
+    api.auth.myRegistrations().then(r => {
+      const m = {}; r.forEach(x => { m[x.event_id] = true; }); setMyRegs(m);
+    }).catch(() => {});
+    api.auth.myEnrollments().then(r => {
+      const m = {}; r.forEach(x => { m[x.training_id] = true; }); setMyEnr(m);
+    }).catch(() => {});
+  }, [user]);
+
+  // Combine all items for calendar
+  const calItems = [
+    ...events.map(ev => {
+      const r = parseRange(ev.date);
+      return { ...ev, startDate: r?.start||null, endDate: r?.end||null, _type:'event' };
+    }),
+    ...trainings.map(t => {
+      const r = parseRange(t.schedule);
+      return { ...t, startDate: r?.start||null, endDate: r?.end||null, _type:'training' };
+    }),
+  ];
+
+  function getColors(it) {
+    if (it._type === 'training') {
+      const s = TR_STYLES[it.category] || TR_STYLES.Technology;
+      return { bg: s.calBg, border: s.calBorder, text: s.calText };
+    }
+    return EV_COLORS[it.category] || EV_COLORS.Summit;
+  }
+
+  // Registered/enrolled item IDs for conflict check
+  const myIds = new Set([
+    ...Object.keys(myRegs).map(id => +id),
+    ...Object.keys(myEnr).map(id => +id),
+  ]);
+  const enrolled = calItems.filter(it => myIds.has(it.id));
+  const conflictIds = new Set();
+  for (let i = 0; i < enrolled.length; i++) {
+    for (let j = i+1; j < enrolled.length; j++) {
+      const a = enrolled[i], b = enrolled[j];
+      if (!a.startDate || !b.startDate) continue;
+      const aE = a.endDate||a.startDate, bE = b.endDate||b.startDate;
+      if (a.startDate <= bE && b.startDate <= aE) { conflictIds.add(a.id); conflictIds.add(b.id); }
+    }
+  }
+
+  function handleClickItem(it) { setDetail(it); setDayPanel(null); }
+  function handleClickDay(date, its) { if (its.length > 0) { setDayPanel({ date, items: its }); setDetail(null); } }
+
+  return (
+    <>
+      {/* Day panel */}
+      {dayPanel && !detail && (
+        <div onClick={() => setDayPanel(null)} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.55)', zIndex:9100, display:'flex', alignItems:'flex-start', justifyContent:'flex-end', padding:20 }}>
+          <div onClick={e => e.stopPropagation()} style={{ background:'#0d1424', border:'1px solid rgba(255,255,255,0.12)', borderRadius:20, width:380, maxHeight:'82vh', overflow:'auto', animation:'panelIn .22s ease', boxShadow:'0 24px 80px rgba(0,0,0,0.7)' }}>
+            <div style={{ padding:'18px 20px 14px', borderBottom:'1px solid rgba(255,255,255,0.07)', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+              <div>
+                <div style={{ color:'rgba(255,255,255,0.4)', fontSize:11, fontWeight:700, textTransform:'uppercase', letterSpacing:'.5px', marginBottom:3 }}>
+                  {DAY_ABBR[dayPanel.date.getDay()]}, {MONTH_NAMES[dayPanel.date.getMonth()]} {dayPanel.date.getDate()}, {dayPanel.date.getFullYear()}
+                </div>
+                <div style={{ color:'#fff', fontWeight:900, fontSize:15 }}>
+                  {dayPanel.items.length} item{dayPanel.items.length !== 1 ? 's' : ''} scheduled
+                </div>
+              </div>
+              <button onClick={() => setDayPanel(null)} style={{ background:'rgba(255,255,255,0.07)', border:'none', borderRadius:'50%', width:32, height:32, color:'rgba(255,255,255,0.6)', fontSize:16, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>✕</button>
+            </div>
+            <div style={{ padding:'12px 14px', display:'flex', flexDirection:'column', gap:10 }}>
+              {dayPanel.items.map(it => {
+                const isEv = it._type === 'event';
+                const grad  = isEv ? (EV_GRADS[it.category]||EV_GRADS.Summit) : (TR_STYLES[it.category]||TR_STYLES.Technology).accent;
+                const reged = isEv ? !!myRegs[it.id] : !!myEnr[it.id];
+                const full  = it.total > 0 && it.enrolled >= it.total;
+                return (
+                  <div key={it.id} style={{ borderRadius:13, overflow:'hidden', border:'1px solid rgba(255,255,255,0.08)' }}>
+                    <div style={{ background: grad, padding:'12px 14px 10px', position:'relative', overflow:'hidden' }}>
+                      <div style={{ position:'absolute', right:-4, bottom:-6, fontSize:48, opacity:0.12 }}>
+                        {isEv ? (EV_ICONS[it.category]||'📅') : (TR_ICONS[it.category]||'🎓')}
+                      </div>
+                      <div style={{ display:'flex', justifyContent:'space-between', marginBottom:4 }}>
+                        <span style={{ background:'rgba(255,255,255,0.2)', color:'#fff', borderRadius:5, padding:'2px 8px', fontSize:10, fontWeight:700 }}>
+                          {isEv ? it.category : `🎓 ${it.category}`}
+                        </span>
+                        {reged && <span style={{ background:'rgba(16,185,129,0.25)', color:'#34d399', borderRadius:5, padding:'2px 8px', fontSize:10, fontWeight:700 }}>✓ {isEv?'Registered':'Enrolled'}</span>}
+                        {full && !reged && <span style={{ background:'rgba(225,29,72,0.25)', color:'#f87171', borderRadius:5, padding:'2px 8px', fontSize:10, fontWeight:700 }}>Full</span>}
+                      </div>
+                      <div style={{ color:'#fff', fontSize:14, fontWeight:900, lineHeight:1.3 }}>{it.title}</div>
+                      {isEv && <div style={{ color:'rgba(255,255,255,0.75)', fontSize:11, marginTop:3 }}>📍 {it.venue}</div>}
+                      {!isEv && <div style={{ color:'rgba(255,255,255,0.75)', fontSize:11, marginTop:3 }}>⏱ {it.duration} · {it.level}</div>}
+                    </div>
+                    <div style={{ padding:'10px 14px', background:'rgba(15,23,42,0.9)' }}>
+                      <div style={{ display:'flex', justifyContent:'space-between', marginBottom:8 }}>
+                        <span style={{ fontSize:11, color:'rgba(255,255,255,0.35)' }}>{isEv ? `🏛 ${it.organizer}` : `🏛 ${it.org}`}</span>
+                        <span style={{ fontSize:11, color: full?'#f87171':'rgba(255,255,255,0.4)' }}>{it.enrolled}/{it.total} {isEv?'seats':'enrolled'}</span>
+                      </div>
+                      {!reged && !full
+                        ? <button onClick={() => { setDayPanel(null); navigate(`/programs?tab=${isEv?'events':'training'}`); }} style={{ width:'100%', background: grad, color:'#fff', border:'none', borderRadius:9, padding:'9px', fontSize:13, fontWeight:800, cursor:'pointer', fontFamily:'inherit' }}>
+                            {isEv ? 'Go to Events to register →' : 'Go to Training to enroll →'}
+                          </button>
+                        : reged
+                          ? <div style={{ textAlign:'center', padding:'9px', background:'rgba(16,185,129,0.1)', border:'1px solid rgba(16,185,129,0.22)', borderRadius:9, color:'#34d399', fontWeight:700, fontSize:12.5 }}>✓ {isEv?'Registered':'Enrolled'}</div>
+                          : <div style={{ textAlign:'center', padding:'9px', background:'rgba(225,29,72,0.08)', border:'1px solid rgba(225,29,72,0.2)', borderRadius:9, color:'#f87171', fontWeight:700, fontSize:12.5 }}>Fully Booked</div>
+                      }
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Item detail panel */}
+      {detail && (
+        <div onClick={() => setDetail(null)} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.5)', zIndex:9100, display:'flex', alignItems:'flex-start', justifyContent:'flex-end', padding:20 }}>
+          <div onClick={e => e.stopPropagation()} style={{ background:'#0f172a', border:'1px solid rgba(255,255,255,0.1)', borderRadius:20, width:340, maxHeight:'80vh', overflow:'auto', animation:'panelIn .22s ease' }}>
+            <div style={{ background: detail._type==='event' ? (EV_GRADS[detail.category]||EV_GRADS.Summit) : (TR_STYLES[detail.category]||TR_STYLES.Technology).accent, padding:'20px 18px 16px', position:'relative' }}>
+              <button onClick={() => setDetail(null)} style={{ position:'absolute', top:12, right:12, background:'rgba(255,255,255,0.2)', border:'none', borderRadius:'50%', width:28, height:28, color:'#fff', fontSize:14, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>✕</button>
+              <span style={{ background:'rgba(255,255,255,0.2)', color:'#fff', borderRadius:5, padding:'2px 9px', fontSize:10.5, fontWeight:700 }}>{detail.category}</span>
+              <div style={{ color:'#fff', fontSize:16, fontWeight:900, lineHeight:1.35, marginTop:6 }}>{detail.title}</div>
+            </div>
+            <div style={{ padding:'16px 18px' }}>
+              {detail._type === 'event'
+                ? [['📅','Date',detail.date],['📍','Venue',detail.venue],['🏛','Organizer',detail.organizer],['👥','Seats',`${detail.enrolled}/${detail.total}`]]
+                    .map(([i,l,v]) => v && (
+                      <div key={l} style={{ display:'flex', gap:10, marginBottom:9 }}>
+                        <span style={{ fontSize:15, flexShrink:0 }}>{i}</span>
+                        <div><div style={{ fontSize:10, color:'rgba(255,255,255,0.3)', fontWeight:700, letterSpacing:'.5px', textTransform:'uppercase' }}>{l}</div><div style={{ fontSize:13, color:'#fff', fontWeight:600 }}>{v}</div></div>
+                      </div>
+                    ))
+                : [['🏛','Organizer',detail.org],['⏱','Duration',detail.duration],['📊','Level',detail.level],['📅','Schedule',detail.schedule],['👥','Enrollment',`${detail.enrolled}/${detail.total}`]]
+                    .map(([i,l,v]) => v && (
+                      <div key={l} style={{ display:'flex', gap:10, marginBottom:9 }}>
+                        <span style={{ fontSize:15, flexShrink:0 }}>{i}</span>
+                        <div><div style={{ fontSize:10, color:'rgba(255,255,255,0.3)', fontWeight:700, letterSpacing:'.5px', textTransform:'uppercase' }}>{l}</div><div style={{ fontSize:13, color:'#fff', fontWeight:600 }}>{v}</div></div>
+                      </div>
+                    ))
+              }
+              <button onClick={() => { setDetail(null); navigate(`/programs?tab=${detail._type==='event'?'events':'training'}`); }} style={{ width:'100%', background:'linear-gradient(90deg,#f97316,#e11d48)', color:'#fff', border:'none', borderRadius:11, padding:'11px', fontSize:13.5, fontWeight:800, cursor:'pointer', fontFamily:'inherit', marginTop:6 }}>
+                {detail._type === 'event' ? 'Register in Programs →' : 'Enroll in Programs →'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {loading ? (
+        <div style={{ textAlign:'center', padding:'80px 0', color:'rgba(255,255,255,0.3)' }}><div style={{ fontSize:36, marginBottom:12 }}>⏳</div>Loading calendar…</div>
+      ) : (
+        <OutlookCal
+          items={calItems}
+          onClickItem={handleClickItem}
+          onClickDay={handleClickDay}
+          conflictIds={conflictIds}
+          getColors={getColors}
+        />
       )}
     </>
   );
