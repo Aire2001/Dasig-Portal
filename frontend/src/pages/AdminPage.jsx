@@ -1686,21 +1686,59 @@ function AdminCalendarTab({ showToast, setTab }) {
   const evCount = allItems.filter(i=>i._type==='event').length;
   const trCount = allItems.filter(i=>i._type==='training').length;
 
+  const [selectedDay, setSelectedDay] = useState(null); // { day, items }
+
+  function handleMiniClick(d) {
+    if (d < 1 || d > daysInMon) return;
+    const items = itemsOnDay(d);
+    setSelectedDay(s => s?.day === d ? null : { day: d, items });
+    setDetail(null);
+  }
+
+  const ROLE_SHORTCUTS = {
+    ADMIN: [
+      { icon:'📅', label:'Add Event',    action:() => setTab('events')    },
+      { icon:'🎓', label:'Add Training', action:() => setTab('training')  },
+      { icon:'👥', label:'View Users',   action:() => setTab('users')     },
+      { icon:'📊', label:'Reports',      action:() => setTab('reports')   },
+    ],
+    MEMBER: [
+      { icon:'📅', label:'Browse Events',   action:() => {} },
+      { icon:'🎓', label:'Enroll Training', action:() => {} },
+      { icon:'📋', label:'View Policies',   action:() => {} },
+      { icon:'💰', label:'Funding',         action:() => {} },
+    ],
+    GUEST: [
+      { icon:'📅', label:'Upcoming Events', action:() => {} },
+      { icon:'👤', label:'Join DASIG',      action:() => {} },
+      { icon:'📰', label:'Latest News',     action:() => {} },
+      { icon:'🏛', label:'Members',         action:() => {} },
+    ],
+  };
+  // Admin panel is admin-only, so always show ADMIN shortcuts
+  const shortcuts = ROLE_SHORTCUTS.ADMIN;
+
   return (
     <div style={{ display:'flex', gap:0, height:'calc(100vh - 140px)', overflow:'hidden' }}>
 
       {/* ── Left sidebar ── */}
       <div style={{ width:220, flexShrink:0, padding:'4px 16px 16px 0', overflowY:'auto', borderRight:'1px solid rgba(255,255,255,0.06)' }}>
-        {/* Mini calendar */}
-        <div style={{ background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:14, padding:'14px 12px', marginBottom:16 }}>
+
+        {/* Mini calendar — clickable */}
+        <div style={{ background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:14, padding:'14px 12px', marginBottom:12 }}>
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10 }}>
             <span style={{ color:'#fff', fontWeight:800, fontSize:13 }}>{MONTH_NAMES_LONG[month].slice(0,3)} {year}</span>
             <div style={{ display:'flex', gap:2 }}>
-              <button onClick={prevMon} style={{ background:'none',border:'none',color:'rgba(255,255,255,0.5)',cursor:'pointer',fontSize:14,padding:'2px 5px',borderRadius:4 }}>‹</button>
-              <button onClick={nextMon} style={{ background:'none',border:'none',color:'rgba(255,255,255,0.5)',cursor:'pointer',fontSize:14,padding:'2px 5px',borderRadius:4 }}>›</button>
+              <button onClick={prevMon} style={{ background:'none',border:'none',color:'rgba(255,255,255,0.5)',cursor:'pointer',fontSize:14,padding:'2px 5px',borderRadius:4,transition:'color .12s' }}
+                onMouseEnter={e=>e.currentTarget.style.color='#fff'}
+                onMouseLeave={e=>e.currentTarget.style.color='rgba(255,255,255,0.5)'}
+              >‹</button>
+              <button onClick={nextMon} style={{ background:'none',border:'none',color:'rgba(255,255,255,0.5)',cursor:'pointer',fontSize:14,padding:'2px 5px',borderRadius:4,transition:'color .12s' }}
+                onMouseEnter={e=>e.currentTarget.style.color='#fff'}
+                onMouseLeave={e=>e.currentTarget.style.color='rgba(255,255,255,0.5)'}
+              >›</button>
             </div>
           </div>
-          {/* Day-of-week labels Mon-Sun */}
           <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', marginBottom:4 }}>
             {['M','T','W','T','F','S','S'].map((d,i) => (
               <div key={i} style={{ textAlign:'center', fontSize:9.5, fontWeight:700, color:'rgba(255,255,255,0.28)' }}>{d}</div>
@@ -1709,24 +1747,101 @@ function AdminCalendarTab({ showToast, setTab }) {
           {miniGrid.map((row,ri) => (
             <div key={ri} style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)' }}>
               {row.map((d,ci) => {
-                const inM = d>=1 && d<=miniDays;
-                const isT = inM && d===today.getDate() && month===today.getMonth() && year===today.getFullYear();
-                const hasItems = inM && itemsOnDay(d).length > 0;
+                const inM    = d >= 1 && d <= miniDays;
+                const isT    = inM && d===today.getDate() && month===today.getMonth() && year===today.getFullYear();
+                const isSel  = inM && selectedDay?.day === d;
+                const items  = inM ? itemsOnDay(d) : [];
+                const evCnt  = items.filter(i=>i._type==='event').length;
+                const trCnt  = items.filter(i=>i._type==='training').length;
                 return (
-                  <div key={ci} style={{ textAlign:'center', padding:'2px 0', position:'relative' }}>
+                  <div key={ci} onClick={() => handleMiniClick(d)}
+                    style={{ textAlign:'center', padding:'2px 0', position:'relative', cursor: inM ? 'pointer' : 'default' }}>
                     <span style={{
                       display:'inline-flex', alignItems:'center', justifyContent:'center',
-                      width:22, height:22, borderRadius:'50%', fontSize:10.5,
-                      fontWeight: isT ? 900 : 400,
-                      color: isT ? '#fff' : inM ? 'rgba(255,255,255,0.65)' : 'rgba(255,255,255,0.18)',
-                      background: isT ? '#f97316' : 'transparent',
+                      width:22, height:22, borderRadius:'50%', fontSize:10.5, transition:'all .12s',
+                      fontWeight: isT || isSel ? 900 : 400,
+                      color: isT ? '#fff' : isSel ? '#fff' : inM ? 'rgba(255,255,255,0.72)' : 'rgba(255,255,255,0.18)',
+                      background: isT ? '#f97316' : isSel ? '#3b82f6' : 'transparent',
+                      boxShadow: isSel ? '0 0 0 2px rgba(59,130,246,0.4)' : 'none',
                     }}>{inM ? d : ''}</span>
-                    {hasItems && !isT && <span style={{ position:'absolute', bottom:1, left:'50%', transform:'translateX(-50%)', width:3, height:3, borderRadius:'50%', background:'#60a5fa' }} />}
+                    {/* Event/training dots */}
+                    {inM && !isT && !isSel && (evCnt > 0 || trCnt > 0) && (
+                      <div style={{ position:'absolute', bottom:0, left:'50%', transform:'translateX(-50%)', display:'flex', gap:2 }}>
+                        {evCnt > 0 && <span style={{ width:3, height:3, borderRadius:'50%', background:'#818cf8', display:'block' }} />}
+                        {trCnt > 0 && <span style={{ width:3, height:3, borderRadius:'50%', background:'#34d399', display:'block' }} />}
+                      </div>
+                    )}
                   </div>
                 );
               })}
             </div>
           ))}
+        </div>
+
+        {/* Day quick panel — shows when a date is clicked */}
+        {selectedDay && (
+          <div style={{ background:'rgba(59,130,246,0.08)', border:'1px solid rgba(59,130,246,0.25)', borderRadius:12, padding:'12px 12px', marginBottom:12, animation:'modalIn .18s ease' }}>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8 }}>
+              <div>
+                <div style={{ color:'rgba(255,255,255,0.45)', fontSize:9.5, fontWeight:700, textTransform:'uppercase', letterSpacing:'.5px' }}>
+                  {MONTH_NAMES_LONG[month].slice(0,3)} {selectedDay.day}
+                </div>
+                <div style={{ color:'#fff', fontWeight:900, fontSize:13, marginTop:1 }}>
+                  {selectedDay.items.length === 0 ? 'No items' : `${selectedDay.items.length} scheduled`}
+                </div>
+              </div>
+              <button onClick={() => setSelectedDay(null)} style={{ background:'none',border:'none',color:'rgba(255,255,255,0.35)',cursor:'pointer',fontSize:14,lineHeight:1,padding:2 }}>✕</button>
+            </div>
+
+            {selectedDay.items.length === 0 ? (
+              <div>
+                <p style={{ color:'rgba(255,255,255,0.35)', fontSize:11, margin:'0 0 8px', lineHeight:1.5 }}>Nothing scheduled on this day.</p>
+                <button onClick={() => setTab('events')} style={{ width:'100%', background:'linear-gradient(90deg,#f97316,#e11d48)', color:'#fff', border:'none', borderRadius:8, padding:'7px', fontSize:11.5, fontWeight:800, cursor:'pointer', fontFamily:'inherit' }}>
+                  ＋ Add Event on this date
+                </button>
+              </div>
+            ) : (
+              <div style={{ display:'flex', flexDirection:'column', gap:5 }}>
+                {selectedDay.items.map(it => (
+                  <div key={it.id} onClick={() => { setDetail(it); setSelectedDay(null); }}
+                    style={{ display:'flex', alignItems:'center', gap:8, padding:'6px 8px', background: it._type==='event' ? 'rgba(129,140,248,0.12)' : 'rgba(52,211,153,0.12)', border: `1px solid ${it._type==='event' ? 'rgba(129,140,248,0.3)' : 'rgba(52,211,153,0.3)'}`, borderRadius:8, cursor:'pointer', transition:'all .13s' }}
+                    onMouseEnter={e=>e.currentTarget.style.background= it._type==='event' ? 'rgba(129,140,248,0.22)' : 'rgba(52,211,153,0.22)'}
+                    onMouseLeave={e=>e.currentTarget.style.background= it._type==='event' ? 'rgba(129,140,248,0.12)' : 'rgba(52,211,153,0.12)'}
+                  >
+                    <span style={{ fontSize:12, flexShrink:0 }}>{it._type==='event' ? '📅' : '🎓'}</span>
+                    <span style={{ fontSize:11, fontWeight:700, color:'#fff', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', flex:1 }}>{it.title}</span>
+                    <span style={{ fontSize:9.5, color: it._type==='event' ? '#a5b4fc' : '#6ee7b7', flexShrink:0, fontWeight:700 }}>{it._type==='event' ? it.category : it.level}</span>
+                  </div>
+                ))}
+                <button onClick={() => setTab('events')} style={{ marginTop:2, background:'rgba(255,255,255,0.06)', color:'rgba(255,255,255,0.55)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:8, padding:'6px', fontSize:11, fontWeight:700, cursor:'pointer', fontFamily:'inherit' }}>
+                  ＋ Add more
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Role-based quick shortcuts */}
+        <div style={{ background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:12, padding:'12px', marginBottom:14 }}>
+          <div style={{ fontSize:10, fontWeight:800, color:'rgba(255,255,255,0.3)', textTransform:'uppercase', letterSpacing:'.6px', marginBottom:10 }}>
+            ⚡ Quick Shortcuts
+          </div>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6 }}>
+            {shortcuts.map(s => (
+              <button key={s.label} onClick={s.action} style={{
+                background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.08)',
+                borderRadius:9, padding:'9px 6px', cursor:'pointer', fontFamily:'inherit',
+                display:'flex', flexDirection:'column', alignItems:'center', gap:4,
+                transition:'all .15s',
+              }}
+              onMouseEnter={e=>{e.currentTarget.style.background='rgba(249,115,22,0.12)';e.currentTarget.style.borderColor='rgba(249,115,22,0.3)';}}
+              onMouseLeave={e=>{e.currentTarget.style.background='rgba(255,255,255,0.05)';e.currentTarget.style.borderColor='rgba(255,255,255,0.08)';}}
+              >
+                <span style={{ fontSize:18 }}>{s.icon}</span>
+                <span style={{ fontSize:10, fontWeight:700, color:'rgba(255,255,255,0.6)', textAlign:'center', lineHeight:1.2 }}>{s.label}</span>
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Legend */}
