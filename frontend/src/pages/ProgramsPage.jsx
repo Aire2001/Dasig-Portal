@@ -405,7 +405,7 @@ export default function ProgramsPage() {
 /* ═══════════════════════════════════════════════════════════
    CARD COMPONENTS (must be outside any map/render loop)
 ═══════════════════════════════════════════════════════════ */
-function EvCard({ ev, idx, registered, onRegister }) {
+function EvCard({ ev, idx, registered, onRegister, onCancel, cancelling }) {
   const [hov, setHov] = useState(false);
   const pct  = ev.total > 0 ? Math.min(100, Math.round((ev.enrolled / ev.total) * 100)) : 0;
   const full = ev.total > 0 && ev.enrolled >= ev.total;
@@ -436,14 +436,35 @@ function EvCard({ ev, idx, registered, onRegister }) {
             <div style={{ height:'100%', width:`${pct}%`, background: full?'linear-gradient(90deg,#e11d48,#f97316)':pct>80?'linear-gradient(90deg,#f59e0b,#f97316)':'linear-gradient(90deg,#059669,#0891b2)', borderRadius:3, transition:'width .6s' }} />
           </div>
         </div>
-        <div style={{ display:'flex', gap:8, alignItems:'center' }}>
-          <span style={{ fontSize:11, color:'rgba(255,255,255,0.3)', flex:1 }}>🏛 {ev.organizer}</span>
-          {!registered
-            ? <button onClick={onRegister} disabled={full} style={{ background: full?'rgba(255,255,255,0.05)':'linear-gradient(90deg,#f97316,#e11d48)', color: full?'rgba(255,255,255,0.3)':'#fff', border: full?'1px solid rgba(255,255,255,0.08)':'none', borderRadius:10, padding:'7px 16px', fontSize:12.5, fontWeight:800, cursor: full?'not-allowed':'pointer', fontFamily:'inherit', boxShadow: full?'none':'0 4px 12px rgba(249,115,22,0.3)', whiteSpace:'nowrap' }}>
-                {full?'Fully Booked':'Register →'}
-              </button>
-            : <span style={{ background:'rgba(16,185,129,0.12)', color:'#34d399', borderRadius:10, padding:'7px 14px', fontSize:12, fontWeight:700, border:'1px solid rgba(16,185,129,0.22)' }}>✓ Registered</span>
-          }
+        <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+          <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+            <span style={{ fontSize:12, color:'rgba(255,255,255,0.45)', flex:1 }}>🏛 {ev.organizer}</span>
+            {!registered
+              ? <button onClick={onRegister} disabled={full} style={{ background: full?'rgba(255,255,255,0.05)':'linear-gradient(90deg,#f97316,#e11d48)', color: full?'rgba(255,255,255,0.3)':'#fff', border: full?'1px solid rgba(255,255,255,0.08)':'none', borderRadius:10, padding:'8px 18px', fontSize:13, fontWeight:800, cursor: full?'not-allowed':'pointer', fontFamily:'inherit', boxShadow: full?'none':'0 4px 12px rgba(249,115,22,0.3)', whiteSpace:'nowrap' }}>
+                  {full?'Fully Booked':'Register →'}
+                </button>
+              : <span style={{ background:'rgba(16,185,129,0.12)', color:'#34d399', borderRadius:10, padding:'7px 14px', fontSize:12.5, fontWeight:700, border:'1px solid rgba(16,185,129,0.22)', whiteSpace:'nowrap' }}>✓ Registered</span>
+            }
+          </div>
+          {/* Cancel button — only shown when registered */}
+          {registered && (
+            <button
+              onClick={onCancel}
+              disabled={cancelling}
+              style={{
+                width:'100%', background:'transparent',
+                border:'1.5px solid rgba(225,29,72,0.35)',
+                borderRadius:10, padding:'8px', fontSize:12.5, fontWeight:700,
+                color: cancelling ? 'rgba(255,255,255,0.3)' : 'rgba(244,63,94,0.9)',
+                cursor: cancelling ? 'not-allowed' : 'pointer',
+                fontFamily:'inherit', transition:'all .15s',
+              }}
+              onMouseEnter={e => { if (!cancelling) { e.currentTarget.style.background='rgba(225,29,72,0.12)'; e.currentTarget.style.borderColor='rgba(225,29,72,0.6)'; } }}
+              onMouseLeave={e => { e.currentTarget.style.background='transparent'; e.currentTarget.style.borderColor='rgba(225,29,72,0.35)'; }}
+            >
+              {cancelling ? '⏳ Cancelling…' : '✕ Cancel Registration'}
+            </button>
+          )}
         </div>
       </div>
     </div>
@@ -505,6 +526,7 @@ function EventsTab({ user }) {
   const [loading, setLoading]     = useState(true);
   const [lastUpdated, setLastUp]  = useState(null);
   const [myRegs, setMyRegs]       = useState({});
+  const [cancellingId, setCancellingId] = useState(null);
   const [detail, setDetail]       = useState(null);
   const [formModal, setFormModal] = useState(null);
   const [conflict, setConflict]   = useState(null);
@@ -597,6 +619,20 @@ function EventsTab({ user }) {
     setInst(user?.institution || '');
     setPosition(user?.campus || '');
     setFnameErr(false); setFormModal(ev); setConflict(null); setDetail(null);
+  }
+
+  async function cancelReg(ev) {
+    if (!window.confirm(`Cancel your registration for "${ev.title}"?`)) return;
+    setCancellingId(ev.id);
+    try {
+      await api.events.unregister(ev.id);
+      setMyRegs(p => { const n = { ...p }; delete n[ev.id]; return n; });
+      setEvents(p => p.map(e => e.id === ev.id ? { ...e, enrolled: Math.max(0, e.enrolled - 1) } : e));
+    } catch (err) {
+      setErrModal(err.message || 'Failed to cancel registration');
+    } finally {
+      setCancellingId(null);
+    }
   }
 
   async function submit() {
@@ -852,7 +888,7 @@ function EventsTab({ user }) {
       {!loading && filteredEvents.length > 0 && (
         <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(300px,1fr))', gap:18 }}>
           {filteredEvents.map((ev, i) => (
-            <EvCard key={ev.id} ev={ev} idx={i} registered={!!myRegs[ev.id]} onRegister={() => openForm(ev)} />
+            <EvCard key={ev.id} ev={ev} idx={i} registered={!!myRegs[ev.id]} onRegister={() => openForm(ev)} onCancel={() => cancelReg(ev)} cancelling={cancellingId === ev.id} />
           ))}
         </div>
       )}
