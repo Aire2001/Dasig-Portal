@@ -14,6 +14,27 @@ const cardGradients = {
   Funding:  'linear-gradient(135deg,#f59e0b,#f97316)',
 };
 
+function CancelConfirmModal({ title, subtitle, onConfirm, onCancel, confirming }) {
+  return (
+    <div onClick={onCancel} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.72)', zIndex:9500, display:'flex', alignItems:'center', justifyContent:'center', padding:20, backdropFilter:'blur(4px)' }}>
+      <div onClick={e => e.stopPropagation()} style={{ background:'linear-gradient(180deg,#0f172a,#020817)', border:'1px solid rgba(225,29,72,0.3)', borderRadius:22, maxWidth:400, width:'100%', padding:'32px 28px', boxShadow:'0 32px 80px rgba(0,0,0,0.8)', textAlign:'center' }}>
+        <div style={{ fontSize:44, marginBottom:14 }}>⚠️</div>
+        <div style={{ color:'#fff', fontWeight:900, fontSize:18, marginBottom:8 }}>{title}</div>
+        <p style={{ color:'rgba(255,255,255,0.55)', fontSize:14, lineHeight:1.7, marginBottom:26 }}>{subtitle}</p>
+        <div style={{ display:'flex', gap:10 }}>
+          <button onClick={onCancel} style={{ flex:1, background:'rgba(255,255,255,0.07)', color:'rgba(255,255,255,0.7)', border:'1px solid rgba(255,255,255,0.12)', borderRadius:12, padding:'13px', fontSize:14, fontWeight:700, cursor:'pointer', fontFamily:'inherit' }}
+            onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,0.13)'}
+            onMouseLeave={e=>e.currentTarget.style.background='rgba(255,255,255,0.07)'}
+          >Keep It</button>
+          <button onClick={onConfirm} disabled={confirming} style={{ flex:1, background: confirming?'#475569':'linear-gradient(90deg,#e11d48,#be123c)', color:'#fff', border:'none', borderRadius:12, padding:'13px', fontSize:14, fontWeight:800, cursor: confirming?'not-allowed':'pointer', fontFamily:'inherit', boxShadow: confirming?'none':'0 4px 16px rgba(225,29,72,0.4)' }}>
+            {confirming ? '⏳ Cancelling…' : 'Yes, Cancel'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const MODAL_STYLES = `
   @keyframes fbModalIn { from { transform:scale(0.84);opacity:0 } to { transform:scale(1);opacity:1 } }
   @keyframes checkPop  { 0%{transform:scale(0)}60%{transform:scale(1.3)}100%{transform:scale(1)} }
@@ -68,8 +89,14 @@ export default function EventsPage() {
       .catch(() => {});
   }, [user]);
 
-  async function cancelRegistration(ev) {
-    if (!window.confirm(`Cancel your registration for "${ev.title}"?`)) return;
+  const [cancelConfirm, setCancelConfirm] = useState(null);
+
+  function cancelRegistration(ev) { setCancelConfirm(ev); }
+
+  async function doCancelRegistration() {
+    const ev = cancelConfirm;
+    if (!ev) return;
+    setCancelConfirm(null);
     setCancelling(ev.id);
     try {
       await api.events.unregister(ev.id);
@@ -128,6 +155,17 @@ export default function EventsPage() {
       <div style={{ position:'relative', zIndex:1 }}>
       <style>{MODAL_STYLES}</style>
       <PageHeader eyebrow="Consortium Events" title="Events & Activities" />
+
+      {/* ── Cancel registration confirmation ── */}
+      {cancelConfirm && (
+        <CancelConfirmModal
+          title="Cancel Registration?"
+          subtitle={`Are you sure you want to cancel your registration for "${cancelConfirm.title}"? Your slot will be released.`}
+          confirming={!!cancelling}
+          onConfirm={doCancelRegistration}
+          onCancel={() => setCancelConfirm(null)}
+        />
+      )}
 
       {/* ── STEP 1: Registration Form Modal ── */}
       {formModal && (

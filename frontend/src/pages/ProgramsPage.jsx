@@ -403,6 +403,46 @@ export default function ProgramsPage() {
 }
 
 /* ═══════════════════════════════════════════════════════════
+   CANCEL CONFIRMATION MODAL — replaces browser window.confirm
+═══════════════════════════════════════════════════════════ */
+function CancelConfirmModal({ title, subtitle, onConfirm, onCancel, confirming }) {
+  return (
+    <div onClick={onCancel} style={{
+      position:'fixed', inset:0, background:'rgba(0,0,0,0.72)', zIndex:9500,
+      display:'flex', alignItems:'center', justifyContent:'center', padding:20,
+      backdropFilter:'blur(4px)',
+    }}>
+      <div onClick={e => e.stopPropagation()} style={{
+        background:'linear-gradient(180deg,#0f172a,#020817)',
+        border:'1px solid rgba(225,29,72,0.3)', borderRadius:22,
+        maxWidth:400, width:'100%', padding:'32px 28px',
+        boxShadow:'0 32px 80px rgba(0,0,0,0.8)', textAlign:'center',
+      }}>
+        <div style={{ fontSize:44, marginBottom:14 }}>⚠️</div>
+        <div style={{ color:'#fff', fontWeight:900, fontSize:18, marginBottom:8 }}>{title}</div>
+        <p style={{ color:'rgba(255,255,255,0.55)', fontSize:14, lineHeight:1.7, marginBottom:26 }}>{subtitle}</p>
+        <div style={{ display:'flex', gap:10 }}>
+          <button onClick={onCancel} style={{
+            flex:1, background:'rgba(255,255,255,0.07)', color:'rgba(255,255,255,0.7)',
+            border:'1px solid rgba(255,255,255,0.12)', borderRadius:12,
+            padding:'13px', fontSize:14, fontWeight:700, cursor:'pointer', fontFamily:'inherit',
+          }}
+          onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,0.13)'}
+          onMouseLeave={e=>e.currentTarget.style.background='rgba(255,255,255,0.07)'}
+          >Keep It</button>
+          <button onClick={onConfirm} disabled={confirming} style={{
+            flex:1, background: confirming?'#475569':'linear-gradient(90deg,#e11d48,#be123c)',
+            color:'#fff', border:'none', borderRadius:12, padding:'13px',
+            fontSize:14, fontWeight:800, cursor: confirming?'not-allowed':'pointer',
+            fontFamily:'inherit', boxShadow: confirming?'none':'0 4px 16px rgba(225,29,72,0.4)',
+          }}>{confirming ? '⏳ Cancelling…' : 'Yes, Cancel'}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════
    CARD COMPONENTS (must be outside any map/render loop)
 ═══════════════════════════════════════════════════════════ */
 function EvCard({ ev, idx, registered, onRegister, onCancel, cancelling }) {
@@ -548,6 +588,7 @@ function EventsTab({ user }) {
   const [lastUpdated, setLastUp]  = useState(null);
   const [myRegs, setMyRegs]       = useState({});
   const [cancellingId, setCancellingId] = useState(null);
+  const [cancelConfirm, setCancelConfirm] = useState(null); // event to cancel
   const [detail, setDetail]       = useState(null);
   const [formModal, setFormModal] = useState(null);
   const [conflict, setConflict]   = useState(null);
@@ -643,7 +684,13 @@ function EventsTab({ user }) {
   }
 
   async function cancelReg(ev) {
-    if (!window.confirm(`Cancel your registration for "${ev.title}"?`)) return;
+    setCancelConfirm(ev); // show custom modal instead of window.confirm
+  }
+
+  async function doCancelReg() {
+    const ev = cancelConfirm;
+    if (!ev) return;
+    setCancelConfirm(null);
     setCancellingId(ev.id);
     try {
       await api.events.unregister(ev.id);
@@ -678,6 +725,17 @@ function EventsTab({ user }) {
   return (
     <>
       <ErrModal err={errModal} onClose={() => setErrModal('')} />
+
+      {/* Cancel registration confirmation */}
+      {cancelConfirm && (
+        <CancelConfirmModal
+          title="Cancel Registration?"
+          subtitle={`Are you sure you want to cancel your registration for "${cancelConfirm.title}"? Your slot will be released to other attendees.`}
+          confirming={!!cancellingId}
+          onConfirm={doCancelReg}
+          onCancel={() => setCancelConfirm(null)}
+        />
+      )}
 
       {/* Conflict warning */}
       {conflict && (
@@ -937,6 +995,7 @@ function TrainingTab({ user }) {
   const [errModal, setErrModal]   = useState('');
   const [submitting, setSub]      = useState(false);
   const [cancellingEnrId, setCancellingEnrId] = useState(null);
+  const [cancelEnrConfirm, setCancelEnrConfirm] = useState(null); // training to cancel
   const [fname, setFname]         = useState('');
   const [email, setEmail]         = useState('');
   const [phone, setPhone]         = useState('');
@@ -1007,7 +1066,13 @@ function TrainingTab({ user }) {
   }
 
   async function cancelEnr(t) {
-    if (!window.confirm(`Cancel your enrollment in "${t.title}"?`)) return;
+    setCancelEnrConfirm(t); // show custom modal
+  }
+
+  async function doCancelEnr() {
+    const t = cancelEnrConfirm;
+    if (!t) return;
+    setCancelEnrConfirm(null);
     setCancellingEnrId(t.id);
     try {
       await api.training.unenroll(t.id);
@@ -1042,6 +1107,17 @@ function TrainingTab({ user }) {
   return (
     <>
       <ErrModal err={errModal} onClose={() => setErrModal('')} />
+
+      {/* Cancel enrollment confirmation */}
+      {cancelEnrConfirm && (
+        <CancelConfirmModal
+          title="Cancel Enrollment?"
+          subtitle={`Are you sure you want to cancel your enrollment in "${cancelEnrConfirm.title}"? Your slot will be returned to the available pool.`}
+          confirming={!!cancellingEnrId}
+          onConfirm={doCancelEnr}
+          onCancel={() => setCancelEnrConfirm(null)}
+        />
+      )}
 
       {/* Detail panel */}
       {detail && !formModal && (
