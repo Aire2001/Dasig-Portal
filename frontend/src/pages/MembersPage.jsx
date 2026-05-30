@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import PageHeader from '../components/PageHeader';
 import ParticleBackground from '../components/ParticleBackground';
 import { api } from '../api';
@@ -57,6 +57,16 @@ const INSTITUTION_ABOUT = {
   },
 };
 
+// Curated Picsum photo seeds — consistent campus/agency photos per institution
+const MEMBER_PHOTOS = {
+  UP:    'https://picsum.photos/seed/university-campus-state/700/340',
+  USa:   'https://picsum.photos/seed/private-university-church/700/340',
+  DOST:  'https://picsum.photos/seed/science-technology-lab/700/340',
+  DICT:  'https://picsum.photos/seed/digital-technology-server/700/340',
+  DTI:   'https://picsum.photos/seed/trade-industry-market/700/340',
+  DepEd: 'https://picsum.photos/seed/education-classroom-school/700/340',
+};
+
 const MEMBERS_CSS = `
   @keyframes cardUp {
     from { transform: translateY(20px); opacity: 0; }
@@ -112,102 +122,117 @@ export default function MembersPage() {
         <PageHeader eyebrow="Consortium Members" title="Region VII Institutions" />
 
         {/* Member detail modal */}
-        {selected && (
-          <div onClick={() => setSelected(null)} style={{
-            position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.65)', zIndex: 9100,
-            display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20,
-            animation: 'fadeIn 0.18s ease',
-          }}>
-            <div onClick={e => e.stopPropagation()} style={{
-              background: 'linear-gradient(180deg,#0f172a,#020817)', borderRadius: 22, maxWidth: 520, width: '100%',
-              boxShadow: '0 32px 100px rgba(0,0,0,0.75)', overflow: 'hidden',
-              border: '1px solid rgba(255,255,255,0.1)',
-              animation: 'modalIn 0.26s cubic-bezier(.34,1.3,.64,1)',
+        {selected && (() => {
+          const info = INSTITUTION_ABOUT[selected.abbr];
+          const photoUrl = MEMBER_PHOTOS[selected.abbr];
+          const email = selected.email || info?.email;
+          const website = selected.website || info?.website;
+          return (
+            <div onClick={() => setSelected(null)} style={{
+              position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.72)', zIndex: 9100,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20,
+              animation: 'fadeIn 0.18s ease', backdropFilter: 'blur(4px)', overflowY: 'auto',
             }}>
-              {/* banner */}
-              <div style={{ background: selectedGrad, padding: '30px 28px 24px', position: 'relative', overflow: 'hidden' }}>
-                <div style={{ position: 'absolute', bottom: -24, right: -12, fontSize: 110, opacity: 0.08, lineHeight: 1 }}>🏛️</div>
-                <button onClick={() => setSelected(null)} style={{
-                  position: 'absolute', top: 14, right: 14,
-                  background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: '50%',
-                  width: 32, height: 32, color: '#fff', fontSize: 16, cursor: 'pointer',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}>✕</button>
-                <div style={{
-                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                  width: 64, height: 64, borderRadius: 18,
-                  background: 'rgba(255,255,255,0.2)', border: '2px solid rgba(255,255,255,0.3)',
-                  fontSize: 18, fontWeight: 900, color: '#fff', letterSpacing: '-0.5px',
-                  marginBottom: 14,
-                }}>{selected.abbr}</div>
-                <h2 style={{ color: '#fff', fontSize: 22, fontWeight: 900, margin: '0 0 6px', lineHeight: 1.25 }}>{selected.full_name}</h2>
-                <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13, fontWeight: 600 }}>📍 {selected.campus}</div>
-              </div>
+              <div onClick={e => e.stopPropagation()} style={{
+                background: '#0d1424', borderRadius: 24, maxWidth: 580, width: '100%',
+                boxShadow: '0 40px 120px rgba(0,0,0,0.85)', overflow: 'hidden',
+                border: '1px solid rgba(255,255,255,0.1)',
+                animation: 'modalIn 0.26s cubic-bezier(.34,1.3,.64,1)',
+                maxHeight: '92vh', display: 'flex', flexDirection: 'column', margin: 'auto',
+              }}>
 
-              {/* details */}
-              <div style={{ padding: '24px 28px 30px', maxHeight: '60vh', overflowY: 'auto' }}>
-                {/* About description */}
-                {(() => {
-                  const info = INSTITUTION_ABOUT[selected.abbr];
-                  return info ? (
-                    <div style={{ marginBottom: 20 }}>
-                      <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', fontWeight: 700, marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.5px' }}>About</div>
-                      <p style={{ color: 'rgba(255,255,255,0.72)', fontSize: 13, lineHeight: 1.8, margin: 0 }}>{info.about}</p>
-                    </div>
-                  ) : null;
-                })()}
+                {/* ── Hero photo ── */}
+                <div style={{ position: 'relative', height: 220, flexShrink: 0, overflow: 'hidden' }}>
+                  <img
+                    src={photoUrl}
+                    alt={selected.full_name}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                    onError={e => { e.target.style.display = 'none'; }}
+                  />
+                  {/* Gradient overlay */}
+                  <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0) 40%, ${selectedGrad.replace('linear-gradient(135deg,','').replace(')','').split(',')[0].trim()}cc 100%)` }} />
+                  <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0) 50%, rgba(13,20,36,0.92) 100%)' }} />
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
-                  {[
-                    { label: 'Abbreviation', value: selected.abbr },
-                    { label: 'Type',         value: selected.type },
-                    { label: 'Campus',       value: selected.campus },
-                    { label: 'Region',       value: 'Region VII' },
-                    ...(INSTITUTION_ABOUT[selected.abbr] ? [
-                      { label: 'Founded',    value: INSTITUTION_ABOUT[selected.abbr].founded },
-                      { label: 'Role',       value: INSTITUTION_ABOUT[selected.abbr].role },
-                    ] : []),
-                  ].map(r => (
-                    <div key={r.label} style={{
-                      background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)',
-                      borderRadius: 12, padding: '12px 14px',
-                    }}>
-                      <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', fontWeight: 700, marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{r.label}</div>
-                      <div style={{ fontSize: 13, color: '#fff', fontWeight: 700, lineHeight: 1.4 }}>{r.value}</div>
+                  {/* Close */}
+                  <button onClick={() => setSelected(null)} style={{
+                    position: 'absolute', top: 14, right: 14,
+                    background: 'rgba(0,0,0,0.55)', border: '1px solid rgba(255,255,255,0.2)',
+                    backdropFilter: 'blur(8px)', borderRadius: '50%', width: 36, height: 36,
+                    color: '#fff', fontSize: 16, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>✕</button>
+
+                  {/* Type badge on photo */}
+                  <div style={{ position: 'absolute', top: 14, left: 14 }}>
+                    <span style={{ background: selectedGrad, color: '#fff', borderRadius: 7, padding: '5px 12px', fontSize: 11.5, fontWeight: 800, boxShadow: '0 2px 10px rgba(0,0,0,0.4)' }}>
+                      {selected.type}
+                    </span>
+                  </div>
+
+                  {/* Institution name overlay at bottom of photo */}
+                  <div style={{ position: 'absolute', bottom: 16, left: 24, right: 24 }}>
+                    <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 48, height: 48, borderRadius: 13, background: 'rgba(255,255,255,0.18)', backdropFilter: 'blur(8px)', border: '1.5px solid rgba(255,255,255,0.35)', fontSize: 13, fontWeight: 900, color: '#fff', marginBottom: 8 }}>
+                      {selected.abbr}
                     </div>
-                  ))}
+                    <h2 style={{ color: '#fff', fontSize: 20, fontWeight: 900, margin: 0, lineHeight: 1.25, textShadow: '0 2px 8px rgba(0,0,0,0.6)' }}>{selected.full_name}</h2>
+                    <div style={{ color: 'rgba(255,255,255,0.75)', fontSize: 13, marginTop: 4, textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>📍 {selected.campus}</div>
+                  </div>
                 </div>
 
-                {/* Contact links from lookup or DB */}
-                {(() => {
-                  const info = INSTITUTION_ABOUT[selected.abbr];
-                  const email = selected.email || (info?.email);
-                  const website = selected.website || (info?.website);
-                  return (
-                    <div style={{ display: 'flex', gap: 10, marginBottom: 18, flexWrap: 'wrap' }}>
+                {/* ── Details ── */}
+                <div style={{ overflowY: 'auto', flex: 1, padding: '22px 26px 26px' }}>
+                  {/* About */}
+                  {info && (
+                    <p style={{ color: 'rgba(255,255,255,0.68)', fontSize: 13.5, lineHeight: 1.8, marginBottom: 20, borderLeft: '3px solid rgba(249,115,22,0.6)', paddingLeft: 14, background: 'rgba(255,255,255,0.03)', borderRadius: '0 8px 8px 0', padding: '12px 14px' }}>
+                      {info.about}
+                    </p>
+                  )}
+
+                  {/* Info grid */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 18 }}>
+                    {[
+                      { l: 'Abbreviation', v: selected.abbr },
+                      { l: 'Type',         v: selected.type },
+                      { l: 'Campus',       v: selected.campus },
+                      { l: 'Region',       v: 'Region VII' },
+                      ...(info ? [{ l: 'Founded', v: info.founded }, { l: 'Role', v: info.role }] : []),
+                    ].map(r => (
+                      <div key={r.l} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: '12px 14px' }}>
+                        <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.38)', fontWeight: 700, marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{r.l}</div>
+                        <div style={{ fontSize: 13.5, color: '#fff', fontWeight: 700, lineHeight: 1.4 }}>{r.v}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Contact links */}
+                  {(email || website) && (
+                    <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap' }}>
                       {email && (
-                        <div style={{ background: 'rgba(96,165,250,0.1)', border: '1px solid rgba(96,165,250,0.25)', borderRadius: 9, padding: '7px 13px', fontSize: 12.5, color: '#60a5fa', fontWeight: 600 }}>
+                        <a href={`mailto:${email}`} style={{ background: 'rgba(96,165,250,0.1)', border: '1px solid rgba(96,165,250,0.25)', borderRadius: 9, padding: '8px 14px', fontSize: 12.5, color: '#60a5fa', fontWeight: 600, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6 }}>
                           ✉️ {email}
-                        </div>
+                        </a>
                       )}
                       {website && (
-                        <div style={{ background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.25)', borderRadius: 9, padding: '7px 13px', fontSize: 12.5, color: '#34d399', fontWeight: 600 }}>
+                        <a href={`https://${website}`} target="_blank" rel="noopener noreferrer" style={{ background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.25)', borderRadius: 9, padding: '8px 14px', fontSize: 12.5, color: '#34d399', fontWeight: 600, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6 }}>
                           🌐 {website}
-                        </div>
+                        </a>
                       )}
                     </div>
-                  );
-                })()}
+                  )}
 
-                <button onClick={() => setSelected(null)} style={{
-                  width: '100%', background: selectedGrad, color: '#fff', border: 'none',
-                  borderRadius: 12, padding: '12px', fontSize: 14, fontWeight: 800,
-                  cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 16px rgba(0,0,0,0.3)',
-                }}>Close</button>
+                  <button onClick={() => setSelected(null)} style={{
+                    width: '100%', background: selectedGrad, color: '#fff', border: 'none',
+                    borderRadius: 13, padding: '13px', fontSize: 14.5, fontWeight: 800,
+                    cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 18px rgba(0,0,0,0.35)',
+                    transition: 'opacity .15s',
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
+                  onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+                  >Close</button>
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         <section style={{ padding: '40px 24px 80px' }}>
           <div style={{ maxWidth: 1120, margin: '0 auto' }}>
@@ -320,33 +345,61 @@ export default function MembersPage() {
 }
 
 function MemberCard({ member: m, grad, index, onClick }) {
+  const [hov, setHov] = useState(false);
+  const [imgOk, setImgOk] = useState(true);
+  const photoUrl = MEMBER_PHOTOS[m.abbr];
+
   return (
-    <div className="member-card"
-      style={{ background: grad, animationDelay: `${index * 0.07}s`, animation: 'cardUp 0.5s ease both' }}
+    <div
+      className="member-card"
+      style={{
+        background: 'rgba(12,18,36,0.95)',
+        animationDelay: `${index * 0.07}s`, animation: 'cardUp 0.5s ease both',
+        padding: 0, overflow: 'hidden', cursor: 'pointer',
+        border: `1px solid ${hov ? 'rgba(249,115,22,0.45)' : 'rgba(255,255,255,0.08)'}`,
+        boxShadow: hov ? '0 18px 48px rgba(249,115,22,0.12)' : '0 4px 20px rgba(0,0,0,0.3)',
+        transform: hov ? 'translateY(-6px) scale(1.02)' : 'none',
+        transition: 'all 0.22s cubic-bezier(.34,1.56,.64,1)',
+      }}
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
       onClick={onClick}
     >
-      <div style={{ position: 'absolute', bottom: -20, right: -10, fontSize: 90, opacity: 0.08, lineHeight: 1 }}>🏛️</div>
+      {/* ── Real photo cover ── */}
+      <div style={{ position: 'relative', height: 160, overflow: 'hidden' }}>
+        {imgOk ? (
+          <img
+            src={photoUrl}
+            alt={m.full_name}
+            onError={() => setImgOk(false)}
+            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', transition: 'transform .35s ease', transform: hov ? 'scale(1.07)' : 'scale(1)' }}
+          />
+        ) : (
+          <div style={{ width: '100%', height: '100%', background: grad, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 56, opacity: 0.5 }}>🏛️</div>
+        )}
+        {/* Dark overlay at bottom */}
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0) 40%, rgba(12,18,36,0.9) 100%)' }} />
+        {/* Type badge */}
+        <div style={{ position: 'absolute', top: 12, left: 12 }}>
+          <span style={{ background: grad, color: '#fff', borderRadius: 6, padding: '3px 10px', fontSize: 10.5, fontWeight: 800, boxShadow: '0 2px 8px rgba(0,0,0,0.4)' }}>{m.type}</span>
+        </div>
+        {/* Abbr badge bottom-left */}
+        <div style={{ position: 'absolute', bottom: 12, left: 14, display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ width: 40, height: 40, borderRadius: 11, background: 'rgba(255,255,255,0.18)', backdropFilter: 'blur(8px)', border: '1.5px solid rgba(255,255,255,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 900, color: '#fff', flexShrink: 0 }}>
+            {m.abbr}
+          </div>
+          <div style={{ color: '#fff', fontWeight: 900, fontSize: 18, letterSpacing: '-0.3px', textShadow: '0 1px 6px rgba(0,0,0,0.7)' }}>{m.abbr}</div>
+        </div>
+      </div>
 
-      {/* Abbr badge */}
-      <div style={{
-        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-        width: 52, height: 52, borderRadius: 15,
-        background: 'rgba(255,255,255,0.18)',
-        fontWeight: 900, fontSize: 14, color: '#fff',
-        marginBottom: 14, letterSpacing: '-0.5px',
-        border: '1px solid rgba(255,255,255,0.25)',
-      }}>{m.abbr}</div>
-
-      <div style={{ fontSize: 24, fontWeight: 900, color: '#fff', marginBottom: 4, letterSpacing: '-0.5px' }}>{m.abbr}</div>
-      <div style={{ fontWeight: 700, fontSize: 13.5, color: 'rgba(255,255,255,0.85)', marginBottom: 6, lineHeight: 1.4 }}>{m.full_name}</div>
-      <div style={{ color: 'rgba(255,255,255,0.55)', fontSize: 12.5, marginBottom: 14 }}>📍 {m.campus}</div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span style={{
-          background: 'rgba(255,255,255,0.2)', color: '#fff',
-          border: '1px solid rgba(255,255,255,0.25)',
-          borderRadius: 8, padding: '4px 12px', fontSize: 11.5, fontWeight: 700,
-        }}>{m.type}</span>
-        <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: 600 }}>View →</span>
+      {/* ── Card body ── */}
+      <div style={{ padding: '14px 18px 16px' }}>
+        <div style={{ fontWeight: 800, fontSize: 14, color: '#fff', lineHeight: 1.35, marginBottom: 5 }}>{m.full_name}</div>
+        <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 12.5, marginBottom: 14 }}>📍 {m.campus}</div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.65)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 7, padding: '4px 11px', fontSize: 11.5, fontWeight: 700 }}>{m.type}</span>
+          <span style={{ fontSize: 12.5, color: hov ? '#f97316' : 'rgba(255,255,255,0.38)', fontWeight: 700, transition: 'color .15s' }}>View details →</span>
+        </div>
       </div>
     </div>
   );
