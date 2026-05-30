@@ -68,71 +68,8 @@ export default function NewsPage() {
       <style>{NEWS_CSS}</style>
       <PageHeader eyebrow="Consortium News" title="News & Announcements" />
 
-      {/* ── Article Modal ── */}
-      {selected && (
-        <div onClick={() => setSelected(null)} style={{
-          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 9100,
-          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20,
-          animation: 'fadeIn 0.18s ease',
-          overflowY: 'auto',
-        }}>
-          <div onClick={e => e.stopPropagation()} style={{
-            background: 'linear-gradient(180deg,#0f172a,#020817)', borderRadius: 22, maxWidth: 660, width: '100%',
-            boxShadow: '0 32px 100px rgba(0,0,0,0.7)', overflow: 'hidden',
-            border: '1px solid rgba(255,255,255,0.1)',
-            animation: 'modalIn 0.26s cubic-bezier(.34,1.3,.64,1)',
-            margin: 'auto',
-          }}>
-            {/* banner */}
-            <div style={{ background: bs.accent, padding: '28px 28px 22px', position: 'relative' }}>
-              <button onClick={() => setSelected(null)} style={{
-                position: 'absolute', top: 14, right: 14,
-                background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: '50%',
-                width: 32, height: 32, color: '#fff', fontSize: 16, cursor: 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}>✕</button>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-                <span style={{
-                  background: 'rgba(255,255,255,0.2)', color: '#fff',
-                  border: '1px solid rgba(255,255,255,0.3)',
-                  borderRadius: 6, padding: '3px 12px', fontSize: 11, fontWeight: 700,
-                }}>{selected.badge}</span>
-                <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: 12 }}>{selected.date}</span>
-              </div>
-              <h2 style={{ color: '#fff', fontSize: 21, fontWeight: 900, lineHeight: 1.3, margin: 0 }}>
-                {selected.title}
-              </h2>
-            </div>
-
-            {/* article body */}
-            <div style={{ padding: '24px 28px 32px', maxHeight: '60vh', overflowY: 'auto' }}>
-              {selected.excerpt && (
-                <p style={{
-                  fontSize: 14.5, color: 'rgba(255,255,255,0.8)', fontWeight: 600, lineHeight: 1.7,
-                  borderLeft: '4px solid rgba(255,255,255,0.3)',
-                  paddingLeft: 14, marginBottom: 20,
-                  background: 'rgba(255,255,255,0.06)', borderRadius: '0 8px 8px 0', padding: '10px 14px',
-                }}>{selected.excerpt}</p>
-              )}
-              {selected.content ? (
-                <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.65)', lineHeight: 1.85 }}>
-                  {selected.content.split('\n').map((para, i) =>
-                    para.trim() ? <p key={i} style={{ marginBottom: 14 }}>{para}</p> : null
-                  )}
-                </div>
-              ) : (
-                <p style={{ color: 'rgba(255,255,255,0.35)', fontStyle: 'italic' }}>No additional content available.</p>
-              )}
-              <div style={{ marginTop: 24, paddingTop: 16, borderTop: '1px solid rgba(255,255,255,0.08)', display: 'flex', justifyContent: 'flex-end' }}>
-                <button onClick={() => setSelected(null)} style={{
-                  background: bs.accent, color: '#fff', border: 'none', borderRadius: 10,
-                  padding: '10px 24px', fontSize: 13.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
-                }}>Close</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* ── Article Reader Modal ── */}
+      {selected && <ArticleReader article={selected} bs={bs} onClose={() => setSelected(null)} />}
 
       <section style={{ padding: '32px 24px 80px' }}>
         <div style={{ maxWidth: 1120, margin: '0 auto' }}>
@@ -170,6 +107,139 @@ export default function NewsPage() {
           )}
         </div>
       </section>
+      </div>
+    </div>
+  );
+}
+
+/* ── Professional article reader modal ─────────────────────────── */
+function ArticleReader({ article: a, bs, onClose }) {
+  const [imgOk, setImgOk] = useState(true);
+
+  // Format article content into styled paragraphs
+  function renderContent(text) {
+    if (!text) return null;
+    const blocks = text.split('\n').filter(l => l.trim());
+    return blocks.map((line, i) => {
+      const t = line.trim();
+      // Numbered list item: "1. Foo", "2. Bar"
+      if (/^\d+\./.test(t)) {
+        const num = t.match(/^(\d+)\./)[1];
+        const body = t.replace(/^\d+\.\s*/, '');
+        return (
+          <div key={i} style={{ display:'flex', gap:14, marginBottom:10, alignItems:'flex-start' }}>
+            <span style={{ background: bs.accent, color:'#fff', borderRadius:'50%', width:24, height:24, display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:900, flexShrink:0, marginTop:2 }}>{num}</span>
+            <p style={{ margin:0, fontSize:14.5, color:'rgba(255,255,255,0.72)', lineHeight:1.75 }}>{body}</p>
+          </div>
+        );
+      }
+      // Bullet: "- Foo"
+      if (t.startsWith('- ') || t.startsWith('• ')) {
+        return (
+          <div key={i} style={{ display:'flex', gap:12, marginBottom:8, alignItems:'flex-start' }}>
+            <span style={{ color:'#f97316', fontSize:16, flexShrink:0, lineHeight:1.6 }}>▸</span>
+            <p style={{ margin:0, fontSize:14.5, color:'rgba(255,255,255,0.72)', lineHeight:1.75 }}>{t.replace(/^[-•]\s*/, '')}</p>
+          </div>
+        );
+      }
+      // Section header (short line ending with colon)
+      if (t.endsWith(':') && t.length < 60) {
+        return <h4 key={i} style={{ color:'#fff', fontSize:15.5, fontWeight:800, marginBottom:10, marginTop: i > 0 ? 20 : 0 }}>{t}</h4>;
+      }
+      return <p key={i} style={{ margin:'0 0 14px', fontSize:14.5, color:'rgba(255,255,255,0.7)', lineHeight:1.85 }}>{t}</p>;
+    });
+  }
+
+  return (
+    <div onClick={onClose} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.75)', zIndex:9100, display:'flex', alignItems:'center', justifyContent:'center', padding:'20px', overflowY:'auto', animation:'fadeIn .18s ease', backdropFilter:'blur(4px)' }}>
+      <div onClick={e => e.stopPropagation()} style={{
+        background:'#0d1424', borderRadius:22, maxWidth:700, width:'100%',
+        boxShadow:'0 40px 120px rgba(0,0,0,0.85)', overflow:'hidden',
+        border:'1px solid rgba(255,255,255,0.1)',
+        animation:'modalIn .28s cubic-bezier(.34,1.3,.64,1)',
+        margin:'auto',
+        maxHeight:'92vh', display:'flex', flexDirection:'column',
+      }}>
+
+        {/* ── Hero photo ── */}
+        <div style={{ position:'relative', height:260, flexShrink:0, overflow:'hidden' }}>
+          {imgOk ? (
+            <img
+              src={coverUrl(a)}
+              alt={a.title}
+              onError={() => setImgOk(false)}
+              style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }}
+            />
+          ) : (
+            <div style={{ width:'100%', height:'100%', background: bs.accent, display:'flex', alignItems:'center', justifyContent:'center', fontSize:80, opacity:0.4 }}>
+              {a.icon || bs.icon}
+            </div>
+          )}
+          {/* Dark gradient overlay */}
+          <div style={{ position:'absolute', inset:0, background:'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0) 40%, rgba(13,20,36,0.95) 100%)' }} />
+
+          {/* Close button */}
+          <button onClick={onClose} style={{ position:'absolute', top:14, right:14, background:'rgba(0,0,0,0.55)', border:'1px solid rgba(255,255,255,0.2)', backdropFilter:'blur(8px)', borderRadius:'50%', width:36, height:36, color:'#fff', fontSize:16, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', transition:'all .15s' }}
+            onMouseEnter={e => { e.currentTarget.style.background='rgba(0,0,0,0.8)'; }}
+            onMouseLeave={e => { e.currentTarget.style.background='rgba(0,0,0,0.55)'; }}
+          >✕</button>
+
+          {/* Badge + date overlaid at bottom of photo */}
+          <div style={{ position:'absolute', bottom:18, left:24, display:'flex', alignItems:'center', gap:10 }}>
+            <span style={{ background: bs.accent, color:'#fff', borderRadius:7, padding:'5px 14px', fontSize:12, fontWeight:800, boxShadow:'0 3px 12px rgba(0,0,0,0.5)', letterSpacing:'.2px' }}>
+              {bs.icon} {a.badge}
+            </span>
+            <span style={{ color:'rgba(255,255,255,0.8)', fontSize:13, fontWeight:600, textShadow:'0 1px 6px rgba(0,0,0,0.9)' }}>
+              {String(a.date).slice(0, 10)}
+            </span>
+          </div>
+        </div>
+
+        {/* ── Article content ── */}
+        <div style={{ overflowY:'auto', flex:1 }}>
+          {/* Title section */}
+          <div style={{ padding:'24px 30px 18px' }}>
+            <h2 style={{ color:'#fff', fontSize:22, fontWeight:900, lineHeight:1.35, margin:'0 0 16px', letterSpacing:'-0.3px' }}>
+              {a.title}
+            </h2>
+
+            {/* Byline */}
+            <div style={{ display:'flex', alignItems:'center', gap:12, paddingBottom:18, borderBottom:'1px solid rgba(255,255,255,0.08)', marginBottom:20 }}>
+              <div style={{ width:36, height:36, borderRadius:'50%', background: bs.accent, display:'flex', alignItems:'center', justifyContent:'center', fontSize:16, flexShrink:0 }}>
+                {bs.icon}
+              </div>
+              <div>
+                <div style={{ color:'rgba(255,255,255,0.85)', fontSize:13, fontWeight:700 }}>DASIG Consortium</div>
+                <div style={{ color:'rgba(255,255,255,0.38)', fontSize:12 }}>
+                  Published {String(a.date).slice(0,10)} · Region VII
+                </div>
+              </div>
+            </div>
+
+            {/* Lead / excerpt */}
+            {a.excerpt && (
+              <div style={{ borderLeft:`4px solid`, borderImage: `${bs.accent} 1`, padding:'14px 18px', background:'rgba(255,255,255,0.05)', borderRadius:'0 10px 10px 0', marginBottom:22, borderLeftColor: 'rgba(249,115,22,0.7)' }}>
+                <p style={{ margin:0, fontSize:15, color:'rgba(255,255,255,0.85)', fontWeight:600, lineHeight:1.7, fontStyle:'italic' }}>
+                  {a.excerpt}
+                </p>
+              </div>
+            )}
+
+            {/* Body */}
+            <div>{renderContent(a.content)}</div>
+
+            {!a.content && <p style={{ color:'rgba(255,255,255,0.3)', fontStyle:'italic', fontSize:13.5 }}>No additional content available for this article.</p>}
+          </div>
+
+          {/* Footer */}
+          <div style={{ padding:'16px 30px 24px', borderTop:'1px solid rgba(255,255,255,0.07)', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+            <span style={{ fontSize:12, color:'rgba(255,255,255,0.28)' }}>DASIG Portal · Region VII Consortium</span>
+            <button onClick={onClose} style={{ background:'rgba(255,255,255,0.08)', color:'rgba(255,255,255,0.7)', border:'1px solid rgba(255,255,255,0.14)', borderRadius:10, padding:'9px 22px', fontSize:13.5, fontWeight:700, cursor:'pointer', fontFamily:'inherit', transition:'all .15s' }}
+              onMouseEnter={e => { e.currentTarget.style.background='rgba(255,255,255,0.14)'; e.currentTarget.style.color='#fff'; }}
+              onMouseLeave={e => { e.currentTarget.style.background='rgba(255,255,255,0.08)'; e.currentTarget.style.color='rgba(255,255,255,0.7)'; }}
+            >Close article</button>
+          </div>
+        </div>
       </div>
     </div>
   );
