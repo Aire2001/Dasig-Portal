@@ -156,18 +156,34 @@ function ArticleReader({ article: a, bs, onClose }) {
   }
 
   return (
-    <div onClick={onClose} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.75)', zIndex:9100, display:'flex', alignItems:'center', justifyContent:'center', padding:'20px', overflowY:'auto', animation:'fadeIn .18s ease', backdropFilter:'blur(4px)' }}>
+    <div onClick={onClose} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.78)', zIndex:9100, display:'flex', alignItems:'center', justifyContent:'center', padding:'16px', overflowY:'auto', animation:'fadeIn .18s ease', backdropFilter:'blur(5px)' }}>
       <div onClick={e => e.stopPropagation()} style={{
-        background:'#0d1424', borderRadius:22, maxWidth:700, width:'100%',
-        boxShadow:'0 40px 120px rgba(0,0,0,0.85)', overflow:'hidden',
+        background:'#0d1424', borderRadius:22,
+        maxWidth: 'min(680px, calc(100vw - 32px))',
+        width:'100%',
+        boxShadow:'0 40px 120px rgba(0,0,0,0.85)',
         border:'1px solid rgba(255,255,255,0.1)',
         animation:'modalIn .28s cubic-bezier(.34,1.3,.64,1)',
         margin:'auto',
-        maxHeight:'92vh', display:'flex', flexDirection:'column',
+        maxHeight:'94vh', display:'flex', flexDirection:'column',
+        position:'relative',
       }}>
 
+        {/* ── Sticky close button — always visible, outside overflow:hidden ── */}
+        <button onClick={onClose} style={{
+          position:'absolute', top:14, right:14, zIndex:20,
+          background:'rgba(0,0,0,0.65)', border:'1.5px solid rgba(255,255,255,0.35)',
+          backdropFilter:'blur(10px)', borderRadius:'50%',
+          width:42, height:42, color:'#fff', fontSize:18, fontWeight:700,
+          cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center',
+          boxShadow:'0 4px 14px rgba(0,0,0,0.5)', transition:'all .15s', flexShrink:0,
+        }}
+          onMouseEnter={e => { e.currentTarget.style.background='rgba(225,29,72,0.75)'; e.currentTarget.style.borderColor='rgba(225,29,72,0.6)'; e.currentTarget.style.transform='scale(1.08)'; }}
+          onMouseLeave={e => { e.currentTarget.style.background='rgba(0,0,0,0.65)'; e.currentTarget.style.borderColor='rgba(255,255,255,0.35)'; e.currentTarget.style.transform='scale(1)'; }}
+        >✕</button>
+
         {/* ── Hero photo ── */}
-        <div style={{ position:'relative', height:260, flexShrink:0, overflow:'hidden' }}>
+        <div style={{ position:'relative', height:240, flexShrink:0, overflow:'hidden', borderRadius:'22px 22px 0 0' }}>
           {imgOk ? (
             <img
               src={coverUrl(a)}
@@ -181,20 +197,14 @@ function ArticleReader({ article: a, bs, onClose }) {
             </div>
           )}
           {/* Dark gradient overlay */}
-          <div style={{ position:'absolute', inset:0, background:'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0) 40%, rgba(13,20,36,0.95) 100%)' }} />
+          <div style={{ position:'absolute', inset:0, background:'linear-gradient(to bottom, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0) 35%, rgba(13,20,36,0.95) 100%)' }} />
 
-          {/* Close button */}
-          <button onClick={onClose} style={{ position:'absolute', top:14, right:14, background:'rgba(0,0,0,0.55)', border:'1px solid rgba(255,255,255,0.2)', backdropFilter:'blur(8px)', borderRadius:'50%', width:36, height:36, color:'#fff', fontSize:16, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', transition:'all .15s' }}
-            onMouseEnter={e => { e.currentTarget.style.background='rgba(0,0,0,0.8)'; }}
-            onMouseLeave={e => { e.currentTarget.style.background='rgba(0,0,0,0.55)'; }}
-          >✕</button>
-
-          {/* Badge + date overlaid at bottom of photo */}
-          <div style={{ position:'absolute', bottom:18, left:24, display:'flex', alignItems:'center', gap:10 }}>
-            <span style={{ background: bs.accent, color:'#fff', borderRadius:7, padding:'5px 14px', fontSize:12, fontWeight:800, boxShadow:'0 3px 12px rgba(0,0,0,0.5)', letterSpacing:'.2px' }}>
+          {/* Badge + date */}
+          <div style={{ position:'absolute', bottom:16, left:22, display:'flex', alignItems:'center', gap:10 }}>
+            <span style={{ background: bs.accent, color:'#fff', borderRadius:7, padding:'5px 14px', fontSize:12.5, fontWeight:800, boxShadow:'0 3px 12px rgba(0,0,0,0.5)', letterSpacing:'.2px' }}>
               {bs.icon} {a.badge}
             </span>
-            <span style={{ color:'rgba(255,255,255,0.8)', fontSize:13, fontWeight:600, textShadow:'0 1px 6px rgba(0,0,0,0.9)' }}>
+            <span style={{ color:'rgba(255,255,255,0.85)', fontSize:13, fontWeight:600, textShadow:'0 1px 6px rgba(0,0,0,0.9)' }}>
               {String(a.date).slice(0, 10)}
             </span>
           </div>
@@ -203,7 +213,7 @@ function ArticleReader({ article: a, bs, onClose }) {
         {/* ── Article content ── */}
         <div style={{ overflowY:'auto', flex:1 }}>
           {/* Title section */}
-          <div style={{ padding:'24px 30px 18px' }}>
+          <div style={{ padding:'22px 26px 16px' }}>
             <h2 style={{ color:'#fff', fontSize:22, fontWeight:900, lineHeight:1.35, margin:'0 0 16px', letterSpacing:'-0.3px' }}>
               {a.title}
             </h2>
@@ -237,12 +247,12 @@ function ArticleReader({ article: a, bs, onClose }) {
           </div>
 
           {/* Footer */}
-          <div style={{ padding:'16px 30px 24px', borderTop:'1px solid rgba(255,255,255,0.07)', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-            <span style={{ fontSize:12, color:'rgba(255,255,255,0.28)' }}>DASIG Portal · Region VII Consortium</span>
-            <button onClick={onClose} style={{ background:'rgba(255,255,255,0.08)', color:'rgba(255,255,255,0.7)', border:'1px solid rgba(255,255,255,0.14)', borderRadius:10, padding:'9px 22px', fontSize:13.5, fontWeight:700, cursor:'pointer', fontFamily:'inherit', transition:'all .15s' }}
-              onMouseEnter={e => { e.currentTarget.style.background='rgba(255,255,255,0.14)'; e.currentTarget.style.color='#fff'; }}
-              onMouseLeave={e => { e.currentTarget.style.background='rgba(255,255,255,0.08)'; e.currentTarget.style.color='rgba(255,255,255,0.7)'; }}
-            >Close article</button>
+          <div style={{ padding:'16px 26px 22px', borderTop:'1px solid rgba(255,255,255,0.07)', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+            <span style={{ fontSize:12.5, color:'rgba(255,255,255,0.38)' }}>DASIG Portal · Region VII Consortium</span>
+            <button onClick={onClose} style={{ background:'linear-gradient(90deg,rgba(249,115,22,0.15),rgba(225,29,72,0.12))', color:'rgba(255,255,255,0.8)', border:'1px solid rgba(249,115,22,0.35)', borderRadius:11, padding:'10px 24px', fontSize:13.5, fontWeight:700, cursor:'pointer', fontFamily:'inherit', transition:'all .15s', display:'flex', alignItems:'center', gap:7 }}
+              onMouseEnter={e => { e.currentTarget.style.background='linear-gradient(90deg,rgba(249,115,22,0.28),rgba(225,29,72,0.22))'; e.currentTarget.style.color='#fff'; }}
+              onMouseLeave={e => { e.currentTarget.style.background='linear-gradient(90deg,rgba(249,115,22,0.15),rgba(225,29,72,0.12))'; e.currentTarget.style.color='rgba(255,255,255,0.8)'; }}
+            >✕ Close article</button>
           </div>
         </div>
       </div>
