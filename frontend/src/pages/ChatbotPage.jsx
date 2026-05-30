@@ -445,7 +445,7 @@ export default function ChatbotPage() {
 
                     {/* Timestamp */}
                     {msg.time && (
-                      <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.22)', marginTop: 4, fontWeight: 500 }}>
+                      <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.42)', marginTop: 4, fontWeight: 500 }}>
                         {formatTime(msg.time)}
                       </div>
                     )}
@@ -475,7 +475,7 @@ export default function ChatbotPage() {
                         )}
                         {msg.followups?.length > 0 && (
                           <>
-                            <div style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.28)', fontWeight: 700, letterSpacing: '0.4px', textTransform: 'uppercase' }}>
+                            <div style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.48)', fontWeight: 700, letterSpacing: '0.4px', textTransform: 'uppercase' }}>
                               Suggested follow-ups
                             </div>
                             <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap' }}>

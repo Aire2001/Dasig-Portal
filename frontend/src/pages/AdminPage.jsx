@@ -116,7 +116,7 @@ function DInput({ label, name, value, onChange, type='text', as, opts, required,
   return (
     <div style={span ? { gridColumn: span } : {}}>
       {as !== 'checkbox' && (
-        <label style={{ display:'block', fontSize:11, fontWeight:700, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:5 }}>
+        <label style={{ display:'block', fontSize:12.5, fontWeight:700, color:'rgba(255,255,255,0.6)', textTransform:'uppercase', letterSpacing:'.4px', marginBottom:5 }}>
           {label}{required && <span style={{ color:'#f97316' }}> *</span>}
         </label>
       )}
@@ -225,7 +225,7 @@ function PageHeader({ title, desc, action }) {
     <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', marginBottom:24 }}>
       <div>
         <h2 style={{ color:'#fff', fontWeight:900, fontSize:19, margin:'0 0 3px', letterSpacing:'-0.3px' }}>{title}</h2>
-        {desc && <p style={{ color:'rgba(255,255,255,0.38)', fontSize:12.5, margin:0 }}>{desc}</p>}
+        {desc && <p style={{ color:'rgba(255,255,255,0.55)', fontSize:12.5, margin:0 }}>{desc}</p>}
       </div>
       {action}
     </div>
@@ -249,8 +249,8 @@ function DataTable({ head, children, empty }) {
             <tr style={{ background:'rgba(255,255,255,0.04)' }}>
               {head.map(h => (
                 <th key={h} style={{
-                  padding:'10px 16px', fontSize:10.5, fontWeight:800,
-                  color:'rgba(255,255,255,0.38)', textTransform:'uppercase',
+                  padding:'10px 16px', fontSize:12, fontWeight:800,
+                  color:'rgba(255,255,255,0.55)', textTransform:'uppercase',
                   letterSpacing:'.6px', textAlign:'left', whiteSpace:'nowrap',
                 }}>{h}</th>
               ))}
@@ -359,13 +359,13 @@ export default function AdminPage() {
         <div style={{ display:'flex', alignItems:'center', gap:8 }}>
           <div style={{ width:28, height:28, borderRadius:8, background:'linear-gradient(135deg,#f97316,#e11d48)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, fontWeight:900, color:'#fff' }}>⚙</div>
           <span style={{ color:'#fff', fontWeight:800, fontSize:14 }}>Admin Panel</span>
-          <span style={{ background:'rgba(225,29,72,0.18)', color:'#f87171', fontSize:10.5, fontWeight:800, borderRadius:5, padding:'2px 8px', border:'1px solid rgba(225,29,72,0.3)' }}>ADMIN</span>
+          <span style={{ background:'rgba(225,29,72,0.18)', color:'#f87171', fontSize:12, fontWeight:800, borderRadius:5, padding:'2px 8px', border:'1px solid rgba(225,29,72,0.3)' }}>ADMIN</span>
         </div>
         <div style={{ flex:1 }} />
         <div style={{ display:'flex', alignItems:'center', gap:10 }}>
           <div style={{ textAlign:'right' }}>
             <div style={{ fontSize:12.5, fontWeight:700, color:'rgba(255,255,255,0.8)' }}>{user?.name || 'Admin'}</div>
-            <div style={{ fontSize:10.5, color:'rgba(255,255,255,0.35)' }}>{user?.email}</div>
+            <div style={{ fontSize:12, color:'rgba(255,255,255,0.5)' }}>{user?.email}</div>
           </div>
           <div style={{ width:34, height:34, borderRadius:10, background:'linear-gradient(135deg,#1e3a8a,#4f46e5)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, fontWeight:900, color:'#fff' }}>{initials}</div>
         </div>
@@ -466,7 +466,7 @@ function DashboardTab({ showToast, setTab }) {
               <div style={{ width:34, height:34, borderRadius:9, background:`${c.color}22`, border:`1px solid ${c.color}44`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:15 }}>{c.icon}</div>
             </div>
             <div style={{ fontSize:12.5, fontWeight:700, color:'rgba(255,255,255,0.75)', marginBottom:2 }}>{c.label}</div>
-            <div style={{ fontSize:11, color:'rgba(255,255,255,0.38)' }}>{c.sub}</div>
+            <div style={{ fontSize:12.5, color:'rgba(255,255,255,0.55)' }}>{c.sub}</div>
           </div>
         ))}
       </div>
@@ -495,7 +495,7 @@ function DashboardTab({ showToast, setTab }) {
         <div style={{ background:'rgba(245,158,11,0.07)', border:'1px solid rgba(245,158,11,0.22)', borderRadius:14, padding:'18px 20px' }}>
           <div style={{ fontSize:12, fontWeight:800, color:'#fbbf24', marginBottom:14, display:'flex', alignItems:'center', gap:8 }}>
             ⚠ Memberships Expiring Soon
-            <span style={{ background:'rgba(245,158,11,0.2)', borderRadius:99, padding:'1px 8px', fontSize:11 }}>{renewals.length}</span>
+            <span style={{ background:'rgba(245,158,11,0.2)', borderRadius:99, padding:'1px 8px', fontSize:12.5 }}>{renewals.length}</span>
           </div>
           {renewals.map(r => (
             <div key={r.id} style={{ display:'flex', justifyContent:'space-between', fontSize:13, color:'rgba(255,255,255,0.65)', padding:'6px 0', borderBottom:'1px solid rgba(255,255,255,0.05)' }}>
@@ -580,14 +580,14 @@ function UsersTab({ showToast }) {
                     </div>
                     <div>
                       <div style={{ fontWeight:700, color:'#fff', fontSize:13 }}>{u.name}</div>
-                      <div style={{ fontSize:11.5, color:'rgba(255,255,255,0.38)' }}>{u.email}</div>
+                      <div style={{ fontSize:13, color:'rgba(255,255,255,0.55)' }}>{u.email}</div>
                     </div>
                   </div>
                 </TD>
                 <TD muted>{u.institution || '—'}{u.campus ? `, ${u.campus}` : ''}</TD>
                 <TD>
                   <select onChange={e => changeRole(u, e.target.value)} value={u.role} disabled={!!acting}
-                    style={{ background:rs.bg, color:rs.color, border:`1px solid ${rs.color}44`, borderRadius:7, padding:'4px 8px', fontSize:11.5, fontWeight:800, cursor:'pointer', fontFamily:'inherit', outline:'none' }}>
+                    style={{ background:rs.bg, color:rs.color, border:`1px solid ${rs.color}44`, borderRadius:7, padding:'4px 8px', fontSize:13, fontWeight:800, cursor:'pointer', fontFamily:'inherit', outline:'none' }}>
                     {['ADMIN','MEMBER','GUEST'].map(r => <option key={r} value={r} style={{ background:'#0f172a' }}>{r}</option>)}
                   </select>
                 </TD>
@@ -656,7 +656,7 @@ function ApplicationsTab({ showToast }) {
                     </div>
                     <div>
                       <div style={{ fontWeight:700, color:'#fff' }}>{a.name}</div>
-                      <div style={{ fontSize:11.5, color:'rgba(255,255,255,0.38)' }}>{a.email}</div>
+                      <div style={{ fontSize:13, color:'rgba(255,255,255,0.55)' }}>{a.email}</div>
                     </div>
                   </div>
                 </TD>
@@ -761,10 +761,10 @@ function EventsTab({ showToast }) {
                 / {attnList.length} registered
               </span>
             </div>
-            <button onClick={() => reloadAttendees(attnEvent)} className="ap-btn ap-btn-ghost" style={{ fontSize:11 }}>↻ Refresh</button>
+            <button onClick={() => reloadAttendees(attnEvent)} className="ap-btn ap-btn-ghost" style={{ fontSize:12.5 }}>↻ Refresh</button>
           </div>
           {attnLoading ? <Loading /> : attnList.length === 0 ? (
-            <div style={{ textAlign:'center', padding:'28px 0', color:'rgba(255,255,255,0.35)', fontSize:13 }}>No registrations yet</div>
+            <div style={{ textAlign:'center', padding:'28px 0', color:'rgba(255,255,255,0.5)', fontSize:13 }}>No registrations yet</div>
           ) : (
             <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
               {attnList.map(reg => (
@@ -775,7 +775,7 @@ function EventsTab({ showToast }) {
                 }}>
                   <div>
                     <div style={{ fontWeight:700, color:'#fff', fontSize:13 }}>{reg.users?.name}</div>
-                    <div style={{ fontSize:11.5, color:'rgba(255,255,255,0.4)' }}>{reg.users?.email} · {reg.users?.institution}</div>
+                    <div style={{ fontSize:13, color:'rgba(255,255,255,0.4)' }}>{reg.users?.email} · {reg.users?.institution}</div>
                   </div>
                   <div style={{ display:'flex', alignItems:'center', gap:8 }}>
                     {reg.attended
@@ -821,7 +821,7 @@ function EventsTab({ showToast }) {
               <TR key={ev.id}>
                 <TD>
                   <div style={{ fontWeight:700, color:'#fff' }}>{ev.title}</div>
-                  <div style={{ fontSize:11.5, color:'rgba(255,255,255,0.38)', marginTop:2 }}>{ev.venue} · {ev.organizer}</div>
+                  <div style={{ fontSize:13, color:'rgba(255,255,255,0.55)', marginTop:2 }}>{ev.venue} · {ev.organizer}</div>
                 </TD>
                 <TD muted>{ev.date}</TD>
                 <TD><span className="ap-badge" style={{ background:`${c}1a`, color:c }}>{ev.category}</span></TD>
@@ -944,7 +944,7 @@ function NewsTab({ showToast }) {
 
             {/* ── Article cover image ── */}
             <div style={{ gridColumn:'1/-1' }}>
-              <label style={{ display:'block', fontSize:11, fontWeight:700, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:8 }}>
+              <label style={{ display:'block', fontSize:12.5, fontWeight:700, color:'rgba(255,255,255,0.6)', textTransform:'uppercase', letterSpacing:'.4px', marginBottom:8 }}>
                 Cover Image <span style={{ color:'rgba(255,255,255,0.25)', fontWeight:400, textTransform:'none' }}>(recommended: 1200×630px)</span>
               </label>
               {form.image_url ? (
@@ -974,7 +974,7 @@ function NewsTab({ showToast }) {
                   <span style={{ fontSize:13, fontWeight:700, color:'rgba(255,255,255,0.55)' }}>
                     {imgUploading ? 'Processing image…' : 'Click to upload cover photo'}
                   </span>
-                  <span style={{ fontSize:11.5, color:'rgba(255,255,255,0.3)' }}>JPG, PNG, WebP — max 10 MB</span>
+                  <span style={{ fontSize:13, color:'rgba(255,255,255,0.3)' }}>JPG, PNG, WebP — max 10 MB</span>
                 </label>
               )}
               <input id="news-img-upload" id2="news-img-replace" type="file" accept="image/*" onChange={handleImageUpload} style={{ display:'none' }} />
@@ -1002,7 +1002,7 @@ function NewsTab({ showToast }) {
                 </TD>
                 <TD>
                   <div style={{ fontWeight:700, color: n.archived ? 'rgba(255,255,255,0.38)' : '#fff', maxWidth:240, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{n.title}</div>
-                  <div style={{ fontSize:11.5, color:'rgba(255,255,255,0.38)', marginTop:2, maxWidth:240, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{n.excerpt}</div>
+                  <div style={{ fontSize:13, color:'rgba(255,255,255,0.55)', marginTop:2, maxWidth:240, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{n.excerpt}</div>
                 </TD>
                 <TD><span className="ap-badge" style={{ background:`${c}1a`, color:c }}>{n.badge}</span></TD>
                 <TD muted>{String(n.date).slice(0,10)}</TD>
@@ -1094,10 +1094,10 @@ function TrainingTab({ showToast }) {
               <span style={{ fontSize:13, fontWeight:700, color:'#fff' }}>{enrolList.length} enrolled</span>
               <span style={{ fontSize:12.5, color:'rgba(255,255,255,0.45)', marginLeft:6 }}>/ {enrolEvent.total} capacity</span>
             </div>
-            <button onClick={() => { setEnrolLoading(true); api.training.enrollments(enrolEvent.id).then(setEnrolList).catch(() => {}).finally(() => setEnrolLoading(false)); }} className="ap-btn ap-btn-ghost" style={{ fontSize:11 }}>↻ Refresh</button>
+            <button onClick={() => { setEnrolLoading(true); api.training.enrollments(enrolEvent.id).then(setEnrolList).catch(() => {}).finally(() => setEnrolLoading(false)); }} className="ap-btn ap-btn-ghost" style={{ fontSize:12.5 }}>↻ Refresh</button>
           </div>
           {enrolLoading ? <Loading /> : enrolList.length === 0 ? (
-            <div style={{ textAlign:'center', padding:'28px 0', color:'rgba(255,255,255,0.35)', fontSize:13 }}>No enrollments yet</div>
+            <div style={{ textAlign:'center', padding:'28px 0', color:'rgba(255,255,255,0.5)', fontSize:13 }}>No enrollments yet</div>
           ) : (
             <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
               {enrolList.map(en => (
@@ -1108,9 +1108,9 @@ function TrainingTab({ showToast }) {
                 }}>
                   <div>
                     <div style={{ fontWeight:700, color:'#fff', fontSize:13 }}>{en.users?.name}</div>
-                    <div style={{ fontSize:11.5, color:'rgba(255,255,255,0.4)' }}>{en.users?.email} · {en.users?.institution}</div>
+                    <div style={{ fontSize:13, color:'rgba(255,255,255,0.4)' }}>{en.users?.email} · {en.users?.institution}</div>
                   </div>
-                  <span style={{ fontSize:11, color:'rgba(255,255,255,0.35)' }}>{new Date(en.created_at).toLocaleDateString()}</span>
+                  <span style={{ fontSize:12.5, color:'rgba(255,255,255,0.5)' }}>{new Date(en.created_at).toLocaleDateString()}</span>
                 </div>
               ))}
             </div>
@@ -1146,7 +1146,7 @@ function TrainingTab({ showToast }) {
               <TR key={t.id}>
                 <TD>
                   <div style={{ fontWeight:700, color:'#fff' }}>{t.title}</div>
-                  <div style={{ fontSize:11.5, color:'rgba(255,255,255,0.38)', marginTop:2 }}>{t.org} · {t.duration}{t.schedule ? ` · ${t.schedule}` : ''}</div>
+                  <div style={{ fontSize:13, color:'rgba(255,255,255,0.55)', marginTop:2 }}>{t.org} · {t.duration}{t.schedule ? ` · ${t.schedule}` : ''}</div>
                 </TD>
                 <TD><span className="ap-badge" style={{ background:`${cc}1a`, color:cc }}>{t.category}</span></TD>
                 <TD><span className="ap-badge" style={{ background:`${lc}1a`, color:lc }}>{t.level}</span></TD>
@@ -1320,7 +1320,7 @@ function FundingTab({ showToast }) {
               <TR key={f.id}>
                 <TD>
                   <div style={{ fontWeight:700, color:'#fff' }}>{f.title}</div>
-                  <div style={{ fontSize:11.5, color:'rgba(255,255,255,0.38)', marginTop:2 }}>{f.category}</div>
+                  <div style={{ fontSize:13, color:'rgba(255,255,255,0.55)', marginTop:2 }}>{f.category}</div>
                 </TD>
                 <TD muted>{f.provider}</TD>
                 <TD><span style={{ color:'#6ee7b7', fontWeight:700 }}>{f.amount || '—'}</span></TD>
@@ -1449,7 +1449,7 @@ function ReportsTab({ showToast }) {
     <div>
       <PageHeader title="Analytics & Reports" desc="Portal performance and usage insights" action={
         <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-          {lastFetched && <span style={{ fontSize:11.5, color:'rgba(255,255,255,0.35)' }}>Live data · {lastFetched.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit', second:'2-digit' })}</span>}
+          {lastFetched && <span style={{ fontSize:13, color:'rgba(255,255,255,0.5)' }}>Live data · {lastFetched.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit', second:'2-digit' })}</span>}
           <button onClick={() => load(true)} disabled={refreshing} className="ap-btn ap-btn-ghost" style={{ display:'flex', alignItems:'center', gap:6 }}>
             <span style={{ display:'inline-block', animation: refreshing ? 'spin .7s linear infinite' : 'none' }}>↻</span>
             {refreshing ? 'Refreshing…' : 'Refresh'}
@@ -1459,7 +1459,7 @@ function ReportsTab({ showToast }) {
 
       {/* Chatbot accuracy panel */}
       <div style={{ background:'rgba(79,70,229,0.07)', border:'1px solid rgba(79,70,229,0.2)', borderRadius:16, padding:'22px 24px', marginBottom:22 }}>
-        <div style={{ fontSize:11.5, fontWeight:800, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', letterSpacing:'1px', marginBottom:16 }}>
+        <div style={{ fontSize:13, fontWeight:800, color:'rgba(255,255,255,0.6)', textTransform:'uppercase', letterSpacing:'.6px', marginBottom:16 }}>
           🦅 Haribon NLP — Intent Recognition Accuracy
         </div>
         <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:12, marginBottom:18 }}>
@@ -1471,7 +1471,7 @@ function ReportsTab({ showToast }) {
           ].map(s => (
             <div key={s.label} style={{ background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:12, padding:'14px 16px' }}>
               <div style={{ fontSize:24, fontWeight:900, color:s.color, letterSpacing:'-1px' }}>{s.value}</div>
-              <div style={{ fontSize:11.5, color:'rgba(255,255,255,0.38)', marginTop:4 }}>{s.label}</div>
+              <div style={{ fontSize:13, color:'rgba(255,255,255,0.55)', marginTop:4 }}>{s.label}</div>
             </div>
           ))}
         </div>
@@ -1486,7 +1486,7 @@ function ReportsTab({ showToast }) {
         </div>
         {chatbot?.topIntents?.length > 0 && (
           <div>
-            <div style={{ fontSize:10.5, fontWeight:800, color:'rgba(255,255,255,0.28)', textTransform:'uppercase', letterSpacing:'.8px', marginBottom:8 }}>Top Intents</div>
+            <div style={{ fontSize:12, fontWeight:800, color:'rgba(255,255,255,0.28)', textTransform:'uppercase', letterSpacing:'.8px', marginBottom:8 }}>Top Intents</div>
             <div style={{ display:'flex', gap:7, flexWrap:'wrap' }}>
               {chatbot.topIntents.map(i => (
                 <span key={i.intent} style={{ background:'rgba(79,70,229,0.2)', color:'#a5b4fc', border:'1px solid rgba(99,102,241,0.3)', borderRadius:7, padding:'4px 10px', fontSize:12, fontWeight:700 }}>
@@ -1500,7 +1500,7 @@ function ReportsTab({ showToast }) {
 
       {/* Event fill rates */}
       <div style={{ marginBottom:22 }}>
-        <div style={{ fontSize:11.5, fontWeight:800, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', letterSpacing:'1px', marginBottom:14 }}>
+        <div style={{ fontSize:13, fontWeight:800, color:'rgba(255,255,255,0.6)', textTransform:'uppercase', letterSpacing:'.6px', marginBottom:14 }}>
           📅 Event Fill Rates — {evRep?.summary?.overallFillRate || 0}% average
         </div>
         <DataTable head={['Event','Category','Enrolled','Capacity','Fill Rate']}>
@@ -1526,7 +1526,7 @@ function ReportsTab({ showToast }) {
 
       {/* Training enrollment */}
       <div>
-        <div style={{ fontSize:11.5, fontWeight:800, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', letterSpacing:'1px', marginBottom:14 }}>
+        <div style={{ fontSize:13, fontWeight:800, color:'rgba(255,255,255,0.6)', textTransform:'uppercase', letterSpacing:'.6px', marginBottom:14 }}>
           🎓 Training Enrollment
         </div>
         <DataTable head={['Program','Org','Level','Enrolled','Fill Rate']}>
@@ -1757,7 +1757,7 @@ function AdminCalendarTab({ showToast, setTab }) {
                     style={{ textAlign:'center', padding:'2px 0', position:'relative', cursor: inM ? 'pointer' : 'default' }}>
                     <span style={{
                       display:'inline-flex', alignItems:'center', justifyContent:'center',
-                      width:22, height:22, borderRadius:'50%', fontSize:10.5, transition:'all .12s',
+                      width:22, height:22, borderRadius:'50%', fontSize:12, transition:'all .12s',
                       fontWeight: isT || isSel ? 900 : 400,
                       color: isT ? '#fff' : isSel ? '#fff' : inM ? 'rgba(255,255,255,0.72)' : 'rgba(255,255,255,0.18)',
                       background: isT ? '#f97316' : isSel ? '#3b82f6' : 'transparent',
@@ -1789,13 +1789,13 @@ function AdminCalendarTab({ showToast, setTab }) {
                   {selectedDay.items.length === 0 ? 'No items' : `${selectedDay.items.length} scheduled`}
                 </div>
               </div>
-              <button onClick={() => setSelectedDay(null)} style={{ background:'none',border:'none',color:'rgba(255,255,255,0.35)',cursor:'pointer',fontSize:14,lineHeight:1,padding:2 }}>✕</button>
+              <button onClick={() => setSelectedDay(null)} style={{ background:'none',border:'none',color:'rgba(255,255,255,0.5)',cursor:'pointer',fontSize:14,lineHeight:1,padding:2 }}>✕</button>
             </div>
 
             {selectedDay.items.length === 0 ? (
               <div>
-                <p style={{ color:'rgba(255,255,255,0.35)', fontSize:11, margin:'0 0 8px', lineHeight:1.5 }}>Nothing scheduled on this day.</p>
-                <button onClick={() => setTab('events')} style={{ width:'100%', background:'linear-gradient(90deg,#f97316,#e11d48)', color:'#fff', border:'none', borderRadius:8, padding:'7px', fontSize:11.5, fontWeight:800, cursor:'pointer', fontFamily:'inherit' }}>
+                <p style={{ color:'rgba(255,255,255,0.5)', fontSize:12.5, margin:'0 0 8px', lineHeight:1.5 }}>Nothing scheduled on this day.</p>
+                <button onClick={() => setTab('events')} style={{ width:'100%', background:'linear-gradient(90deg,#f97316,#e11d48)', color:'#fff', border:'none', borderRadius:8, padding:'7px', fontSize:13, fontWeight:800, cursor:'pointer', fontFamily:'inherit' }}>
                   ＋ Add Event on this date
                 </button>
               </div>
@@ -1808,11 +1808,11 @@ function AdminCalendarTab({ showToast, setTab }) {
                     onMouseLeave={e=>e.currentTarget.style.background= it._type==='event' ? 'rgba(129,140,248,0.12)' : 'rgba(52,211,153,0.12)'}
                   >
                     <span style={{ fontSize:12, flexShrink:0 }}>{it._type==='event' ? '📅' : '🎓'}</span>
-                    <span style={{ fontSize:11, fontWeight:700, color:'#fff', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', flex:1 }}>{it.title}</span>
+                    <span style={{ fontSize:12.5, fontWeight:700, color:'#fff', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', flex:1 }}>{it.title}</span>
                     <span style={{ fontSize:9.5, color: it._type==='event' ? '#a5b4fc' : '#6ee7b7', flexShrink:0, fontWeight:700 }}>{it._type==='event' ? it.category : it.level}</span>
                   </div>
                 ))}
-                <button onClick={() => setTab('events')} style={{ marginTop:2, background:'rgba(255,255,255,0.06)', color:'rgba(255,255,255,0.55)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:8, padding:'6px', fontSize:11, fontWeight:700, cursor:'pointer', fontFamily:'inherit' }}>
+                <button onClick={() => setTab('events')} style={{ marginTop:2, background:'rgba(255,255,255,0.06)', color:'rgba(255,255,255,0.55)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:8, padding:'6px', fontSize:12.5, fontWeight:700, cursor:'pointer', fontFamily:'inherit' }}>
                   ＋ Add more
                 </button>
               </div>
@@ -1822,7 +1822,7 @@ function AdminCalendarTab({ showToast, setTab }) {
 
         {/* Role-based quick shortcuts */}
         <div style={{ background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:12, padding:'12px', marginBottom:14 }}>
-          <div style={{ fontSize:10, fontWeight:800, color:'rgba(255,255,255,0.3)', textTransform:'uppercase', letterSpacing:'.6px', marginBottom:10 }}>
+          <div style={{ fontSize:12, fontWeight:800, color:'rgba(255,255,255,0.3)', textTransform:'uppercase', letterSpacing:'.6px', marginBottom:10 }}>
             ⚡ Quick Shortcuts
           </div>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6 }}>
@@ -1837,7 +1837,7 @@ function AdminCalendarTab({ showToast, setTab }) {
               onMouseLeave={e=>{e.currentTarget.style.background='rgba(255,255,255,0.05)';e.currentTarget.style.borderColor='rgba(255,255,255,0.08)';}}
               >
                 <span style={{ fontSize:18 }}>{s.icon}</span>
-                <span style={{ fontSize:10, fontWeight:700, color:'rgba(255,255,255,0.6)', textAlign:'center', lineHeight:1.2 }}>{s.label}</span>
+                <span style={{ fontSize:12, fontWeight:700, color:'rgba(255,255,255,0.6)', textAlign:'center', lineHeight:1.2 }}>{s.label}</span>
               </button>
             ))}
           </div>
@@ -1845,7 +1845,7 @@ function AdminCalendarTab({ showToast, setTab }) {
 
         {/* Legend */}
         <div style={{ marginBottom:14 }}>
-          <div style={{ fontSize:10, fontWeight:800, color:'rgba(255,255,255,0.3)', textTransform:'uppercase', letterSpacing:'.6px', marginBottom:8 }}>My Calendars</div>
+          <div style={{ fontSize:12, fontWeight:800, color:'rgba(255,255,255,0.3)', textTransform:'uppercase', letterSpacing:'.6px', marginBottom:8 }}>My Calendars</div>
           {[
             { color:'#818cf8', label:`Events (${evCount})`,   key:'event'    },
             { color:'#34d399', label:`Training (${trCount})`, key:'training' },
@@ -1858,7 +1858,7 @@ function AdminCalendarTab({ showToast, setTab }) {
         </div>
 
         {/* Quick actions */}
-        <div style={{ fontSize:10, fontWeight:800, color:'rgba(255,255,255,0.3)', textTransform:'uppercase', letterSpacing:'.6px', marginBottom:8 }}>Quick Actions</div>
+        <div style={{ fontSize:12, fontWeight:800, color:'rgba(255,255,255,0.3)', textTransform:'uppercase', letterSpacing:'.6px', marginBottom:8 }}>Quick Actions</div>
         {[
           { label:'＋ Add Event', action:() => setTab('events') },
           { label:'＋ Add Training', action:() => setTab('training') },
@@ -1895,7 +1895,7 @@ function AdminCalendarTab({ showToast, setTab }) {
             {MONTH_NAMES_LONG[month]} {year}
           </h2>
           <div style={{ marginLeft:'auto', display:'flex', gap:8, alignItems:'center' }}>
-            <span style={{ fontSize:12, color:'rgba(255,255,255,0.35)' }}>
+            <span style={{ fontSize:12, color:'rgba(255,255,255,0.5)' }}>
               {allItems.filter(i=>{ const m=i.startDate?.getMonth(); return m===month; }).length} items this month
             </span>
             <button onClick={() => setTab('events')} style={{ background:'linear-gradient(90deg,#f97316,#e11d48)', color:'#fff', border:'none', borderRadius:9, padding:'8px 16px', fontSize:12.5, fontWeight:800, cursor:'pointer', fontFamily:'inherit', display:'flex', alignItems:'center', gap:6 }}>
@@ -1907,7 +1907,7 @@ function AdminCalendarTab({ showToast, setTab }) {
         {/* Day headers Mon–Sun */}
         <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', borderBottom:'1px solid rgba(255,255,255,0.08)', paddingBottom:6, marginBottom:0, flexShrink:0 }}>
           {DAY_LABELS.map((d,i) => (
-            <div key={d} style={{ textAlign:'center', fontSize:11.5, fontWeight:700, color: i>=5 ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.45)', letterSpacing:'.5px', textTransform:'uppercase' }}>{d}</div>
+            <div key={d} style={{ textAlign:'center', fontSize:13, fontWeight:700, color: i>=5 ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.45)', letterSpacing:'.5px', textTransform:'uppercase' }}>{d}</div>
           ))}
         </div>
 
@@ -1955,7 +1955,7 @@ function AdminCalendarTab({ showToast, setTab }) {
                           >
                             {item._type === 'training' && <span style={{ fontSize:8, flexShrink:0, opacity:0.8 }}>🎓</span>}
                             {!item.isStart && <span style={{ fontSize:9, color:item._text, opacity:0.5, flexShrink:0 }}>◀</span>}
-                            <span style={{ fontSize:10.5, fontWeight:700, color:item._text, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', flex:1 }}>
+                            <span style={{ fontSize:12, fontWeight:700, color:item._text, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', flex:1 }}>
                               {item.title}
                             </span>
                           </div>
@@ -1996,7 +1996,7 @@ function AdminCalendarTab({ showToast, setTab }) {
           <div onClick={e => e.stopPropagation()} style={{ background:'#0f172a', border:'1px solid rgba(255,255,255,0.12)', borderRadius:20, width:340, maxHeight:'80vh', overflow:'auto', animation:'modalIn .22s ease', boxShadow:'0 24px 80px rgba(0,0,0,0.7)' }}>
             <div style={{ background: detail._type==='event' ? (EV_CAL_COLORS[detail.category]?.bg?.replace('0.4','0.7') || 'rgba(79,70,229,0.7)') : TR_CAL_COLORS[detail.category]?.replace('0.4','0.7'), padding:'18px 20px 16px', position:'relative' }}>
               <button onClick={()=>setDetail(null)} style={{ position:'absolute',top:12,right:12,background:'rgba(255,255,255,0.18)',border:'none',borderRadius:'50%',width:28,height:28,color:'#fff',fontSize:14,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center' }}>✕</button>
-              <div style={{ fontSize:10.5, fontWeight:700, color:'rgba(255,255,255,0.65)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:5 }}>
+              <div style={{ fontSize:12, fontWeight:700, color:'rgba(255,255,255,0.65)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:5 }}>
                 {detail._type === 'event' ? `📅 ${detail.category}` : `🎓 ${detail.category}`}
               </div>
               <div style={{ color:'#fff', fontSize:16, fontWeight:900, lineHeight:1.35 }}>{detail.title}</div>
@@ -2007,14 +2007,14 @@ function AdminCalendarTab({ showToast, setTab }) {
                     .map(([ic,l,v]) => v && (
                       <div key={l} style={{ display:'flex',gap:10,marginBottom:10 }}>
                         <span style={{ fontSize:14,flexShrink:0 }}>{ic}</span>
-                        <div><div style={{ fontSize:10,color:'rgba(255,255,255,0.3)',fontWeight:700,textTransform:'uppercase',letterSpacing:'.5px' }}>{l}</div><div style={{ fontSize:13,color:'#fff',fontWeight:600 }}>{v}</div></div>
+                        <div><div style={{ fontSize:12,color:'rgba(255,255,255,0.3)',fontWeight:700,textTransform:'uppercase',letterSpacing:'.5px' }}>{l}</div><div style={{ fontSize:13,color:'#fff',fontWeight:600 }}>{v}</div></div>
                       </div>
                     ))
                 : [['🏛','Organizer',detail.org],['⏱','Duration',detail.duration],['📊','Level',detail.level],['📅','Schedule',detail.schedule],['👥','Enrollment',`${detail.enrolled}/${detail.total}`]]
                     .map(([ic,l,v]) => v && (
                       <div key={l} style={{ display:'flex',gap:10,marginBottom:10 }}>
                         <span style={{ fontSize:14,flexShrink:0 }}>{ic}</span>
-                        <div><div style={{ fontSize:10,color:'rgba(255,255,255,0.3)',fontWeight:700,textTransform:'uppercase',letterSpacing:'.5px' }}>{l}</div><div style={{ fontSize:13,color:'#fff',fontWeight:600 }}>{v}</div></div>
+                        <div><div style={{ fontSize:12,color:'rgba(255,255,255,0.3)',fontWeight:700,textTransform:'uppercase',letterSpacing:'.5px' }}>{l}</div><div style={{ fontSize:13,color:'#fff',fontWeight:600 }}>{v}</div></div>
                       </div>
                     ))
               }

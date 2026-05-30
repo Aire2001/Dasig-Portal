@@ -190,13 +190,13 @@ function PolicyCard({ policy: p, cfg, locked, index, onClick }) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 }}>
         <span style={{
           background: 'rgba(255,255,255,0.2)', color: '#fff',
-          borderRadius: 8, padding: '4px 12px', fontSize: 11, fontWeight: 800,
+          borderRadius: 8, padding: '4px 12px', fontSize: 12, fontWeight: 800,
         }}>{p.category}</span>
         <span style={{ fontSize: 20 }}>{locked ? '🔒' : cfg.icon}</span>
       </div>
 
       <h3 style={{ fontWeight: 900, fontSize: 15.5, color: '#fff', lineHeight: 1.35, marginBottom: 8 }}>{p.title}</h3>
-      <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.5)', marginBottom: 10, fontWeight: 600 }}>Effective: {p.effective_date}</div>
+      <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.65)', marginBottom: 10, fontWeight: 600 }}>Effective: {p.effective_date}</div>
       <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.65)', lineHeight: 1.7, marginBottom: 0 }}>
         {locked ? 'This policy is available to DASIG members only.' : p.content.slice(0, 120) + (p.content.length > 120 ? '…' : '')}
       </p>

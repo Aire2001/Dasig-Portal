@@ -119,7 +119,7 @@ export default function PartnershipsPage() {
                   { l: 'Contact',  v: selected.contact_person || '—' },
                 ].map(r => (
                   <div key={r.l} style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: '13px 16px' }}>
-                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', fontWeight: 700, marginBottom: 5, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{r.l}</div>
+                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', fontWeight: 700, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.4px' }}>{r.l}</div>
                     <div style={{ fontSize: 14, color: '#fff', fontWeight: 700 }}>{r.v}</div>
                   </div>
                 ))}
@@ -203,7 +203,7 @@ function PartnerCard({ p, index, onClick }) {
             borderRadius: 20, padding: '4px 11px', fontSize: 11.5, fontWeight: 800,
           }}>{p.status}</span>
         </div>
-        <span style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.45)', fontWeight: 600 }}>{p.start_date}</span>
+        <span style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.65)', fontWeight: 600 }}>{p.start_date}</span>
       </div>
 
       <h3 style={{ fontWeight: 900, fontSize: 16, color: '#fff', lineHeight: 1.3, marginBottom: 8 }}>{p.partner_name}</h3>

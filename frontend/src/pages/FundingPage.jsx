@@ -131,20 +131,20 @@ export default function FundingPage() {
                   { l: 'Status',   v: selected.status },
                 ].map(r => (
                   <div key={r.l} style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: '13px 16px' }}>
-                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', fontWeight: 700, marginBottom: 5, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{r.l}</div>
+                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', fontWeight: 700, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.4px' }}>{r.l}</div>
                     <div style={{ fontSize: 14, color: '#fff', fontWeight: 700 }}>{r.v}</div>
                   </div>
                 ))}
               </div>
               {selected.description && (
                 <>
-                  <div style={{ fontWeight: 800, fontSize: 12, color: 'rgba(255,255,255,0.4)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Description</div>
+                  <div style={{ fontWeight: 800, fontSize: 12.5, color: 'rgba(255,255,255,0.6)', marginBottom: 9, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Description</div>
                   <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13.5, lineHeight: 1.8, marginBottom: 18 }}>{selected.description}</p>
                 </>
               )}
               {selected.eligibility && (
                 <>
-                  <div style={{ fontWeight: 800, fontSize: 12, color: 'rgba(255,255,255,0.4)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Eligibility</div>
+                  <div style={{ fontWeight: 800, fontSize: 12.5, color: 'rgba(255,255,255,0.6)', marginBottom: 9, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Eligibility</div>
                   <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13.5, lineHeight: 1.8, marginBottom: 18 }}>{selected.eligibility}</p>
                 </>
               )}
@@ -239,7 +239,7 @@ function FundingCard({ item, index, onClick }) {
           background: sb.bg, color: sb.color, border: `1px solid ${sb.border}`,
           borderRadius: 20, padding: '4px 13px', fontSize: 11.5, fontWeight: 800,
         }}>{item.status}</span>
-        <span style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.5)', fontWeight: 600 }}>Due: {item.deadline}</span>
+        <span style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.7)', fontWeight: 600 }}>Due: {item.deadline}</span>
       </div>
 
       <h3 style={{ fontWeight: 900, fontSize: 16, color: '#fff', lineHeight: 1.3, marginBottom: 8 }}>{item.title}</h3>

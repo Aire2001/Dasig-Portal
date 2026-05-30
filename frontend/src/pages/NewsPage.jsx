@@ -129,7 +129,7 @@ function ArticleReader({ article: a, bs, onClose }) {
         const body = t.replace(/^\d+\.\s*/, '');
         return (
           <div key={i} style={{ display:'flex', gap:14, marginBottom:10, alignItems:'flex-start' }}>
-            <span style={{ background: bs.accent, color:'#fff', borderRadius:'50%', width:24, height:24, display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:900, flexShrink:0, marginTop:2 }}>{num}</span>
+            <span style={{ background: bs.accent, color:'#fff', borderRadius:'50%', width:26, height:26, display:'flex', alignItems:'center', justifyContent:'center', fontSize:12, fontWeight:900, flexShrink:0, marginTop:1 }}>{num}</span>
             <p style={{ margin:0, fontSize:14.5, color:'rgba(255,255,255,0.72)', lineHeight:1.75 }}>{body}</p>
           </div>
         );
@@ -289,10 +289,10 @@ function NewsCard({ article: a, idx, onOpen }) {
 
         {/* Badge + date pinned to bottom-left of photo */}
         <div style={{ position:'absolute', bottom:12, left:14, display:'flex', alignItems:'center', gap:8 }}>
-          <span style={{ background: bs.accent, color:'#fff', borderRadius:6, padding:'4px 10px', fontSize:10.5, fontWeight:800, boxShadow:'0 2px 8px rgba(0,0,0,0.4)' }}>
+          <span style={{ background: bs.accent, color:'#fff', borderRadius:6, padding:'4px 12px', fontSize:12, fontWeight:800, boxShadow:'0 2px 8px rgba(0,0,0,0.4)' }}>
             {bs.icon} {a.badge}
           </span>
-          <span style={{ color:'rgba(255,255,255,0.8)', fontSize:11.5, fontWeight:600, textShadow:'0 1px 4px rgba(0,0,0,0.8)' }}>
+          <span style={{ color:'rgba(255,255,255,0.9)', fontSize:12.5, fontWeight:600, textShadow:'0 1px 4px rgba(0,0,0,0.8)' }}>
             {String(a.date).slice(0,10)}
           </span>
         </div>
@@ -317,7 +317,7 @@ function NewsCard({ article: a, idx, onOpen }) {
           </p>
         )}
         <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginTop:12, paddingTop:12, borderTop:'1px solid rgba(255,255,255,0.06)' }}>
-          <span style={{ fontSize:11, color:'rgba(255,255,255,0.28)', fontWeight:500 }}>DASIG Consortium</span>
+          <span style={{ fontSize:12.5, color:'rgba(255,255,255,0.5)', fontWeight:500 }}>DASIG Consortium</span>
           {!a.locked && (
             <span style={{ fontSize:12.5, color: hov ? '#f97316' : 'rgba(255,255,255,0.4)', fontWeight:700, transition:'color .15s', display:'flex', alignItems:'center', gap:4 }}>
               Read more <span style={{ fontSize:14 }}>→</span>

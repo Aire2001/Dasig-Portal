@@ -192,7 +192,7 @@ export default function MembersPage() {
 
                   {/* Type badge */}
                   <div style={{ position: 'absolute', top: 14, left: 14 }}>
-                    <span style={{ background: 'rgba(0,0,0,0.35)', backdropFilter: 'blur(6px)', color: '#fff', borderRadius: 7, padding: '4px 12px', fontSize: 11, fontWeight: 800, border: '1px solid rgba(255,255,255,0.25)' }}>
+                    <span style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(6px)', color: '#fff', borderRadius: 7, padding: '5px 13px', fontSize: 12, fontWeight: 800, border: '1px solid rgba(255,255,255,0.3)' }}>
                       {selected.type}
                     </span>
                   </div>
@@ -226,7 +226,7 @@ export default function MembersPage() {
                       ...(info ? [{ l: 'Founded', v: info.founded }, { l: 'Role', v: info.role }] : []),
                     ].map(r => (
                       <div key={r.l} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: '12px 14px' }}>
-                        <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.38)', fontWeight: 700, marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{r.l}</div>
+                        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', fontWeight: 700, marginBottom: 5, textTransform: 'uppercase', letterSpacing: '0.4px' }}>{r.l}</div>
                         <div style={{ fontSize: 13.5, color: '#fff', fontWeight: 700, lineHeight: 1.4 }}>{r.v}</div>
                       </div>
                     ))}
@@ -296,7 +296,7 @@ export default function MembersPage() {
               <div style={{ display: 'flex', gap: 32, alignItems: 'flex-start', flexWrap: 'wrap' }}>
                 <div style={{ flex: 2, minWidth: 260 }}>
                   <div style={{
-                    fontSize: 10.5, fontWeight: 800, letterSpacing: '1.2px', textTransform: 'uppercase', marginBottom: 8,
+                    fontSize: 12, fontWeight: 800, letterSpacing: '.8px', textTransform: 'uppercase', marginBottom: 9,
                     background: 'linear-gradient(90deg,#f97316,#e11d48)',
                     WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
                   }}>About the Consortium</div>
@@ -328,7 +328,7 @@ export default function MembersPage() {
                     }}>
                       <span style={{ fontSize: 18, flexShrink: 0 }}>{item.icon}</span>
                       <div>
-                        <div style={{ fontSize: 10.5, fontWeight: 800, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 2 }}>{item.label}</div>
+                        <div style={{ fontSize: 12, fontWeight: 800, color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: '0.4px', marginBottom: 3 }}>{item.label}</div>
                         <div style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.72)', lineHeight: 1.5 }}>{item.text}</div>
                       </div>
                     </div>
@@ -340,7 +340,7 @@ export default function MembersPage() {
             {/* Section heading */}
             <div style={{ marginBottom: 20 }}>
               <div style={{
-                fontSize: 10.5, fontWeight: 800, letterSpacing: '1.2px', textTransform: 'uppercase', marginBottom: 6,
+                fontSize: 12, fontWeight: 800, letterSpacing: '.8px', textTransform: 'uppercase', marginBottom: 7,
                 background: 'linear-gradient(90deg,#f97316,#e11d48)',
                 WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
               }}>Member Institutions</div>
@@ -428,7 +428,7 @@ function MemberCard({ member: m, grad, index, onClick }) {
       <div style={{ background: asset.bg, height: 175, position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 12 }}>
         <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at 50% 35%, rgba(255,255,255,0.14) 0%, transparent 68%)', pointerEvents: 'none' }} />
         <div style={{ position: 'absolute', top: 12, right: 12 }}>
-          <span style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(8px)', color: '#fff', borderRadius: 7, padding: '4px 11px', fontSize: 10.5, fontWeight: 800, border: '1px solid rgba(255,255,255,0.28)' }}>{m.type}</span>
+          <span style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(8px)', color: '#fff', borderRadius: 7, padding: '5px 12px', fontSize: 12, fontWeight: 800, border: '1px solid rgba(255,255,255,0.3)' }}>{m.type}</span>
         </div>
         {/* Logo with fallback */}
         <div style={{ position: 'relative', zIndex: 1, transition: 'transform .3s ease', transform: hov ? 'scale(1.09)' : 'scale(1)' }}>
@@ -450,7 +450,7 @@ function MemberCard({ member: m, grad, index, onClick }) {
         <div style={{ fontWeight: 800, fontSize: 14, color: '#fff', lineHeight: 1.35, marginBottom: 5 }}>{m.full_name}</div>
         <div style={{ color: 'rgba(255,255,255,0.42)', fontSize: 12.5, marginBottom: 14 }}>📍 {m.campus}</div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ background: `${asset.accent}18`, color: asset.accent, border: `1px solid ${asset.accent}40`, borderRadius: 7, padding: '4px 11px', fontSize: 11.5, fontWeight: 700 }}>{m.type}</span>
+          <span style={{ background: `${asset.accent}18`, color: asset.accent, border: `1px solid ${asset.accent}45`, borderRadius: 7, padding: '5px 12px', fontSize: 12.5, fontWeight: 700 }}>{m.type}</span>
           <span style={{ fontSize: 12.5, color: hov ? asset.accent : 'rgba(255,255,255,0.35)', fontWeight: 700, transition: 'color .15s' }}>View details →</span>
         </div>
       </div>

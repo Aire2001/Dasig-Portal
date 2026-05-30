@@ -63,9 +63,9 @@ const CSS = `
   }
 
   .pf-label {
-    display:block; font-size:11px; font-weight:700;
-    color:rgba(255,255,255,0.38); letter-spacing:.5px;
-    text-transform:uppercase; margin-bottom:7px;
+    display:block; font-size:12px; font-weight:700;
+    color:rgba(255,255,255,0.55); letter-spacing:.4px;
+    text-transform:uppercase; margin-bottom:8px;
   }
   .pf-save {
     background:linear-gradient(90deg,#f97316,#e11d48);
@@ -171,7 +171,7 @@ export default function ProfilePage() {
             onMouseLeave={e => { e.currentTarget.style.color='rgba(255,255,255,0.6)'; e.currentTarget.style.background='rgba(255,255,255,0.07)'; }}
           >← Back</button>
           <div>
-            <div style={{ color:'rgba(255,255,255,0.4)', fontSize:11.5, fontWeight:700, letterSpacing:'1px', textTransform:'uppercase', marginBottom:3 }}>Account Management</div>
+            <div style={{ color:'rgba(255,255,255,0.55)', fontSize:12, fontWeight:700, letterSpacing:'.8px', textTransform:'uppercase', marginBottom:4 }}>Account Management</div>
             <h1 style={{ color:'#fff', fontSize:24, fontWeight:900, margin:0, letterSpacing:'-0.4px' }}>My Profile</h1>
           </div>
         </div>
@@ -195,7 +195,7 @@ export default function ProfilePage() {
                       onMouseLeave={e => e.currentTarget.style.opacity=0}
                     >
                       <span style={{ fontSize:18 }}>📷</span>
-                      <span style={{ fontSize:9.5, color:'#fff', fontWeight:700 }}>CHANGE</span>
+                      <span style={{ fontSize:11, color:'#fff', fontWeight:800 }}>CHANGE</span>
                     </div>
                   </div>
                 </label>
@@ -286,7 +286,7 @@ function ProfileTab({ user, showToast, onSaved }) {
 
       {/* Email — read only */}
       <div>
-        <label className="pf-label">Email Address <span style={{ color:'rgba(255,255,255,0.25)', fontSize:10, fontWeight:400, textTransform:'none' }}>— cannot be changed</span></label>
+        <label className="pf-label">Email Address <span style={{ color:'rgba(255,255,255,0.45)', fontSize:12, fontWeight:400, textTransform:'none' }}>— cannot be changed</span></label>
         <input className="pf-input" value={user.email} disabled style={{ opacity:.5, cursor:'not-allowed' }} />
       </div>
 
@@ -457,7 +457,7 @@ function StatusTab({ user, navigate }) {
       <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:24 }}>
         {infoRows.map(r => (
           <div key={r.label} style={{ background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:12, padding:'12px 16px' }}>
-            <div style={{ fontSize:10.5, fontWeight:700, color:'rgba(255,255,255,0.35)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:4 }}>
+            <div style={{ fontSize:12, fontWeight:700, color:'rgba(255,255,255,0.55)', textTransform:'uppercase', letterSpacing:'.4px', marginBottom:5 }}>
               <span style={{ marginRight:6 }}>{r.icon}</span>{r.label}
             </div>
             <div style={{ fontSize:13.5, fontWeight:700, color: r.color || '#fff', lineHeight:1.35 }}>

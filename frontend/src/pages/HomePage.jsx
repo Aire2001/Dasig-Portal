@@ -183,7 +183,7 @@ function AdminHomePage({ navigate, user }) {
             borderRadius: 24, padding: '6px 18px', marginBottom: 22,
           }}>
             <div className="admin-pulse" style={{ width: 8, height: 8, borderRadius: '50%', background: '#e11d48', flexShrink: 0 }} />
-            <span style={{ color: '#e11d48', fontSize: 11.5, fontWeight: 800, letterSpacing: '1.2px', textTransform: 'uppercase' }}>
+            <span style={{ color: '#e11d48', fontSize: 13, fontWeight: 800, letterSpacing: '1.2px', textTransform: 'uppercase' }}>
               ⚡ Admin Command Center · DASIG Portal
             </span>
           </div>
@@ -225,7 +225,7 @@ function AdminHomePage({ navigate, user }) {
         <div style={{ maxWidth: 1120, margin: '0 auto' }}>
           <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 28 }}>
             <div>
-              <p style={{ fontSize: 11, fontWeight: 800, letterSpacing: '1.4px', textTransform: 'uppercase', color: '#e11d48', marginBottom: 7 }}>Quick Access</p>
+              <p style={{ fontSize: 12.5, fontWeight: 800, letterSpacing: '1.4px', textTransform: 'uppercase', color: '#e11d48', marginBottom: 7 }}>Quick Access</p>
               <h2 style={{ fontSize: 30, fontWeight: 900, color: '#fff', letterSpacing: '-0.8px' }}>Manage all portal modules</h2>
             </div>
             <button onClick={() => navigate('/admin')} style={{
@@ -339,7 +339,7 @@ export default function HomePage() {
             <div style={{ flex: 1 }} />
             <button onClick={() => navigate('/membership')} style={{
               background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.3)',
-              color: '#10b981', borderRadius: 7, padding: '4px 12px', fontSize: 11.5,
+              color: '#10b981', borderRadius: 7, padding: '4px 12px', fontSize: 13,
               fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
             }}>My Card →</button>
           </div>
@@ -375,9 +375,9 @@ export default function HomePage() {
               <div style={{
                 width: 22, height: 22, borderRadius: 11,
                 background: 'linear-gradient(90deg,#f97316,#e11d48)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12,
               }}>🏛</div>
-              <span style={{ color: 'rgba(255,255,255,0.75)', fontSize: 11.5, fontWeight: 600, letterSpacing: '0.5px' }}>
+              <span style={{ color: 'rgba(255,255,255,0.75)', fontSize: 13, fontWeight: 600, letterSpacing: '0.5px' }}>
                 CENTRAL VISAYAS CONSORTIUM · REGION VII · 6 INSTITUTIONS
               </span>
             </div>
@@ -426,7 +426,7 @@ export default function HomePage() {
                     background: 'linear-gradient(90deg,#f97316,#e11d48)',
                     WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
                   }}>{s.v}</div>
-                  <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11, marginTop: 4 }}>{s.l}</div>
+                  <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 12.5, marginTop: 4 }}>{s.l}</div>
                 </div>
               ))}
             </div>
@@ -446,7 +446,7 @@ export default function HomePage() {
           maxWidth: 1120, margin: '0 auto', height: 52,
           display: 'flex', alignItems: 'center', gap: 14, overflow: 'hidden',
         }}>
-          <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 10, fontWeight: 800, letterSpacing: '1.2px', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+          <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 12, fontWeight: 800, letterSpacing: '1.2px', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
             Region VII Members
           </span>
           <div style={{ width: 1, height: 14, background: 'rgba(255,255,255,0.1)', flexShrink: 0 }} />
@@ -454,7 +454,7 @@ export default function HomePage() {
             {['University of the Philippines', 'University of San Agustin', 'DOST Region VII', 'DICT Region VII', 'DTI Region VII', 'DepEd Region VII'].map(m => (
               <div key={m} style={{
                 background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)',
-                borderRadius: 6, padding: '4px 12px', fontSize: 11.5,
+                borderRadius: 6, padding: '4px 12px', fontSize: 13,
                 color: 'rgba(255,255,255,0.6)', fontWeight: 600, whiteSpace: 'nowrap',
               }}>{m}</div>
             ))}
@@ -520,7 +520,7 @@ export default function HomePage() {
         <div style={{ maxWidth: 1120, margin: '0 auto' }}>
           <div style={{ marginBottom: 36 }}>
             <p style={{
-              fontSize: 11.5, fontWeight: 800, letterSpacing: '1.2px', textTransform: 'uppercase', marginBottom: 8,
+              fontSize: 13, fontWeight: 800, letterSpacing: '1.2px', textTransform: 'uppercase', marginBottom: 8,
               background: 'linear-gradient(90deg,#f97316,#e11d48)',
               WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
             }}>Platform Modules</p>
@@ -545,7 +545,7 @@ export default function HomePage() {
           <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 28 }}>
             <div>
               <p style={{
-                fontSize: 11.5, fontWeight: 800, letterSpacing: '1.2px', textTransform: 'uppercase', marginBottom: 8,
+                fontSize: 13, fontWeight: 800, letterSpacing: '1.2px', textTransform: 'uppercase', marginBottom: 8,
                 background: 'linear-gradient(90deg,#f97316,#e11d48)',
                 WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
               }}>Consortium News</p>
@@ -588,10 +588,10 @@ export default function HomePage() {
                   <span style={{
                     background: 'rgba(255,255,255,0.15)', color: '#fff',
                     border: '1px solid rgba(255,255,255,0.25)',
-                    borderRadius: 5, padding: '3px 9px', fontSize: 10.5, fontWeight: 700,
+                    borderRadius: 5, padding: '3px 9px', fontSize: 12, fontWeight: 700,
                     display: 'block', width: 'fit-content', marginBottom: 7,
                   }}>📣 Announcement</span>
-                  <div style={{ color: 'rgba(255,255,255,0.55)', fontSize: 11.5, marginBottom: 4 }}>May 20, 2026</div>
+                  <div style={{ color: 'rgba(255,255,255,0.55)', fontSize: 13, marginBottom: 4 }}>May 20, 2026</div>
                   <h3 style={{ color: '#fff', fontWeight: 800, fontSize: 19, lineHeight: 1.22, maxWidth: 360, letterSpacing: '-0.3px' }}>
                     DASIG Annual Summit 2026 Registration Now Open
                   </h3>
@@ -626,9 +626,9 @@ export default function HomePage() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
                     <span style={{
                       background: 'rgba(255,255,255,0.2)', color: '#fff',
-                      borderRadius: 5, padding: '3px 10px', fontSize: 10.5, fontWeight: 800,
+                      borderRadius: 5, padding: '3px 10px', fontSize: 12, fontWeight: 800,
                     }}>{n.badge}</span>
-                    <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)' }}>{n.date}</span>
+                    <span style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.45)' }}>{n.date}</span>
                   </div>
                   <div style={{ fontWeight: 800, fontSize: 14, color: '#fff', lineHeight: 1.35, marginBottom: 6 }}>{n.title}</div>
                   <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', lineHeight: 1.55 }}>{n.excerpt}</div>
@@ -651,7 +651,7 @@ export default function HomePage() {
           <div style={{ position: 'absolute', width: 380, height: 380, borderRadius: '50%', background: 'radial-gradient(rgba(79,70,229,0.3),transparent 70%)', right: -80, top: -100, pointerEvents: 'none' }} />
           <div style={{ position: 'absolute', width: 280, height: 280, borderRadius: '50%', background: 'radial-gradient(rgba(249,115,22,0.2),transparent 70%)', left: -40, bottom: -60, pointerEvents: 'none' }} />
           <div style={{ padding: 48, position: 'relative', zIndex: 1 }}>
-            <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11, fontWeight: 700, letterSpacing: '1px', marginBottom: 10, textTransform: 'uppercase' }}>
+            <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12.5, fontWeight: 700, letterSpacing: '1px', marginBottom: 10, textTransform: 'uppercase' }}>
               Join Region VII Consortium
             </p>
             <h2 style={{ color: '#fff', fontSize: 32, fontWeight: 900, lineHeight: 1.1, letterSpacing: '-1px', marginBottom: 13 }}>
@@ -735,7 +735,7 @@ export default function HomePage() {
                       }}>Admin</span>
                     )}
                   </div>
-                  <div style={{ color: 'rgba(255,255,255,0.42)', fontSize: 11.5, marginTop: 2 }}>{f.sub}</div>
+                  <div style={{ color: 'rgba(255,255,255,0.42)', fontSize: 13, marginTop: 2 }}>{f.sub}</div>
                 </div>
                 <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 13 }}>
                   {f.adminOnly && user?.role !== 'ADMIN' ? '🔒' : '→'}
