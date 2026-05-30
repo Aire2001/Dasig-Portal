@@ -511,7 +511,9 @@ function EventsTab({ user }) {
   const [submitting, setSub]      = useState(false);
   const [fname, setFname]         = useState('');
   const [phone, setPhone]         = useState('');
+  const [email, setEmail]         = useState('');
   const [institution, setInst]    = useState('');
+  const [position, setPosition]   = useState('');
   const [fnameErr, setFnameErr]   = useState(false);
   const navigate = useNavigate();
 
@@ -556,7 +558,11 @@ function EventsTab({ user }) {
   }
 
   function prefill(ev) {
-    setFname(user?.name || ''); setPhone(user?.phone || ''); setInst(user?.institution || '');
+    setFname(user?.name || '');
+    setEmail(user?.email || '');
+    setPhone(user?.phone || '');
+    setInst(user?.institution || '');
+    setPosition(user?.campus || '');
     setFnameErr(false); setFormModal(ev); setConflict(null); setDetail(null);
   }
 
@@ -569,7 +575,7 @@ function EventsTab({ user }) {
       setEvents(p => p.map(e => e.id === formModal.id ? updated : e));
       setMyRegs(p => ({ ...p, [formModal.id]: { attended: false } }));
       setFormModal(null);
-      setOkModal({ event: updated, name: fname, email: user.email, role: user.role });
+      setOkModal({ event: updated, name: fname, email: email || user.email, phone, institution, position, role: user.role });
     } catch (err) {
       const msg = err.message || '';
       setFormModal(null);
@@ -665,21 +671,61 @@ function EventsTab({ user }) {
               </div>
             </div>
             <div style={{ padding:'18px 24px 22px', display:'flex', flexDirection:'column', gap:12 }}>
-              {[
-                { label:'FULL NAME', val:fname, set:setFname, err:fnameErr, setErr:setFnameErr, req:true, ph:'Your full name' },
-                { label:'PHONE', val:phone, set:setPhone, ph:'e.g. 09XX-XXX-XXXX' },
-                { label:'INSTITUTION', val:institution, set:setInst, ph:'Your organization' },
-              ].map(f => (
-                <div key={f.label}>
-                  <label style={{ fontSize:10.5, fontWeight:700, color: f.err ? '#f87171' : 'rgba(255,255,255,0.4)', display:'block', marginBottom:5, letterSpacing:'.5px', textTransform:'uppercase' }}>
-                    {f.label}{f.req && <span style={{ color:'#e11d48' }}> *</span>}
+              {/* 2-column grid for compact layout */}
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
+                {/* Full Name */}
+                <div style={{ gridColumn:'1/-1' }}>
+                  <label style={{ fontSize:10.5, fontWeight:700, color: fnameErr?'#f87171':'rgba(255,255,255,0.4)', display:'block', marginBottom:5, letterSpacing:'.5px', textTransform:'uppercase' }}>
+                    Full Name <span style={{ color:'#e11d48' }}>*</span>
                   </label>
-                  <input className="prog-input" value={f.val} placeholder={f.ph}
-                    onChange={e => { f.set(e.target.value); if (f.setErr && e.target.value.trim()) f.setErr(false); }}
-                    style={f.err ? { borderColor:'#e11d48' } : {}} />
-                  {f.err && <div style={{ color:'#f87171', fontSize:12, marginTop:4 }}>⚠ Required.</div>}
+                  <input className="prog-input" value={fname} placeholder="Your full name"
+                    onChange={e => { setFname(e.target.value); if (e.target.value.trim()) setFnameErr(false); }}
+                    style={fnameErr ? { borderColor:'#e11d48' } : {}} />
+                  {fnameErr && <div style={{ color:'#f87171', fontSize:12, marginTop:4 }}>⚠ Full name is required.</div>}
                 </div>
-              ))}
+                {/* Email */}
+                <div>
+                  <label style={{ fontSize:10.5, fontWeight:700, color:'rgba(255,255,255,0.4)', display:'block', marginBottom:5, letterSpacing:'.5px', textTransform:'uppercase' }}>
+                    Email Address <span style={{ color:'rgba(255,255,255,0.25)', fontSize:10, fontWeight:400 }}>(for confirmation)</span>
+                  </label>
+                  <input className="prog-input" type="email" value={email} placeholder="your@email.com"
+                    onChange={e => setEmail(e.target.value)} />
+                </div>
+                {/* Phone */}
+                <div>
+                  <label style={{ fontSize:10.5, fontWeight:700, color:'rgba(255,255,255,0.4)', display:'block', marginBottom:5, letterSpacing:'.5px', textTransform:'uppercase' }}>
+                    Phone Number
+                  </label>
+                  <input className="prog-input" value={phone} placeholder="e.g. 09XX-XXX-XXXX"
+                    onChange={e => setPhone(e.target.value)} />
+                </div>
+                {/* Institution */}
+                <div>
+                  <label style={{ fontSize:10.5, fontWeight:700, color:'rgba(255,255,255,0.4)', display:'block', marginBottom:5, letterSpacing:'.5px', textTransform:'uppercase' }}>
+                    Institution / Organization
+                  </label>
+                  <input className="prog-input" value={institution} placeholder="Your institution"
+                    onChange={e => setInst(e.target.value)} />
+                </div>
+                {/* Position */}
+                <div>
+                  <label style={{ fontSize:10.5, fontWeight:700, color:'rgba(255,255,255,0.4)', display:'block', marginBottom:5, letterSpacing:'.5px', textTransform:'uppercase' }}>
+                    Position / Designation
+                  </label>
+                  <input className="prog-input" value={position} placeholder="e.g. Faculty, Researcher"
+                    onChange={e => setPosition(e.target.value)} />
+                </div>
+              </div>
+              {/* Role badge */}
+              <div style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 14px', background:'rgba(255,255,255,0.04)', borderRadius:10, border:'1px solid rgba(255,255,255,0.08)' }}>
+                <span style={{ fontSize:16 }}>🪪</span>
+                <div>
+                  <div style={{ fontSize:10, color:'rgba(255,255,255,0.3)', fontWeight:700, letterSpacing:'.5px', textTransform:'uppercase', marginBottom:2 }}>Account Type</div>
+                  <div style={{ fontSize:12.5, fontWeight:800, color: user?.role==='ADMIN'?'#fca5a5':user?.role==='MEMBER'?'#6ee7b7':'#93c5fd' }}>
+                    {user?.role==='ADMIN'?'🛡 Administrator':user?.role==='MEMBER'?'✓ Member':'○ Guest'}
+                  </div>
+                </div>
+              </div>
               <div style={{ display:'flex', gap:10, marginTop:4 }}>
                 <button onClick={() => setFormModal(null)} style={{ flex:1, background:'rgba(255,255,255,0.06)', color:'rgba(255,255,255,0.55)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:12, padding:'12px', fontSize:13.5, fontWeight:700, cursor:'pointer', fontFamily:'inherit' }}>Cancel</button>
                 <button onClick={submit} disabled={submitting} style={{ flex:2, background: submitting ? '#475569' : 'linear-gradient(90deg,#f97316,#e11d48)', color:'#fff', border:'none', borderRadius:12, padding:'12px', fontSize:14, fontWeight:800, cursor: submitting ? 'not-allowed' : 'pointer', fontFamily:'inherit' }}>
@@ -702,12 +748,22 @@ function EventsTab({ user }) {
                 {(okModal.name || 'U')[0].toUpperCase()}
               </div>
             </div>
-            <div style={{ paddingTop:46, paddingBottom:12, textAlign:'center' }}>
-              <div style={{ fontWeight:900, fontSize:17, color:'#fff', paddingLeft:24, paddingRight:24 }}>{okModal.name}</div>
+            <div style={{ paddingTop:46, paddingBottom:12, textAlign:'center', paddingLeft:24, paddingRight:24 }}>
+              <div style={{ fontWeight:900, fontSize:17, color:'#fff' }}>{okModal.name}</div>
               <div style={{ fontSize:12, color:'rgba(255,255,255,0.38)', marginTop:3 }}>{okModal.email}</div>
+              {okModal.position && <div style={{ fontSize:12, color:'rgba(255,255,255,0.32)', marginTop:2 }}>{okModal.position}</div>}
+              {okModal.institution && <div style={{ fontSize:12, color:'rgba(255,255,255,0.32)', marginTop:2 }}>🏛 {okModal.institution}</div>}
+              {okModal.phone && <div style={{ fontSize:12, color:'rgba(255,255,255,0.32)', marginTop:2 }}>📞 {okModal.phone}</div>}
             </div>
             <div style={{ padding:'0 22px 22px', display:'flex', flexDirection:'column', gap:7 }}>
-              {[{i:'📋',l:'EVENT',v:okModal.event.title},{i:'📅',l:'DATE',v:okModal.event.date||'TBA'},{i:'📍',l:'VENUE',v:okModal.event.venue||'TBA'}].map(r => (
+              {[
+                {i:'📋',l:'EVENT',v:okModal.event.title},
+                {i:'📅',l:'DATE',v:okModal.event.date||'TBA'},
+                {i:'📍',l:'VENUE',v:okModal.event.venue||'TBA'},
+                {i:'🏛',l:'ORGANIZER',v:okModal.event.organizer},
+                {i:'🎫',l:'CATEGORY',v:okModal.event.category},
+                {i:'👥',l:'SEATS',v:`${okModal.event.enrolled}/${okModal.event.total} filled`},
+              ].filter(r=>r.v).map(r => (
                 <div key={r.l} style={{ display:'flex', alignItems:'center', gap:10, padding:'9px 12px', background:'rgba(255,255,255,0.04)', borderRadius:10 }}>
                   <span style={{ fontSize:15 }}>{r.i}</span>
                   <div><div style={{ fontSize:10, color:'rgba(255,255,255,0.3)', fontWeight:700, letterSpacing:'.5px' }}>{r.l}</div><div style={{ fontSize:12.5, color:'#fff', fontWeight:700 }}>{r.v}</div></div>
@@ -769,7 +825,9 @@ function TrainingTab({ user }) {
   const [submitting, setSub]      = useState(false);
   const [fname, setFname]         = useState('');
   const [email, setEmail]         = useState('');
+  const [phone, setPhone]         = useState('');
   const [institution, setInst]    = useState('');
+  const [position, setPosition]   = useState('');
   const [fnameErr, setFnameErr]   = useState(false);
   const navigate = useNavigate();
 
@@ -810,7 +868,11 @@ function TrainingTab({ user }) {
 
   function openEnroll(t) {
     if (!user) { setErrModal('login'); return; }
-    setFname(user.name || ''); setEmail(user.email || ''); setInst(user.institution || '');
+    setFname(user.name || '');
+    setEmail(user.email || '');
+    setPhone(user.phone || '');
+    setInst(user.institution || '');
+    setPosition(user.campus || '');
     setFnameErr(false); setFormModal(t); setDetail(null);
   }
 
@@ -823,7 +885,7 @@ function TrainingTab({ user }) {
       setTrainings(p => p.map(t => t.id === formModal.id ? upd : t));
       setMyEnr(p => ({ ...p, [formModal.id]: true }));
       setFormModal(null);
-      setOkModal({ training: upd, name: fname, email, institution, role: user.role });
+      setOkModal({ training: upd, name: fname, email, phone, institution, position, role: user.role });
     } catch (err) {
       const msg = err.message || '';
       setFormModal(null);
@@ -896,21 +958,51 @@ function TrainingTab({ user }) {
               </div>
             </div>
             <div style={{ padding:'18px 24px 22px', display:'flex', flexDirection:'column', gap:12 }}>
-              {[
-                { label:'FULL NAME', val:fname, set:setFname, err:fnameErr, setErr:setFnameErr, req:true, ph:'Your full name' },
-                { label:'EMAIL',     val:email, set:setEmail, ph:'your@email.com' },
-                { label:'INSTITUTION', val:institution, set:setInst, ph:'Your organization' },
-              ].map(f => (
-                <div key={f.label}>
-                  <label style={{ fontSize:10.5, fontWeight:700, color: f.err?'#f87171':'rgba(255,255,255,0.4)', display:'block', marginBottom:5, letterSpacing:'.5px', textTransform:'uppercase' }}>
-                    {f.label}{f.req&&<span style={{ color:'#e11d48' }}> *</span>}
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
+                {/* Full Name */}
+                <div style={{ gridColumn:'1/-1' }}>
+                  <label style={{ fontSize:10.5, fontWeight:700, color: fnameErr?'#f87171':'rgba(255,255,255,0.4)', display:'block', marginBottom:5, letterSpacing:'.5px', textTransform:'uppercase' }}>
+                    Full Name <span style={{ color:'#e11d48' }}>*</span>
                   </label>
-                  <input className="prog-input" value={f.val} placeholder={f.ph}
-                    onChange={e => { f.set(e.target.value); if (f.setErr && e.target.value.trim()) f.setErr(false); }}
-                    style={f.err ? { borderColor:'#e11d48' } : {}} />
-                  {f.err && <div style={{ color:'#f87171', fontSize:12, marginTop:4 }}>⚠ Required.</div>}
+                  <input className="prog-input" value={fname} placeholder="Your full name"
+                    onChange={e => { setFname(e.target.value); if (e.target.value.trim()) setFnameErr(false); }}
+                    style={fnameErr ? { borderColor:'#e11d48' } : {}} />
+                  {fnameErr && <div style={{ color:'#f87171', fontSize:12, marginTop:4 }}>⚠ Full name is required.</div>}
                 </div>
-              ))}
+                {/* Email */}
+                <div>
+                  <label style={{ fontSize:10.5, fontWeight:700, color:'rgba(255,255,255,0.4)', display:'block', marginBottom:5, letterSpacing:'.5px', textTransform:'uppercase' }}>Email Address</label>
+                  <input className="prog-input" type="email" value={email} placeholder="your@email.com"
+                    onChange={e => setEmail(e.target.value)} />
+                </div>
+                {/* Phone */}
+                <div>
+                  <label style={{ fontSize:10.5, fontWeight:700, color:'rgba(255,255,255,0.4)', display:'block', marginBottom:5, letterSpacing:'.5px', textTransform:'uppercase' }}>Phone Number</label>
+                  <input className="prog-input" value={phone} placeholder="e.g. 09XX-XXX-XXXX"
+                    onChange={e => setPhone(e.target.value)} />
+                </div>
+                {/* Institution */}
+                <div>
+                  <label style={{ fontSize:10.5, fontWeight:700, color:'rgba(255,255,255,0.4)', display:'block', marginBottom:5, letterSpacing:'.5px', textTransform:'uppercase' }}>Institution</label>
+                  <input className="prog-input" value={institution} placeholder="Your institution"
+                    onChange={e => setInst(e.target.value)} />
+                </div>
+                {/* Position */}
+                <div>
+                  <label style={{ fontSize:10.5, fontWeight:700, color:'rgba(255,255,255,0.4)', display:'block', marginBottom:5, letterSpacing:'.5px', textTransform:'uppercase' }}>Position / Designation</label>
+                  <input className="prog-input" value={position} placeholder="e.g. Faculty, Researcher"
+                    onChange={e => setPosition(e.target.value)} />
+                </div>
+              </div>
+              <div style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 14px', background:'rgba(255,255,255,0.04)', borderRadius:10, border:'1px solid rgba(255,255,255,0.08)' }}>
+                <span style={{ fontSize:16 }}>🪪</span>
+                <div>
+                  <div style={{ fontSize:10, color:'rgba(255,255,255,0.3)', fontWeight:700, letterSpacing:'.5px', textTransform:'uppercase', marginBottom:2 }}>Account Type</div>
+                  <div style={{ fontSize:12.5, fontWeight:800, color: user?.role==='ADMIN'?'#fca5a5':user?.role==='MEMBER'?'#6ee7b7':'#93c5fd' }}>
+                    {user?.role==='ADMIN'?'🛡 Administrator':user?.role==='MEMBER'?'✓ Member':'○ Guest'}
+                  </div>
+                </div>
+              </div>
               <div style={{ display:'flex', gap:10, marginTop:4 }}>
                 <button onClick={() => setFormModal(null)} style={{ flex:1, background:'rgba(255,255,255,0.06)', color:'rgba(255,255,255,0.55)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:12, padding:'12px', fontSize:13.5, fontWeight:700, cursor:'pointer', fontFamily:'inherit' }}>Cancel</button>
                 <button onClick={submitEnroll} disabled={submitting} style={{ flex:2, background: submitting?'#475569':ts(formModal).accent, color:'#fff', border:'none', borderRadius:12, padding:'12px', fontSize:14, fontWeight:800, cursor: submitting?'not-allowed':'pointer', fontFamily:'inherit' }}>
@@ -935,9 +1027,19 @@ function TrainingTab({ user }) {
             </div>
             <div style={{ paddingTop:44, paddingBottom:10, textAlign:'center', paddingLeft:22, paddingRight:22 }}>
               <div style={{ fontWeight:900, fontSize:16, color:'#fff' }}>{okModal.name}</div>
+              <div style={{ fontSize:12, color:'rgba(255,255,255,0.38)', marginTop:3 }}>{okModal.email}</div>
+              {okModal.position && <div style={{ fontSize:12, color:'rgba(255,255,255,0.32)', marginTop:2 }}>{okModal.position}</div>}
+              {okModal.institution && <div style={{ fontSize:12, color:'rgba(255,255,255,0.32)', marginTop:2 }}>🏛 {okModal.institution}</div>}
             </div>
             <div style={{ padding:'0 22px 22px', display:'flex', flexDirection:'column', gap:7 }}>
-              {[{i:'🎓',l:'PROGRAM',v:okModal.training.title},{i:'🏛',l:'ORGANIZER',v:okModal.training.org},{i:'⏱',l:'DURATION',v:okModal.training.duration}].map(r => (
+              {[
+                {i:'🎓',l:'PROGRAM',v:okModal.training.title},
+                {i:'🏛',l:'ORGANIZER',v:okModal.training.org},
+                {i:'⏱',l:'DURATION',v:okModal.training.duration},
+                {i:'📊',l:'LEVEL',v:okModal.training.level},
+                {i:'📅',l:'SCHEDULE',v:okModal.training.schedule?.split('|')[0]?.trim()},
+                {i:'👥',l:'SLOTS',v:`${okModal.training.enrolled}/${okModal.training.total} enrolled`},
+              ].filter(r=>r.v).map(r => (
                 <div key={r.l} style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 12px', background:'rgba(255,255,255,0.04)', borderRadius:10 }}>
                   <span style={{ fontSize:14 }}>{r.i}</span>
                   <div><div style={{ fontSize:10, color:'rgba(255,255,255,0.3)', fontWeight:700, letterSpacing:'.5px' }}>{r.l}</div><div style={{ fontSize:12.5, color:'#fff', fontWeight:700 }}>{r.v}</div></div>
