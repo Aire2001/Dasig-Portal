@@ -490,6 +490,7 @@ function TrCard({ t, idx, enrolled, onEnroll }) {
 const EV_FILTERS = ['All','Summit','Workshop','Seminar','Funding'];
 
 function EventsTab({ user }) {
+  const [active, setActive]       = useState('All');
   const [events, setEvents]       = useState([]);
   const [loading, setLoading]     = useState(true);
   const [myRegs, setMyRegs]       = useState({});
@@ -526,6 +527,8 @@ function EventsTab({ user }) {
   }, [user]);
 
   // Attach parsed date range to each event
+  const filteredEvents = active === 'All' ? events : events.filter(ev => ev.category === active);
+
   const calItems = events.map(ev => {
     const range = parseRange(ev.date);
     return { ...ev, startDate: range?.start || null, endDate: range?.end || null, _type: 'event' };
@@ -801,7 +804,7 @@ function EventsTab({ user }) {
         </div>
       )}
 
-      {/* Outlook Calendar — full view, no cards below */}
+      {/* Outlook Calendar */}
       {!loading && (
         <OutlookCal
           items={calItems}
@@ -812,6 +815,32 @@ function EventsTab({ user }) {
         />
       )}
       {loading && <div style={{ textAlign:'center', padding:'60px 0', color:'rgba(255,255,255,0.3)' }}><div style={{ fontSize:32, marginBottom:10 }}>⏳</div>Loading…</div>}
+
+      {/* Category filter chips */}
+      <div style={{ display:'flex', gap:8, marginBottom:20, flexWrap:'wrap', marginTop:4 }}>
+        {EV_FILTERS.map(f => (
+          <button key={f} onClick={() => setActive(f)} style={{
+            background: active === f ? 'linear-gradient(90deg,#f97316,#e11d48)' : 'rgba(255,255,255,0.06)',
+            color: active === f ? '#fff' : 'rgba(255,255,255,0.6)',
+            border: active === f ? 'none' : '1px solid rgba(255,255,255,0.12)',
+            borderRadius:20, padding:'7px 18px', fontSize:12.5, fontWeight:700,
+            cursor:'pointer', fontFamily:'inherit', transition:'all .15s',
+            boxShadow: active === f ? '0 4px 14px rgba(249,115,22,0.3)' : 'none',
+          }}>{f}</button>
+        ))}
+      </div>
+
+      {/* Event cards grid with Register buttons */}
+      {!loading && filteredEvents.length > 0 && (
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(300px,1fr))', gap:18 }}>
+          {filteredEvents.map((ev, i) => (
+            <EvCard key={ev.id} ev={ev} idx={i} registered={!!myRegs[ev.id]} onRegister={() => openForm(ev)} />
+          ))}
+        </div>
+      )}
+      {!loading && filteredEvents.length === 0 && (
+        <div style={{ textAlign:'center', padding:'40px 0', color:'rgba(255,255,255,0.28)', fontSize:14 }}>No events found.</div>
+      )}
     </>
   );
 }
