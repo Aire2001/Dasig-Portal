@@ -141,11 +141,13 @@ function itemsOnDay(items, day) {
   });
 }
 
-function OutlookCal({ items, onClickItem, onClickDay, conflictIds, getColors }) {
+function OutlookCal({ items, onClickItem, onClickDay, conflictIds, getColors, onRefresh, refreshing }) {
   const todayDate = new Date();
-  const [month, setMonth] = useState(null);
-  const [year,  setYear]  = useState(null);
-  const [init,  setInit]  = useState(false);
+  const [month, setMonth]         = useState(null);
+  const [year,  setYear]          = useState(null);
+  const [init,  setInit]          = useState(false);
+  const [showPicker, setShowPicker] = useState(false);
+  const [pickerYear, setPickerYear] = useState(todayDate.getFullYear());
 
   // Auto-jump to earliest month with items
   useEffect(() => {
@@ -157,6 +159,7 @@ function OutlookCal({ items, onClickItem, onClickDay, conflictIds, getColors }) 
     const base = earliest || todayDate;
     setMonth(base.getMonth());
     setYear(base.getFullYear());
+    setPickerYear(base.getFullYear());
     setInit(true);
   }, [items.length]);
 
@@ -171,7 +174,11 @@ function OutlookCal({ items, onClickItem, onClickDay, conflictIds, getColors }) 
     if (m === 11) { setMonth(0); setYear(y + 1); }
     else setMonth(m + 1);
   }
-  function goToday() { setMonth(todayDate.getMonth()); setYear(todayDate.getFullYear()); }
+  function goToday() { setMonth(todayDate.getMonth()); setYear(todayDate.getFullYear()); setShowPicker(false); }
+
+  function selectMonthYear(mon, yr) {
+    setMonth(mon); setYear(yr); setShowPicker(false);
+  }
 
   // Build 6-week grid
   const firstDow   = new Date(y, m, 1).getDay();
@@ -223,29 +230,83 @@ function OutlookCal({ items, onClickItem, onClickDay, conflictIds, getColors }) 
   return (
     <div style={{ background:'rgba(13,20,40,0.85)', border:'1px solid rgba(255,255,255,0.09)', borderRadius:20, overflow:'hidden', marginBottom:28 }}>
 
-      {/* Header */}
-      <div style={{ padding:'14px 20px', borderBottom:'1px solid rgba(255,255,255,0.07)', display:'flex', alignItems:'center', gap:10 }}>
+      {/* ── Header with month/year picker ── */}
+      <div style={{ padding:'14px 20px', borderBottom:'1px solid rgba(255,255,255,0.07)', display:'flex', alignItems:'center', gap:10, position:'relative' }}>
         <button onClick={goToday} style={{ background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.14)', borderRadius:8, padding:'6px 14px', color:'rgba(255,255,255,0.75)', fontSize:12.5, fontWeight:700, cursor:'pointer', fontFamily:'inherit', transition:'all .13s' }}
           onMouseEnter={e=>{e.currentTarget.style.background='rgba(255,255,255,0.13)';}}
           onMouseLeave={e=>{e.currentTarget.style.background='rgba(255,255,255,0.07)';}}
         >Today</button>
         <div style={{ display:'flex', gap:4 }}>
-          <button onClick={prevMon} style={{ background:'none', border:'none', color:'rgba(255,255,255,0.55)', fontSize:18, cursor:'pointer', width:30, height:30, display:'flex', alignItems:'center', justifyContent:'center', borderRadius:6, transition:'all .12s' }}
-            onMouseEnter={e=>{e.currentTarget.style.background='rgba(255,255,255,0.08)';e.currentTarget.style.color='#fff';}}
-            onMouseLeave={e=>{e.currentTarget.style.background='none';e.currentTarget.style.color='rgba(255,255,255,0.55)';}}
-          >‹</button>
-          <button onClick={nextMon} style={{ background:'none', border:'none', color:'rgba(255,255,255,0.55)', fontSize:18, cursor:'pointer', width:30, height:30, display:'flex', alignItems:'center', justifyContent:'center', borderRadius:6, transition:'all .12s' }}
-            onMouseEnter={e=>{e.currentTarget.style.background='rgba(255,255,255,0.08)';e.currentTarget.style.color='#fff';}}
-            onMouseLeave={e=>{e.currentTarget.style.background='none';e.currentTarget.style.color='rgba(255,255,255,0.55)';}}
-          >›</button>
+          {[['‹',prevMon],['›',nextMon]].map(([ch,fn])=>(
+            <button key={ch} onClick={fn} style={{ background:'none', border:'none', color:'rgba(255,255,255,0.55)', fontSize:18, cursor:'pointer', width:30, height:30, display:'flex', alignItems:'center', justifyContent:'center', borderRadius:6, transition:'all .12s' }}
+              onMouseEnter={e=>{e.currentTarget.style.background='rgba(255,255,255,0.08)';e.currentTarget.style.color='#fff';}}
+              onMouseLeave={e=>{e.currentTarget.style.background='none';e.currentTarget.style.color='rgba(255,255,255,0.55)';}}
+            >{ch}</button>
+          ))}
         </div>
-        <span style={{ color:'#fff', fontWeight:900, fontSize:18, letterSpacing:'-0.3px' }}>{MONTH_NAMES[m]} {y}</span>
-        {items.length > 0 && (
-          <span style={{ marginLeft:'auto', fontSize:11.5, color:'rgba(255,255,255,0.3)', fontWeight:500 }}>
-            {items.length} program{items.length !== 1 ? 's' : ''} this view
-          </span>
+
+        {/* Clickable month/year → opens picker */}
+        <button onClick={() => { setPickerYear(y); setShowPicker(s => !s); }} style={{ background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:10, padding:'6px 14px', color:'#fff', fontWeight:900, fontSize:18, letterSpacing:'-0.3px', cursor:'pointer', fontFamily:'inherit', display:'flex', alignItems:'center', gap:6, transition:'all .13s' }}
+          onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,0.12)'}
+          onMouseLeave={e=>e.currentTarget.style.background='rgba(255,255,255,0.06)'}
+        >
+          {MONTH_NAMES[m]} {y}
+          <span style={{ fontSize:10, opacity:0.6 }}>{showPicker ? '▲' : '▼'}</span>
+        </button>
+
+        {/* Month/Year picker dropdown */}
+        {showPicker && (
+          <div onClick={e=>e.stopPropagation()} style={{ position:'absolute', top:54, left:120, zIndex:9999, background:'#0d1424', border:'1px solid rgba(255,255,255,0.15)', borderRadius:16, padding:'16px', boxShadow:'0 20px 60px rgba(0,0,0,0.7)', minWidth:280 }}>
+            {/* Year selector */}
+            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:14 }}>
+              <button onClick={()=>setPickerYear(y=>y-1)} style={{ background:'rgba(255,255,255,0.07)', border:'none', borderRadius:8, width:32, height:32, color:'#fff', fontSize:16, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>‹</button>
+              <span style={{ color:'#fff', fontWeight:900, fontSize:16 }}>{pickerYear}</span>
+              <button onClick={()=>setPickerYear(y=>y+1)} style={{ background:'rgba(255,255,255,0.07)', border:'none', borderRadius:8, width:32, height:32, color:'#fff', fontSize:16, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>›</button>
+            </div>
+            {/* 12 months grid */}
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:6 }}>
+              {MONTH_NAMES.map((mn, mi) => {
+                const isCurrent = mi === m && pickerYear === y;
+                const isToday   = mi === todayDate.getMonth() && pickerYear === todayDate.getFullYear();
+                return (
+                  <button key={mi} onClick={() => selectMonthYear(mi, pickerYear)} style={{
+                    padding:'8px 4px', borderRadius:9, border:'none', fontSize:12.5, fontWeight:700,
+                    cursor:'pointer', fontFamily:'inherit', transition:'all .13s',
+                    background: isCurrent ? 'linear-gradient(90deg,#f97316,#e11d48)' : isToday ? 'rgba(249,115,22,0.15)' : 'rgba(255,255,255,0.05)',
+                    color: isCurrent ? '#fff' : isToday ? '#fb923c' : 'rgba(255,255,255,0.72)',
+                    boxShadow: isCurrent ? '0 3px 10px rgba(249,115,22,0.35)' : 'none',
+                  }}
+                  onMouseEnter={e=>{ if(!isCurrent) e.currentTarget.style.background='rgba(255,255,255,0.12)'; }}
+                  onMouseLeave={e=>{ if(!isCurrent) e.currentTarget.style.background= isToday?'rgba(249,115,22,0.15)':'rgba(255,255,255,0.05)'; }}
+                  >
+                    {mn.slice(0,3)}
+                  </button>
+                );
+              })}
+            </div>
+            <button onClick={()=>setShowPicker(false)} style={{ marginTop:12, width:'100%', background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:9, padding:'7px', color:'rgba(255,255,255,0.5)', fontSize:12, fontWeight:700, cursor:'pointer', fontFamily:'inherit' }}>Close</button>
+          </div>
         )}
+
+        {/* Refresh + item count */}
+        <div style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:10 }}>
+          <span style={{ fontSize:12, color:'rgba(255,255,255,0.35)', fontWeight:500 }}>
+            {items.filter(i=>{ const mo=i.startDate?.getMonth(), yr=i.startDate?.getFullYear(); return mo===m && yr===y; }).length} items in {MONTH_NAMES[m]}
+          </span>
+          {onRefresh && (
+            <button onClick={onRefresh} disabled={refreshing} style={{ background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.12)', borderRadius:8, padding:'5px 12px', color:'rgba(255,255,255,0.65)', fontSize:12, fontWeight:700, cursor: refreshing?'default':'pointer', fontFamily:'inherit', display:'flex', alignItems:'center', gap:5, transition:'all .13s' }}
+              onMouseEnter={e=>{ if(!refreshing) e.currentTarget.style.background='rgba(255,255,255,0.13)'; }}
+              onMouseLeave={e=>e.currentTarget.style.background='rgba(255,255,255,0.07)'}
+            >
+              <span style={{ display:'inline-block', animation: refreshing?'spin .7s linear infinite':'none' }}>↻</span>
+              {refreshing ? 'Refreshing…' : 'Refresh'}
+            </button>
+          )}
+        </div>
       </div>
+
+      {/* Close picker when clicking outside */}
+      {showPicker && <div onClick={()=>setShowPicker(false)} style={{ position:'fixed', inset:0, zIndex:9998 }} />}
 
       {/* Day-of-week headers */}
       <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', borderBottom:'1px solid rgba(255,255,255,0.06)' }}>
@@ -1334,20 +1395,24 @@ function CalendarTab({ user }) {
   const [trainings, setTrain]   = useState([]);
   const [myRegs, setMyRegs]     = useState({});
   const [myEnr, setMyEnr]       = useState({});
-  const [loading, setLoading]   = useState(true);
-  const [detail, setDetail]     = useState(null);
-  const [dayPanel, setDayPanel] = useState(null); // { date, items }
+  const [loading, setLoading]     = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [detail, setDetail]       = useState(null);
+  const [dayPanel, setDayPanel]   = useState(null); // { date, items }
   const navigate = useNavigate();
 
-  useEffect(() => {
+  function loadData(isRefresh = false) {
+    if (isRefresh) setRefreshing(true); else setLoading(true);
     Promise.all([
       api.events.list({ limit: 1000 }),
       api.training.list({ limit: 1000 }),
     ]).then(([ev, tr]) => {
       setEvents(ev.data || []);
       setTrain(tr.data || []);
-    }).catch(() => {}).finally(() => setLoading(false));
-  }, []);
+    }).catch(() => {}).finally(() => { setLoading(false); setRefreshing(false); });
+  }
+
+  useEffect(() => { loadData(); }, []);
 
   useEffect(() => {
     if (!user) return;
@@ -1396,7 +1461,8 @@ function CalendarTab({ user }) {
   }
 
   function handleClickItem(it) { setDetail(it); setDayPanel(null); }
-  function handleClickDay(date, its) { if (its.length > 0) { setDayPanel({ date, items: its }); setDetail(null); } }
+  // Always show day panel — even for empty dates (shows "No events" message)
+  function handleClickDay(date, its) { setDayPanel({ date, items: its }); setDetail(null); }
 
   return (
     <>
@@ -1503,6 +1569,8 @@ function CalendarTab({ user }) {
           onClickDay={handleClickDay}
           conflictIds={conflictIds}
           getColors={getColors}
+          onRefresh={() => loadData(true)}
+          refreshing={refreshing}
         />
       )}
     </>

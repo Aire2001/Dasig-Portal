@@ -75,8 +75,8 @@ export default function NewsPage() {
       <section style={{ padding: '32px 24px 80px' }}>
         <div style={{ maxWidth: 1120, margin: '0 auto' }}>
 
-          {/* filter badges */}
-          <div style={{ display: 'flex', gap: 8, marginBottom: 28, flexWrap: 'wrap' }}>
+          {/* filter badges + refresh */}
+          <div style={{ display: 'flex', gap: 8, marginBottom: 28, flexWrap: 'wrap', alignItems: 'center' }}>
             {BADGE_FILTERS.map(b => {
               const isActive = filter === b;
               const s = badgeStyle[b] || {};
@@ -93,6 +93,10 @@ export default function NewsPage() {
                 </button>
               );
             })}
+            <button onClick={() => { setLoading(true); const params = filter !== 'All' ? { badge: filter } : {}; api.news.list(params).then(r => setArticles(r.data || [])).catch(()=>{}).finally(()=>setLoading(false)); }} style={{ marginLeft:'auto', background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.12)', borderRadius:20, padding:'7px 16px', color:'rgba(255,255,255,0.65)', fontSize:12.5, fontWeight:700, cursor:'pointer', fontFamily:'inherit', display:'flex', alignItems:'center', gap:5, transition:'all .13s' }}
+              onMouseEnter={e=>{e.currentTarget.style.background='rgba(255,255,255,0.13)'; e.currentTarget.style.color='#fff';}}
+              onMouseLeave={e=>{e.currentTarget.style.background='rgba(255,255,255,0.07)'; e.currentTarget.style.color='rgba(255,255,255,0.65)';}}
+            >↻ Refresh</button>
           </div>
 
           {loading ? (

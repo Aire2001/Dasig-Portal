@@ -344,9 +344,15 @@ export default function MembersPage() {
                 background: 'linear-gradient(90deg,#f97316,#e11d48)',
                 WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
               }}>Member Institutions</div>
-              <h3 style={{ color: '#fff', fontSize: 18, fontWeight: 900, margin: 0 }}>
-                Click any institution to learn more
-              </h3>
+              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+                <h3 style={{ color: '#fff', fontSize: 18, fontWeight: 900, margin: 0 }}>
+                  Click any institution to learn more
+                </h3>
+                <button onClick={() => { setLoading(true); api.members.list().then(setMembers).catch(()=>{}).finally(()=>setLoading(false)); }} style={{ background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.12)', borderRadius:20, padding:'6px 16px', color:'rgba(255,255,255,0.65)', fontSize:12.5, fontWeight:700, cursor:'pointer', fontFamily:'inherit', display:'flex', alignItems:'center', gap:5, transition:'all .13s' }}
+                  onMouseEnter={e=>{e.currentTarget.style.background='rgba(255,255,255,0.13)'; e.currentTarget.style.color='#fff';}}
+                  onMouseLeave={e=>{e.currentTarget.style.background='rgba(255,255,255,0.07)'; e.currentTarget.style.color='rgba(255,255,255,0.65)';}}
+                >↻ Refresh</button>
+              </div>
             </div>
 
             {loading ? (
