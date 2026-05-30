@@ -245,7 +245,7 @@ export default function ChatbotPage() {
   }
 
   function newChat() {
-    setMessages([INIT_MSG]);
+    setMessages([{ from:'bot', text: makeInitMsg(user), time: new Date() }]);
     setTotalAsked(0);
     setTotalMatched(0);
     setMatchRate(null);
@@ -544,7 +544,7 @@ export default function ChatbotPage() {
                   value={input}
                   onChange={handleInputChange}
                   onKeyDown={onKey}
-                  placeholder={user ? `Ask Haribon, ${user.name.split(' ')[0]}…` : 'Ask Haribon about events, membership, training, policies…'}
+                  placeholder={user ? `Ask Haribon, ${(user.name || 'there').split(' ')[0]}…` : 'Ask Haribon about events, membership, training, policies…'}
                   disabled={thinking}
                   style={{ maxHeight: 120, overflowY: 'auto' }}
                 />

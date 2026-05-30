@@ -1590,12 +1590,13 @@ const TR_CAL_COLORS = {
 
 function AdminCalendarTab({ showToast, setTab }) {
   const today      = new Date();
-  const [month, setMonth] = useState(today.getMonth());
-  const [year,  setYear]  = useState(today.getFullYear());
+  const [month, setMonth]         = useState(today.getMonth());
+  const [year,  setYear]          = useState(today.getFullYear());
   const [events,    setEvents]    = useState([]);
   const [trainings, setTrainings] = useState([]);
   const [loading,   setLoading]   = useState(true);
   const [detail,    setDetail]    = useState(null);
+  const [selectedDay, setSelectedDay] = useState(null); // ALL hooks must be at the top
 
   useEffect(() => {
     Promise.all([
@@ -1685,8 +1686,6 @@ function AdminCalendarTab({ showToast, setTab }) {
 
   const evCount = allItems.filter(i=>i._type==='event').length;
   const trCount = allItems.filter(i=>i._type==='training').length;
-
-  const [selectedDay, setSelectedDay] = useState(null); // { day, items }
 
   function handleMiniClick(d) {
     if (d < 1 || d > daysInMon) return;

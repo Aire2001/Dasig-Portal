@@ -556,6 +556,21 @@ function EventsTab({ user }) {
 
   const filteredEvents = active === 'All' ? events : events.filter(ev => ev.category === active);
 
+  // Conflict IDs: registered events whose date ranges overlap each other
+  const registeredEvItems = events.filter(ev => myRegs[ev.id]).map(ev => {
+    const r = parseRange(ev.date);
+    return { ...ev, startDate: r?.start||null, endDate: r?.end||null };
+  });
+  const conflictIds = new Set();
+  for (let i = 0; i < registeredEvItems.length; i++) {
+    for (let j = i+1; j < registeredEvItems.length; j++) {
+      const a = registeredEvItems[i], b = registeredEvItems[j];
+      if (!a.startDate || !b.startDate) continue;
+      const aE = a.endDate||a.startDate, bE = b.endDate||b.startDate;
+      if (a.startDate <= bE && b.startDate <= aE) { conflictIds.add(a.id); conflictIds.add(b.id); }
+    }
+  }
+
   // Check conflict before opening form
   function openForm(ev) {
     if (!user) { setErrModal('login'); return; }

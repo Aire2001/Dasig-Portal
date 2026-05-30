@@ -127,7 +127,8 @@ router.put('/password', verifyToken, async (req, res) => {
     return res.status(400).json({ error: 'New password must be at least 8 characters' });
   }
 
-  const { data: user } = await supabase.from('users').select('password_hash').eq('id', req.user.id).single();
+  const { data: user, error: fetchErr } = await supabase.from('users').select('password_hash').eq('id', req.user.id).single();
+  if (fetchErr || !user) return res.status(404).json({ error: 'User not found' });
   const match = await bcrypt.compare(current_password, user.password_hash);
   if (!match) return res.status(401).json({ error: 'Current password is incorrect' });
 

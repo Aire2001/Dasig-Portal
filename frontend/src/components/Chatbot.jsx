@@ -38,10 +38,10 @@ function getGreeting(user) {
     return "Hi! I'm Haribon 🦅 — the DASIG AI Assistant.\n\nYou're browsing as a guest. Ask me about events, membership, training, and more!";
   }
   if (user.role === 'ADMIN') {
-    return `Hello, ${user.name.split(' ')[0]} 🦅\n\nI'm Haribon, your DASIG AI Assistant. Need help with the portal, member management, or event information?`;
+    return `Hello, ${(user.name || 'Admin').split(' ')[0]} 🦅\n\nI'm Haribon, your DASIG AI Assistant. Need help with the portal, member management, or event information?`;
   }
   if (user.role === 'MEMBER') {
-    return `Welcome back, ${user.name.split(' ')[0]}! 🦅\n\nI'm Haribon — your DASIG AI. Ask about events, training programs, funding opportunities, or partnerships.`;
+    return `Welcome back, ${(user.name || 'there').split(' ')[0]}! 🦅\n\nI'm Haribon — your DASIG AI. Ask about events, training programs, funding opportunities, or partnerships.`;
   }
   return "Hi! I'm Haribon 🦅 — the DASIG AI Assistant.\n\nAsk me about events, training, membership, or policies!";
 }
@@ -359,7 +359,7 @@ export default function Chatbot() {
                 value={input}
                 onChange={e => setInput(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && !thinking && send()}
-                placeholder={user ? `Ask Haribon, ${user.name.split(' ')[0]}…` : 'Ask Haribon…'}
+                placeholder={user ? `Ask Haribon, ${(user.name || 'there').split(' ')[0]}…` : 'Ask Haribon…'}
                 disabled={thinking}
               />
               <button onClick={() => send()} disabled={thinking || !input.trim()} style={{
