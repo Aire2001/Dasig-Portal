@@ -15,31 +15,46 @@ export default function ParticleBackground({ density = 60 }) {
     resize();
     window.addEventListener('resize', resize);
 
-    const particles = Array.from({ length: density }, () => ({
-      x:     Math.random() * canvas.width,
-      y:     Math.random() * canvas.height,
-      r:     Math.random() * 1.6 + 0.4,
-      vx:    (Math.random() - 0.5) * 0.38,
-      vy:    (Math.random() - 0.5) * 0.38,
-      alpha: Math.random() * 0.45 + 0.12,
-      pulse: Math.random() * Math.PI * 2,
-    }));
+    // More vibrant particles — mix of blue/orange/white tones
+    const particles = Array.from({ length: density }, () => {
+      const hues = [
+        `rgba(148,163,184,`,   // slate
+        `rgba(99,102,241,`,    // indigo
+        `rgba(249,115,22,`,    // orange
+        `rgba(96,165,250,`,    // blue
+        `rgba(255,255,255,`,   // white
+      ];
+      return {
+        x:     Math.random() * canvas.width,
+        y:     Math.random() * canvas.height,
+        r:     Math.random() * 1.8 + 0.4,
+        vx:    (Math.random() - 0.5) * 0.40,
+        vy:    (Math.random() - 0.5) * 0.40,
+        alpha: Math.random() * 0.55 + 0.15,
+        pulse: Math.random() * Math.PI * 2,
+        color: hues[Math.floor(Math.random() * hues.length)],
+      };
+    });
 
+    // Brighter, more vibrant glowing orbs
     const orbs = [
-      { x: canvas.width * 0.75, y: canvas.height * 0.25, r: 200, color: 'rgba(79,70,229,0.14)',  vx:  0.20, vy:  0.13 },
-      { x: canvas.width * 0.15, y: canvas.height * 0.65, r: 150, color: 'rgba(249,115,22,0.10)', vx: -0.15, vy: -0.10 },
-      { x: canvas.width * 0.50, y: canvas.height * 0.50, r: 120, color: 'rgba(225,29,72,0.07)',  vx:  0.11, vy: -0.14 },
+      { x: canvas.width * 0.78, y: canvas.height * 0.22, r: 260, color: 'rgba(79,70,229,0.20)',  vx:  0.18, vy:  0.12 },
+      { x: canvas.width * 0.12, y: canvas.height * 0.68, r: 200, color: 'rgba(249,115,22,0.15)', vx: -0.14, vy: -0.10 },
+      { x: canvas.width * 0.52, y: canvas.height * 0.48, r: 180, color: 'rgba(225,29,72,0.10)',  vx:  0.10, vy: -0.13 },
+      { x: canvas.width * 0.30, y: canvas.height * 0.25, r: 140, color: 'rgba(6,182,212,0.08)',  vx: -0.12, vy:  0.09 },
     ];
 
     function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+      // Draw glowing orbs
       orbs.forEach(o => {
         o.x += o.vx; o.y += o.vy;
         if (o.x < -o.r || o.x > canvas.width  + o.r) o.vx *= -1;
         if (o.y < -o.r || o.y > canvas.height + o.r) o.vy *= -1;
         const g = ctx.createRadialGradient(o.x, o.y, 0, o.x, o.y, o.r);
         g.addColorStop(0, o.color);
+        g.addColorStop(0.5, o.color.replace(/[\d.]+\)$/, '0.04)'));
         g.addColorStop(1, 'transparent');
         ctx.beginPath();
         ctx.arc(o.x, o.y, o.r, 0, Math.PI * 2);
@@ -47,30 +62,32 @@ export default function ParticleBackground({ density = 60 }) {
         ctx.fill();
       });
 
+      // Draw particles
       particles.forEach(p => {
         p.x += p.vx; p.y += p.vy; p.pulse += 0.022;
         if (p.x < 0) p.x = canvas.width;
         if (p.x > canvas.width)  p.x = 0;
         if (p.y < 0) p.y = canvas.height;
         if (p.y > canvas.height) p.y = 0;
-        const a = p.alpha * (0.7 + 0.3 * Math.sin(p.pulse));
+        const a = p.alpha * (0.65 + 0.35 * Math.sin(p.pulse));
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(148,163,184,${a})`;
+        ctx.fillStyle = `${p.color}${a.toFixed(2)})`;
         ctx.fill();
       });
 
+      // Connecting lines between nearby particles
       for (let i = 0; i < particles.length; i++) {
         for (let j = i + 1; j < particles.length; j++) {
           const dx = particles[i].x - particles[j].x;
           const dy = particles[i].y - particles[j].y;
           const d  = Math.sqrt(dx * dx + dy * dy);
-          if (d < 85) {
+          if (d < 90) {
             ctx.beginPath();
             ctx.moveTo(particles[i].x, particles[i].y);
             ctx.lineTo(particles[j].x, particles[j].y);
-            ctx.strokeStyle = `rgba(148,163,184,${0.11 * (1 - d / 85)})`;
-            ctx.lineWidth = 0.6;
+            ctx.strokeStyle = `rgba(148,163,184,${(0.13 * (1 - d / 90)).toFixed(3)})`;
+            ctx.lineWidth = 0.65;
             ctx.stroke();
           }
         }

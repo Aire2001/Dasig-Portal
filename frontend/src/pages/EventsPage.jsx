@@ -41,6 +41,7 @@ export default function EventsPage() {
   const [submitting, setSubmitting] = useState(false);
   // map of eventId -> { attended: bool } for the logged-in user
   const [myRegs, setMyRegs]       = useState({});
+  const [cancelling, setCancelling] = useState(null); // eventId being cancelled
 
   // form fields
   const [fname, setFname]             = useState('');
@@ -66,6 +67,20 @@ export default function EventsPage() {
       })
       .catch(() => {});
   }, [user]);
+
+  async function cancelRegistration(ev) {
+    if (!window.confirm(`Cancel your registration for "${ev.title}"?`)) return;
+    setCancelling(ev.id);
+    try {
+      await api.events.unregister(ev.id);
+      setMyRegs(prev => { const n = { ...prev }; delete n[ev.id]; return n; });
+      setEvents(prev => prev.map(e => e.id === ev.id ? { ...e, enrolled: Math.max(0, e.enrolled - 1) } : e));
+    } catch (err) {
+      setErrModal(err.message || 'Failed to cancel registration');
+    } finally {
+      setCancelling(null);
+    }
+  }
 
   async function markAttended(ev) {
     try {
@@ -262,9 +277,20 @@ export default function EventsPage() {
             boxShadow:'0 40px 120px rgba(0,0,0,0.8)', overflow:'hidden',
             border:'1px solid rgba(255,255,255,0.1)',
             animation:'fbModalIn 0.28s cubic-bezier(.34,1.56,.64,1)',
+            maxHeight:'92vh', display:'flex', flexDirection:'column',
           }}>
             {/* Header */}
-            <div style={{ background: gradient(okModal.event), padding:'36px 32px 60px', textAlign:'center', position:'relative' }}>
+            <div style={{ background: gradient(okModal.event), padding:'36px 32px 60px', textAlign:'center', position:'relative', flexShrink:0 }}>
+              {/* ✕ Close button */}
+              <button onClick={() => setOkModal(null)} style={{
+                position:'absolute', top:14, right:14, width:34, height:34, borderRadius:'50%',
+                background:'rgba(255,255,255,0.18)', border:'1px solid rgba(255,255,255,0.3)',
+                color:'#fff', fontSize:16, cursor:'pointer', display:'flex', alignItems:'center',
+                justifyContent:'center', backdropFilter:'blur(4px)', transition:'all .15s',
+              }}
+              onMouseEnter={e => e.currentTarget.style.background='rgba(255,255,255,0.3)'}
+              onMouseLeave={e => e.currentTarget.style.background='rgba(255,255,255,0.18)'}
+              >✕</button>
               <div style={{ fontSize:13, color:'rgba(255,255,255,0.6)', fontWeight:700, letterSpacing:1, textTransform:'uppercase', marginBottom:8 }}>Registration Confirmed</div>
               <div style={{ color:'#fff', fontSize:22, fontWeight:900, lineHeight:1.3 }}>{okModal.event.title}</div>
               <div style={{ color:'rgba(255,255,255,0.65)', fontSize:13, marginTop:6 }}>{okModal.event.category}</div>
@@ -302,7 +328,7 @@ export default function EventsPage() {
             <div style={{ height:1, background:'rgba(255,255,255,0.07)', margin:'0 32px' }} />
 
             {/* Event detail rows */}
-            <div style={{ padding:'20px 32px 28px', display:'flex', flexDirection:'column', gap:10 }}>
+            <div style={{ padding:'20px 32px 28px', display:'flex', flexDirection:'column', gap:10, overflowY:'auto' }}>
               {[
                 { icon:'📅', label:'DATE',       value: okModal.event.date },
                 { icon:'📍', label:'VENUE',      value: okModal.event.venue },
@@ -444,8 +470,10 @@ export default function EventsPage() {
                 <EventCard key={ev.id}
                   ev={{ ...ev, bg: cardGradients[ev.category] || cardGradients.Summit }}
                   myReg={myRegs[ev.id]}
+                  isCancelling={cancelling === ev.id}
                   onRegister={() => openForm(ev)}
-                  onAttend={() => markAttended(ev)} />
+                  onAttend={() => markAttended(ev)}
+                  onCancel={() => cancelRegistration(ev)} />
               ))}
             </div>
           )}
@@ -456,7 +484,7 @@ export default function EventsPage() {
   );
 }
 
-function EventCard({ ev, myReg, onRegister, onAttend }) {
+function EventCard({ ev, myReg, isCancelling, onRegister, onAttend, onCancel }) {
   const [tilt, setTilt]       = useState({ x: 0, y: 0 });
   const [shine, setShine]     = useState({ x: 50, y: 50 });
   const [hovered, setHovered] = useState(false);
@@ -589,19 +617,33 @@ function EventCard({ ev, myReg, onRegister, onAttend }) {
               color:'#34d399', textAlign:'center',
             }}>✅ Attended</div>
           ) : registered ? (
-            <div style={{ display:'flex', gap:8, position:'relative', zIndex:1 }}>
-              <div style={{
-                flex:1, background:'rgba(74,222,128,0.12)', border:'1.5px solid rgba(74,222,128,0.3)',
-                borderRadius:12, padding:'11px', fontSize:12.5, fontWeight:700,
-                color:'#4ade80', textAlign:'center',
-              }}>✓ Registered</div>
-              <button onClick={onAttend} style={{
-                flex:1, background:'linear-gradient(90deg,#059669,#0891b2)',
-                color:'#fff', border:'none', borderRadius:12,
-                padding:'11px', fontSize:12.5, fontWeight:800,
-                cursor:'pointer', fontFamily:'inherit',
-                boxShadow:'0 4px 14px rgba(5,150,105,0.35)',
-              }}>Mark Attended</button>
+            <div style={{ display:'flex', flexDirection:'column', gap:8, position:'relative', zIndex:1 }}>
+              <div style={{ display:'flex', gap:8 }}>
+                <div style={{
+                  flex:1, background:'rgba(74,222,128,0.12)', border:'1.5px solid rgba(74,222,128,0.3)',
+                  borderRadius:12, padding:'11px', fontSize:12.5, fontWeight:700,
+                  color:'#4ade80', textAlign:'center',
+                }}>✓ Registered</div>
+                <button onClick={onAttend} style={{
+                  flex:1, background:'linear-gradient(90deg,#059669,#0891b2)',
+                  color:'#fff', border:'none', borderRadius:12,
+                  padding:'11px', fontSize:12.5, fontWeight:800,
+                  cursor:'pointer', fontFamily:'inherit',
+                  boxShadow:'0 4px 14px rgba(5,150,105,0.35)',
+                }}>Mark Attended</button>
+              </div>
+              <button onClick={onCancel} disabled={isCancelling} style={{
+                width:'100%', background:'transparent',
+                border:'1.5px solid rgba(225,29,72,0.35)',
+                borderRadius:12, padding:'9px', fontSize:12.5, fontWeight:700,
+                color:'rgba(244,63,94,0.85)', cursor: isCancelling ? 'not-allowed' : 'pointer',
+                fontFamily:'inherit', transition:'all .15s',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.background='rgba(225,29,72,0.12)'; e.currentTarget.style.color='#f43f5e'; }}
+              onMouseLeave={e => { e.currentTarget.style.background='transparent'; e.currentTarget.style.color='rgba(244,63,94,0.85)'; }}
+              >
+                {isCancelling ? '⏳ Cancelling…' : '✕ Cancel Registration'}
+              </button>
             </div>
           ) : (
             <button onClick={onRegister} disabled={full}

@@ -3,56 +3,81 @@ import { api } from '../api';
 
 const AuthContext = createContext(null);
 
-export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+const TOKEN_KEY = 'dasig_token';
+const USER_KEY  = 'dasig_user';
 
+function getCachedUser() {
+  try {
+    const raw = localStorage.getItem(USER_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+}
+
+export function AuthProvider({ children }) {
+  // Initialise from cache so the UI never flashes "logged out" on refresh
+  const [user, setUser]       = useState(getCachedUser);
+  const [loading, setLoading] = useState(!!localStorage.getItem(TOKEN_KEY));
+
+  function applyUser(u) {
+    if (u) {
+      localStorage.setItem(USER_KEY, JSON.stringify(u));
+    } else {
+      localStorage.removeItem(USER_KEY);
+      localStorage.removeItem(TOKEN_KEY);
+    }
+    setUser(u);
+  }
+
+  // Validate token in background on mount; don't clear until we get a 401
   useEffect(() => {
-    const token = localStorage.getItem('dasig_token');
+    const token = localStorage.getItem(TOKEN_KEY);
     if (!token) { setLoading(false); return; }
+
     fetch('http://localhost:4000/api/auth/me', {
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      headers: { Authorization: `Bearer ${token}` },
     })
       .then(res => {
         if (res.status === 401 || res.status === 403) {
-          localStorage.removeItem('dasig_token');
+          // Token genuinely invalid — clear everything
+          applyUser(null);
           return null;
         }
         return res.ok ? res.json() : null;
       })
-      .then(u => { if (u) setUser(u); })
-      .catch(() => {})
+      .then(u => { if (u) applyUser(u); })
+      .catch(() => {
+        // Network error / backend down — keep cached user, don't force logout
+      })
       .finally(() => setLoading(false));
   }, []);
 
   async function login(email, password) {
     const data = await api.auth.login(email, password);
-    localStorage.setItem('dasig_token', data.token);
+    localStorage.setItem(TOKEN_KEY, data.token);
     sessionStorage.setItem('dasig_welcome', data.user.name || 'back');
-    setUser(data.user);
+    applyUser(data.user);
     return data.user;
   }
 
   async function register(body) {
     const data = await api.auth.register(body);
-    localStorage.setItem('dasig_token', data.token);
+    localStorage.setItem(TOKEN_KEY, data.token);
     sessionStorage.setItem('dasig_welcome', data.user.name || 'back');
-    setUser(data.user);
+    applyUser(data.user);
     return data.user;
   }
 
   async function refreshUser() {
-    const token = localStorage.getItem('dasig_token');
+    const token = localStorage.getItem(TOKEN_KEY);
     if (!token) return;
     try {
       const u = await api.auth.me();
-      setUser(u);
+      applyUser(u);
     } catch (_) {}
   }
 
   function logout() {
-    localStorage.removeItem('dasig_token');
-    setUser(null);
+    applyUser(null);
   }
 
   return (
