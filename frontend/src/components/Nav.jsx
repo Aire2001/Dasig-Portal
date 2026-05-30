@@ -351,8 +351,11 @@ export default function Nav() {
                   className={`nav-link${active ? ' active' : ''}`}
                   onClick={() => navigate(link.to)}
                   style={link.highlight ? {
-                    background: 'rgba(249,115,22,0.1)', color: '#f97316',
-                    border: '1px solid rgba(249,115,22,0.25)', borderRadius: 8,
+                    background: active ? 'rgba(249,115,22,0.22)' : 'rgba(249,115,22,0.1)',
+                    color: '#f97316',
+                    border: `1px solid rgba(249,115,22,${active ? '0.5' : '0.25'})`,
+                    borderRadius: 8,
+                    boxShadow: active ? '0 0 12px rgba(249,115,22,0.3)' : 'none',
                   } : {}}
                 >
                   {link.label}
@@ -360,42 +363,55 @@ export default function Nav() {
               );
             })}
 
-            {/* More dropdown */}
+            {/* More dropdown — button turns orange if on a "More" page */}
             <div ref={moreRef} style={{ position: 'relative' }}>
-              <button
-                className="nav-link"
-                onClick={() => setMoreOpen(o => !o)}
-                style={{ display: 'flex', alignItems: 'center', gap: 4 }}
-              >
-                More
-                <span style={{
-                  fontSize: 9, marginTop: 1, display: 'inline-block',
-                  transform: moreOpen ? 'rotate(180deg)' : 'rotate(0)',
-                  transition: 'transform 0.18s',
-                }}>▼</span>
-              </button>
+              {(() => {
+                const moreActive = moreLinks.some(l => location.pathname.startsWith(l.to));
+                return (
+                  <button
+                    className={`nav-link${moreActive ? ' active' : ''}`}
+                    onClick={() => setMoreOpen(o => !o)}
+                    style={{ display: 'flex', alignItems: 'center', gap: 4 }}
+                  >
+                    More
+                    <span style={{
+                      fontSize: 9, marginTop: 1, display: 'inline-block',
+                      transform: moreOpen ? 'rotate(180deg)' : 'rotate(0)',
+                      transition: 'transform 0.18s',
+                    }}>▼</span>
+                  </button>
+                );
+              })()}
               {moreOpen && (
                 <div style={{
                   position: 'absolute', top: 'calc(100% + 8px)', left: 0,
                   background: 'rgba(0,13,40,0.98)', border: '1px solid rgba(255,255,255,0.1)',
-                  borderRadius: 12, padding: '6px', minWidth: 180,
+                  borderRadius: 12, padding: '6px', minWidth: 190,
                   boxShadow: '0 16px 48px rgba(0,0,0,0.6)',
                   animation: 'dropIn 0.18s ease', zIndex: 1000,
                 }}>
-                  {moreLinks.map(link => (
-                    <button key={link.label} onClick={() => { navigate(link.to); setMoreOpen(false); }} style={{
-                      display: 'block', width: '100%', textAlign: 'left',
-                      background: 'transparent', border: 'none', borderRadius: 8,
-                      padding: '9px 14px', fontSize: 13, color: 'rgba(255,255,255,0.7)',
-                      cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600,
-                      transition: 'all 0.14s',
-                    }}
-                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.07)'; e.currentTarget.style.color = '#fff'; }}
-                    onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(255,255,255,0.7)'; }}
-                    >
-                      {link.label}
-                    </button>
-                  ))}
+                  {moreLinks.map(link => {
+                    const isLinkActive = location.pathname.startsWith(link.to);
+                    return (
+                      <button key={link.label} onClick={() => { navigate(link.to); setMoreOpen(false); }} style={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                        width: '100%', textAlign: 'left',
+                        background: isLinkActive ? 'rgba(249,115,22,0.12)' : 'transparent',
+                        border: 'none', borderRadius: 8,
+                        padding: '9px 14px', fontSize: 13,
+                        color: isLinkActive ? '#f97316' : 'rgba(255,255,255,0.7)',
+                        cursor: 'pointer', fontFamily: 'inherit', fontWeight: isLinkActive ? 800 : 600,
+                        transition: 'all 0.14s',
+                        borderLeft: isLinkActive ? '3px solid #f97316' : '3px solid transparent',
+                      }}
+                      onMouseEnter={e => { if (!isLinkActive) { e.currentTarget.style.background = 'rgba(255,255,255,0.07)'; e.currentTarget.style.color = '#fff'; } }}
+                      onMouseLeave={e => { if (!isLinkActive) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(255,255,255,0.7)'; } }}
+                      >
+                        <span>{link.label}</span>
+                        {isLinkActive && <span style={{ fontSize: 10, background: 'rgba(249,115,22,0.2)', color: '#f97316', borderRadius: 5, padding: '1px 7px', fontWeight: 800 }}>current</span>}
+                      </button>
+                    );
+                  })}
                 </div>
               )}
             </div>
