@@ -16,6 +16,21 @@ const badgeStyle = {
 };
 const defaultBadge = badgeStyle.Announcement;
 
+// Curated Unsplash photo seeds per category — consistent, real photos, no API key needed
+const COVER_SEEDS = {
+  Announcement: 'conference-summit-meeting',
+  Policy:       'government-document-law',
+  Funding:      'finance-scholarship-money',
+  Training:     'education-classroom-learning',
+  Research:     'science-research-laboratory',
+};
+
+function coverUrl(article) {
+  const seed = COVER_SEEDS[article.badge] || 'education-conference';
+  // Unique per article (same badge always gives different photo per article ID)
+  return `https://picsum.photos/seed/${seed}-${article.id || 1}/800/400`;
+}
+
 const NEWS_CSS = `
   @keyframes modalIn { from{transform:scale(0.88) translateY(20px);opacity:0} to{transform:scale(1) translateY(0);opacity:1} }
   @keyframes fadeIn  { from{opacity:0} to{opacity:1} }
@@ -161,7 +176,8 @@ export default function NewsPage() {
 }
 
 function NewsCard({ article: a, idx, onOpen }) {
-  const [hov, setHov] = useState(false);
+  const [hov, setHov]       = useState(false);
+  const [imgOk, setImgOk]   = useState(true);
   const bs = badgeStyle[a.badge] || defaultBadge;
 
   return (
@@ -171,51 +187,69 @@ function NewsCard({ article: a, idx, onOpen }) {
       onMouseLeave={() => setHov(false)}
       style={{
         borderRadius: 18, overflow: 'hidden',
-        background: 'rgba(15,23,42,0.92)',
-        border: `1px solid ${hov && !a.locked ? 'rgba(249,115,22,0.4)' : 'rgba(255,255,255,0.07)'}`,
-        boxShadow: hov && !a.locked ? '0 14px 42px rgba(249,115,22,0.12)' : '0 4px 16px rgba(0,0,0,0.3)',
-        transform: hov && !a.locked ? 'translateY(-5px)' : 'none',
+        background: 'rgba(12,18,36,0.96)',
+        border: `1px solid ${hov && !a.locked ? 'rgba(249,115,22,0.45)' : 'rgba(255,255,255,0.08)'}`,
+        boxShadow: hov && !a.locked ? '0 18px 48px rgba(0,0,0,0.45)' : '0 4px 18px rgba(0,0,0,0.35)',
+        transform: hov && !a.locked ? 'translateY(-6px)' : 'none',
         transition: 'all .22s cubic-bezier(.34,1.56,.64,1)',
         cursor: a.locked ? 'default' : 'pointer',
-        opacity: a.locked ? 0.78 : 1,
         animation: `cardUp .35s ease ${idx * 0.05}s both`,
+        display: 'flex', flexDirection: 'column',
       }}
     >
-      {/* Cover image */}
-      <div style={{ background: bs.accent, padding: '26px 22px 20px', position: 'relative', overflow: 'hidden', minHeight: 148, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-        <div style={{ position:'absolute', inset:0, backgroundImage:`radial-gradient(circle at 72% 28%, rgba(255,255,255,0.14) 0%, transparent 58%)`, pointerEvents:'none' }} />
-        <div style={{ position:'absolute', right:-6, top:-6, fontSize:96, opacity:0.13, lineHeight:1, userSelect:'none', transform: hov ? 'scale(1.07) rotate(5deg)' : 'scale(1)', transition:'transform .3s ease' }}>
-          {a.icon || bs.icon}
-        </div>
-        {a.locked && (
-          <div style={{ position:'absolute', inset:0, background:'rgba(0,0,0,0.5)', display:'flex', alignItems:'center', justifyContent:'center', flexDirection:'column', gap:6, zIndex:2 }}>
-            <div style={{ fontSize:26 }}>🔒</div>
-            <div style={{ color:'rgba(255,255,255,0.75)', fontSize:11.5, fontWeight:700 }}>Members Only</div>
+      {/* ── Actual photo cover ── */}
+      <div style={{ position:'relative', height:200, overflow:'hidden', flexShrink:0 }}>
+        {imgOk ? (
+          <img
+            src={coverUrl(a)}
+            alt={a.title}
+            onError={() => setImgOk(false)}
+            style={{ width:'100%', height:'100%', objectFit:'cover', display:'block', transition:'transform .35s ease', transform: hov ? 'scale(1.06)' : 'scale(1)' }}
+          />
+        ) : (
+          /* Fallback: gradient when photo fails to load */
+          <div style={{ width:'100%', height:'100%', background: bs.accent, display:'flex', alignItems:'center', justifyContent:'center', fontSize:64, opacity:0.5 }}>
+            {a.icon || bs.icon}
           </div>
         )}
-        <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:10, position:'relative', zIndex:1 }}>
-          <span style={{ background:'rgba(255,255,255,0.22)', color:'#fff', borderRadius:6, padding:'3px 10px', fontSize:10.5, fontWeight:700 }}>
+
+        {/* Gradient overlay at bottom for text legibility */}
+        <div style={{ position:'absolute', inset:0, background:'linear-gradient(to bottom, rgba(0,0,0,0) 30%, rgba(0,0,0,0.72) 100%)', pointerEvents:'none' }} />
+
+        {/* Badge + date pinned to bottom-left of photo */}
+        <div style={{ position:'absolute', bottom:12, left:14, display:'flex', alignItems:'center', gap:8 }}>
+          <span style={{ background: bs.accent, color:'#fff', borderRadius:6, padding:'4px 10px', fontSize:10.5, fontWeight:800, boxShadow:'0 2px 8px rgba(0,0,0,0.4)' }}>
             {bs.icon} {a.badge}
           </span>
-          <span style={{ color:'rgba(255,255,255,0.65)', fontSize:11.5 }}>{String(a.date).slice(0,10)}</span>
+          <span style={{ color:'rgba(255,255,255,0.8)', fontSize:11.5, fontWeight:600, textShadow:'0 1px 4px rgba(0,0,0,0.8)' }}>
+            {String(a.date).slice(0,10)}
+          </span>
         </div>
-        <div style={{ color:'#fff', fontSize:15.5, fontWeight:900, lineHeight:1.35, position:'relative', zIndex:1, textShadow:'0 1px 8px rgba(0,0,0,0.45)' }}>
-          {a.title}
-        </div>
+
+        {/* Members-only lock overlay */}
+        {a.locked && (
+          <div style={{ position:'absolute', inset:0, background:'rgba(0,0,0,0.55)', display:'flex', alignItems:'center', justifyContent:'center', flexDirection:'column', gap:8 }}>
+            <div style={{ fontSize:32 }}>🔒</div>
+            <div style={{ color:'#fff', fontSize:13, fontWeight:800, letterSpacing:'.3px' }}>Members Only</div>
+          </div>
+        )}
       </div>
 
-      {/* Card body */}
-      <div style={{ padding:'15px 20px 17px' }}>
+      {/* ── Card body ── */}
+      <div style={{ padding:'16px 18px 18px', flex:1, display:'flex', flexDirection:'column' }}>
+        <h3 style={{ color:'#fff', fontSize:15, fontWeight:900, lineHeight:1.4, marginBottom:8, display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden' }}>
+          {a.title}
+        </h3>
         {a.excerpt && (
-          <p style={{ color:'rgba(255,255,255,0.5)', fontSize:12.5, lineHeight:1.65, marginBottom:12, overflow:'hidden', display:'-webkit-box', WebkitLineClamp:3, WebkitBoxOrient:'vertical' }}>
+          <p style={{ color:'rgba(255,255,255,0.5)', fontSize:12.5, lineHeight:1.65, marginBottom:'auto', overflow:'hidden', display:'-webkit-box', WebkitLineClamp:3, WebkitBoxOrient:'vertical', paddingBottom:12 }}>
             {a.excerpt}
           </p>
         )}
-        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-          <span style={{ fontSize:11, color:'rgba(255,255,255,0.28)' }}>DASIG Consortium</span>
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginTop:12, paddingTop:12, borderTop:'1px solid rgba(255,255,255,0.06)' }}>
+          <span style={{ fontSize:11, color:'rgba(255,255,255,0.28)', fontWeight:500 }}>DASIG Consortium</span>
           {!a.locked && (
-            <span style={{ fontSize:12.5, color: hov ? '#f97316' : 'rgba(255,255,255,0.4)', fontWeight:700, transition:'color .15s' }}>
-              Read more →
+            <span style={{ fontSize:12.5, color: hov ? '#f97316' : 'rgba(255,255,255,0.4)', fontWeight:700, transition:'color .15s', display:'flex', alignItems:'center', gap:4 }}>
+              Read more <span style={{ fontSize:14 }}>→</span>
             </span>
           )}
         </div>

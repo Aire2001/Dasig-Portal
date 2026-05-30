@@ -367,6 +367,98 @@ export default function ProgramsPage() {
 }
 
 /* ═══════════════════════════════════════════════════════════
+   CARD COMPONENTS (must be outside any map/render loop)
+═══════════════════════════════════════════════════════════ */
+function EvCard({ ev, idx, registered, onRegister }) {
+  const [hov, setHov] = useState(false);
+  const pct  = ev.total > 0 ? Math.min(100, Math.round((ev.enrolled / ev.total) * 100)) : 0;
+  const full = ev.total > 0 && ev.enrolled >= ev.total;
+  const grad = EV_GRADS[ev?.category] || EV_GRADS.Summit;
+  return (
+    <div onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
+      style={{ borderRadius:18, overflow:'hidden', background:'rgba(15,23,42,0.9)', border:`1px solid ${hov?'rgba(249,115,22,0.4)':'rgba(255,255,255,0.07)'}`, boxShadow: hov?'0 14px 40px rgba(249,115,22,0.12)':'0 4px 16px rgba(0,0,0,0.3)', transform: hov?'translateY(-4px)':'none', transition:'all .22s cubic-bezier(.34,1.56,.64,1)', animation:`cardIn .35s ease ${idx*0.05}s both` }}>
+      <div style={{ background: grad, padding:'18px 20px 14px', position:'relative', overflow:'hidden', minHeight:100 }}>
+        <div style={{ position:'absolute', right:-8, bottom:-10, fontSize:70, opacity:0.12 }}>{EV_ICONS[ev.category]||'📅'}</div>
+        <div style={{ display:'flex', justifyContent:'space-between', marginBottom:6 }}>
+          <span style={{ background:'rgba(255,255,255,0.22)', color:'#fff', borderRadius:6, padding:'3px 10px', fontSize:10.5, fontWeight:700 }}>{ev.category}</span>
+          {registered && <span style={{ background:'rgba(16,185,129,0.28)', color:'#34d399', borderRadius:6, padding:'3px 10px', fontSize:10.5, fontWeight:700, border:'1px solid rgba(16,185,129,0.4)' }}>✓ Registered</span>}
+          {full && !registered && <span style={{ background:'rgba(225,29,72,0.28)', color:'#f87171', borderRadius:6, padding:'3px 10px', fontSize:10.5, fontWeight:700 }}>Full</span>}
+        </div>
+        <div style={{ color:'#fff', fontSize:15, fontWeight:900, lineHeight:1.3, marginBottom:5 }}>{ev.title}</div>
+        <div style={{ display:'flex', gap:10 }}>
+          <span style={{ color:'rgba(255,255,255,0.78)', fontSize:11.5 }}>📅 {ev.date}</span>
+          <span style={{ color:'rgba(255,255,255,0.78)', fontSize:11.5 }}>📍 {ev.venue}</span>
+        </div>
+      </div>
+      <div style={{ padding:'12px 16px' }}>
+        <div style={{ marginBottom:10 }}>
+          <div style={{ display:'flex', justifyContent:'space-between', marginBottom:3 }}>
+            <span style={{ fontSize:11, color:'rgba(255,255,255,0.38)' }}>Seats</span>
+            <span style={{ fontSize:11.5, color: full?'#f87171':pct>80?'#fcd34d':'#6ee7b7', fontWeight:700 }}>{ev.enrolled}/{ev.total}</span>
+          </div>
+          <div style={{ height:5, background:'rgba(255,255,255,0.07)', borderRadius:3, overflow:'hidden' }}>
+            <div style={{ height:'100%', width:`${pct}%`, background: full?'linear-gradient(90deg,#e11d48,#f97316)':pct>80?'linear-gradient(90deg,#f59e0b,#f97316)':'linear-gradient(90deg,#059669,#0891b2)', borderRadius:3, transition:'width .6s' }} />
+          </div>
+        </div>
+        <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+          <span style={{ fontSize:11, color:'rgba(255,255,255,0.3)', flex:1 }}>🏛 {ev.organizer}</span>
+          {!registered
+            ? <button onClick={onRegister} disabled={full} style={{ background: full?'rgba(255,255,255,0.05)':'linear-gradient(90deg,#f97316,#e11d48)', color: full?'rgba(255,255,255,0.3)':'#fff', border: full?'1px solid rgba(255,255,255,0.08)':'none', borderRadius:10, padding:'7px 16px', fontSize:12.5, fontWeight:800, cursor: full?'not-allowed':'pointer', fontFamily:'inherit', boxShadow: full?'none':'0 4px 12px rgba(249,115,22,0.3)', whiteSpace:'nowrap' }}>
+                {full?'Fully Booked':'Register →'}
+              </button>
+            : <span style={{ background:'rgba(16,185,129,0.12)', color:'#34d399', borderRadius:10, padding:'7px 14px', fontSize:12, fontWeight:700, border:'1px solid rgba(16,185,129,0.22)' }}>✓ Registered</span>
+          }
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TrCard({ t, idx, enrolled, onEnroll }) {
+  const [hov, setHov] = useState(false);
+  const pct  = t.total > 0 ? Math.min(100, Math.round(t.enrolled / t.total * 100)) : 0;
+  const full = t.total > 0 && t.enrolled >= t.total;
+  const s    = TR_STYLES[t?.category] || TR_STYLES.Technology;
+  return (
+    <div onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
+      style={{ borderRadius:18, overflow:'hidden', background:'rgba(15,23,42,0.9)', border:`1px solid ${hov?s.color+'50':'rgba(255,255,255,0.07)'}`, boxShadow: hov?`0 14px 40px ${s.color}20`:'0 4px 16px rgba(0,0,0,0.3)', transform: hov?'translateY(-4px)':'none', transition:'all .22s cubic-bezier(.34,1.56,.64,1)', animation:`cardIn .35s ease ${idx*0.05}s both` }}>
+      <div style={{ background: s.accent, padding:'18px 20px 14px', position:'relative', overflow:'hidden', minHeight:100 }}>
+        <div style={{ position:'absolute', right:-8, bottom:-10, fontSize:70, opacity:0.12 }}>{TR_ICONS[t.category]||'🎓'}</div>
+        <div style={{ display:'flex', justifyContent:'space-between', marginBottom:6 }}>
+          <span style={{ background:'rgba(255,255,255,0.22)', color:'#fff', borderRadius:6, padding:'3px 10px', fontSize:10.5, fontWeight:700 }}>{t.category}</span>
+          <span style={{ background:'rgba(255,255,255,0.18)', color:'#fff', borderRadius:6, padding:'3px 10px', fontSize:10.5, fontWeight:700 }}>{t.level}</span>
+        </div>
+        <div style={{ color:'#fff', fontSize:15, fontWeight:900, lineHeight:1.3, marginBottom:5 }}>{t.title}</div>
+        <div style={{ display:'flex', gap:10, flexWrap:'wrap' }}>
+          <span style={{ color:'rgba(255,255,255,0.78)', fontSize:11.5 }}>🏛 {t.org}</span>
+          <span style={{ color:'rgba(255,255,255,0.78)', fontSize:11.5 }}>⏱ {t.duration}</span>
+        </div>
+      </div>
+      <div style={{ padding:'12px 16px' }}>
+        {t.schedule && <div style={{ fontSize:11.5, color:'rgba(255,255,255,0.4)', marginBottom:10 }}>📅 {t.schedule.split('|')[0].trim()}</div>}
+        <div style={{ marginBottom:10 }}>
+          <div style={{ display:'flex', justifyContent:'space-between', marginBottom:3 }}>
+            <span style={{ fontSize:11, color:'rgba(255,255,255,0.38)' }}>Enrollment</span>
+            <span style={{ fontSize:11.5, color: full?'#f87171':'#6ee7b7', fontWeight:700 }}>{t.enrolled}/{t.total}</span>
+          </div>
+          <div style={{ height:5, background:'rgba(255,255,255,0.07)', borderRadius:3, overflow:'hidden' }}>
+            <div style={{ height:'100%', width:`${pct}%`, background: s.accent, borderRadius:3, transition:'width .6s' }} />
+          </div>
+        </div>
+        <div style={{ display:'flex', justifyContent:'flex-end' }}>
+          {enrolled
+            ? <span style={{ background:'rgba(16,185,129,0.12)', color:'#34d399', borderRadius:10, padding:'8px 14px', fontSize:12, fontWeight:700, border:'1px solid rgba(16,185,129,0.22)' }}>✓ Enrolled</span>
+            : <button onClick={onEnroll} disabled={full} style={{ background: full?'rgba(255,255,255,0.05)':s.accent, color: full?'rgba(255,255,255,0.3)':'#fff', border: full?'1px solid rgba(255,255,255,0.08)':'none', borderRadius:10, padding:'9px 20px', fontSize:13, fontWeight:800, cursor: full?'not-allowed':'pointer', fontFamily:'inherit', boxShadow: full?'none':`0 4px 12px ${s.color}40` }}>
+                {full?'Fully Booked':'Enroll →'}
+              </button>
+          }
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════
    EVENTS TAB
 ═══════════════════════════════════════════════════════════ */
 const EV_FILTERS = ['All','Summit','Workshop','Seminar','Funding'];
@@ -646,48 +738,9 @@ function EventsTab({ user }) {
       {/* Event cards grid */}
       {!loading && events.length > 0 && (
         <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(300px,1fr))', gap:18 }}>
-          {events.map((ev, i) => {
-            const pct  = ev.total > 0 ? Math.min(100, Math.round((ev.enrolled / ev.total) * 100)) : 0;
-            const full = ev.total > 0 && ev.enrolled >= ev.total;
-            const [hov, setHov] = useState(false);
-            return (
-              <div key={ev.id} onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)} style={{ borderRadius:18, overflow:'hidden', background:'rgba(15,23,42,0.9)', border:`1px solid ${hov ? 'rgba(249,115,22,0.4)' : 'rgba(255,255,255,0.07)'}`, boxShadow: hov ? '0 14px 40px rgba(249,115,22,0.12)' : '0 4px 16px rgba(0,0,0,0.3)', transform: hov ? 'translateY(-4px)' : 'none', transition:'all .22s cubic-bezier(.34,1.56,.64,1)', animation:`cardIn .35s ease ${i*0.05}s both` }}>
-                <div style={{ background: grad(ev), padding:'18px 20px 14px', position:'relative', overflow:'hidden', minHeight:100 }}>
-                  <div style={{ position:'absolute', right:-8, bottom:-10, fontSize:70, opacity:0.12 }}>{EV_ICONS[ev.category]||'📅'}</div>
-                  <div style={{ display:'flex', justifyContent:'space-between', marginBottom:6 }}>
-                    <span style={{ background:'rgba(255,255,255,0.22)', color:'#fff', borderRadius:6, padding:'3px 10px', fontSize:10.5, fontWeight:700 }}>{ev.category}</span>
-                    {myRegs[ev.id] && <span style={{ background:'rgba(16,185,129,0.28)', color:'#34d399', borderRadius:6, padding:'3px 10px', fontSize:10.5, fontWeight:700, border:'1px solid rgba(16,185,129,0.4)' }}>✓ Registered</span>}
-                    {full && !myRegs[ev.id] && <span style={{ background:'rgba(225,29,72,0.28)', color:'#f87171', borderRadius:6, padding:'3px 10px', fontSize:10.5, fontWeight:700 }}>Full</span>}
-                  </div>
-                  <div style={{ color:'#fff', fontSize:15, fontWeight:900, lineHeight:1.3, marginBottom:5 }}>{ev.title}</div>
-                  <div style={{ display:'flex', gap:10 }}>
-                    <span style={{ color:'rgba(255,255,255,0.78)', fontSize:11.5 }}>📅 {ev.date}</span>
-                    <span style={{ color:'rgba(255,255,255,0.78)', fontSize:11.5 }}>📍 {ev.venue}</span>
-                  </div>
-                </div>
-                <div style={{ padding:'12px 16px' }}>
-                  <div style={{ marginBottom:10 }}>
-                    <div style={{ display:'flex', justifyContent:'space-between', marginBottom:3 }}>
-                      <span style={{ fontSize:11, color:'rgba(255,255,255,0.38)' }}>Seats</span>
-                      <span style={{ fontSize:11.5, color: full?'#f87171':pct>80?'#fcd34d':'#6ee7b7', fontWeight:700 }}>{ev.enrolled}/{ev.total}</span>
-                    </div>
-                    <div style={{ height:5, background:'rgba(255,255,255,0.07)', borderRadius:3, overflow:'hidden' }}>
-                      <div style={{ height:'100%', width:`${pct}%`, background: full?'linear-gradient(90deg,#e11d48,#f97316)':pct>80?'linear-gradient(90deg,#f59e0b,#f97316)':'linear-gradient(90deg,#059669,#0891b2)', borderRadius:3, transition:'width .6s' }} />
-                    </div>
-                  </div>
-                  <div style={{ display:'flex', gap:8, alignItems:'center' }}>
-                    <span style={{ fontSize:11, color:'rgba(255,255,255,0.3)', flex:1 }}>🏛 {ev.organizer}</span>
-                    {!myRegs[ev.id]
-                      ? <button onClick={() => openForm(ev)} disabled={full} style={{ background: full?'rgba(255,255,255,0.05)':'linear-gradient(90deg,#f97316,#e11d48)', color: full?'rgba(255,255,255,0.3)':'#fff', border: full?'1px solid rgba(255,255,255,0.08)':'none', borderRadius:10, padding:'7px 16px', fontSize:12.5, fontWeight:800, cursor: full?'not-allowed':'pointer', fontFamily:'inherit', boxShadow: full?'none':'0 4px 12px rgba(249,115,22,0.3)', whiteSpace:'nowrap' }}>
-                          {full ? 'Fully Booked' : 'Register →'}
-                        </button>
-                      : <span style={{ background:'rgba(16,185,129,0.12)', color:'#34d399', borderRadius:10, padding:'7px 14px', fontSize:12, fontWeight:700, border:'1px solid rgba(16,185,129,0.22)' }}>✓ Registered</span>
-                    }
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+          {events.map((ev, i) => (
+            <EvCard key={ev.id} ev={ev} idx={i} registered={!!myRegs[ev.id]} onRegister={() => openForm(ev)} />
+          ))}
         </div>
       )}
     </>
@@ -924,48 +977,9 @@ function TrainingTab({ user }) {
       {/* Training cards */}
       {!loading && (
         <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(300px,1fr))', gap:18 }}>
-          {filtered.map((t, idx) => {
-            const [hov, setHov] = useState(false);
-            const pct = t.total > 0 ? Math.min(100, Math.round(t.enrolled/t.total*100)) : 0;
-            const full = t.total > 0 && t.enrolled >= t.total;
-            return (
-              <div key={t.id} onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
-                style={{ borderRadius:18, overflow:'hidden', background:'rgba(15,23,42,0.9)', border:`1px solid ${hov?ts(t).color+'50':'rgba(255,255,255,0.07)'}`, boxShadow: hov?`0 14px 40px ${ts(t).color}20`:'0 4px 16px rgba(0,0,0,0.3)', transform: hov?'translateY(-4px)':'none', transition:'all .22s cubic-bezier(.34,1.56,.64,1)', animation:`cardIn .35s ease ${idx*0.05}s both` }}>
-                <div style={{ background: ts(t).accent, padding:'18px 20px 14px', position:'relative', overflow:'hidden', minHeight:100 }}>
-                  <div style={{ position:'absolute', right:-8, bottom:-10, fontSize:70, opacity:0.12 }}>{TR_ICONS[t.category]||'🎓'}</div>
-                  <div style={{ display:'flex', justifyContent:'space-between', marginBottom:6 }}>
-                    <span style={{ background:'rgba(255,255,255,0.22)', color:'#fff', borderRadius:6, padding:'3px 10px', fontSize:10.5, fontWeight:700 }}>{t.category}</span>
-                    <span style={{ background:'rgba(255,255,255,0.18)', color:'#fff', borderRadius:6, padding:'3px 10px', fontSize:10.5, fontWeight:700 }}>{t.level}</span>
-                  </div>
-                  <div style={{ color:'#fff', fontSize:15, fontWeight:900, lineHeight:1.3, marginBottom:5 }}>{t.title}</div>
-                  <div style={{ display:'flex', gap:10, flexWrap:'wrap' }}>
-                    <span style={{ color:'rgba(255,255,255,0.78)', fontSize:11.5 }}>🏛 {t.org}</span>
-                    <span style={{ color:'rgba(255,255,255,0.78)', fontSize:11.5 }}>⏱ {t.duration}</span>
-                  </div>
-                </div>
-                <div style={{ padding:'12px 16px' }}>
-                  {t.schedule && <div style={{ fontSize:11.5, color:'rgba(255,255,255,0.4)', marginBottom:10 }}>📅 {t.schedule.split('|')[0].trim()}</div>}
-                  <div style={{ marginBottom:10 }}>
-                    <div style={{ display:'flex', justifyContent:'space-between', marginBottom:3 }}>
-                      <span style={{ fontSize:11, color:'rgba(255,255,255,0.38)' }}>Enrollment</span>
-                      <span style={{ fontSize:11.5, color: full?'#f87171':'#6ee7b7', fontWeight:700 }}>{t.enrolled}/{t.total}</span>
-                    </div>
-                    <div style={{ height:5, background:'rgba(255,255,255,0.07)', borderRadius:3, overflow:'hidden' }}>
-                      <div style={{ height:'100%', width:`${pct}%`, background: ts(t).accent, borderRadius:3, transition:'width .6s' }} />
-                    </div>
-                  </div>
-                  <div style={{ display:'flex', justifyContent:'flex-end' }}>
-                    {myEnr[t.id]
-                      ? <span style={{ background:'rgba(16,185,129,0.12)', color:'#34d399', borderRadius:10, padding:'8px 14px', fontSize:12, fontWeight:700, border:'1px solid rgba(16,185,129,0.22)' }}>✓ Enrolled</span>
-                      : <button onClick={() => openEnroll(t)} disabled={full} style={{ background: full?'rgba(255,255,255,0.05)':ts(t).accent, color: full?'rgba(255,255,255,0.3)':'#fff', border: full?'1px solid rgba(255,255,255,0.08)':'none', borderRadius:10, padding:'9px 20px', fontSize:13, fontWeight:800, cursor: full?'not-allowed':'pointer', fontFamily:'inherit', boxShadow: full?'none':`0 4px 12px ${ts(t).color}40` }}>
-                          {full ? 'Fully Booked' : 'Enroll →'}
-                        </button>
-                    }
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+          {filtered.map((t, idx) => (
+            <TrCard key={t.id} t={t} idx={idx} enrolled={!!myEnr[t.id]} onEnroll={() => openEnroll(t)} />
+          ))}
         </div>
       )}
     </>
