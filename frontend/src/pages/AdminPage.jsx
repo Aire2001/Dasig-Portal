@@ -847,19 +847,58 @@ function EventsTab({ showToast }) {
 /* ═══════════════════════════════════════════════════════════════════
    NEWS
 ═══════════════════════════════════════════════════════════════════ */
-const NW_BLANK = { icon:'📣', badge:'Announcement', date:'', title:'', excerpt:'', content:'', members_only:false, archived:false };
+const NW_BLANK = { icon:'📣', badge:'Announcement', date:'', title:'', excerpt:'', content:'', members_only:false, archived:false, image_url:'' };
+
+// Compress uploaded news image to 1200×630 JPEG (Open Graph standard)
+function compressNewsImage(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = reject;
+    reader.onload = e => {
+      const img = new Image();
+      img.onerror = reject;
+      img.onload = () => {
+        const W = 1200, H = 630;
+        const canvas = document.createElement('canvas');
+        canvas.width = W; canvas.height = H;
+        const ctx = canvas.getContext('2d');
+        const scale = Math.max(W / img.width, H / img.height);
+        const w = img.width * scale, h = img.height * scale;
+        ctx.drawImage(img, (W - w) / 2, (H - h) / 2, w, h);
+        resolve(canvas.toDataURL('image/jpeg', 0.82));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
 
 function NewsTab({ showToast }) {
-  const [items, setItems]     = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [modal, setModal]     = useState(null);
-  const [form, setForm]       = useState(NW_BLANK);
-  const [saving, setSaving]   = useState(false);
-  const [confirm, setConfirm] = useState(null);
+  const [items, setItems]       = useState([]);
+  const [loading, setLoading]   = useState(true);
+  const [modal, setModal]       = useState(null);
+  const [form, setForm]         = useState(NW_BLANK);
+  const [saving, setSaving]     = useState(false);
+  const [confirm, setConfirm]   = useState(null);
+  const [imgUploading, setImgUp] = useState(false);
 
   const load = useCallback(() => { setLoading(true); api.news.list({ limit: 1000 }).then(r => setItems(r.data || [])).catch(() => showToast('Failed', false)).finally(() => setLoading(false)); }, []);
   useEffect(load, [load]);
   const fc = e => setForm(p => ({ ...p, [e.target.name]: e.target.type === 'checkbox' ? e.target.checked : e.target.value }));
+
+  async function handleImageUpload(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) { showToast('Image must be under 10 MB', false); return; }
+    if (!file.type.startsWith('image/')) { showToast('Please select an image file', false); return; }
+    setImgUp(true);
+    try {
+      const dataUri = await compressNewsImage(file);
+      setForm(p => ({ ...p, image_url: dataUri }));
+      showToast('Image ready — save the article to publish', true, '');
+    } catch { showToast('Image processing failed', false); }
+    finally { setImgUp(false); }
+  }
 
   async function save() {
     if (!form.title || !form.date) { showToast('Fill required fields', false); return; }
@@ -897,6 +936,46 @@ function NewsTab({ showToast }) {
             <DInput label="Date *" name="date" value={form.date} onChange={fc} type="date" required />
             <DInput label="Icon (emoji)" name="icon" value={form.icon} onChange={fc} />
             <DInput label="Members Only" name="members_only" value={form.members_only} onChange={fc} as="checkbox" />
+
+            {/* ── Article cover image ── */}
+            <div style={{ gridColumn:'1/-1' }}>
+              <label style={{ display:'block', fontSize:11, fontWeight:700, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:8 }}>
+                Cover Image <span style={{ color:'rgba(255,255,255,0.25)', fontWeight:400, textTransform:'none' }}>(recommended: 1200×630px)</span>
+              </label>
+              {form.image_url ? (
+                <div style={{ position:'relative', borderRadius:10, overflow:'hidden', marginBottom:8 }}>
+                  <img src={form.image_url} alt="cover" style={{ width:'100%', height:180, objectFit:'cover', display:'block' }} />
+                  <div style={{ position:'absolute', inset:0, background:'linear-gradient(to bottom, rgba(0,0,0,0) 50%, rgba(0,0,0,0.7) 100%)' }} />
+                  <div style={{ position:'absolute', bottom:10, right:10, display:'flex', gap:8 }}>
+                    <label htmlFor="news-img-replace" style={{ background:'rgba(255,255,255,0.18)', backdropFilter:'blur(6px)', color:'#fff', borderRadius:7, padding:'6px 12px', fontSize:12, fontWeight:700, cursor:'pointer', border:'1px solid rgba(255,255,255,0.3)' }}>
+                      {imgUploading ? '⏳' : '📷 Replace'}
+                    </label>
+                    <button type="button" onClick={() => setForm(p => ({...p, image_url:''}))} style={{ background:'rgba(225,29,72,0.7)', color:'#fff', border:'none', borderRadius:7, padding:'6px 12px', fontSize:12, fontWeight:700, cursor:'pointer' }}>
+                      ✕ Remove
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <label htmlFor="news-img-upload" style={{
+                  display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center',
+                  gap:8, height:140, borderRadius:10, cursor:'pointer',
+                  border:'2px dashed rgba(255,255,255,0.15)', background:'rgba(255,255,255,0.03)',
+                  transition:'all .15s',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor='rgba(249,115,22,0.5)'; e.currentTarget.style.background='rgba(249,115,22,0.04)'; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor='rgba(255,255,255,0.15)'; e.currentTarget.style.background='rgba(255,255,255,0.03)'; }}
+                >
+                  <span style={{ fontSize:32 }}>{imgUploading ? '⏳' : '🖼'}</span>
+                  <span style={{ fontSize:13, fontWeight:700, color:'rgba(255,255,255,0.55)' }}>
+                    {imgUploading ? 'Processing image…' : 'Click to upload cover photo'}
+                  </span>
+                  <span style={{ fontSize:11.5, color:'rgba(255,255,255,0.3)' }}>JPG, PNG, WebP — max 10 MB</span>
+                </label>
+              )}
+              <input id="news-img-upload" id2="news-img-replace" type="file" accept="image/*" onChange={handleImageUpload} style={{ display:'none' }} />
+              <input id="news-img-replace" type="file" accept="image/*" onChange={handleImageUpload} style={{ display:'none' }} />
+            </div>
+
             <DInput label="Excerpt" name="excerpt" value={form.excerpt} onChange={fc} as="textarea" span="1/-1" />
             <DInput label="Full Content" name="content" value={form.content} onChange={fc} as="textarea" span="1/-1" />
           </div>
@@ -904,14 +983,21 @@ function NewsTab({ showToast }) {
         </Modal>
       )}
       {loading ? <Loading /> : (
-        <DataTable head={['Title','Badge','Date','Access','Status','Actions']}>
-          {items.length === 0 ? <EmptyTR cols={6} /> : items.map(n => {
+        <DataTable head={['Cover','Title','Badge','Date','Access','Status','Actions']}>
+          {items.length === 0 ? <EmptyTR cols={7} /> : items.map(n => {
             const c = BC[n.badge] || '#60a5fa';
             return (
               <TR key={n.id}>
+                {/* Cover thumbnail */}
+                <TD w={60}>
+                  {n.image_url
+                    ? <img src={n.image_url} alt="" style={{ width:52, height:34, objectFit:'cover', borderRadius:6, display:'block' }} />
+                    : <div style={{ width:52, height:34, borderRadius:6, background:'rgba(255,255,255,0.06)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:16 }}>{n.icon || '📰'}</div>
+                  }
+                </TD>
                 <TD>
-                  <div style={{ fontWeight:700, color: n.archived ? 'rgba(255,255,255,0.38)' : '#fff', maxWidth:260, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{n.title}</div>
-                  <div style={{ fontSize:11.5, color:'rgba(255,255,255,0.38)', marginTop:2, maxWidth:260, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{n.excerpt}</div>
+                  <div style={{ fontWeight:700, color: n.archived ? 'rgba(255,255,255,0.38)' : '#fff', maxWidth:240, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{n.title}</div>
+                  <div style={{ fontSize:11.5, color:'rgba(255,255,255,0.38)', marginTop:2, maxWidth:240, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{n.excerpt}</div>
                 </TD>
                 <TD><span className="ap-badge" style={{ background:`${c}1a`, color:c }}>{n.badge}</span></TD>
                 <TD muted>{String(n.date).slice(0,10)}</TD>

@@ -49,7 +49,7 @@ router.get('/:id', optionalAuth, async (req, res) => {
 
 // POST /api/news — create (ADMIN only)
 router.post('/', verifyToken, requireRole('ADMIN'), async (req, res) => {
-  const { icon, badge, date, title, excerpt, content, members_only } = req.body;
+  const { icon, badge, date, title, excerpt, content, members_only, image_url } = req.body;
   if (!date || !title) return res.status(400).json({ error: 'date and title are required' });
 
   const { data, error } = await supabase.from('news').insert({
@@ -58,6 +58,7 @@ router.post('/', verifyToken, requireRole('ADMIN'), async (req, res) => {
     date, title,
     excerpt: excerpt || null,
     content: content || null,
+    image_url: image_url || null,
     members_only: members_only ?? false,
   }).select().single();
   if (error) return res.status(500).json({ error: error.message });
@@ -66,7 +67,7 @@ router.post('/', verifyToken, requireRole('ADMIN'), async (req, res) => {
 
 // PUT /api/news/:id — update (ADMIN only)
 router.put('/:id', verifyToken, requireRole('ADMIN'), async (req, res) => {
-  const { icon, badge, date, title, excerpt, content, members_only, archived } = req.body;
+  const { icon, badge, date, title, excerpt, content, members_only, archived, image_url } = req.body;
   const updates = {};
   if (icon !== undefined) updates.icon = icon;
   if (badge !== undefined) updates.badge = badge;
@@ -76,6 +77,7 @@ router.put('/:id', verifyToken, requireRole('ADMIN'), async (req, res) => {
   if (content !== undefined) updates.content = content;
   if (members_only !== undefined) updates.members_only = members_only;
   if (archived !== undefined) updates.archived = Boolean(archived);
+  if (image_url !== undefined) updates.image_url = image_url || null;
 
   const { data, error } = await supabase.from('news').update(updates).eq('id', req.params.id).select().single();
   if (error) return res.status(404).json({ error: 'Article not found' });

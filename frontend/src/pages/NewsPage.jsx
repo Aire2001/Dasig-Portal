@@ -16,7 +16,7 @@ const badgeStyle = {
 };
 const defaultBadge = badgeStyle.Announcement;
 
-// Curated Unsplash photo seeds per category — consistent, real photos, no API key needed
+// Category-based Picsum seeds — used only when admin hasn't uploaded a cover image
 const COVER_SEEDS = {
   Announcement: 'conference-summit-meeting',
   Policy:       'government-document-law',
@@ -26,8 +26,9 @@ const COVER_SEEDS = {
 };
 
 function coverUrl(article) {
+  // Admin-uploaded image takes priority; Picsum is the fallback
+  if (article.image_url) return article.image_url;
   const seed = COVER_SEEDS[article.badge] || 'education-conference';
-  // Unique per article (same badge always gives different photo per article ID)
   return `https://picsum.photos/seed/${seed}-${article.id || 1}/800/400`;
 }
 

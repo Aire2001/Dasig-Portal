@@ -439,45 +439,56 @@ export default function Nav() {
                   >My Card</button>
                 )}
 
-                {/* Profile link for Admin — with avatar */}
+                {/* Admin — single combined button: avatar + name → profile | ADMIN pill → admin panel */}
                 {user.role === 'ADMIN' && (() => {
                   const initials = (user.name || 'A').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
                   return (
-                    <button onClick={() => navigate('/profile')} style={{
-                      background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.12)',
-                      borderRadius:10, padding:'4px 10px 4px 4px',
-                      color:'rgba(255,255,255,0.75)', fontSize:13, fontWeight:600,
-                      cursor:'pointer', fontFamily:'inherit', transition:'all .15s',
-                      display:'flex', alignItems:'center', gap:8,
-                    }}
-                    onMouseEnter={e => { e.currentTarget.style.color='#fff'; e.currentTarget.style.background='rgba(255,255,255,0.12)'; }}
-                    onMouseLeave={e => { e.currentTarget.style.color='rgba(255,255,255,0.75)'; e.currentTarget.style.background='rgba(255,255,255,0.06)'; }}
-                    title="My Profile">
-                      <div style={{ width:28, height:28, borderRadius:8, overflow:'hidden', flexShrink:0 }}>
-                        {user.avatar_url
-                          ? <img src={user.avatar_url} alt="" style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }} />
-                          : <div style={{ width:'100%', height:'100%', background:'linear-gradient(135deg,#e11d48,#9f1239)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:900, color:'#fff' }}>{initials}</div>
-                        }
-                      </div>
-                      <span style={{ maxWidth:100, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{user.name}</span>
-                    </button>
+                    <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+                      {/* Avatar + name → profile */}
+                      <button onClick={() => navigate('/profile')} style={{
+                        display:'flex', alignItems:'center', gap:8,
+                        background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.12)',
+                        borderRadius:10, padding:'4px 10px 4px 4px',
+                        color:'rgba(255,255,255,0.75)', fontSize:13, fontWeight:600,
+                        cursor:'pointer', fontFamily:'inherit', transition:'all .15s',
+                      }}
+                      onMouseEnter={e => { e.currentTarget.style.color='#fff'; e.currentTarget.style.background='rgba(255,255,255,0.12)'; }}
+                      onMouseLeave={e => { e.currentTarget.style.color='rgba(255,255,255,0.75)'; e.currentTarget.style.background='rgba(255,255,255,0.06)'; }}
+                      title="My Profile">
+                        <div style={{ width:28, height:28, borderRadius:8, overflow:'hidden', flexShrink:0 }}>
+                          {user.avatar_url
+                            ? <img src={user.avatar_url} alt="" style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }} />
+                            : <div style={{ width:'100%', height:'100%', background:'linear-gradient(135deg,#e11d48,#9f1239)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:900, color:'#fff' }}>{initials}</div>
+                          }
+                        </div>
+                        <span style={{ maxWidth:100, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{user.name}</span>
+                      </button>
+                      {/* ADMIN pill → admin panel */}
+                      <button onClick={() => navigate('/admin')} style={{
+                        background:'rgba(225,29,72,0.18)', color:'#f43f5e',
+                        border:'1px solid rgba(225,29,72,0.35)', borderRadius:8,
+                        padding:'5px 12px', fontSize:11.5, fontWeight:900,
+                        cursor:'pointer', fontFamily:'inherit', letterSpacing:'.4px',
+                        transition:'all .15s',
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.background='rgba(225,29,72,0.3)'}
+                      onMouseLeave={e => e.currentTarget.style.background='rgba(225,29,72,0.18)'}
+                      title="Admin Panel">
+                        ⚙ ADMIN
+                      </button>
+                    </div>
                   );
                 })()}
-                {/* Admin panel button */}
-                {user.role === 'ADMIN' && (
+                {/* Legacy admin panel button — REMOVED, replaced by ADMIN pill above */}
+                {false && user.role === 'ADMIN' && (
                   <button onClick={() => navigate('/admin')} style={{
                     display: 'flex', alignItems: 'center', gap: 8,
                     color: '#fff', background: 'rgba(225,29,72,0.14)',
                     border: '1px solid rgba(225,29,72,0.3)', borderRadius: 10,
                     padding: '6px 14px', fontSize: 13, fontWeight: 700,
                     cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.2s',
-                  }}
-                  onMouseEnter={e => e.currentTarget.style.background='rgba(225,29,72,0.26)'}
-                  onMouseLeave={e => e.currentTarget.style.background='rgba(225,29,72,0.14)'}
-                  >
-                    <span style={{ width:7, height:7, borderRadius:'50%', background:'#e11d48', boxShadow:'0 0 7px rgba(225,29,72,0.9)', display:'inline-block' }} />
-                    {user.name || 'Admin'}
-                    <span style={{ fontSize:10, fontWeight:800, background:'rgba(225,29,72,0.35)', color:'#fca5a5', borderRadius:5, padding:'1px 7px' }}>ADMIN</span>
+                  }}>
+                    <span style={{ width:7, height:7, borderRadius:'50%', background:'#e11d48', display:'inline-block' }} />
                   </button>
                 )}
 
