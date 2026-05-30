@@ -57,14 +57,44 @@ const INSTITUTION_ABOUT = {
   },
 };
 
-// Curated Picsum photo seeds — consistent campus/agency photos per institution
-const MEMBER_PHOTOS = {
-  UP:    'https://picsum.photos/seed/university-campus-state/700/340',
-  USa:   'https://picsum.photos/seed/private-university-church/700/340',
-  DOST:  'https://picsum.photos/seed/science-technology-lab/700/340',
-  DICT:  'https://picsum.photos/seed/digital-technology-server/700/340',
-  DTI:   'https://picsum.photos/seed/trade-industry-market/700/340',
-  DepEd: 'https://picsum.photos/seed/education-classroom-school/700/340',
+// Official institution logos/seals from Wikimedia Commons + official websites
+const MEMBER_ASSETS = {
+  UP: {
+    logo: 'https://upload.wikimedia.org/wikipedia/en/b/b7/UP_seal.png',
+    bg: 'linear-gradient(135deg,#7b1113 0%,#a82323 60%,#8B1a1a 100%)',
+    accent: '#c0392b',
+    emoji: '🎓',
+  },
+  USa: {
+    logo: 'https://upload.wikimedia.org/wikipedia/en/d/d8/Coat_of_arms_of_the_University_of_San_Agustin.png',
+    bg: 'linear-gradient(135deg,#1a3a6c 0%,#2a5298 60%,#1e4080 100%)',
+    accent: '#3b82f6',
+    emoji: '🏫',
+  },
+  DOST: {
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/8/8d/DOST_seal.png',
+    bg: 'linear-gradient(135deg,#064e1e 0%,#0d7a3a 60%,#065f46 100%)',
+    accent: '#10b981',
+    emoji: '🔬',
+  },
+  DICT: {
+    logo: 'https://upload.wikimedia.org/wikipedia/en/0/0c/DICT_logo.png',
+    bg: 'linear-gradient(135deg,#003087 0%,#0052cc 60%,#1a4fcc 100%)',
+    accent: '#3b82f6',
+    emoji: '💻',
+  },
+  DTI: {
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e9/DTI_Logo_%282022%29.svg/300px-DTI_Logo_%282022%29.svg.png',
+    bg: 'linear-gradient(135deg,#8B0000 0%,#c0392b 60%,#a01f1f 100%)',
+    accent: '#ef4444',
+    emoji: '💼',
+  },
+  DepEd: {
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/62/DepEd-Seal.svg/300px-DepEd-Seal.svg.png',
+    bg: 'linear-gradient(135deg,#0f3d7a 0%,#1a56db 60%,#154987 100%)',
+    accent: '#3b82f6',
+    emoji: '📚',
+  },
 };
 
 const MEMBERS_CSS = `
@@ -124,7 +154,7 @@ export default function MembersPage() {
         {/* Member detail modal */}
         {selected && (() => {
           const info = INSTITUTION_ABOUT[selected.abbr];
-          const photoUrl = MEMBER_PHOTOS[selected.abbr];
+          const asset = MEMBER_ASSETS[selected.abbr] || { bg: selectedGrad, emoji: '🏛️', accent: '#f97316' };
           const email = selected.email || info?.email;
           const website = selected.website || info?.website;
           return (
@@ -141,40 +171,32 @@ export default function MembersPage() {
                 maxHeight: '92vh', display: 'flex', flexDirection: 'column', margin: 'auto',
               }}>
 
-                {/* ── Hero photo ── */}
-                <div style={{ position: 'relative', height: 220, flexShrink: 0, overflow: 'hidden' }}>
-                  <img
-                    src={photoUrl}
-                    alt={selected.full_name}
-                    style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-                    onError={e => { e.target.style.display = 'none'; }}
-                  />
-                  {/* Gradient overlay */}
-                  <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0) 40%, ${selectedGrad.replace('linear-gradient(135deg,','').replace(')','').split(',')[0].trim()}cc 100%)` }} />
-                  <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0) 50%, rgba(13,20,36,0.92) 100%)' }} />
+                {/* ── Hero: institution logo on official-color background ── */}
+                <div style={{ background: asset.bg, padding: '32px 24px 24px', position: 'relative', overflow: 'hidden', flexShrink: 0 }}>
+                  <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at 50% 30%, rgba(255,255,255,0.15) 0%, transparent 65%)', pointerEvents: 'none' }} />
 
                   {/* Close */}
                   <button onClick={() => setSelected(null)} style={{
                     position: 'absolute', top: 14, right: 14,
-                    background: 'rgba(0,0,0,0.55)', border: '1px solid rgba(255,255,255,0.2)',
-                    backdropFilter: 'blur(8px)', borderRadius: '50%', width: 36, height: 36,
-                    color: '#fff', fontSize: 16, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.25)',
+                    backdropFilter: 'blur(8px)', borderRadius: '50%', width: 34, height: 34,
+                    color: '#fff', fontSize: 15, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}>✕</button>
 
-                  {/* Type badge on photo */}
+                  {/* Type badge */}
                   <div style={{ position: 'absolute', top: 14, left: 14 }}>
-                    <span style={{ background: selectedGrad, color: '#fff', borderRadius: 7, padding: '5px 12px', fontSize: 11.5, fontWeight: 800, boxShadow: '0 2px 10px rgba(0,0,0,0.4)' }}>
+                    <span style={{ background: 'rgba(0,0,0,0.35)', backdropFilter: 'blur(6px)', color: '#fff', borderRadius: 7, padding: '4px 12px', fontSize: 11, fontWeight: 800, border: '1px solid rgba(255,255,255,0.25)' }}>
                       {selected.type}
                     </span>
                   </div>
 
-                  {/* Institution name overlay at bottom of photo */}
-                  <div style={{ position: 'absolute', bottom: 16, left: 24, right: 24 }}>
-                    <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 48, height: 48, borderRadius: 13, background: 'rgba(255,255,255,0.18)', backdropFilter: 'blur(8px)', border: '1.5px solid rgba(255,255,255,0.35)', fontSize: 13, fontWeight: 900, color: '#fff', marginBottom: 8 }}>
-                      {selected.abbr}
+                  {/* Official logo centered */}
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
+                    <ModalLogo asset={asset} abbr={selected.abbr} name={selected.full_name} />
+                    <div>
+                      <h2 style={{ color: '#fff', fontSize: 22, fontWeight: 900, margin: '0 0 6px', lineHeight: 1.25, textAlign: 'center', textShadow: '0 2px 10px rgba(0,0,0,0.5)' }}>{selected.full_name}</h2>
+                      <div style={{ color: 'rgba(255,255,255,0.78)', fontSize: 13, textAlign: 'center', textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}>📍 {selected.campus}</div>
                     </div>
-                    <h2 style={{ color: '#fff', fontSize: 20, fontWeight: 900, margin: 0, lineHeight: 1.25, textShadow: '0 2px 8px rgba(0,0,0,0.6)' }}>{selected.full_name}</h2>
-                    <div style={{ color: 'rgba(255,255,255,0.75)', fontSize: 13, marginTop: 4, textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>📍 {selected.campus}</div>
                   </div>
                 </div>
 
@@ -344,61 +366,80 @@ export default function MembersPage() {
   );
 }
 
+function ModalLogo({ asset, abbr, name }) {
+  const [ok, setOk] = useState(true);
+  return ok ? (
+    <img
+      src={asset.logo}
+      alt={name}
+      onError={() => setOk(false)}
+      style={{ width: 110, height: 110, objectFit: 'contain', filter: 'drop-shadow(0 6px 20px rgba(0,0,0,0.55))', display: 'block' }}
+    />
+  ) : (
+    <div style={{ width: 100, height: 100, borderRadius: 24, background: 'rgba(255,255,255,0.18)', border: '2px solid rgba(255,255,255,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, fontWeight: 900, color: '#fff', letterSpacing: '-0.5px' }}>
+      {abbr}
+    </div>
+  );
+}
+
 function MemberCard({ member: m, grad, index, onClick }) {
   const [hov, setHov] = useState(false);
-  const [imgOk, setImgOk] = useState(true);
-  const photoUrl = MEMBER_PHOTOS[m.abbr];
+  const [logoOk, setLogoOk] = useState(true);
+  const asset = MEMBER_ASSETS[m.abbr] || { bg: grad, emoji: '🏛️', accent: '#f97316' };
 
   return (
     <div
       className="member-card"
       style={{
-        background: 'rgba(12,18,36,0.95)',
+        background: 'rgba(12,18,36,0.96)',
         animationDelay: `${index * 0.07}s`, animation: 'cardUp 0.5s ease both',
         padding: 0, overflow: 'hidden', cursor: 'pointer',
-        border: `1px solid ${hov ? 'rgba(249,115,22,0.45)' : 'rgba(255,255,255,0.08)'}`,
-        boxShadow: hov ? '0 18px 48px rgba(249,115,22,0.12)' : '0 4px 20px rgba(0,0,0,0.3)',
-        transform: hov ? 'translateY(-6px) scale(1.02)' : 'none',
-        transition: 'all 0.22s cubic-bezier(.34,1.56,.64,1)',
+        border: `1.5px solid ${hov ? asset.accent + '80' : 'rgba(255,255,255,0.08)'}`,
+        boxShadow: hov ? `0 20px 50px ${asset.accent}25` : '0 4px 20px rgba(0,0,0,0.35)',
+        transform: hov ? 'translateY(-7px) scale(1.02)' : 'none',
+        transition: 'all 0.24s cubic-bezier(.34,1.56,.64,1)',
       }}
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
       onClick={onClick}
     >
-      {/* ── Real photo cover ── */}
-      <div style={{ position: 'relative', height: 160, overflow: 'hidden' }}>
-        {imgOk ? (
+      {/* ── Institution header with official logo ── */}
+      <div style={{ background: asset.bg, height: 170, position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
+        {/* Subtle radial glow */}
+        <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at 50% 40%, rgba(255,255,255,0.12) 0%, transparent 70%)', pointerEvents: 'none' }} />
+        {/* Type badge top-right */}
+        <div style={{ position: 'absolute', top: 12, right: 12 }}>
+          <span style={{ background: 'rgba(0,0,0,0.35)', backdropFilter: 'blur(8px)', color: '#fff', borderRadius: 7, padding: '4px 11px', fontSize: 10.5, fontWeight: 800, border: '1px solid rgba(255,255,255,0.25)' }}>{m.type}</span>
+        </div>
+        {/* Official logo / seal */}
+        {logoOk ? (
           <img
-            src={photoUrl}
+            src={asset.logo}
             alt={m.full_name}
-            onError={() => setImgOk(false)}
-            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', transition: 'transform .35s ease', transform: hov ? 'scale(1.07)' : 'scale(1)' }}
+            onError={() => setLogoOk(false)}
+            style={{ width: 90, height: 90, objectFit: 'contain', filter: 'drop-shadow(0 4px 16px rgba(0,0,0,0.6))', transition: 'transform .3s ease', transform: hov ? 'scale(1.08)' : 'scale(1)', position: 'relative', zIndex: 1 }}
           />
         ) : (
-          <div style={{ width: '100%', height: '100%', background: grad, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 56, opacity: 0.5 }}>🏛️</div>
-        )}
-        {/* Dark overlay at bottom */}
-        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0) 40%, rgba(12,18,36,0.9) 100%)' }} />
-        {/* Type badge */}
-        <div style={{ position: 'absolute', top: 12, left: 12 }}>
-          <span style={{ background: grad, color: '#fff', borderRadius: 6, padding: '3px 10px', fontSize: 10.5, fontWeight: 800, boxShadow: '0 2px 8px rgba(0,0,0,0.4)' }}>{m.type}</span>
-        </div>
-        {/* Abbr badge bottom-left */}
-        <div style={{ position: 'absolute', bottom: 12, left: 14, display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ width: 40, height: 40, borderRadius: 11, background: 'rgba(255,255,255,0.18)', backdropFilter: 'blur(8px)', border: '1.5px solid rgba(255,255,255,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 900, color: '#fff', flexShrink: 0 }}>
+          /* Fallback: styled abbreviation badge */
+          <div style={{ width: 86, height: 86, borderRadius: 22, background: 'rgba(255,255,255,0.18)', border: '2px solid rgba(255,255,255,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 900, color: '#fff', letterSpacing: '-0.5px', boxShadow: '0 6px 20px rgba(0,0,0,0.4)', position: 'relative', zIndex: 1 }}>
             {m.abbr}
           </div>
-          <div style={{ color: '#fff', fontWeight: 900, fontSize: 18, letterSpacing: '-0.3px', textShadow: '0 1px 6px rgba(0,0,0,0.7)' }}>{m.abbr}</div>
+        )}
+        {/* Abbr label below logo */}
+        <div style={{ color: 'rgba(255,255,255,0.9)', fontWeight: 900, fontSize: 14, letterSpacing: '0.5px', marginTop: 10, textShadow: '0 1px 6px rgba(0,0,0,0.7)', position: 'relative', zIndex: 1 }}>
+          {m.abbr}
         </div>
+        {/* Bottom gradient fade into card body */}
+        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 40, background: 'linear-gradient(to bottom, transparent, rgba(12,18,36,0.6))' }} />
       </div>
 
       {/* ── Card body ── */}
-      <div style={{ padding: '14px 18px 16px' }}>
+      <div style={{ padding: '14px 18px 17px' }}>
         <div style={{ fontWeight: 800, fontSize: 14, color: '#fff', lineHeight: 1.35, marginBottom: 5 }}>{m.full_name}</div>
-        <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 12.5, marginBottom: 14 }}>📍 {m.campus}</div>
+        <div style={{ color: 'rgba(255,255,255,0.42)', fontSize: 12.5, marginBottom: 14 }}>📍 {m.campus}</div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.65)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 7, padding: '4px 11px', fontSize: 11.5, fontWeight: 700 }}>{m.type}</span>
-          <span style={{ fontSize: 12.5, color: hov ? '#f97316' : 'rgba(255,255,255,0.38)', fontWeight: 700, transition: 'color .15s' }}>View details →</span>
+          <span style={{ background: `${asset.accent}18`, color: asset.accent, border: `1px solid ${asset.accent}40`, borderRadius: 7, padding: '4px 11px', fontSize: 11.5, fontWeight: 700 }}>{m.type}</span>
+          <span style={{ fontSize: 12.5, color: hov ? asset.accent : 'rgba(255,255,255,0.35)', fontWeight: 700, transition: 'color .15s' }}>View details →</span>
         </div>
       </div>
     </div>
