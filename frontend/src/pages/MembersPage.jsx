@@ -57,42 +57,49 @@ const INSTITUTION_ABOUT = {
   },
 };
 
-// Official institution logos/seals from Wikimedia Commons + official websites
+// Institution logos — Clearbit fetches actual logo from official website
+// Falls back to Wikipedia Special:FilePath (no hash needed), then to text badge
 const MEMBER_ASSETS = {
   UP: {
-    logo: 'https://upload.wikimedia.org/wikipedia/en/b/b7/UP_seal.png',
-    bg: 'linear-gradient(135deg,#7b1113 0%,#a82323 60%,#8B1a1a 100%)',
-    accent: '#c0392b',
+    logo:     'https://logo.clearbit.com/up.edu.ph',
+    logo2:    'https://en.wikipedia.org/wiki/Special:FilePath/UP_seal.png',
+    bg: 'linear-gradient(135deg,#6b1010 0%,#9b2020 60%,#7b1212 100%)',
+    accent: '#ef4444',
     emoji: '🎓',
   },
   USa: {
-    logo: 'https://upload.wikimedia.org/wikipedia/en/d/d8/Coat_of_arms_of_the_University_of_San_Agustin.png',
-    bg: 'linear-gradient(135deg,#1a3a6c 0%,#2a5298 60%,#1e4080 100%)',
-    accent: '#3b82f6',
+    logo:     'https://logo.clearbit.com/usa.edu.ph',
+    logo2:    'https://en.wikipedia.org/wiki/Special:FilePath/University_of_San_Agustin.png',
+    bg: 'linear-gradient(135deg,#0f2d5c 0%,#1e4a9e 60%,#163880 100%)',
+    accent: '#60a5fa',
     emoji: '🏫',
   },
   DOST: {
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/8/8d/DOST_seal.png',
-    bg: 'linear-gradient(135deg,#064e1e 0%,#0d7a3a 60%,#065f46 100%)',
-    accent: '#10b981',
+    logo:     'https://logo.clearbit.com/dost.gov.ph',
+    logo2:    'https://commons.wikimedia.org/wiki/Special:FilePath/DOST_seal.png',
+    bg: 'linear-gradient(135deg,#053d18 0%,#0a6b2e 60%,#074f22 100%)',
+    accent: '#34d399',
     emoji: '🔬',
   },
   DICT: {
-    logo: 'https://upload.wikimedia.org/wikipedia/en/0/0c/DICT_logo.png',
-    bg: 'linear-gradient(135deg,#003087 0%,#0052cc 60%,#1a4fcc 100%)',
-    accent: '#3b82f6',
+    logo:     'https://logo.clearbit.com/dict.gov.ph',
+    logo2:    'https://commons.wikimedia.org/wiki/Special:FilePath/DICT_logo.png',
+    bg: 'linear-gradient(135deg,#041f5c 0%,#0a3a9e 60%,#082e80 100%)',
+    accent: '#93c5fd',
     emoji: '💻',
   },
   DTI: {
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e9/DTI_Logo_%282022%29.svg/300px-DTI_Logo_%282022%29.svg.png',
-    bg: 'linear-gradient(135deg,#8B0000 0%,#c0392b 60%,#a01f1f 100%)',
-    accent: '#ef4444',
+    logo:     'https://logo.clearbit.com/dti.gov.ph',
+    logo2:    'https://commons.wikimedia.org/wiki/Special:FilePath/DTI_Logo_(2022).svg',
+    bg: 'linear-gradient(135deg,#6b0a0a 0%,#b01e1e 60%,#8b1010 100%)',
+    accent: '#fca5a5',
     emoji: '💼',
   },
   DepEd: {
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/62/DepEd-Seal.svg/300px-DepEd-Seal.svg.png',
-    bg: 'linear-gradient(135deg,#0f3d7a 0%,#1a56db 60%,#154987 100%)',
-    accent: '#3b82f6',
+    logo:     'https://logo.clearbit.com/deped.gov.ph',
+    logo2:    'https://commons.wikimedia.org/wiki/Special:FilePath/DepEd-Seal.svg',
+    bg: 'linear-gradient(135deg,#0b2d6c 0%,#1546b4 60%,#0d3892 100%)',
+    accent: '#93c5fd',
     emoji: '📚',
   },
 };
@@ -366,26 +373,40 @@ export default function MembersPage() {
   );
 }
 
-function ModalLogo({ asset, abbr, name }) {
-  const [ok, setOk] = useState(true);
-  return ok ? (
+// Logo with 3-tier fallback: Clearbit → Wikipedia Special:FilePath → text badge
+function LogoImg({ asset, abbr, name, size = 100, style = {} }) {
+  const [src, setSrc] = useState(asset.logo);
+  const [tried, setTried] = useState(0);
+
+  function handleError() {
+    if (tried === 0 && asset.logo2) { setSrc(asset.logo2); setTried(1); }
+    else setSrc(null);
+  }
+
+  if (!src) {
+    return (
+      <div style={{ width: size, height: size, borderRadius: size * 0.22, background: 'rgba(255,255,255,0.18)', border: '2px solid rgba(255,255,255,0.32)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: size * 0.22, fontWeight: 900, color: '#fff', letterSpacing: '-0.5px', ...style }}>
+        {abbr}
+      </div>
+    );
+  }
+  return (
     <img
-      src={asset.logo}
+      src={src}
       alt={name}
-      onError={() => setOk(false)}
-      style={{ width: 110, height: 110, objectFit: 'contain', filter: 'drop-shadow(0 6px 20px rgba(0,0,0,0.55))', display: 'block' }}
+      onError={handleError}
+      style={{ width: size, height: size, objectFit: 'contain', display: 'block', ...style }}
     />
-  ) : (
-    <div style={{ width: 100, height: 100, borderRadius: 24, background: 'rgba(255,255,255,0.18)', border: '2px solid rgba(255,255,255,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, fontWeight: 900, color: '#fff', letterSpacing: '-0.5px' }}>
-      {abbr}
-    </div>
   );
+}
+
+function ModalLogo({ asset, abbr, name }) {
+  return <LogoImg asset={asset} abbr={abbr} name={name} size={110} style={{ filter: 'drop-shadow(0 6px 20px rgba(0,0,0,0.55))' }} />;
 }
 
 function MemberCard({ member: m, grad, index, onClick }) {
   const [hov, setHov] = useState(false);
-  const [logoOk, setLogoOk] = useState(true);
-  const asset = MEMBER_ASSETS[m.abbr] || { bg: grad, emoji: '🏛️', accent: '#f97316' };
+  const asset = MEMBER_ASSETS[m.abbr] || { logo: null, logo2: null, bg: grad, accent: '#f97316', emoji: '🏛️' };
 
   return (
     <div
@@ -395,7 +416,7 @@ function MemberCard({ member: m, grad, index, onClick }) {
         animationDelay: `${index * 0.07}s`, animation: 'cardUp 0.5s ease both',
         padding: 0, overflow: 'hidden', cursor: 'pointer',
         border: `1.5px solid ${hov ? asset.accent + '80' : 'rgba(255,255,255,0.08)'}`,
-        boxShadow: hov ? `0 20px 50px ${asset.accent}25` : '0 4px 20px rgba(0,0,0,0.35)',
+        boxShadow: hov ? `0 22px 52px ${asset.accent}25` : '0 4px 22px rgba(0,0,0,0.38)',
         transform: hov ? 'translateY(-7px) scale(1.02)' : 'none',
         transition: 'all 0.24s cubic-bezier(.34,1.56,.64,1)',
       }}
@@ -403,34 +424,25 @@ function MemberCard({ member: m, grad, index, onClick }) {
       onMouseLeave={() => setHov(false)}
       onClick={onClick}
     >
-      {/* ── Institution header with official logo ── */}
-      <div style={{ background: asset.bg, height: 170, position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
-        {/* Subtle radial glow */}
-        <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at 50% 40%, rgba(255,255,255,0.12) 0%, transparent 70%)', pointerEvents: 'none' }} />
-        {/* Type badge top-right */}
+      {/* ── Logo on institution-color header ── */}
+      <div style={{ background: asset.bg, height: 175, position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 12 }}>
+        <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at 50% 35%, rgba(255,255,255,0.14) 0%, transparent 68%)', pointerEvents: 'none' }} />
         <div style={{ position: 'absolute', top: 12, right: 12 }}>
-          <span style={{ background: 'rgba(0,0,0,0.35)', backdropFilter: 'blur(8px)', color: '#fff', borderRadius: 7, padding: '4px 11px', fontSize: 10.5, fontWeight: 800, border: '1px solid rgba(255,255,255,0.25)' }}>{m.type}</span>
+          <span style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(8px)', color: '#fff', borderRadius: 7, padding: '4px 11px', fontSize: 10.5, fontWeight: 800, border: '1px solid rgba(255,255,255,0.28)' }}>{m.type}</span>
         </div>
-        {/* Official logo / seal */}
-        {logoOk ? (
-          <img
-            src={asset.logo}
-            alt={m.full_name}
-            onError={() => setLogoOk(false)}
-            style={{ width: 90, height: 90, objectFit: 'contain', filter: 'drop-shadow(0 4px 16px rgba(0,0,0,0.6))', transition: 'transform .3s ease', transform: hov ? 'scale(1.08)' : 'scale(1)', position: 'relative', zIndex: 1 }}
+        {/* Logo with fallback */}
+        <div style={{ position: 'relative', zIndex: 1, transition: 'transform .3s ease', transform: hov ? 'scale(1.09)' : 'scale(1)' }}>
+          <LogoImg
+            asset={asset}
+            abbr={m.abbr}
+            name={m.full_name}
+            size={88}
+            style={{ filter: 'drop-shadow(0 5px 18px rgba(0,0,0,0.65))' }}
           />
-        ) : (
-          /* Fallback: styled abbreviation badge */
-          <div style={{ width: 86, height: 86, borderRadius: 22, background: 'rgba(255,255,255,0.18)', border: '2px solid rgba(255,255,255,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 900, color: '#fff', letterSpacing: '-0.5px', boxShadow: '0 6px 20px rgba(0,0,0,0.4)', position: 'relative', zIndex: 1 }}>
-            {m.abbr}
-          </div>
-        )}
-        {/* Abbr label below logo */}
-        <div style={{ color: 'rgba(255,255,255,0.9)', fontWeight: 900, fontSize: 14, letterSpacing: '0.5px', marginTop: 10, textShadow: '0 1px 6px rgba(0,0,0,0.7)', position: 'relative', zIndex: 1 }}>
-          {m.abbr}
         </div>
-        {/* Bottom gradient fade into card body */}
-        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 40, background: 'linear-gradient(to bottom, transparent, rgba(12,18,36,0.6))' }} />
+        {/* Abbr label */}
+        <div style={{ color: 'rgba(255,255,255,0.88)', fontWeight: 900, fontSize: 14, letterSpacing: '0.5px', textShadow: '0 1px 6px rgba(0,0,0,0.7)', position: 'relative', zIndex: 1 }}>{m.abbr}</div>
+        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 40, background: 'linear-gradient(to bottom, transparent, rgba(12,18,36,0.65))' }} />
       </div>
 
       {/* ── Card body ── */}
