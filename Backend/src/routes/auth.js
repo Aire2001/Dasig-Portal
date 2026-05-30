@@ -184,7 +184,7 @@ router.post('/reset-password', async (req, res) => {
 // GET /api/auth/my-registrations — events the user registered for
 router.get('/my-registrations', verifyToken, async (req, res) => {
   const { data, error } = await supabase.from('event_registrations')
-    .select('event_id, created_at, attended, events(id, title, date, venue, category)')
+    .select('event_id, created_at, events(id, title, date, venue, category)')
     .eq('user_id', req.user.id)
     .order('created_at', { ascending: false });
   if (error) return res.status(500).json({ error: error.message });

@@ -61,7 +61,7 @@ export default function EventsPage() {
     api.auth.myRegistrations()
       .then(regs => {
         const map = {};
-        regs.forEach(r => { map[r.event_id] = { attended: r.attended }; });
+        regs.forEach(r => { map[r.event_id] = { attended: r.attended ?? false }; });
         setMyRegs(map);
       })
       .catch(() => {});

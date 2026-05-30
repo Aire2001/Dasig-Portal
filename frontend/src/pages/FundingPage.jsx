@@ -206,7 +206,11 @@ export default function FundingPage() {
               <div style={{ fontSize: 36, marginBottom: 12 }}>⏳</div>Loading opportunities…
             </div>
           ) : items.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '60px 0', color: 'rgba(255,255,255,0.3)' }}>No funding opportunities found.</div>
+            <div style={{ textAlign:'center', padding:'60px 0' }}>
+              <div style={{ fontSize:40, marginBottom:12 }}>💰</div>
+              <div style={{ color:'rgba(255,255,255,0.55)', fontSize:16, fontWeight:700, marginBottom:6 }}>No funding opportunities found</div>
+              <div style={{ color:'rgba(255,255,255,0.28)', fontSize:13 }}>Try adjusting the category or status filter above</div>
+            </div>
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 16 }}>
               {items.map((item, i) => <FundingCard key={item.id} item={item} index={i} onClick={() => setSelected(item)} />)}

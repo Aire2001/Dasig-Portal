@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import HaribonFull from '../components/HaribonFull';
 import ParticleBackground from '../components/ParticleBackground';
 import { useAuth } from '../context/AuthContext';
+import { api } from '../api';
 
 // ── Animated particle canvas ──────────────────────────────────
 function ParticleCanvas() {
@@ -274,6 +275,23 @@ export default function HomePage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [ctaToast, setCtaToast] = useState('');
+  const [stats, setStats] = useState({ members: 6, events: 4, trainings: 4, news: 8 });
+
+  // Fetch live stats for homepage counters
+  useEffect(() => {
+    Promise.allSettled([
+      api.events.list({ limit: 1 }),
+      api.training.list({ limit: 1 }),
+      api.news.list({ limit: 1 }),
+    ]).then(([ev, tr, nw]) => {
+      setStats({
+        members: 6, // fixed — 6 consortium institutions
+        events:   ev.status === 'fulfilled' ? (ev.value.total ?? 4) : 4,
+        trainings: tr.status === 'fulfilled' ? (tr.value.total ?? 4) : 4,
+        news:     nw.status === 'fulfilled' ? (nw.value.total ?? 8) : 8,
+      });
+    }).catch(() => {});
+  }, []);
 
   function showToast(msg) {
     setCtaToast(msg);
@@ -392,7 +410,12 @@ export default function HomePage() {
               >View all modules</button>
             </div>
             <div style={{ display: 'flex', borderTop: '1px solid rgba(255,255,255,0.09)', paddingTop: 26 }}>
-              {[{ v: '6', l: 'Institutions' }, { v: '120+', l: 'Events' }, { v: '₱12M+', l: 'Funding' }, { v: '48', l: 'Partners' }].map((s, i) => (
+              {[
+                { v: String(stats.members), l: 'Institutions' },
+                { v: String(stats.events), l: 'Events' },
+                { v: String(stats.trainings), l: 'Programs' },
+                { v: String(stats.news), l: 'Articles' },
+              ].map((s, i) => (
                 <div key={i} style={{
                   flex: 1,
                   borderRight: i < 3 ? '1px solid rgba(255,255,255,0.09)' : 'none',
