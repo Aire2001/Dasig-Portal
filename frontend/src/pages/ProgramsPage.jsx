@@ -481,7 +481,7 @@ function CancelConfirmModal({ title, subtitle, onConfirm, onCancel, confirming }
       <div onClick={e => e.stopPropagation()} style={{
         background:'linear-gradient(180deg,#0f172a,#020817)',
         border:'1px solid rgba(225,29,72,0.3)', borderRadius:22,
-        maxWidth:400, width:'100%', padding:'32px 28px',
+        maxWidth:'min(400px,calc(100vw - 32px))', width:'100%', padding:'32px 28px',
         boxShadow:'0 32px 80px rgba(0,0,0,0.8)', textAlign:'center',
       }}>
         <div style={{ fontSize:44, marginBottom:14 }}>⚠️</div>
@@ -806,7 +806,7 @@ function EventsTab({ user }) {
       {/* Conflict warning */}
       {conflict && (
         <div onClick={() => setConflict(null)} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.72)', zIndex:9300, display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
-          <div onClick={e => e.stopPropagation()} style={{ background:'#0f172a', border:'1px solid rgba(245,158,11,0.4)', borderRadius:22, maxWidth:420, width:'100%', padding:'32px', animation:'modalIn .22s ease' }}>
+          <div onClick={e => e.stopPropagation()} style={{ background:'#0f172a', border:'1px solid rgba(245,158,11,0.4)', borderRadius:22, maxWidth:'min(420px,calc(100vw - 32px))', width:'100%', padding:'32px', animation:'modalIn .22s ease' }}>
             <div style={{ fontSize:42, textAlign:'center', marginBottom:12 }}>⚠️</div>
             <div style={{ color:'#fbbf24', fontWeight:900, fontSize:17, textAlign:'center', marginBottom:8 }}>Scheduling Conflict</div>
             <p style={{ color:'rgba(255,255,255,0.6)', fontSize:13.5, textAlign:'center', lineHeight:1.65, marginBottom:6 }}>
@@ -826,7 +826,7 @@ function EventsTab({ user }) {
         <div onClick={() => setDetail(null)} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.5)', zIndex:9100, display:'flex', alignItems:'flex-start', justifyContent:'flex-end', padding:20 }}>
           <div onClick={e => e.stopPropagation()} style={{ background:'#0f172a', border:'1px solid rgba(255,255,255,0.12)', borderRadius:20, width:360, maxHeight:'80vh', overflow:'auto', animation:'panelIn .22s ease' }}>
             <div style={{ background: grad(detail), padding:'24px 22px 18px', position:'relative' }}>
-              <button onClick={() => setDetail(null)} style={{ position:'absolute', top:12, right:12, background:'rgba(255,255,255,0.2)', border:'none', borderRadius:'50%', width:28, height:28, color:'#fff', fontSize:14, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>✕</button>
+              <button onClick={() => setDetail(null)} style={{ position:'absolute', top:12, right:12, background:'rgba(255,255,255,0.2)', border:'none', borderRadius:'50%', width:36, height:36, color:'#fff', fontSize:16, fontWeight:700, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', backdropFilter:'blur(6px)', boxShadow:'0 2px 8px rgba(0,0,0,0.4)' }}>✕</button>
               <div style={{ color:'rgba(255,255,255,0.65)', fontSize:10.5, fontWeight:700, letterSpacing:1, marginBottom:4 }}>{detail.category}</div>
               <div style={{ color:'#fff', fontSize:17, fontWeight:900, lineHeight:1.35 }}>{detail.title}</div>
             </div>
@@ -870,9 +870,9 @@ function EventsTab({ user }) {
       {/* Registration form */}
       {formModal && (
         <div onClick={() => !submitting && setFormModal(null)} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.65)', zIndex:9200, display:'flex', alignItems:'center', justifyContent:'center', padding:20, overflowY:'auto' }}>
-          <div onClick={e => e.stopPropagation()} style={{ background:'linear-gradient(180deg,#0f172a,#020817)', borderRadius:22, maxWidth:480, width:'100%', overflow:'hidden', border:'1px solid rgba(255,255,255,0.1)', animation:'modalIn .24s cubic-bezier(.34,1.56,.64,1)', margin:'auto' }}>
+          <div onClick={e => e.stopPropagation()} style={{ background:'linear-gradient(180deg,#0f172a,#020817)', borderRadius:22, maxWidth:'min(480px,calc(100vw - 32px))', width:'100%', overflow:'hidden', border:'1px solid rgba(255,255,255,0.1)', animation:'modalIn .24s cubic-bezier(.34,1.56,.64,1)', margin:'auto' }}>
             <div style={{ background: grad(formModal), padding:'22px 24px 18px', position:'relative' }}>
-              <button onClick={() => setFormModal(null)} style={{ position:'absolute', top:14, right:14, background:'rgba(255,255,255,0.2)', border:'none', borderRadius:'50%', width:30, height:30, color:'#fff', fontSize:16, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>✕</button>
+              <button onClick={() => setFormModal(null)} style={{ position:'absolute', top:14, right:14, background:'rgba(255,255,255,0.2)', border:'none', borderRadius:'50%', width:36, height:36, color:'#fff', fontSize:16, fontWeight:700, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', backdropFilter:'blur(6px)', boxShadow:'0 2px 8px rgba(0,0,0,0.4)' }}>✕</button>
               <div style={{ color:'rgba(255,255,255,0.65)', fontSize:10.5, fontWeight:700, letterSpacing:1, marginBottom:4 }}>EVENT REGISTRATION</div>
               <div style={{ color:'#fff', fontSize:17, fontWeight:900 }}>{formModal.title}</div>
               <div style={{ display:'flex', gap:14, marginTop:8, flexWrap:'wrap' }}>
@@ -954,7 +954,7 @@ function EventsTab({ user }) {
       {/* Success modal */}
       {okModal && (
         <div onClick={() => setOkModal(null)} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.65)', zIndex:9200, display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
-          <div onClick={e => e.stopPropagation()} style={{ background:'#0f172a', borderRadius:24, maxWidth:440, width:'100%', overflow:'hidden', border:'1px solid rgba(255,255,255,0.1)', animation:'modalIn .26s cubic-bezier(.34,1.56,.64,1)' }}>
+          <div onClick={e => e.stopPropagation()} style={{ background:'#0f172a', borderRadius:24, maxWidth:'min(440px,calc(100vw - 32px))', width:'100%', overflow:'hidden', border:'1px solid rgba(255,255,255,0.1)', animation:'modalIn .26s cubic-bezier(.34,1.56,.64,1)' }}>
             <div style={{ background: grad(okModal.event), padding:'28px 28px 52px', textAlign:'center', position:'relative' }}>
               <div style={{ color:'rgba(255,255,255,0.6)', fontSize:10.5, fontWeight:700, letterSpacing:1, textTransform:'uppercase', marginBottom:6 }}>Registration Confirmed</div>
               <div style={{ color:'#fff', fontSize:19, fontWeight:900 }}>{okModal.event.title}</div>
@@ -1190,7 +1190,7 @@ function TrainingTab({ user }) {
         <div onClick={() => setDetail(null)} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.5)', zIndex:9100, display:'flex', alignItems:'flex-start', justifyContent:'flex-end', padding:20 }}>
           <div onClick={e => e.stopPropagation()} style={{ background:'#0f172a', border:'1px solid rgba(255,255,255,0.12)', borderRadius:20, width:360, maxHeight:'80vh', overflow:'auto', animation:'panelIn .22s ease' }}>
             <div style={{ background: ts(detail).accent, padding:'22px 20px 18px', position:'relative' }}>
-              <button onClick={() => setDetail(null)} style={{ position:'absolute', top:12, right:12, background:'rgba(255,255,255,0.2)', border:'none', borderRadius:'50%', width:28, height:28, color:'#fff', fontSize:14, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>✕</button>
+              <button onClick={() => setDetail(null)} style={{ position:'absolute', top:12, right:12, background:'rgba(255,255,255,0.2)', border:'none', borderRadius:'50%', width:36, height:36, color:'#fff', fontSize:16, fontWeight:700, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', backdropFilter:'blur(6px)', boxShadow:'0 2px 8px rgba(0,0,0,0.4)' }}>✕</button>
               <span style={{ background:'rgba(255,255,255,0.2)', color:'#fff', borderRadius:5, padding:'2px 8px', fontSize:10, fontWeight:700 }}>{detail.category}</span>
               <div style={{ color:'#fff', fontSize:16, fontWeight:900, lineHeight:1.35, marginTop:6 }}>{detail.title}</div>
             </div>
@@ -1232,9 +1232,9 @@ function TrainingTab({ user }) {
       {/* Enrollment form */}
       {formModal && (
         <div onClick={() => !submitting && setFormModal(null)} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.65)', zIndex:9200, display:'flex', alignItems:'center', justifyContent:'center', padding:20, overflowY:'auto' }}>
-          <div onClick={e => e.stopPropagation()} style={{ background:'linear-gradient(180deg,#0f172a,#020817)', borderRadius:22, maxWidth:480, width:'100%', overflow:'hidden', border:'1px solid rgba(255,255,255,0.1)', animation:'modalIn .24s cubic-bezier(.34,1.56,.64,1)', margin:'auto' }}>
+          <div onClick={e => e.stopPropagation()} style={{ background:'linear-gradient(180deg,#0f172a,#020817)', borderRadius:22, maxWidth:'min(480px,calc(100vw - 32px))', width:'100%', overflow:'hidden', border:'1px solid rgba(255,255,255,0.1)', animation:'modalIn .24s cubic-bezier(.34,1.56,.64,1)', margin:'auto' }}>
             <div style={{ background: ts(formModal).accent, padding:'22px 24px 18px', position:'relative' }}>
-              <button onClick={() => setFormModal(null)} style={{ position:'absolute', top:14, right:14, background:'rgba(255,255,255,0.2)', border:'none', borderRadius:'50%', width:30, height:30, color:'#fff', fontSize:16, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>✕</button>
+              <button onClick={() => setFormModal(null)} style={{ position:'absolute', top:14, right:14, background:'rgba(255,255,255,0.2)', border:'none', borderRadius:'50%', width:36, height:36, color:'#fff', fontSize:16, fontWeight:700, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', backdropFilter:'blur(6px)', boxShadow:'0 2px 8px rgba(0,0,0,0.4)' }}>✕</button>
               <div style={{ color:'rgba(255,255,255,0.65)', fontSize:10.5, fontWeight:700, letterSpacing:1, marginBottom:4 }}>PROGRAM ENROLLMENT</div>
               <div style={{ color:'#fff', fontSize:17, fontWeight:900 }}>{formModal.title}</div>
               <div style={{ display:'flex', gap:12, marginTop:8, flexWrap:'wrap' }}>
@@ -1303,7 +1303,7 @@ function TrainingTab({ user }) {
       {/* Success */}
       {okModal && (
         <div onClick={() => setOkModal(null)} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.65)', zIndex:9200, display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
-          <div onClick={e => e.stopPropagation()} style={{ background:'#0f172a', borderRadius:24, maxWidth:420, width:'100%', overflow:'hidden', border:'1px solid rgba(255,255,255,0.1)', animation:'modalIn .26s cubic-bezier(.34,1.56,.64,1)' }}>
+          <div onClick={e => e.stopPropagation()} style={{ background:'#0f172a', borderRadius:24, maxWidth:'min(420px,calc(100vw - 32px))', width:'100%', overflow:'hidden', border:'1px solid rgba(255,255,255,0.1)', animation:'modalIn .26s cubic-bezier(.34,1.56,.64,1)' }}>
             <div style={{ background: ts(okModal.training).accent, padding:'26px 26px 48px', textAlign:'center', position:'relative' }}>
               <div style={{ color:'rgba(255,255,255,0.6)', fontSize:10.5, fontWeight:700, letterSpacing:1, textTransform:'uppercase', marginBottom:6 }}>Enrollment Confirmed</div>
               <div style={{ color:'#fff', fontSize:18, fontWeight:900 }}>{okModal.training.title}</div>
@@ -1545,7 +1545,7 @@ function CalendarTab({ user }) {
         <div onClick={() => setDetail(null)} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.5)', zIndex:9100, display:'flex', alignItems:'flex-start', justifyContent:'flex-end', padding:20 }}>
           <div onClick={e => e.stopPropagation()} style={{ background:'#0f172a', border:'1px solid rgba(255,255,255,0.1)', borderRadius:20, width:340, maxHeight:'80vh', overflow:'auto', animation:'panelIn .22s ease' }}>
             <div style={{ background: detail._type==='event' ? (EV_GRADS[detail.category]||EV_GRADS.Summit) : (TR_STYLES[detail.category]||TR_STYLES.Technology).accent, padding:'20px 18px 16px', position:'relative' }}>
-              <button onClick={() => setDetail(null)} style={{ position:'absolute', top:12, right:12, background:'rgba(255,255,255,0.2)', border:'none', borderRadius:'50%', width:28, height:28, color:'#fff', fontSize:14, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>✕</button>
+              <button onClick={() => setDetail(null)} style={{ position:'absolute', top:12, right:12, background:'rgba(255,255,255,0.2)', border:'none', borderRadius:'50%', width:36, height:36, color:'#fff', fontSize:16, fontWeight:700, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', backdropFilter:'blur(6px)', boxShadow:'0 2px 8px rgba(0,0,0,0.4)' }}>✕</button>
               <span style={{ background:'rgba(255,255,255,0.2)', color:'#fff', borderRadius:5, padding:'2px 9px', fontSize:10.5, fontWeight:700 }}>{detail.category}</span>
               <div style={{ color:'#fff', fontSize:16, fontWeight:900, lineHeight:1.35, marginTop:6 }}>{detail.title}</div>
             </div>

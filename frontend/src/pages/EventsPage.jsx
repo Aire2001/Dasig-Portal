@@ -17,7 +17,7 @@ const cardGradients = {
 function CancelConfirmModal({ title, subtitle, onConfirm, onCancel, confirming }) {
   return (
     <div onClick={onCancel} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.72)', zIndex:9500, display:'flex', alignItems:'center', justifyContent:'center', padding:20, backdropFilter:'blur(4px)' }}>
-      <div onClick={e => e.stopPropagation()} style={{ background:'linear-gradient(180deg,#0f172a,#020817)', border:'1px solid rgba(225,29,72,0.3)', borderRadius:22, maxWidth:400, width:'100%', padding:'32px 28px', boxShadow:'0 32px 80px rgba(0,0,0,0.8)', textAlign:'center' }}>
+      <div onClick={e => e.stopPropagation()} style={{ background:'linear-gradient(180deg,#0f172a,#020817)', border:'1px solid rgba(225,29,72,0.3)', borderRadius:22, maxWidth:'min(400px,calc(100vw - 32px))', width:'100%', padding:'32px 28px', boxShadow:'0 32px 80px rgba(0,0,0,0.8)', textAlign:'center' }}>
         <div style={{ fontSize:44, marginBottom:14 }}>⚠️</div>
         <div style={{ color:'#fff', fontWeight:900, fontSize:18, marginBottom:8 }}>{title}</div>
         <p style={{ color:'rgba(255,255,255,0.55)', fontSize:14, lineHeight:1.7, marginBottom:26 }}>{subtitle}</p>
@@ -175,7 +175,7 @@ export default function EventsPage() {
           overflowY:'auto',
         }}>
           <div onClick={e => e.stopPropagation()} style={{
-            background:'linear-gradient(180deg,#0f172a,#020817)', borderRadius:22, maxWidth:480, width:'100%',
+            background:'linear-gradient(180deg,#0f172a,#020817)', borderRadius:22, maxWidth:'min(480px,calc(100vw - 32px))', width:'100%',
             boxShadow:'0 32px 100px rgba(0,0,0,0.7)', overflow:'hidden',
             border:'1px solid rgba(255,255,255,0.1)',
             animation:'fbModalIn 0.24s cubic-bezier(.34,1.56,.64,1)',
@@ -311,7 +311,7 @@ export default function EventsPage() {
           zIndex:9100, display:'flex', alignItems:'center', justifyContent:'center', padding:20,
         }}>
           <div onClick={e => e.stopPropagation()} style={{
-            background:'#0f172a', borderRadius:24, maxWidth:520, width:'100%',
+            background:'#0f172a', borderRadius:24, maxWidth:'min(520px,calc(100vw - 32px))', width:'100%',
             boxShadow:'0 40px 120px rgba(0,0,0,0.8)', overflow:'hidden',
             border:'1px solid rgba(255,255,255,0.1)',
             animation:'fbModalIn 0.28s cubic-bezier(.34,1.56,.64,1)',
@@ -420,7 +420,7 @@ export default function EventsPage() {
           zIndex:9200, display:'flex', alignItems:'center', justifyContent:'center', padding:24,
         }}>
           <div onClick={e => e.stopPropagation()} style={{
-            background:'linear-gradient(180deg,#0f172a,#020817)', borderRadius:20, maxWidth:380, width:'100%',
+            background:'linear-gradient(180deg,#0f172a,#020817)', borderRadius:20, maxWidth:'min(380px,calc(100vw - 32px))', width:'100%',
             boxShadow:'0 24px 80px rgba(0,0,0,0.7)', overflow:'hidden',
             border:'1px solid rgba(255,255,255,0.1)',
             animation:'fbModalIn 0.22s cubic-bezier(.34,1.56,.64,1)',

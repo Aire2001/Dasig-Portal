@@ -1995,7 +1995,7 @@ function AdminCalendarTab({ showToast, setTab }) {
         <div onClick={() => setDetail(null)} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.45)', zIndex:9100, display:'flex', alignItems:'flex-start', justifyContent:'flex-end', padding:20 }}>
           <div onClick={e => e.stopPropagation()} style={{ background:'#0f172a', border:'1px solid rgba(255,255,255,0.12)', borderRadius:20, width:340, maxHeight:'80vh', overflow:'auto', animation:'modalIn .22s ease', boxShadow:'0 24px 80px rgba(0,0,0,0.7)' }}>
             <div style={{ background: detail._type==='event' ? (EV_CAL_COLORS[detail.category]?.bg?.replace('0.4','0.7') || 'rgba(79,70,229,0.7)') : TR_CAL_COLORS[detail.category]?.replace('0.4','0.7'), padding:'18px 20px 16px', position:'relative' }}>
-              <button onClick={()=>setDetail(null)} style={{ position:'absolute',top:12,right:12,background:'rgba(255,255,255,0.18)',border:'none',borderRadius:'50%',width:28,height:28,color:'#fff',fontSize:14,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center' }}>✕</button>
+              <button onClick={()=>setDetail(null)} style={{ position:'absolute',top:12,right:12,background:'rgba(255,255,255,0.18)',border:'none',borderRadius:'50%',width:36,height:36,color:'#fff',fontSize:16,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',backdropFilter:'blur(6px)',boxShadow:'0 2px 8px rgba(0,0,0,0.4)' }}>✕</button>
               <div style={{ fontSize:12, fontWeight:700, color:'rgba(255,255,255,0.65)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:5 }}>
                 {detail._type === 'event' ? `📅 ${detail.category}` : `🎓 ${detail.category}`}
               </div>

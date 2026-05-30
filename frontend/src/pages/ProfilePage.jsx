@@ -15,7 +15,7 @@ function ConfirmModal({ icon, title, subtitle, details, onConfirm, onCancel, con
       <div onClick={e => e.stopPropagation()} style={{
         background:'linear-gradient(180deg,#0f172a,#06091a)',
         border:'1px solid rgba(255,255,255,0.12)', borderRadius:24,
-        maxWidth:440, width:'100%', padding:'36px 32px',
+        maxWidth:'min(440px,calc(100vw - 32px))', width:'100%', padding:'36px 32px',
         boxShadow:'0 40px 100px rgba(0,0,0,0.85)', textAlign:'center',
       }}>
         <div style={{ fontSize:52, marginBottom:16, lineHeight:1 }}>{icon}</div>
@@ -348,7 +348,7 @@ function ProfileTab({ user, showToast, onSaved }) {
         confirmColor="linear-gradient(90deg,#f97316,#e11d48)"
       />
     )}
-    <div style={{ display:'flex', flexDirection:'column', gap:20, maxWidth:520 }}>
+    <div style={{ display:'flex', flexDirection:'column', gap:20, maxWidth:'min(520px,calc(100vw - 32px))' }}>
       {/* Name */}
       <div>
         <label className="pf-label">Display Name <span style={{ color:'#e11d48' }}>*</span></label>
@@ -476,7 +476,7 @@ function SecurityTab({ showToast }) {
 
   return (
     <>
-    <div style={{ display:'flex', flexDirection:'column', gap:20, maxWidth:440 }}>
+    <div style={{ display:'flex', flexDirection:'column', gap:20, maxWidth:'min(440px,calc(100vw - 32px))' }}>
       <div style={{ background:'rgba(59,130,246,0.07)', border:'1px solid rgba(59,130,246,0.2)', borderRadius:12, padding:'12px 16px', display:'flex', gap:10, alignItems:'flex-start' }}>
         <span style={{ fontSize:16, flexShrink:0 }}>ℹ️</span>
         <p style={{ color:'rgba(255,255,255,0.6)', fontSize:13, margin:0, lineHeight:1.6 }}>

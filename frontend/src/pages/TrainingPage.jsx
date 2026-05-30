@@ -97,7 +97,7 @@ export default function TrainingPage() {
           padding:20, overflowY:'auto',
         }}>
           <div onClick={e => e.stopPropagation()} style={{
-            background:'linear-gradient(180deg,#0f172a,#020817)', borderRadius:22, maxWidth:480, width:'100%',
+            background:'linear-gradient(180deg,#0f172a,#020817)', borderRadius:22, maxWidth:'min(480px,calc(100vw - 32px))', width:'100%',
             boxShadow:'0 32px 100px rgba(0,0,0,0.7)', overflow:'hidden',
             border:'1px solid rgba(255,255,255,0.1)',
             animation:'modalIn 0.24s cubic-bezier(.34,1.56,.64,1)', margin:'auto',
@@ -223,7 +223,7 @@ export default function TrainingPage() {
           zIndex:9100, display:'flex', alignItems:'center', justifyContent:'center', padding:20,
         }}>
           <div onClick={e => e.stopPropagation()} style={{
-            background:'#0f172a', borderRadius:24, maxWidth:520, width:'100%',
+            background:'#0f172a', borderRadius:24, maxWidth:'min(520px,calc(100vw - 32px))', width:'100%',
             boxShadow:'0 40px 120px rgba(0,0,0,0.8)', overflow:'hidden',
             border:'1px solid rgba(255,255,255,0.1)',
             animation:'modalIn 0.28s cubic-bezier(.34,1.56,.64,1)',
@@ -323,7 +323,7 @@ export default function TrainingPage() {
           zIndex:9200, display:'flex', alignItems:'center', justifyContent:'center', padding:24,
         }}>
           <div onClick={e => e.stopPropagation()} style={{
-            background:'linear-gradient(180deg,#0f172a,#020817)', borderRadius:20, maxWidth:380, width:'100%',
+            background:'linear-gradient(180deg,#0f172a,#020817)', borderRadius:20, maxWidth:'min(380px,calc(100vw - 32px))', width:'100%',
             boxShadow:'0 24px 80px rgba(0,0,0,0.7)', overflow:'hidden',
             border:'1px solid rgba(255,255,255,0.1)',
             animation:'modalIn 0.22s cubic-bezier(.34,1.56,.64,1)',

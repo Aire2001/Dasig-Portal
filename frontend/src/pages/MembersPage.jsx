@@ -171,7 +171,7 @@ export default function MembersPage() {
               animation: 'fadeIn 0.18s ease', backdropFilter: 'blur(4px)', overflowY: 'auto',
             }}>
               <div onClick={e => e.stopPropagation()} style={{
-                background: '#0d1424', borderRadius: 24, maxWidth: 580, width: '100%',
+                background: '#0d1424', borderRadius: 24, maxWidth: 'min(580px,calc(100vw - 32px))', width: '100%',
                 boxShadow: '0 40px 120px rgba(0,0,0,0.85)', overflow: 'hidden',
                 border: '1px solid rgba(255,255,255,0.1)',
                 animation: 'modalIn 0.26s cubic-bezier(.34,1.3,.64,1)',
