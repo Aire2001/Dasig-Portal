@@ -4,6 +4,7 @@ import PageHeader from '../components/PageHeader';
 import ParticleBackground from '../components/ParticleBackground';
 import HaribonFace from '../components/HaribonFace';
 import { api } from '../api';
+import { useAuth } from '../context/AuthContext';
 
 // Renders bot reply text with formatted bullets, numbered lists, and section headers
 function BotText({ text }) {
@@ -55,17 +56,54 @@ function BotText({ text }) {
   );
 }
 
-const QUICK_CHIPS = [
-  { label: '📅 Upcoming Events',        q: 'What events are coming up?' },
-  { label: '🎓 Training Programs',      q: 'What training programs are available?' },
-  { label: '👥 How to become a member', q: 'How do I become a DASIG member?' },
-  { label: '💰 Funding Opportunities',  q: 'What funding opportunities are available?' },
-  { label: '📰 News & Announcements',   q: 'What are the latest news and announcements?' },
-  { label: '📋 Policies',               q: 'Where can I find the DASIG policies?' },
-  { label: '🤝 Partnerships',           q: 'Tell me about DASIG partnerships' },
-  { label: '🏛 Member Institutions',    q: 'Who are the DASIG member institutions?' },
-  { label: '🦅 About Haribon',          q: 'Who are you and what can you do?' },
-];
+// Role-based quick chips
+const QUICK_CHIPS_BY_ROLE = {
+  GUEST: [
+    { label: '📅 Upcoming Events',        q: 'What events are coming up?' },
+    { label: '🎓 Training Programs',      q: 'What training programs are available?' },
+    { label: '👥 How to become a member', q: 'How do I become a DASIG member?' },
+    { label: '💰 Funding Opportunities',  q: 'What funding opportunities are available?' },
+    { label: '📰 News & Announcements',   q: 'What are the latest news and announcements?' },
+    { label: '🏛 Member Institutions',    q: 'Who are the DASIG member institutions?' },
+    { label: '🦅 About Haribon',          q: 'Who are you and what can you do?' },
+    { label: '🔐 How to register',        q: 'How do I create a DASIG account?' },
+  ],
+  MEMBER: [
+    { label: '📅 Upcoming Events',        q: 'What events are coming up?' },
+    { label: '🎓 Enroll in Training',     q: 'What training programs can I enroll in?' },
+    { label: '💰 Open Funding',           q: 'What funding opportunities are open?' },
+    { label: '🤝 Partnerships',           q: 'Tell me about DASIG partnerships' },
+    { label: '📋 View Policies',          q: 'What governance policies are available?' },
+    { label: '📰 Latest News',            q: 'What are the latest news and announcements?' },
+    { label: '📊 My Membership Status',   q: 'What is my membership status?' },
+    { label: '🏛 Member Institutions',    q: 'Who are the DASIG member institutions?' },
+  ],
+  ADMIN: [
+    { label: '📅 All Events',             q: 'What events are coming up?' },
+    { label: '🎓 Training Programs',      q: 'What training programs are available?' },
+    { label: '👥 Member Management',      q: 'What can the admin panel manage?' },
+    { label: '🤖 Chatbot Accuracy',       q: 'How is the chatbot performing?' },
+    { label: '💰 Funding Opportunities',  q: 'What funding opportunities exist?' },
+    { label: '📋 Governance Policies',    q: 'What governance policies are available?' },
+    { label: '🤝 Partnerships',           q: 'Tell me about DASIG partnerships' },
+    { label: '🦅 What can Haribon do',    q: 'What topics can Haribon answer?' },
+  ],
+};
+
+// Role-based greeting
+function makeInitMsg(user) {
+  if (!user) {
+    return "Hi! I'm Haribon 🦅 — the DASIG AI Assistant.\n\nI can answer questions about consortium events, training programs, membership, policies, funding opportunities, partnerships, and more.\n\nWhat would you like to know?";
+  }
+  const first = (user.name || '').split(' ')[0];
+  if (user.role === 'ADMIN') {
+    return `Hello, ${first}! I'm Haribon 🦅 — the DASIG AI Assistant.\n\nAs an administrator, I can help with portal information, event details, training programs, member management guidance, and system queries.\n\nWhat do you need?`;
+  }
+  if (user.role === 'MEMBER') {
+    return `Welcome back, ${first}! 🦅 I'm Haribon — your DASIG AI Assistant.\n\nYou have full member access. Ask me about upcoming events, training enrollments, funding opportunities, partnerships, or governance policies.\n\nHow can I help you today?`;
+  }
+  return `Hi, ${first}! I'm Haribon 🦅 — the DASIG AI Assistant.\n\nI can help you learn about DASIG events, training programs, and how to become a member.\n\nWhat would you like to know?`;
+}
 
 const CHAT_CSS = `
   @keyframes msgIn {
@@ -116,19 +154,32 @@ const CHAT_CSS = `
   ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 3px; }
 `;
 
-const INIT_MSG = {
-  from: 'bot',
-  text: "Kumusta! I'm Haribon 🦅 — your DASIG AI Assistant.\n\nI can answer questions about consortium events, training programs, membership, policies, funding opportunities, partnerships, and more.\n\nWhat would you like to know?",
-  time: new Date(),
-};
-
 function formatTime(d) {
   return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
+const ROLE_BADGE = {
+  ADMIN:  { bg:'rgba(225,29,72,0.18)',   color:'#f43f5e', label:'Administrator' },
+  MEMBER: { bg:'rgba(16,185,129,0.15)',  color:'#34d399', label:'Member'        },
+  GUEST:  { bg:'rgba(255,255,255,0.08)', color:'rgba(255,255,255,0.5)', label:'Guest' },
+};
+
 export default function ChatbotPage() {
-  const navigate = useNavigate();
-  const [messages, setMessages] = useState([INIT_MSG]);
+  const navigate  = useNavigate();
+  const { user }  = useAuth();
+  const role      = user?.role || 'GUEST';
+  const quickChips = QUICK_CHIPS_BY_ROLE[role] || QUICK_CHIPS_BY_ROLE.GUEST;
+  const rb        = ROLE_BADGE[role] || ROLE_BADGE.GUEST;
+
+  const initMsg = { from:'bot', text: makeInitMsg(user), time: new Date() };
+  const [messages, setMessages] = useState([initMsg]);
+
+  // Reset chat when user changes (login/logout)
+  useEffect(() => {
+    setMessages([{ from:'bot', text: makeInitMsg(user), time: new Date() }]);
+    setTotalAsked(0); setTotalMatched(0); setMatchRate(null);
+    setEnded(false); setHasReplied(false); setInput('');
+  }, [user?.id]);
   const [input, setInput]       = useState('');
   const [thinking, setThinking] = useState(false);
   const [matchRate, setMatchRate] = useState(null);
@@ -225,18 +276,35 @@ export default function ChatbotPage() {
               background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
               borderRadius: 14, padding: '12px 18px', flexWrap: 'wrap',
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <div style={{ width: 38, height: 38, borderRadius: 10, overflow: 'hidden', flexShrink: 0 }}>
-                  <HaribonFace size={38} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ width: 40, height: 40, borderRadius: 11, overflow: 'hidden', flexShrink: 0, border: '2px solid rgba(249,115,22,0.3)' }}>
+                  <HaribonFace size={40} />
                 </div>
                 <div>
-                  <div style={{ color: '#fff', fontWeight: 800, fontSize: 13 }}>Haribon · DASIG NLP Engine</div>
+                  <div style={{ color: '#fff', fontWeight: 900, fontSize: 14 }}>Haribon · DASIG NLP Engine</div>
                   <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11, display: 'flex', alignItems: 'center', gap: 5, marginTop: 1 }}>
-                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#4ade80', display: 'inline-block', flexShrink: 0 }} />
+                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#4ade80', display: 'inline-block', flexShrink: 0, boxShadow:'0 0 5px rgba(74,222,128,0.8)' }} />
                     Online · Scoped to DASIG knowledge base
                   </div>
                 </div>
               </div>
+              {/* User badge */}
+              {user && (
+                <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                  <div style={{ width:32, height:32, borderRadius:9, overflow:'hidden', flexShrink:0 }}>
+                    {user.avatar_url
+                      ? <img src={user.avatar_url} alt="" style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }} />
+                      : <div style={{ width:'100%', height:'100%', background:'linear-gradient(135deg,#f97316,#e11d48)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:900, color:'#fff' }}>
+                          {(user.name||'U').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase()}
+                        </div>
+                    }
+                  </div>
+                  <div>
+                    <div style={{ color:'rgba(255,255,255,0.75)', fontSize:12.5, fontWeight:700 }}>{user.name}</div>
+                    <span style={{ background: rb.bg, color: rb.color, border:`1px solid ${rb.color}30`, borderRadius:5, padding:'1px 8px', fontSize:10, fontWeight:800 }}>{rb.label}</span>
+                  </div>
+                </div>
+              )}
               <div style={{ marginLeft: 'auto', display: 'flex', gap: 10, alignItems: 'center' }}>
                 {matchRate !== null && (
                   <div style={{
@@ -453,7 +521,7 @@ export default function ChatbotPage() {
                     Quick questions
                   </div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
-                    {QUICK_CHIPS.map(c => (
+                    {quickChips.map(c => (
                       <button key={c.label} className="chip-btn" onClick={() => send(c.q)} disabled={thinking}>
                         {c.label}
                       </button>
@@ -476,7 +544,7 @@ export default function ChatbotPage() {
                   value={input}
                   onChange={handleInputChange}
                   onKeyDown={onKey}
-                  placeholder="Ask Haribon about events, membership, training, policies…"
+                  placeholder={user ? `Ask Haribon, ${user.name.split(' ')[0]}…` : 'Ask Haribon about events, membership, training, policies…'}
                   disabled={thinking}
                   style={{ maxHeight: 120, overflowY: 'auto' }}
                 />

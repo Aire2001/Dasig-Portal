@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import HaribonFace from './HaribonFace';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
@@ -132,6 +132,10 @@ const ROLE_BADGE = {
 export default function Chatbot() {
   const { user }     = useAuth();
   const navigate     = useNavigate();
+  const location     = useLocation();
+
+  // Don't show the floating widget on the full chatbot page
+  if (location.pathname === '/chatbot') return null;
   const role         = user?.role || 'GUEST';
   const quick        = QUICK_BY_ROLE[role] || QUICK_BY_ROLE.GUEST;
   const rb           = ROLE_BADGE[role] || ROLE_BADGE.GUEST;
