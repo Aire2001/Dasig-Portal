@@ -41,13 +41,22 @@ export function AuthProvider({ children }) {
     return data.user;
   }
 
+  async function refreshUser() {
+    const token = localStorage.getItem('dasig_token');
+    if (!token) return;
+    try {
+      const u = await api.auth.me();
+      setUser(u);
+    } catch (_) {}
+  }
+
   function logout() {
     localStorage.removeItem('dasig_token');
     setUser(null);
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );

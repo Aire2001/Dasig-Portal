@@ -400,11 +400,20 @@ export default function Nav() {
                   </div>
                 )}
 
-                {/* Name — only show for MEMBER and GUEST */}
+                {/* Name — clickable, opens profile page */}
                 {user.role !== 'ADMIN' && (
-                  <span style={{ color: 'rgba(255,255,255,0.65)', fontSize: 13, maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <button onClick={() => navigate('/profile')} style={{
+                    color: 'rgba(255,255,255,0.75)', background: 'rgba(255,255,255,0.06)',
+                    border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8,
+                    padding: '5px 12px', fontSize: 13, fontWeight: 600,
+                    cursor: 'pointer', fontFamily: 'inherit', transition: 'all .15s',
+                    maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.color='#fff'; e.currentTarget.style.background='rgba(255,255,255,0.12)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.color='rgba(255,255,255,0.75)'; e.currentTarget.style.background='rgba(255,255,255,0.06)'; }}
+                  title="My Profile">
                     {user.name}
-                  </span>
+                  </button>
                 )}
 
                 {/* My Card — members only */}
@@ -420,7 +429,20 @@ export default function Nav() {
                   >My Card</button>
                 )}
 
-                {/* Admin button — shows name + role in one pill */}
+                {/* Profile link for Admin */}
+                {user.role === 'ADMIN' && (
+                  <button onClick={() => navigate('/profile')} style={{
+                    background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.12)',
+                    borderRadius:8, padding:'5px 12px', color:'rgba(255,255,255,0.7)',
+                    fontSize:13, fontWeight:600, cursor:'pointer', fontFamily:'inherit', transition:'all .15s',
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.color='#fff'; e.currentTarget.style.background='rgba(255,255,255,0.12)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.color='rgba(255,255,255,0.7)'; e.currentTarget.style.background='rgba(255,255,255,0.06)'; }}
+                  title="My Profile">
+                    {user.name}
+                  </button>
+                )}
+                {/* Admin panel button */}
                 {user.role === 'ADMIN' && (
                   <button onClick={() => navigate('/admin')} style={{
                     display: 'flex', alignItems: 'center', gap: 8,

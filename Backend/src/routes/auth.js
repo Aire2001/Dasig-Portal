@@ -90,7 +90,7 @@ router.get('/me', verifyToken, (req, res) => {
 
 // PUT /api/auth/profile — update profile fields
 router.put('/profile', verifyToken, async (req, res) => {
-  const { name, institution, campus } = req.body;
+  const { name, institution, campus, phone } = req.body;
   const updates = {};
   if (name !== undefined) {
     if (!name.trim()) return res.status(400).json({ error: 'Name cannot be empty' });
@@ -98,13 +98,14 @@ router.put('/profile', verifyToken, async (req, res) => {
   }
   if (institution !== undefined) updates.institution = institution;
   if (campus !== undefined) updates.campus = campus;
+  if (phone !== undefined) updates.phone = phone || null;
 
   if (Object.keys(updates).length === 0) {
     return res.status(400).json({ error: 'No updatable fields provided' });
   }
 
   const { data, error } = await supabase.from('users').update(updates).eq('id', req.user.id)
-    .select('id, name, email, role, status, institution, campus, tier, member_since, renewal_due').single();
+    .select('id, name, email, role, status, institution, campus, phone, tier, member_since, renewal_due').single();
   if (error) return res.status(500).json({ error: 'Profile update failed' });
   res.json({ message: 'Profile updated', user: data });
 });

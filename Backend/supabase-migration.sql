@@ -66,6 +66,7 @@ END $$;
 -- Add columns to existing deployments (safe to run multiple times)
 ALTER TABLE events ADD COLUMN IF NOT EXISTS registration_deadline DATE;
 ALTER TABLE event_registrations ADD COLUMN IF NOT EXISTS attended BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS phone TEXT;
 
 CREATE TABLE IF NOT EXISTS event_registrations (
   id         BIGSERIAL PRIMARY KEY,

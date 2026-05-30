@@ -19,6 +19,7 @@ import PartnershipsPage from './pages/PartnershipsPage';
 import ContactAdminPage from './pages/ContactAdminPage';
 import TermsPage from './pages/TermsPage';
 import ChatbotPage from './pages/ChatbotPage';
+import ProfilePage from './pages/ProfilePage';
 
 export default function App() {
   return (
@@ -45,6 +46,7 @@ export default function App() {
                 <Route path="/contact-admin" element={<ContactAdminPage />} />
                 <Route path="/terms"         element={<TermsPage />} />
                 <Route path="/chatbot"       element={<ChatbotPage />} />
+                <Route path="/profile"       element={<ProfilePage />} />
               </Routes>
               <Footer />
               <Chatbot />
