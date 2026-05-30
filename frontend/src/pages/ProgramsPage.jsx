@@ -129,7 +129,18 @@ function ErrModal({ err, onClose }) {
 /* ═══════════════════════════════════════════════════════════
    OUTLOOK-STYLE CALENDAR COMPONENT
 ═══════════════════════════════════════════════════════════ */
-function OutlookCal({ items, onClickItem, conflictIds, getColors }) {
+// Returns all items active on a given calendar day
+function itemsOnDay(items, day) {
+  const dayStart = day.getTime();
+  const dayEnd   = dayStart + DAY_MS - 1;
+  return items.filter(it => {
+    if (!it.startDate) return false;
+    const end = it.endDate ? it.endDate.getTime() : it.startDate.getTime();
+    return it.startDate.getTime() <= dayEnd && end >= dayStart;
+  });
+}
+
+function OutlookCal({ items, onClickItem, onClickDay, conflictIds, getColors }) {
   const todayDate = new Date();
   const [month, setMonth] = useState(null);
   const [year,  setYear]  = useState(null);
@@ -294,20 +305,35 @@ function OutlookCal({ items, onClickItem, conflictIds, getColors }) {
             )}
             {nRows === 0 && <div style={{ height: 8 }} />}
 
-            {/* Day number cells */}
+            {/* Day number cells — clickable */}
             <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)' }}>
               {week.days.map((day, di) => {
-                const inMon  = day.getMonth() === m;
-                const isToday = sameDay(day, todayDate);
+                const inMon    = day.getMonth() === m;
+                const isToday  = sameDay(day, todayDate);
                 const isWeekend = di === 0 || di === 6;
+                const dayItems = inMon ? itemsOnDay(items, day) : [];
+                const hasEvents = dayItems.length > 0;
                 return (
-                  <div key={di} className="cal-day-cell" style={{ borderLeft: di > 0 ? '1px solid rgba(255,255,255,0.04)' : 'none', background: isToday ? 'rgba(249,115,22,0.06)' : 'transparent' }}>
+                  <div
+                    key={di}
+                    className="cal-day-cell"
+                    onClick={() => inMon && onClickDay && onClickDay(day, dayItems)}
+                    style={{
+                      borderLeft: di > 0 ? '1px solid rgba(255,255,255,0.04)' : 'none',
+                      background: isToday ? 'rgba(249,115,22,0.06)' : 'transparent',
+                      cursor: inMon ? 'pointer' : 'default',
+                      transition: 'background .12s',
+                    }}
+                    onMouseEnter={e => { if (inMon) e.currentTarget.style.background = isToday ? 'rgba(249,115,22,0.12)' : 'rgba(255,255,255,0.05)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = isToday ? 'rgba(249,115,22,0.06)' : 'transparent'; }}
+                  >
                     <div style={{
-                      width: 26, height: 26, borderRadius: '50%',
+                      width: 28, height: 28, borderRadius: '50%',
                       background: isToday ? '#f97316' : 'transparent',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       fontSize: 12.5, fontWeight: isToday ? 900 : 400,
-                      color: isToday ? '#fff' : inMon ? (isWeekend ? 'rgba(255,255,255,0.38)' : 'rgba(255,255,255,0.6)') : 'rgba(255,255,255,0.18)',
+                      color: isToday ? '#fff' : inMon ? (isWeekend ? 'rgba(255,255,255,0.38)' : 'rgba(255,255,255,0.65)') : 'rgba(255,255,255,0.18)',
+                      boxShadow: hasEvents && !isToday ? '0 0 0 2px rgba(249,115,22,0.4)' : 'none',
                     }}>
                       {day.getDate()}
                     </div>
@@ -464,11 +490,11 @@ function TrCard({ t, idx, enrolled, onEnroll }) {
 const EV_FILTERS = ['All','Summit','Workshop','Seminar','Funding'];
 
 function EventsTab({ user }) {
-  const [active, setActive]       = useState('All');
   const [events, setEvents]       = useState([]);
   const [loading, setLoading]     = useState(true);
   const [myRegs, setMyRegs]       = useState({});
   const [detail, setDetail]       = useState(null);   // clicked calendar item
+  const [dayPanel, setDayPanel]   = useState(null);   // { date, items }
   const [formModal, setFormModal] = useState(null);
   const [conflict, setConflict]   = useState(null);
   const [okModal, setOkModal]     = useState(null);
@@ -482,11 +508,11 @@ function EventsTab({ user }) {
 
   useEffect(() => {
     setLoading(true);
-    api.events.list({ category: active })
+    api.events.list({ limit: 1000 })
       .then(r => setEvents(r.data || []))
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [active]);
+  }, []);
 
   useEffect(() => {
     if (!user) return;
@@ -710,39 +736,82 @@ function EventsTab({ user }) {
         </div>
       )}
 
-      {/* Outlook Calendar */}
+      {/* Day-click panel */}
+      {dayPanel && !detail && !formModal && (
+        <div onClick={() => setDayPanel(null)} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.55)', zIndex:9100, display:'flex', alignItems:'flex-start', justifyContent:'flex-end', padding:20 }}>
+          <div onClick={e => e.stopPropagation()} style={{ background:'#0d1424', border:'1px solid rgba(255,255,255,0.12)', borderRadius:20, width:380, maxHeight:'82vh', overflow:'auto', animation:'panelIn .22s ease', boxShadow:'0 24px 80px rgba(0,0,0,0.7)' }}>
+            <div style={{ padding:'20px 22px 16px', borderBottom:'1px solid rgba(255,255,255,0.07)', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+              <div>
+                <div style={{ color:'rgba(255,255,255,0.45)', fontSize:11, fontWeight:700, letterSpacing:'.5px', textTransform:'uppercase', marginBottom:3 }}>
+                  {DAY_ABBR[dayPanel.date.getDay()]}, {MONTH_NAMES[dayPanel.date.getMonth()]} {dayPanel.date.getDate()}, {dayPanel.date.getFullYear()}
+                </div>
+                <div style={{ color:'#fff', fontWeight:900, fontSize:16 }}>
+                  {dayPanel.items.length === 0 ? 'No events' : `${dayPanel.items.length} event${dayPanel.items.length > 1 ? 's' : ''}`}
+                </div>
+              </div>
+              <button onClick={() => setDayPanel(null)} style={{ background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:'50%', width:32, height:32, color:'rgba(255,255,255,0.6)', fontSize:16, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>✕</button>
+            </div>
+
+            {dayPanel.items.length === 0 ? (
+              <div style={{ padding:'32px 22px', textAlign:'center' }}>
+                <div style={{ fontSize:40, marginBottom:10 }}>📅</div>
+                <div style={{ color:'rgba(255,255,255,0.35)', fontSize:13.5 }}>No events on this date.</div>
+                <div style={{ color:'rgba(255,255,255,0.22)', fontSize:12, marginTop:6 }}>Check another date or the next month.</div>
+              </div>
+            ) : (
+              <div style={{ padding:'14px 16px', display:'flex', flexDirection:'column', gap:12 }}>
+                {dayPanel.items.map(ev => {
+                  const grad = EV_GRADS[ev.category] || EV_GRADS.Summit;
+                  const registered = !!myRegs[ev.id];
+                  const full = ev.total > 0 && ev.enrolled >= ev.total;
+                  return (
+                    <div key={ev.id} style={{ borderRadius:14, overflow:'hidden', border:'1px solid rgba(255,255,255,0.08)' }}>
+                      <div style={{ background: grad, padding:'14px 16px 12px', position:'relative', overflow:'hidden' }}>
+                        <div style={{ position:'absolute', right:-6, bottom:-8, fontSize:52, opacity:0.12 }}>{EV_ICONS[ev.category]||'📅'}</div>
+                        <div style={{ display:'flex', justifyContent:'space-between', marginBottom:5 }}>
+                          <span style={{ background:'rgba(255,255,255,0.22)', color:'#fff', borderRadius:5, padding:'2px 9px', fontSize:10, fontWeight:700 }}>{ev.category}</span>
+                          {registered && <span style={{ background:'rgba(16,185,129,0.28)', color:'#34d399', borderRadius:5, padding:'2px 9px', fontSize:10, fontWeight:700 }}>✓ Registered</span>}
+                          {full && !registered && <span style={{ background:'rgba(225,29,72,0.28)', color:'#f87171', borderRadius:5, padding:'2px 9px', fontSize:10, fontWeight:700 }}>Full</span>}
+                        </div>
+                        <div style={{ color:'#fff', fontSize:14.5, fontWeight:900, lineHeight:1.3, marginBottom:4 }}>{ev.title}</div>
+                        <div style={{ display:'flex', gap:10, flexWrap:'wrap' }}>
+                          <span style={{ color:'rgba(255,255,255,0.8)', fontSize:11 }}>📅 {ev.date}</span>
+                          <span style={{ color:'rgba(255,255,255,0.8)', fontSize:11 }}>📍 {ev.venue}</span>
+                        </div>
+                      </div>
+                      <div style={{ padding:'12px 16px', background:'rgba(15,23,42,0.9)' }}>
+                        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8 }}>
+                          <span style={{ fontSize:11.5, color:'rgba(255,255,255,0.35)' }}>🏛 {ev.organizer}</span>
+                          <span style={{ fontSize:11.5, color: full ? '#f87171' : 'rgba(255,255,255,0.45)', fontWeight:600 }}>{ev.enrolled}/{ev.total} seats</span>
+                        </div>
+                        {ev.description && <p style={{ color:'rgba(255,255,255,0.45)', fontSize:12, lineHeight:1.55, marginBottom:10, overflow:'hidden', display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical' }}>{ev.description}</p>}
+                        {!registered
+                          ? <button onClick={() => { setDayPanel(null); openForm(ev); }} disabled={full} style={{ width:'100%', background: full ? 'rgba(255,255,255,0.05)' : 'linear-gradient(90deg,#f97316,#e11d48)', color: full ? 'rgba(255,255,255,0.3)' : '#fff', border: full ? '1px solid rgba(255,255,255,0.08)' : 'none', borderRadius:10, padding:'10px', fontSize:13.5, fontWeight:800, cursor: full ? 'not-allowed' : 'pointer', fontFamily:'inherit', boxShadow: full ? 'none' : '0 4px 14px rgba(249,115,22,0.35)' }}>
+                              {full ? 'Fully Booked' : 'Register for this event →'}
+                            </button>
+                          : <div style={{ textAlign:'center', padding:'10px', background:'rgba(16,185,129,0.1)', border:'1px solid rgba(16,185,129,0.25)', borderRadius:10, color:'#34d399', fontWeight:700, fontSize:13 }}>✓ You are registered</div>
+                        }
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Outlook Calendar — full view, no cards below */}
       {!loading && (
         <OutlookCal
           items={calItems}
           onClickItem={setDetail}
+          onClickDay={(date, its) => { setDayPanel({ date, items: its }); setDetail(null); }}
           conflictIds={conflictIds}
           getColors={evColors}
         />
       )}
       {loading && <div style={{ textAlign:'center', padding:'60px 0', color:'rgba(255,255,255,0.3)' }}><div style={{ fontSize:32, marginBottom:10 }}>⏳</div>Loading…</div>}
-
-      {/* Filter chips */}
-      <div style={{ display:'flex', gap:8, marginBottom:20, flexWrap:'wrap', marginTop:4 }}>
-        {EV_FILTERS.map(f => (
-          <button key={f} onClick={() => setActive(f)} style={{
-            background: active === f ? 'linear-gradient(90deg,#f97316,#e11d48)' : 'rgba(255,255,255,0.06)',
-            color: active === f ? '#fff' : 'rgba(255,255,255,0.6)',
-            border: active === f ? 'none' : '1px solid rgba(255,255,255,0.12)',
-            borderRadius:20, padding:'7px 18px', fontSize:12.5, fontWeight:700,
-            cursor:'pointer', fontFamily:'inherit', transition:'all .15s',
-            boxShadow: active === f ? '0 4px 14px rgba(249,115,22,0.3)' : 'none',
-          }}>{f}</button>
-        ))}
-      </div>
-
-      {/* Event cards grid */}
-      {!loading && events.length > 0 && (
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(300px,1fr))', gap:18 }}>
-          {events.map((ev, i) => (
-            <EvCard key={ev.id} ev={ev} idx={i} registered={!!myRegs[ev.id]} onRegister={() => openForm(ev)} />
-          ))}
-        </div>
-      )}
     </>
   );
 }
@@ -953,6 +1022,7 @@ function TrainingTab({ user }) {
         <OutlookCal
           items={calItems}
           onClickItem={setDetail}
+          onClickDay={(date, its) => its.length > 0 && setDetail(its[0])}
           conflictIds={conflictIds}
           getColors={trColors}
         />
