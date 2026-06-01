@@ -854,6 +854,74 @@ function EventsTab({ showToast }) {
 ═══════════════════════════════════════════════════════════════════ */
 const NW_BLANK = { icon:'📣', badge:'Announcement', date:'', title:'', excerpt:'', content:'', members_only:false, archived:false, image_url:'' };
 
+const BADGE_OPTIONS = [
+  { value:'Announcement', icon:'📣', color:'#60a5fa', bg:'rgba(96,165,250,0.15)',  desc:'General announcements & updates' },
+  { value:'Policy',       icon:'📋', color:'#fcd34d', bg:'rgba(252,211,77,0.15)',  desc:'Governance & policy documents' },
+  { value:'Funding',      icon:'💰', color:'#6ee7b7', bg:'rgba(110,231,183,0.15)', desc:'Scholarships, grants & funds' },
+  { value:'Training',     icon:'🎓', color:'#fca5a5', bg:'rgba(252,165,165,0.15)', desc:'Professional development programs' },
+  { value:'Research',     icon:'🔬', color:'#c4b5fd', bg:'rgba(196,181,253,0.15)', desc:'Research initiatives & papers' },
+];
+
+function BadgeDropdown({ value, onChange }) {
+  const [open, setOpen] = useState(false);
+  const selected = BADGE_OPTIONS.find(b => b.value === value) || BADGE_OPTIONS[0];
+  return (
+    <div style={{ position:'relative' }}>
+      {/* Trigger */}
+      <button type="button" onClick={() => setOpen(o => !o)} style={{
+        width:'100%', height:40, background: open?'rgba(255,255,255,0.1)':'rgba(255,255,255,0.05)',
+        border:`1.5px solid ${open?'rgba(255,255,255,0.25)':'rgba(255,255,255,0.11)'}`,
+        borderRadius:9, padding:'0 12px', cursor:'pointer', fontFamily:'inherit',
+        display:'flex', alignItems:'center', gap:9, transition:'all .15s',
+      }}
+      onMouseEnter={e => { if (!open) { e.currentTarget.style.background='rgba(255,255,255,0.08)'; e.currentTarget.style.borderColor='rgba(255,255,255,0.2)'; } }}
+      onMouseLeave={e => { if (!open) { e.currentTarget.style.background='rgba(255,255,255,0.05)'; e.currentTarget.style.borderColor='rgba(255,255,255,0.11)'; } }}
+      >
+        <div style={{ width:26, height:26, borderRadius:7, background: selected.bg, display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, flexShrink:0, border:`1px solid ${selected.color}40` }}>{selected.icon}</div>
+        <span style={{ flex:1, textAlign:'left', fontSize:13, fontWeight:700, color:'#fff' }}>{selected.value}</span>
+        <span style={{ fontSize:9, color:'rgba(255,255,255,0.4)', transition:'transform .2s', transform: open?'rotate(180deg)':'rotate(0)', flexShrink:0 }}>▼</span>
+      </button>
+
+      {/* Dropdown */}
+      {open && (
+        <div onClick={e => e.stopPropagation()} style={{
+          position:'absolute', top:46, left:0, zIndex:9999, width:260,
+          background:'linear-gradient(180deg,#141e36,#0d1424)',
+          border:'1px solid rgba(255,255,255,0.1)', borderRadius:14, overflow:'hidden',
+          boxShadow:'0 20px 56px rgba(0,0,0,0.75)',
+        }}>
+          {BADGE_OPTIONS.map((opt, idx) => {
+            const isActive = value === opt.value;
+            return (
+              <button key={opt.value} type="button"
+                onClick={() => { onChange(opt.value); setOpen(false); }}
+                style={{
+                  width:'100%', display:'flex', alignItems:'center', gap:11,
+                  padding:'10px 14px',
+                  background: isActive ? opt.bg : 'transparent',
+                  border:'none', borderBottom: idx < BADGE_OPTIONS.length-1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
+                  borderLeft: `3px solid ${isActive ? opt.color : 'transparent'}`,
+                  cursor:'pointer', fontFamily:'inherit', transition:'background .12s',
+                }}
+                onMouseEnter={e => { if (!isActive) e.currentTarget.style.background='rgba(255,255,255,0.05)'; }}
+                onMouseLeave={e => { if (!isActive) e.currentTarget.style.background='transparent'; }}
+              >
+                <div style={{ width:34, height:34, borderRadius:9, background: isActive?opt.bg:'rgba(255,255,255,0.06)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:16, flexShrink:0, border:`1px solid ${isActive?opt.color+'50':'rgba(255,255,255,0.07)'}` }}>{opt.icon}</div>
+                <div style={{ flex:1, textAlign:'left' }}>
+                  <div style={{ fontSize:13.5, fontWeight: isActive?800:600, color: isActive?'#fff':'rgba(255,255,255,0.78)', lineHeight:1.2 }}>{opt.value}</div>
+                  <div style={{ fontSize:11, color:'rgba(255,255,255,0.38)', marginTop:1.5 }}>{opt.desc}</div>
+                </div>
+                {isActive && <span style={{ fontSize:14, color: opt.color, flexShrink:0 }}>✓</span>}
+              </button>
+            );
+          })}
+        </div>
+      )}
+      {open && <div onClick={() => setOpen(false)} style={{ position:'fixed', inset:0, zIndex:9998 }} />}
+    </div>
+  );
+}
+
 // Compress uploaded news image to 1200×630 JPEG (Open Graph standard)
 function compressNewsImage(file) {
   return new Promise((resolve, reject) => {
@@ -937,7 +1005,11 @@ function NewsTab({ showToast }) {
         <Modal title={modal === 'create' ? 'Publish Article' : 'Edit Article'} onClose={() => setModal(null)} wide>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
             <DInput label="Title *" name="title" value={form.title} onChange={fc} required span="1/-1" />
-            <DInput label="Badge" name="badge" value={form.badge} onChange={fc} as="select" opts={['Announcement','Policy','Funding','Training','Research']} />
+            {/* Custom Badge Dropdown */}
+            <div>
+              <label style={{ display:'block', fontSize:11, fontWeight:700, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:5 }}>Badge</label>
+              <BadgeDropdown value={form.badge} onChange={val => setForm(p => ({ ...p, badge: val }))} />
+            </div>
             <DInput label="Date *" name="date" value={form.date} onChange={fc} type="date" required />
             <DInput label="Icon (emoji)" name="icon" value={form.icon} onChange={fc} />
             <DInput label="Members Only" name="members_only" value={form.members_only} onChange={fc} as="checkbox" />
