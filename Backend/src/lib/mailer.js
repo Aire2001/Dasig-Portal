@@ -296,4 +296,40 @@ async function sendTrainingCancellationEmail(toEmail, userName, training) {
   });
 }
 
-module.exports = { sendPasswordResetEmail, sendEventRegistrationEmail, sendTrainingEnrollmentEmail, sendEventCancellationEmail, sendTrainingCancellationEmail };
+async function sendMembershipApplicationNotification(applicant) {
+  const adminEmail = process.env.ADMIN_EMAIL || process.env.SMTP_USER;
+  if (!process.env.SMTP_USER || !process.env.SMTP_PASS || !adminEmail) {
+    console.warn('[mailer] SMTP not configured — skipping membership notification');
+    return;
+  }
+  const transporter = createTransporter();
+  await transporter.sendMail({
+    from: FROM,
+    to: adminEmail,
+    subject: `[DASIG Portal] New Membership Application — ${applicant.name}`,
+    html: `
+      <div style="font-family:'Segoe UI',Arial,sans-serif;background:#f1f5f9;padding:32px 0">
+        <div style="background:#fff;max-width:540px;margin:0 auto;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08)">
+          <div style="background:linear-gradient(135deg,#001d5c,#1a56db);padding:28px 32px">
+            <h2 style="color:#fff;margin:0;font-size:20px;font-weight:900">🦅 New Membership Application</h2>
+            <p style="color:rgba(255,255,255,0.65);margin:6px 0 0;font-size:13px">Action required · DASIG Portal Admin</p>
+          </div>
+          <div style="padding:28px 32px">
+            <p style="color:#334155;font-size:14px;line-height:1.7;margin:0 0 18px">A new membership application has been submitted and is awaiting your review.</p>
+            <table style="width:100%;border-collapse:collapse;margin-bottom:20px">
+              <tr><td style="padding:8px 0;color:#64748b;font-size:12px;font-weight:700;text-transform:uppercase;width:120px">Applicant</td><td style="padding:8px 0;color:#1e293b;font-weight:700">${applicant.name}</td></tr>
+              <tr><td style="padding:8px 0;color:#64748b;font-size:12px;font-weight:700;text-transform:uppercase">Email</td><td style="padding:8px 0;color:#1e293b">${applicant.email}</td></tr>
+              <tr><td style="padding:8px 0;color:#64748b;font-size:12px;font-weight:700;text-transform:uppercase">Institution</td><td style="padding:8px 0;color:#1e293b;font-weight:600">${applicant.institution}</td></tr>
+              ${applicant.campus ? `<tr><td style="padding:8px 0;color:#64748b;font-size:12px;font-weight:700;text-transform:uppercase">Campus</td><td style="padding:8px 0;color:#1e293b">${applicant.campus}</td></tr>` : ''}
+              <tr><td style="padding:8px 0;color:#64748b;font-size:12px;font-weight:700;text-transform:uppercase">Tier</td><td style="padding:8px 0;color:#1e293b">${applicant.tier || 'Tier 2'}</td></tr>
+            </table>
+            <a href="${PORTAL_URL}/admin?tab=applications" style="display:inline-block;background:linear-gradient(90deg,#f97316,#e11d48);color:#fff;text-decoration:none;border-radius:10px;padding:12px 24px;font-size:14px;font-weight:800">Review Application →</a>
+          </div>
+          <div style="padding:14px 32px;border-top:1px solid #f1f5f9;font-size:11px;color:#94a3b8">DASIG Portal · Automated notification — do not reply.</div>
+        </div>
+      </div>`,
+    text: `New membership application from ${applicant.name} (${applicant.email})\nInstitution: ${applicant.institution}\nTier: ${applicant.tier || 'Tier 2'}\n\nReview at: ${PORTAL_URL}/admin?tab=applications`,
+  });
+}
+
+module.exports = { sendPasswordResetEmail, sendEventRegistrationEmail, sendTrainingEnrollmentEmail, sendEventCancellationEmail, sendTrainingCancellationEmail, sendMembershipApplicationNotification };

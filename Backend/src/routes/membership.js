@@ -1,6 +1,7 @@
 const express = require('express');
 const supabase = require('../lib/supabase');
 const { verifyToken, requireRole } = require('../middleware/auth');
+const { sendMembershipApplicationNotification } = require('../lib/mailer');
 
 const router = express.Router();
 
@@ -37,6 +38,13 @@ router.post('/apply', verifyToken, async (req, res) => {
   }).select().single();
 
   if (error) return res.status(500).json({ error: 'Failed to submit application' });
+
+  // Notify admin (fire-and-forget)
+  sendMembershipApplicationNotification({
+    name: req.user.name, email: req.user.email,
+    institution, campus: campus || '', tier: tier || 'Tier 2',
+  }).catch(() => {});
+
   res.status(201).json({ message: 'Application submitted. Pending admin approval.', application: app });
 });
 

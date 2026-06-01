@@ -274,6 +274,19 @@ ALTER TABLE funding_opportunities   DISABLE ROW LEVEL SECURITY;
 ALTER TABLE partnerships            DISABLE ROW LEVEL SECURITY;
 ALTER TABLE chatbot_logs            DISABLE ROW LEVEL SECURITY;
 
+-- Contact form messages (persisted so messages are never lost if SMTP fails)
+CREATE TABLE IF NOT EXISTS contact_messages (
+  id         BIGSERIAL PRIMARY KEY,
+  name       TEXT NOT NULL,
+  email      TEXT NOT NULL,
+  subject    TEXT NOT NULL,
+  category   TEXT NOT NULL DEFAULT 'General Inquiry',
+  message    TEXT NOT NULL,
+  read       BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE contact_messages DISABLE ROW LEVEL SECURITY;
+
 
 -- ============================================================
 -- SEED DATA

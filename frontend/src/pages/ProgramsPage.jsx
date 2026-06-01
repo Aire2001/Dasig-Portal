@@ -662,6 +662,7 @@ const EV_FILTERS = ['All','Summit','Workshop','Seminar','Funding'];
 
 function EventsTab({ user }) {
   const [active, setActive]       = useState('All');
+  const [search, setSearch]       = useState('');
   const [events, setEvents]       = useState([]);
   const [loading, setLoading]     = useState(true);
   const [lastUpdated, setLastUp]  = useState(null);
@@ -717,7 +718,10 @@ function EventsTab({ user }) {
       .catch(() => {});
   }, [user]);
 
-  const filteredEvents = active === 'All' ? events : events.filter(ev => ev.category === active);
+  const filteredEvents = events.filter(ev =>
+    (active === 'All' || ev.category === active) &&
+    (!search.trim() || ev.title.toLowerCase().includes(search.trim().toLowerCase()) || ev.venue?.toLowerCase().includes(search.trim().toLowerCase()))
+  );
 
   // Conflict IDs: registered events whose date ranges overlap each other
   const registeredEvItems = events.filter(ev => myRegs[ev.id]).map(ev => {
@@ -1041,8 +1045,20 @@ function EventsTab({ user }) {
         </div>
       )}
 
-      {/* Filter chips + live refresh bar */}
-      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:20, flexWrap:'wrap', gap:10, marginTop:4 }}>
+      {/* Search + Filter chips + live refresh bar */}
+      <div style={{ marginBottom:14, marginTop:4 }}>
+        <div style={{ position:'relative', maxWidth:360 }}>
+          <span style={{ position:'absolute', left:12, top:'50%', transform:'translateY(-50%)', color:'rgba(255,255,255,0.35)', fontSize:14, pointerEvents:'none' }}>🔍</span>
+          <input
+            className="prog-input"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search events by title or venue…"
+            style={{ paddingLeft:36 }}
+          />
+        </div>
+      </div>
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:20, flexWrap:'wrap', gap:10 }}>
         <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
           {EV_FILTERS.map(f => (
             <button key={f} onClick={() => setActive(f)} style={{
@@ -1086,7 +1102,11 @@ function EventsTab({ user }) {
         </div>
       )}
       {!loading && filteredEvents.length === 0 && (
-        <div style={{ textAlign:'center', padding:'40px 0', color:'rgba(255,255,255,0.28)', fontSize:14 }}>No events found.</div>
+        <div style={{ textAlign:'center', padding:'60px 0' }}>
+          <div style={{ fontSize:36, marginBottom:12 }}>🔍</div>
+          <div style={{ color:'rgba(255,255,255,0.4)', fontSize:15, fontWeight:700 }}>{search ? `No events found for "${search}"` : 'No events found.'}</div>
+          {search && <button onClick={() => setSearch('')} style={{ marginTop:12, background:'rgba(255,255,255,0.07)', color:'rgba(255,255,255,0.6)', border:'1px solid rgba(255,255,255,0.12)', borderRadius:8, padding:'7px 16px', fontSize:13, cursor:'pointer', fontFamily:'inherit' }}>Clear search</button>}
+        </div>
       )}
     </>
   );
@@ -1102,6 +1122,7 @@ function TrainingTab({ user }) {
   const [loading, setLoading]     = useState(true);
   const [lastUpdated, setLastUp]  = useState(null);
   const [catFilter, setCat]       = useState('All');
+  const [search, setSearch]       = useState('');
   const [myEnr, setMyEnr]         = useState({});
   const [detail, setDetail]       = useState(null);
   const [formModal, setFormModal] = useState(null);
@@ -1230,7 +1251,10 @@ function TrainingTab({ user }) {
     } finally { setSub(false); }
   }
 
-  const filtered = catFilter === 'All' ? trainings : trainings.filter(t => t.category === catFilter);
+  const filtered = trainings.filter(t =>
+    (catFilter === 'All' || t.category === catFilter) &&
+    (!search.trim() || t.title.toLowerCase().includes(search.trim().toLowerCase()) || t.org?.toLowerCase().includes(search.trim().toLowerCase()))
+  );
 
   return (
     <>
@@ -1447,8 +1471,22 @@ function TrainingTab({ user }) {
 
       {loading && <div style={{ textAlign:'center', padding:'60px 0', color:'rgba(255,255,255,0.3)' }}><div style={{ fontSize:32, marginBottom:10 }}>⏳</div>Loading…</div>}
 
+      {/* Search bar */}
+      <div style={{ marginBottom:14, marginTop:4 }}>
+        <div style={{ position:'relative', maxWidth:360 }}>
+          <span style={{ position:'absolute', left:12, top:'50%', transform:'translateY(-50%)', color:'rgba(255,255,255,0.35)', fontSize:14, pointerEvents:'none' }}>🔍</span>
+          <input
+            className="prog-input"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search programs by title or organizer…"
+            style={{ paddingLeft:36 }}
+          />
+        </div>
+      </div>
+
       {/* Category filters + refresh */}
-      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:20, flexWrap:'wrap', gap:10, marginTop:4 }}>
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:20, flexWrap:'wrap', gap:10 }}>
         <div style={{ display:'flex', gap:8, flexWrap:'wrap', alignItems:'center' }}>
           <span style={{ fontSize:12, fontWeight:700, color:'rgba(255,255,255,0.35)' }}>Filter:</span>
           {TR_CATS.map(c => (
@@ -1484,11 +1522,18 @@ function TrainingTab({ user }) {
       </div>
 
       {/* Training cards */}
-      {!loading && (
+      {!loading && filtered.length > 0 && (
         <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(300px,1fr))', gap:18 }}>
           {filtered.map((t, idx) => (
             <TrCard key={t.id} t={t} idx={idx} registered={!!myEnr[t.id]} onRegister={() => openEnroll(t)} onCancel={() => cancelEnr(t)} cancelling={cancellingEnrId === t.id} />
           ))}
+        </div>
+      )}
+      {!loading && filtered.length === 0 && (
+        <div style={{ textAlign:'center', padding:'60px 0' }}>
+          <div style={{ fontSize:36, marginBottom:12 }}>🔍</div>
+          <div style={{ color:'rgba(255,255,255,0.4)', fontSize:15, fontWeight:700 }}>{search ? `No programs found for "${search}"` : 'No programs found.'}</div>
+          {search && <button onClick={() => setSearch('')} style={{ marginTop:12, background:'rgba(255,255,255,0.07)', color:'rgba(255,255,255,0.6)', border:'1px solid rgba(255,255,255,0.12)', borderRadius:8, padding:'7px 16px', fontSize:13, cursor:'pointer', fontFamily:'inherit' }}>Clear search</button>}
         </div>
       )}
     </>

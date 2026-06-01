@@ -1,4 +1,4 @@
-const BASE = 'http://localhost:4000/api';
+const BASE = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
 
 function getToken() {
   return localStorage.getItem('dasig_token');
@@ -142,5 +142,7 @@ export const api = {
   },
   contact: {
     send: (body) => request('/contact', { method: 'POST', body: JSON.stringify(body) }),
+    messages: () => request('/contact/messages'),
+    markRead: (id) => request(`/contact/messages/${id}/read`, { method: 'PATCH' }),
   },
 };
