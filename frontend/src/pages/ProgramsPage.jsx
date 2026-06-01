@@ -1,4 +1,11 @@
-import { useState, useEffect, useCallback } from 'react';
+import FullCalendar from '@fullcalendar/react';
+import timeGridPlugin from '@fullcalendar/timegrid';
+import interactionPlugin from '@fullcalendar/interaction';
+import dayGridPlugin from '@fullcalendar/daygrid';
+import tippy from 'tippy.js';
+import 'tippy.js/dist/tippy.css';
+import 'tippy.js/animations/shift-away.css';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import PageHeader from '../components/PageHeader';
 import ParticleBackground from '../components/ParticleBackground';
@@ -436,7 +443,7 @@ export default function ProgramsPage() {
           eyebrow={isCalendar ? 'DASIG Calendar' : 'DASIG Programs'}
           title={isCalendar ? 'Events & Training Calendar' : 'Events & Training'}
         />
-        <div style={{ maxWidth:1120, margin:'0 auto', padding:'0 24px 80px' }}>
+        <div style={{ maxWidth: isCalendar ? '95%' : 1120, margin:'0 auto', padding:'0 24px 80px', transition: 'max-width 0.3s ease' }}>
 
           {/* Tab switcher — only show on Programs (not Calendar) */}
           {!isCalendar && (
@@ -1395,6 +1402,23 @@ function TrainingTab({ user }) {
    CALENDAR TAB — Outlook calendar only, no cards below
    Shows BOTH events and training. Click bar or date = detail.
 ═══════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════
+   CALENDAR TAB — FullCalendar implementation
+═══════════════════════════════════════════════════════════ */
+
+function getUniqueEventColor(stringId) {
+  let hash = 0;
+  for (let i = 0; i < stringId.length; i++) {
+    hash = stringId.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const h = Math.abs(hash) % 360;
+  return {
+    bg: `hsl(${h}, 85%, 55%)`,
+    border: `hsl(${h}, 85%, 40%)`, 
+    text: '#ffffff'
+  };
+}
+
 function CalendarTab({ user }) {
   const [events, setEvents]     = useState([]);
   const [trainings, setTrain]   = useState([]);
@@ -1403,7 +1427,13 @@ function CalendarTab({ user }) {
   const [loading, setLoading]     = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [detail, setDetail]       = useState(null);
-  const [dayPanel, setDayPanel]   = useState(null); // { date, items }
+  
+  const [searchQuery, setSearchQuery]   = useState('');
+  const [selectedCat, setSelectedCat]   = useState('All');
+  const [datePickerOpen, setDatePickerOpen] = useState(false);
+  const [pickerYear, setPickerYear]     = useState(new Date().getFullYear());
+  const [pickerMonth, setPickerMonth]   = useState(new Date().getMonth());
+  const calendarRef = useRef(null);
   const navigate = useNavigate();
 
   function loadData(isRefresh = false) {
@@ -1429,7 +1459,7 @@ function CalendarTab({ user }) {
     }).catch(() => {});
   }, [user]);
 
-  // Combine all items for calendar
+  // Combine all items
   const calItems = [
     ...events.map(ev => {
       const r = parseRange(ev.date);
@@ -1441,19 +1471,28 @@ function CalendarTab({ user }) {
     }),
   ];
 
-  function getColors(it) {
-    if (it._type === 'training') {
-      const s = TR_STYLES[it.category] || TR_STYLES.Technology;
-      return { bg: s.calBg, border: s.calBorder, text: s.calText };
-    }
-    return EV_COLORS[it.category] || EV_COLORS.Summit;
+  const allCategories = Array.from(new Set(calItems.map(it => it.category))).filter(Boolean).sort();
+
+  // Date picker: jump FullCalendar to selected month/year
+  function jumpToDate(year, month) {
+    const calApi = calendarRef.current?.getApi();
+    if (calApi) calApi.gotoDate(new Date(year, month, 1));
+    setPickerYear(year);
+    setPickerMonth(month);
+    setDatePickerOpen(false);
   }
 
-  // Registered/enrolled item IDs for conflict check
-  const myIds = new Set([
-    ...Object.keys(myRegs).map(id => +id),
-    ...Object.keys(myEnr).map(id => +id),
-  ]);
+  function jumpToToday() {
+    const calApi = calendarRef.current?.getApi();
+    if (calApi) calApi.today();
+    const now = new Date();
+    setPickerYear(now.getFullYear());
+    setPickerMonth(now.getMonth());
+    setDatePickerOpen(false);
+  }
+
+  // Conflict check logic
+  const myIds = new Set([...Object.keys(myRegs).map(id => +id), ...Object.keys(myEnr).map(id => +id)]);
   const enrolled = calItems.filter(it => myIds.has(it.id));
   const conflictIds = new Set();
   for (let i = 0; i < enrolled.length; i++) {
@@ -1465,88 +1504,79 @@ function CalendarTab({ user }) {
     }
   }
 
-  function handleClickItem(it) { setDetail(it); setDayPanel(null); }
-  // Always show day panel — even for empty dates (shows "No events" message)
-  function handleClickDay(date, its) { setDayPanel({ date, items: its }); setDetail(null); }
+  // Map to FullCalendar format
+  const fcEvents = calItems
+    .filter(it => it.startDate)
+    .filter(it => selectedCat === 'All' || it.category === selectedCat)
+    .filter(it => !searchQuery || it.title.toLowerCase().includes(searchQuery.toLowerCase())) 
+    .map(it => {
+      const colors = getUniqueEventColor(it.title + it.id);
+      const isConflict = conflictIds.has(it.id);
+
+      const start = new Date(it.startDate);
+      start.setHours(9, 0, 0); 
+      const end = it.endDate ? new Date(it.endDate) : new Date(it.startDate);
+      end.setHours(16, 0, 0); 
+
+      return {
+        id: String(it.id),
+        title: it.title,
+        start: start,
+        end: end,
+        backgroundColor: isConflict ? '#dc2626' : colors.bg,
+        borderColor: isConflict ? '#991b1b' : colors.border,
+        textColor: colors.text,
+        extendedProps: { originalData: it }
+      };
+    });
+
+  // NEW: Function to generate and download an .ics calendar file
+  function generateICS(detailData) {
+    const formatICSDate = (dateObj) => {
+      return dateObj.toISOString().replace(/-|:|\.\d+/g, '').substring(0, 15) + 'Z';
+    };
+
+    const start = new Date(detailData.startDate || new Date());
+    start.setHours(9, 0, 0);
+    const end = detailData.endDate ? new Date(detailData.endDate) : new Date(start);
+    end.setHours(16, 0, 0);
+
+    const title = detailData.title || 'DASIG Event';
+    const location = detailData.venue || detailData.org || 'TBA';
+    const description = `Category: ${detailData.category}\\nView more details on the DASIG Portal.`;
+
+    const icsContent = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//DASIG Portal//EN',
+      'BEGIN:VEVENT',
+      `DTSTART:${formatICSDate(start)}`,
+      `DTEND:${formatICSDate(end)}`,
+      `SUMMARY:${title}`,
+      `DESCRIPTION:${description}`,
+      `LOCATION:${location}`,
+      'END:VEVENT',
+      'END:VCALENDAR'
+    ].join('\n');
+
+    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `${title.replace(/[^a-zA-Z0-9]/g, '_')}.ics`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
 
   return (
     <>
-      {/* Day panel */}
-      {dayPanel && !detail && (
-        <div onClick={() => setDayPanel(null)} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.55)', zIndex:9100, display:'flex', alignItems:'flex-start', justifyContent:'flex-end', padding:20 }}>
-          <div onClick={e => e.stopPropagation()} style={{ background:'#0d1424', border:'1px solid rgba(255,255,255,0.12)', borderRadius:20, width:380, maxHeight:'82vh', overflow:'auto', animation:'panelIn .22s ease', boxShadow:'0 24px 80px rgba(0,0,0,0.7)' }}>
-            <div style={{ padding:'18px 20px 14px', borderBottom:'1px solid rgba(255,255,255,0.07)', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-              <div>
-                <div style={{ color:'rgba(255,255,255,0.4)', fontSize:11, fontWeight:700, textTransform:'uppercase', letterSpacing:'.5px', marginBottom:3 }}>
-                  {DAY_ABBR[dayPanel.date.getDay()]}, {MONTH_NAMES[dayPanel.date.getMonth()]} {dayPanel.date.getDate()}, {dayPanel.date.getFullYear()}
-                </div>
-                <div style={{ color:'#fff', fontWeight:900, fontSize:15 }}>
-                  {dayPanel.items.length === 0 ? 'No events on this day' : `${dayPanel.items.length} item${dayPanel.items.length !== 1 ? 's' : ''} scheduled`}
-                </div>
-              </div>
-              <button onClick={() => setDayPanel(null)} style={{ background:'rgba(255,255,255,0.07)', border:'none', borderRadius:'50%', width:32, height:32, color:'rgba(255,255,255,0.6)', fontSize:16, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>✕</button>
-            </div>
-            <div style={{ padding:'12px 14px', display:'flex', flexDirection:'column', gap:10 }}>
-              {dayPanel.items.length === 0 && (
-                <div style={{ textAlign:'center', padding:'24px 16px' }}>
-                  <div style={{ fontSize:40, marginBottom:10 }}>📅</div>
-                  <div style={{ color:'rgba(255,255,255,0.55)', fontSize:14, fontWeight:600, marginBottom:16 }}>No events or training scheduled on this date.</div>
-                  <button onClick={() => { setDayPanel(null); }} style={{ background:'linear-gradient(90deg,#f97316,#e11d48)', color:'#fff', border:'none', borderRadius:10, padding:'9px 20px', fontSize:13, fontWeight:800, cursor:'pointer', fontFamily:'inherit' }}>
-                    Browse Programs →
-                  </button>
-                </div>
-              )}
-              {dayPanel.items.map(it => {
-                const isEv = it._type === 'event';
-                const grad  = isEv ? (EV_GRADS[it.category]||EV_GRADS.Summit) : (TR_STYLES[it.category]||TR_STYLES.Technology).accent;
-                const reged = isEv ? !!myRegs[it.id] : !!myEnr[it.id];
-                const full  = it.total > 0 && it.enrolled >= it.total;
-                return (
-                  <div key={it.id} style={{ borderRadius:13, overflow:'hidden', border:'1px solid rgba(255,255,255,0.08)' }}>
-                    <div style={{ background: grad, padding:'12px 14px 10px', position:'relative', overflow:'hidden' }}>
-                      <div style={{ position:'absolute', right:-4, bottom:-6, fontSize:48, opacity:0.12 }}>
-                        {isEv ? (EV_ICONS[it.category]||'📅') : (TR_ICONS[it.category]||'🎓')}
-                      </div>
-                      <div style={{ display:'flex', justifyContent:'space-between', marginBottom:4 }}>
-                        <span style={{ background:'rgba(255,255,255,0.2)', color:'#fff', borderRadius:5, padding:'2px 8px', fontSize:10, fontWeight:700 }}>
-                          {isEv ? it.category : `🎓 ${it.category}`}
-                        </span>
-                        {reged && <span style={{ background:'rgba(16,185,129,0.25)', color:'#34d399', borderRadius:5, padding:'2px 8px', fontSize:10, fontWeight:700 }}>✓ {isEv?'Registered':'Enrolled'}</span>}
-                        {full && !reged && <span style={{ background:'rgba(225,29,72,0.25)', color:'#f87171', borderRadius:5, padding:'2px 8px', fontSize:10, fontWeight:700 }}>Full</span>}
-                      </div>
-                      <div style={{ color:'#fff', fontSize:14, fontWeight:900, lineHeight:1.3 }}>{it.title}</div>
-                      {isEv && <div style={{ color:'rgba(255,255,255,0.75)', fontSize:11, marginTop:3 }}>📍 {it.venue}</div>}
-                      {!isEv && <div style={{ color:'rgba(255,255,255,0.75)', fontSize:11, marginTop:3 }}>⏱ {it.duration} · {it.level}</div>}
-                    </div>
-                    <div style={{ padding:'10px 14px', background:'rgba(15,23,42,0.9)' }}>
-                      <div style={{ display:'flex', justifyContent:'space-between', marginBottom:8 }}>
-                        <span style={{ fontSize:11, color:'rgba(255,255,255,0.35)' }}>{isEv ? `🏛 ${it.organizer}` : `🏛 ${it.org}`}</span>
-                        <span style={{ fontSize:11, color: full?'#f87171':'rgba(255,255,255,0.4)' }}>{it.enrolled}/{it.total} {isEv?'seats':'enrolled'}</span>
-                      </div>
-                      {!reged && !full
-                        ? <button onClick={() => { setDayPanel(null); navigate(`/programs?tab=${isEv?'events':'training'}`); }} style={{ width:'100%', background: grad, color:'#fff', border:'none', borderRadius:9, padding:'9px', fontSize:13, fontWeight:800, cursor:'pointer', fontFamily:'inherit' }}>
-                            {isEv ? 'Go to Events to register →' : 'Go to Training to enroll →'}
-                          </button>
-                        : reged
-                          ? <div style={{ textAlign:'center', padding:'9px', background:'rgba(16,185,129,0.1)', border:'1px solid rgba(16,185,129,0.22)', borderRadius:9, color:'#34d399', fontWeight:700, fontSize:12.5 }}>✓ {isEv?'Registered':'Enrolled'}</div>
-                          : <div style={{ textAlign:'center', padding:'9px', background:'rgba(225,29,72,0.08)', border:'1px solid rgba(225,29,72,0.2)', borderRadius:9, color:'#f87171', fontWeight:700, fontSize:12.5 }}>Fully Booked</div>
-                      }
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Item detail panel */}
       {detail && (
         <div onClick={() => setDetail(null)} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.5)', zIndex:9100, display:'flex', alignItems:'flex-start', justifyContent:'flex-end', padding:20 }}>
           <div onClick={e => e.stopPropagation()} style={{ background:'#0f172a', border:'1px solid rgba(255,255,255,0.1)', borderRadius:20, width:340, maxHeight:'80vh', overflow:'auto', animation:'panelIn .22s ease' }}>
-            <div style={{ background: detail._type==='event' ? (EV_GRADS[detail.category]||EV_GRADS.Summit) : (TR_STYLES[detail.category]||TR_STYLES.Technology).accent, padding:'20px 18px 16px', position:'relative' }}>
-              <button onClick={() => setDetail(null)} style={{ position:'absolute', top:12, right:12, background:'rgba(0,0,0,0.70)', border:'2px solid rgba(255,255,255,0.5)', backdropFilter:'blur(10px)', borderRadius:'50%', width:36, height:36, color:'#fff', fontSize:16, fontWeight:700, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', backdropFilter:'blur(6px)', boxShadow:'0 2px 8px rgba(0,0,0,0.4)' }}>✕</button>
-              <span style={{ background:'rgba(255,255,255,0.2)', color:'#fff', borderRadius:5, padding:'2px 9px', fontSize:10.5, fontWeight:700 }}>{detail.category}</span>
+            <div style={{ background: getUniqueEventColor(detail.title + detail.id).bg, padding:'20px 18px 16px', position:'relative' }}>
+              <button onClick={() => setDetail(null)} style={{ position:'absolute', top:12, right:12, background:'rgba(0,0,0,0.70)', border:'2px solid rgba(255,255,255,0.5)', backdropFilter:'blur(10px)', borderRadius:'50%', width:36, height:36, color:'#fff', fontSize:16, fontWeight:700, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 2px 8px rgba(0,0,0,0.4)' }}>✕</button>
+              <span style={{ background:'rgba(0,0,0,0.3)', color:'#fff', borderRadius:5, padding:'2px 9px', fontSize:10.5, fontWeight:700 }}>{detail.category}</span>
               <div style={{ color:'#fff', fontSize:16, fontWeight:900, lineHeight:1.35, marginTop:6 }}>{detail.title}</div>
             </div>
             <div style={{ padding:'16px 18px' }}>
@@ -1566,27 +1596,218 @@ function CalendarTab({ user }) {
                       </div>
                     ))
               }
+              {conflictIds.has(detail.id) && (
+                <div style={{ background:'rgba(245,158,11,0.1)', border:'1px solid rgba(245,158,11,0.35)', borderRadius:10, padding:'10px 12px', marginBottom:12 }}>
+                  <div style={{ color:'#fbbf24', fontWeight:700, fontSize:12.5 }}>⚠️ Scheduling conflict detected</div>
+                </div>
+              )}
+              
               <button onClick={() => { setDetail(null); navigate(`/programs?tab=${detail._type==='event'?'events':'training'}`); }} style={{ width:'100%', background:'linear-gradient(90deg,#f97316,#e11d48)', color:'#fff', border:'none', borderRadius:11, padding:'11px', fontSize:13.5, fontWeight:800, cursor:'pointer', fontFamily:'inherit', marginTop:6 }}>
                 {detail._type === 'event' ? 'Register in Programs →' : 'Enroll in Programs →'}
+              </button>
+
+              {/* NEW: Add to Calendar Button */}
+              <button onClick={() => generateICS(detail)} style={{ width:'100%', background:'rgba(255,255,255,0.08)', border:'1px solid rgba(255,255,255,0.15)', color:'#fff', borderRadius:11, padding:'10px', fontSize:13, fontWeight:700, cursor:'pointer', fontFamily:'inherit', marginTop:10, display:'flex', alignItems:'center', justifyContent:'center', gap:8, transition: 'all 0.2s' }}
+                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.12)'}
+                onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
+              >
+                📅 Add to Calendar (.ics)
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {loading ? (
-        <div style={{ textAlign:'center', padding:'80px 0', color:'rgba(255,255,255,0.3)' }}><div style={{ fontSize:36, marginBottom:12 }}>⏳</div>Loading calendar…</div>
-      ) : (
-        <OutlookCal
-          items={calItems}
-          onClickItem={handleClickItem}
-          onClickDay={handleClickDay}
-          conflictIds={conflictIds}
-          getColors={getColors}
-          onRefresh={() => loadData(true)}
-          refreshing={refreshing}
-        />
-      )}
+      {/* Main UI */}
+      <div style={{ background:'rgba(13,20,40,0.85)', border:'1px solid rgba(255,255,255,0.09)', borderRadius:20, padding: 24, marginBottom:28 }}>
+        
+        {/* ── Top Controls Row ── */}
+        <div style={{ display:'flex', gap:10, alignItems:'center', marginBottom:16, flexWrap:'wrap' }}>
+
+          {/* Search */}
+          <div style={{ position:'relative', flex:'1', minWidth:180, maxWidth:280 }}>
+            <span style={{ position:'absolute', left:12, top:'50%', transform:'translateY(-50%)', fontSize:14, pointerEvents:'none' }}>🔍</span>
+            <input type="text" placeholder="Search events or training…" value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="prog-input" style={{ paddingLeft:38, height:40 }} />
+          </div>
+
+          {/* Category Dropdown */}
+          <div style={{ position:'relative', minWidth:190 }}>
+            <select
+              value={selectedCat}
+              onChange={e => setSelectedCat(e.target.value)}
+              style={{
+                width:'100%', height:40, background:'rgba(255,255,255,0.07)',
+                border:'1.5px solid rgba(255,255,255,0.15)', borderRadius:10,
+                color:'#fff', fontSize:13.5, fontWeight:700, fontFamily:'inherit',
+                padding:'0 36px 0 14px', cursor:'pointer', outline:'none',
+                appearance:'none', transition:'border-color .15s',
+              }}
+            >
+              <option value="All" style={{ background:'#0f172a' }}>📂 All Categories</option>
+              {allCategories.map(cat => (
+                <option key={cat} value={cat} style={{ background:'#0f172a' }}>
+                  {cat}
+                </option>
+              ))}
+            </select>
+            <span style={{ position:'absolute', right:12, top:'50%', transform:'translateY(-50%)', pointerEvents:'none', color:'rgba(255,255,255,0.5)', fontSize:12 }}>▼</span>
+          </div>
+
+          {/* Date Picker Shortcut */}
+          <div style={{ position:'relative' }}>
+            <button
+              onClick={() => setDatePickerOpen(o => !o)}
+              style={{ height:40, background: datePickerOpen?'rgba(249,115,22,0.2)':'rgba(255,255,255,0.07)', border:`1.5px solid ${datePickerOpen?'rgba(249,115,22,0.5)':'rgba(255,255,255,0.15)'}`, borderRadius:10, padding:'0 16px', color: datePickerOpen?'#f97316':'rgba(255,255,255,0.75)', fontSize:13.5, fontWeight:700, cursor:'pointer', fontFamily:'inherit', display:'flex', alignItems:'center', gap:7, transition:'all .15s' }}
+            >
+              📅 {MONTH_NAMES[pickerMonth]?.slice(0,3)} {pickerYear} <span style={{ fontSize:10 }}>▼</span>
+            </button>
+
+            {datePickerOpen && (
+              <div onClick={e => e.stopPropagation()} style={{ position:'absolute', top:46, left:0, zIndex:9999, background:'#0d1424', border:'1px solid rgba(255,255,255,0.15)', borderRadius:16, padding:'16px', boxShadow:'0 20px 60px rgba(0,0,0,0.7)', minWidth:270 }}>
+                {/* Year nav */}
+                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:14 }}>
+                  <button onClick={() => setPickerYear(y => Math.max(2020, y-1))} style={{ background:'rgba(255,255,255,0.07)', border:'none', borderRadius:8, width:32, height:32, color:'#fff', fontSize:16, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>‹</button>
+                  <span style={{ color:'#fff', fontWeight:900, fontSize:16, minWidth:50, textAlign:'center' }}>{pickerYear}</span>
+                  <button onClick={() => setPickerYear(y => Math.min(2035, y+1))} style={{ background:'rgba(255,255,255,0.07)', border:'none', borderRadius:8, width:32, height:32, color:'#fff', fontSize:16, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>›</button>
+                </div>
+                {/* Month grid */}
+                <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:6, marginBottom:10 }}>
+                  {MONTH_NAMES.map((mn, mi) => {
+                    const isSel = mi === pickerMonth && pickerYear === new Date().getFullYear() ? false : (mi === pickerMonth);
+                    const isToday = mi === new Date().getMonth() && pickerYear === new Date().getFullYear();
+                    return (
+                      <button key={mi} onClick={() => jumpToDate(pickerYear, mi)} style={{
+                        padding:'8px 4px', borderRadius:9, border:'none', fontSize:12.5, fontWeight:700,
+                        cursor:'pointer', fontFamily:'inherit', transition:'all .13s',
+                        background: isSel ? 'linear-gradient(90deg,#f97316,#e11d48)' : isToday ? 'rgba(249,115,22,0.18)' : 'rgba(255,255,255,0.05)',
+                        color: isSel ? '#fff' : isToday ? '#fb923c' : 'rgba(255,255,255,0.75)',
+                        boxShadow: isSel ? '0 3px 10px rgba(249,115,22,0.4)' : 'none',
+                      }}
+                      onMouseEnter={e => { if (!isSel) e.currentTarget.style.background='rgba(255,255,255,0.12)'; }}
+                      onMouseLeave={e => { if (!isSel) e.currentTarget.style.background = isToday?'rgba(249,115,22,0.18)':'rgba(255,255,255,0.05)'; }}
+                      >{mn.slice(0,3)}</button>
+                    );
+                  })}
+                </div>
+                <div style={{ display:'flex', gap:8 }}>
+                  <button onClick={jumpToToday} style={{ flex:1, background:'rgba(249,115,22,0.12)', border:'1px solid rgba(249,115,22,0.3)', borderRadius:9, padding:'8px', color:'#fb923c', fontSize:12.5, fontWeight:800, cursor:'pointer', fontFamily:'inherit' }}>Today</button>
+                  <button onClick={() => setDatePickerOpen(false)} style={{ flex:1, background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:9, padding:'8px', color:'rgba(255,255,255,0.55)', fontSize:12.5, fontWeight:700, cursor:'pointer', fontFamily:'inherit' }}>Close</button>
+                </div>
+              </div>
+            )}
+            {/* Close picker on outside click */}
+            {datePickerOpen && <div onClick={() => setDatePickerOpen(false)} style={{ position:'fixed', inset:0, zIndex:9998 }} />}
+          </div>
+
+          {/* Refresh */}
+          <button onClick={() => loadData(true)} disabled={refreshing} style={{ height:40, background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.12)', borderRadius:10, padding:'0 16px', color:'rgba(255,255,255,0.65)', fontSize:13, fontWeight:700, cursor: refreshing?'default':'pointer', fontFamily:'inherit', display:'flex', alignItems:'center', gap:6, transition:'all .13s', marginLeft:'auto' }}
+            onMouseEnter={e => { if (!refreshing) e.currentTarget.style.background='rgba(255,255,255,0.12)'; }}
+            onMouseLeave={e => e.currentTarget.style.background='rgba(255,255,255,0.07)'}
+          >
+            <span style={{ display:'inline-block', animation: refreshing?'spin .7s linear infinite':'none' }}>↻</span>
+            {refreshing ? 'Refreshing…' : 'Refresh'}
+          </button>
+        </div>
+
+        {/* Active filter badge */}
+        {selectedCat !== 'All' && (
+          <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:14 }}>
+            <span style={{ fontSize:12.5, color:'rgba(255,255,255,0.45)', fontWeight:600 }}>Showing:</span>
+            <span style={{ background:'rgba(249,115,22,0.18)', border:'1px solid rgba(249,115,22,0.4)', borderRadius:20, padding:'4px 14px', fontSize:13, fontWeight:800, color:'#f97316' }}>
+              {selectedCat}
+            </span>
+            <button onClick={() => setSelectedCat('All')} style={{ background:'none', border:'none', color:'rgba(255,255,255,0.4)', fontSize:12.5, cursor:'pointer', fontFamily:'inherit', fontWeight:600, transition:'color .13s' }}
+              onMouseEnter={e => e.currentTarget.style.color='#f43f5e'}
+              onMouseLeave={e => e.currentTarget.style.color='rgba(255,255,255,0.4)'}
+            >✕ Clear filter</button>
+          </div>
+        )}
+
+        {loading ? (
+          <div style={{ textAlign:'center', padding:'80px 0', color:'rgba(255,255,255,0.3)' }}><div style={{ fontSize:36, marginBottom:12 }}>⏳</div>Loading calendar…</div>
+        ) : fcEvents.length === 0 && !loading ? (
+          /* ── Not Available state ── */
+          <div style={{ textAlign:'center', padding:'80px 24px', background:'rgba(255,255,255,0.02)', borderRadius:16, border:'1px dashed rgba(255,255,255,0.08)' }}>
+            <div style={{ fontSize:56, marginBottom:16 }}>📭</div>
+            <div style={{ color:'#fff', fontWeight:900, fontSize:20, marginBottom:8 }}>
+              No events available{selectedCat !== 'All' ? ` for "${selectedCat}"` : ''}
+            </div>
+            <p style={{ color:'rgba(255,255,255,0.45)', fontSize:14, lineHeight:1.7, maxWidth:380, margin:'0 auto 24px' }}>
+              {selectedCat !== 'All'
+                ? `There are currently no scheduled events or training programs in the "${selectedCat}" category.`
+                : searchQuery
+                  ? `No results matching "${searchQuery}". Try a different search term.`
+                  : 'No events or training programs are currently scheduled.'}
+            </p>
+            <div style={{ display:'flex', gap:10, justifyContent:'center', flexWrap:'wrap' }}>
+              {selectedCat !== 'All' && (
+                <button onClick={() => setSelectedCat('All')} style={{ background:'linear-gradient(90deg,#f97316,#e11d48)', color:'#fff', border:'none', borderRadius:11, padding:'10px 22px', fontSize:13.5, fontWeight:800, cursor:'pointer', fontFamily:'inherit' }}>
+                  Show All Categories
+                </button>
+              )}
+              {searchQuery && (
+                <button onClick={() => setSearchQuery('')} style={{ background:'rgba(255,255,255,0.07)', color:'rgba(255,255,255,0.75)', border:'1px solid rgba(255,255,255,0.15)', borderRadius:11, padding:'10px 22px', fontSize:13.5, fontWeight:700, cursor:'pointer', fontFamily:'inherit' }}>
+                  Clear Search
+                </button>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="fc-dark-theme" style={{ background: '#0d1424', borderRadius: 12, padding: '4px', border: '1px solid rgba(255,255,255,0.05)' }}>
+            <FullCalendar
+              ref={calendarRef}
+              plugins={[timeGridPlugin, dayGridPlugin, interactionPlugin]}
+              initialView="dayGridMonth"
+              headerToolbar={{
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,timeGridDay'
+              }}
+              slotMinTime="08:00:00"
+              slotMaxTime="18:00:00"
+              allDaySlot={false}
+              events={fcEvents}
+              height="85vh"
+              eventDisplay="block"
+              nowIndicator={true} /* <--- ADD THIS LINE HERE */
+              eventClick={(info) => setDetail(info.event.extendedProps.originalData)}
+              eventDidMount={(info) => {
+                const it = info.event.extendedProps.originalData;
+                const isEv = it._type === 'event';
+                const detail1 = isEv ? `📍 ${it.venue}` : `🏛 ${it.org}`;
+                const detail2 = isEv ? `👥 ${it.enrolled}/${it.total} seats` : `⏱ ${it.duration} · 📊 ${it.level}`;
+
+                tippy(info.el, {
+                  content: `
+                    <div style="text-align: left; font-family: inherit;">
+                      <div style="font-size: 10px; font-weight: 800; color: #f97316; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;">
+                        ${it.category}
+                      </div>
+                      <div style="font-size: 13.5px; font-weight: 800; color: #ffffff; margin-bottom: 6px; line-height: 1.3;">
+                        ${it.title}
+                      </div>
+                      <div style="font-size: 11.5px; color: rgba(255,255,255,0.7); margin-bottom: 3px;">
+                        ${detail1}
+                      </div>
+                      <div style="font-size: 11.5px; color: rgba(255,255,255,0.7);">
+                        ${detail2}
+                      </div>
+                    </div>
+                  `,
+                  allowHTML: true,
+                  theme: 'dasig',
+                  placement: 'top',
+                  animation: 'shift-away',
+                  arrow: true,
+                  delay: [150, 0], 
+                });
+              }}
+            />
+          </div>
+        )}
+      </div>
     </>
   );
 }

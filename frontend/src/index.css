@@ -41,3 +41,68 @@ body {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+/* --- FullCalendar Dark Theme Overrides --- */
+.fc-dark-theme .fc {
+  color: #e2e8f0;
+}
+.fc-dark-theme .fc-theme-standard td, 
+.fc-dark-theme .fc-theme-standard th, 
+.fc-dark-theme .fc-theme-standard .fc-scrollgrid {
+  border-color: rgba(255,255,255,0.1);
+}
+.fc-dark-theme .fc-timegrid-slot {
+  border-color: rgba(255,255,255,0.05);
+}
+.fc-dark-theme .fc-button-primary {
+  background-color: rgba(255,255,255,0.08) !important;
+  border-color: rgba(255,255,255,0.15) !important;
+  color: #e2e8f0 !important;
+  text-transform: capitalize;
+}
+.fc-dark-theme .fc-button-primary:hover {
+  background-color: rgba(249,115,22,0.8) !important; /* DASIG Orange */
+  border-color: #f97316 !important;
+}
+.fc-dark-theme .fc-button-active {
+  background-color: #f97316 !important;
+  border-color: #ea580c !important;
+}
+.fc-dark-theme .fc-col-header-cell-cushion {
+  color: #94a3b8;
+  padding: 8px;
+  font-weight: 700;
+}
+.fc-dark-theme .fc-timegrid-axis-cushion, 
+.fc-dark-theme .fc-timegrid-slot-label-cushion {
+  color: #64748b;
+}
+/* --- Tippy.js Custom Dark Theme for DASIG --- */
+.tippy-box[data-theme~='dasig'] {
+  background-color: #0f172a;
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 12px;
+  box-shadow: 0 16px 40px rgba(0,0,0,0.6);
+  backdrop-filter: blur(8px);
+}
+.tippy-box[data-theme~='dasig'][data-placement^='top'] > .tippy-arrow::before {
+  border-top-color: rgba(255,255,255,0.15);
+}
+.tippy-box[data-theme~='dasig'][data-placement^='bottom'] > .tippy-arrow::before {
+  border-bottom-color: rgba(255,255,255,0.15);
+}
+.tippy-content {
+  padding: 8px 10px;
+}
+/* --- FullCalendar Current Time Indicator Styling --- */
+.fc-dark-theme .fc-now-indicator-line {
+  border-color: #f97316; /* DASIG Orange */
+  border-width: 2px;
+  box-shadow: 0 0 8px rgba(249,115,22,0.8);
+  z-index: 10;
+}
+
+.fc-dark-theme .fc-now-indicator-arrow {
+  border-color: transparent transparent transparent #f97316;
+  border-width: 6px 0 6px 6px;
+  margin-top: -5px;
+}
