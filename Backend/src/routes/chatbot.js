@@ -177,8 +177,8 @@ const KB = [
   },
   {
     intent: 'event_capacity',
-    keywords: ['full', 'slot', 'available slot', 'seat', 'capacity', 'fully booked', 'no more slot', 'waitlist'],
-    reply: 'Each event has a maximum capacity. Once an event is fully booked, registration is closed. There is no waitlist feature currently — check the Events module regularly for newly added events or slot openings.',
+    keywords: ['full', 'slot', 'available slot', 'seat', 'capacity', 'fully booked', 'no more slot', 'waitlist', 'event is full', 'event full', 'full event', 'what if full', 'event i want is full', 'event is already full', 'no slot', 'already full', 'sold out', 'booked out', 'registration closed', 'no available slot', 'what if the event', 'if the event is full'],
+    reply: 'If an event is fully booked, the Register button will show "Fully Booked" and registration is closed. There is currently no waitlist feature.\n\nHere\'s what you can do:\n1. Check back regularly — cancellations can free up slots\n2. Browse other events in the Programs module with similar topics\n3. Contact the organizer at admin@dasig.ph to express your interest\n\nRegister early for future events — slots fill up fast!',
   },
   {
     intent: 'fees',
@@ -240,6 +240,26 @@ const KB = [
     keywords: ['guest', 'guest user', 'not logged in', 'without account', 'what can guests do', 'guest access', 'free access', 'no account'],
     reply: 'Guest users (not logged in) can browse public Events, News announcements, Training programs, and the Members directory. To access Policies, Partnerships, Funding, and members-only content, you need to register and apply for DASIG membership.',
   },
+  {
+    intent: 'how_many_events',
+    keywords: ['how many events', 'total events', 'number of events', 'count events', 'events available'],
+    reply: 'The DASIG Portal has multiple events and training programs available for registration. Visit the Programs module to browse them all!',
+  },
+  {
+    intent: 'deadline',
+    keywords: ['deadline', 'registration deadline', 'event deadline', 'when is the deadline', 'last day to register', 'closing date'],
+    reply: 'Each DASIG event has its own registration deadline. Check the event details in the Programs module to see the closing date for registration. Register early to secure your slot!',
+  },
+  {
+    intent: 'upcoming',
+    keywords: ['upcoming', 'what is next', 'next event', 'next training', 'soon', 'coming soon', 'soonest'],
+    reply: 'Here are the upcoming DASIG events and activities. Register through the Programs module — slots are limited!',
+  },
+  {
+    intent: 'open_registration',
+    keywords: ['open for registration', 'registration open', 'can i still register', 'open events', 'available to register'],
+    reply: 'Several DASIG events are currently open for registration. Browse the Programs module to see all available events and enroll today!',
+  },
 ];
 
 // Follow-up suggestions — contextually relevant, never re-trigger the same intent
@@ -291,6 +311,10 @@ const FOLLOWUPS = {
   cancel_registration:  ['How do I register for an event?', 'What other events are coming up?', 'How do I check my event registrations?'],
   profile_page:         ['How do I update my profile information?', 'What is my current membership status?', 'How do I check my event registrations?'],
   guest_access:         ['How do I create a DASIG account?', 'How do I become a DASIG member?', 'What events are coming up?'],
+  how_many_events:      ['What events are coming up?', 'How do I register for an event?', 'What training programs are offered?'],
+  deadline:             ['How do I register for an event?', 'What happens if the event is full?', 'Can I cancel my registration?'],
+  upcoming:             ['How do I register for an event?', 'What training programs are offered?', 'What is the DASIG Annual Summit?'],
+  open_registration:    ['How do I register for an event?', 'What if the event is full?', 'How do I check my registrations?'],
 };
 const DEFAULT_FOLLOWUPS = [
   '📅 What events are coming up?',
@@ -315,7 +339,7 @@ function matchIntent(text) {
       if (new RegExp(`\\b${escaped}\\b`).test(lower)) score += 2;
       else if (lower.includes(kw)) score += 1;
     }
-    if (score > bestScore) { bestScore = score; best = entry; }
+    if (score >= bestScore) { bestScore = score; best = entry; }
   }
 
   return bestScore > 0 ? { reply: best.reply, intent: best.intent, score: bestScore } : null;
@@ -399,6 +423,41 @@ router.post('/message', async (req, res) => {
         const list = items.map(m => `• ${m.abbr ? m.abbr + ' — ' : ''}${m.full_name}`).join('\n');
         reply = `The DASIG Consortium currently includes these Region VII member institutions:\n\n${list}\n\nView full profiles in the Members module.`;
       }
+    } else if (match.intent === 'event_register' || match.intent === 'open_registration') {
+      const { data } = await supabase.from('events').select('title,date,enrolled,total').order('id').limit(10);
+      if (data && data.length > 0) {
+        const available = data.filter(e => e.enrolled < e.total).slice(0, 4);
+        if (available.length > 0) {
+          const list = available.map(e => `• ${e.title} — ${e.date} (${e.enrolled}/${e.total} registered)`).join('\n');
+          reply += `\n\n📅 Open for registration:\n${list}`;
+        }
+      }
+    } else if (match.intent === 'how_many_events') {
+      const { count } = await supabase.from('events').select('*', { count: 'exact', head: true });
+      const { count: trCount } = await supabase.from('trainings').select('*', { count: 'exact', head: true });
+      reply = `The DASIG Portal currently has ${count || 0} events and ${trCount || 0} training programs available.\n\nVisit the Programs module to browse and register!`;
+    } else if (match.intent === 'upcoming') {
+      const { data } = await supabase.from('events').select('title,date,category').order('id').limit(5);
+      if (data && data.length > 0) {
+        const list = data.map(e => `• ${e.title} [${e.category}] — ${e.date}`).join('\n');
+        reply = `Here are the upcoming DASIG events:\n\n${list}\n\nRegister through the Programs module — slots are limited!`;
+      }
+    } else if (match.intent === 'event_capacity') {
+      const { data } = await supabase.from('events').select('title,date,enrolled,total').order('id').limit(10);
+      if (data && data.length > 0) {
+        const fullyBooked = data.filter(e => e.enrolled >= e.total);
+        const available = data.filter(e => e.enrolled < e.total);
+        let extraInfo = '';
+        if (fullyBooked.length > 0) {
+          const bookedList = fullyBooked.slice(0, 3).map(e => `• ${e.title} — FULL (${e.enrolled}/${e.total})`).join('\n');
+          extraInfo += `\n\n🔴 Fully booked:\n${bookedList}`;
+        }
+        if (available.length > 0) {
+          const availList = available.slice(0, 3).map(e => `• ${e.title} — ${e.enrolled}/${e.total} registered`).join('\n');
+          extraInfo += `\n\n🟢 Still available:\n${availList}`;
+        }
+        if (extraInfo) reply += extraInfo;
+      }
     }
   } catch (_) {}
 
@@ -417,6 +476,8 @@ router.post('/message', async (req, res) => {
     membership: '/membership', membership_status: '/membership',
     membership_renewal: '/membership', tiers: '/membership',
     haribon: '/chatbot', chatbot_capabilities: '/chatbot',
+    how_many_events: '/programs', upcoming: '/programs?tab=events',
+    open_registration: '/programs?tab=events', deadline: '/programs?tab=events',
   };
 
   return res.json({
