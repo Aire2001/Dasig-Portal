@@ -57,50 +57,43 @@ const INSTITUTION_ABOUT = {
   },
 };
 
-// Institution logos — Clearbit fetches actual logo from official website
-// Falls back to Wikipedia Special:FilePath (no hash needed), then to text badge
+// Institution logos — direct Wikimedia CDN URLs (reliable, no redirect)
 const MEMBER_ASSETS = {
   UP: {
-    logo:     'https://logo.clearbit.com/up.edu.ph',
-    logo2:    'https://en.wikipedia.org/wiki/University_of_the_Philippines',
+    logo:  'https://upload.wikimedia.org/wikipedia/commons/thumb/e/eb/UP_Seal.png/200px-UP_Seal.png',
+    logo2: 'https://logo.clearbit.com/up.edu.ph',
     bg: 'linear-gradient(135deg,#6b1010 0%,#9b2020 60%,#7b1212 100%)',
-    accent: '#ef4444',
-    emoji: '🎓',
+    accent: '#ef4444', emoji: '🎓',
   },
   USa: {
-    logo:     'https://logo.clearbit.com/usa.edu.ph',
-    logo2:    'https://en.wikipedia.org/wiki/Special:FilePath/University_of_San_Agustin.png',
+    logo:  'https://upload.wikimedia.org/wikipedia/en/thumb/0/0d/University_of_San_Agustin_Seal.png/200px-University_of_San_Agustin_Seal.png',
+    logo2: 'https://logo.clearbit.com/usa.edu.ph',
     bg: 'linear-gradient(135deg,#0f2d5c 0%,#1e4a9e 60%,#163880 100%)',
-    accent: '#60a5fa',
-    emoji: '🏫',
+    accent: '#60a5fa', emoji: '🏫',
   },
   DOST: {
-    logo:     'https://logo.clearbit.com/dost.gov.ph',
-    logo2:    'https://commons.wikimedia.org/wiki/Special:FilePath/DOST_seal.png',
+    logo:  'https://upload.wikimedia.org/wikipedia/commons/thumb/8/83/DOST_seal.png/200px-DOST_seal.png',
+    logo2: 'https://logo.clearbit.com/dost.gov.ph',
     bg: 'linear-gradient(135deg,#053d18 0%,#0a6b2e 60%,#074f22 100%)',
-    accent: '#34d399',
-    emoji: '🔬',
+    accent: '#34d399', emoji: '🔬',
   },
   DICT: {
-    logo:     'https://logo.clearbit.com/dict.gov.ph',
-    logo2:    'https://commons.wikimedia.org/wiki/Special:FilePath/DICT_logo.png',
+    logo:  'https://upload.wikimedia.org/wikipedia/en/thumb/4/4f/DICT_Philippines_logo.png/200px-DICT_Philippines_logo.png',
+    logo2: 'https://logo.clearbit.com/dict.gov.ph',
     bg: 'linear-gradient(135deg,#041f5c 0%,#0a3a9e 60%,#082e80 100%)',
-    accent: '#93c5fd',
-    emoji: '💻',
+    accent: '#93c5fd', emoji: '💻',
   },
   DTI: {
-    logo:     'https://logo.clearbit.com/dti.gov.ph',
-    logo2:    'https://commons.wikimedia.org/wiki/Special:FilePath/DTI_Logo_(2022).svg',
+    logo:  'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/DTI_Logo_%282022%29.svg/200px-DTI_Logo_%282022%29.svg.png',
+    logo2: 'https://logo.clearbit.com/dti.gov.ph',
     bg: 'linear-gradient(135deg,#6b0a0a 0%,#b01e1e 60%,#8b1010 100%)',
-    accent: '#fca5a5',
-    emoji: '💼',
+    accent: '#fca5a5', emoji: '💼',
   },
   DepEd: {
-    logo:     'https://logo.clearbit.com/deped.gov.ph',
-    logo2:    'https://commons.wikimedia.org/wiki/Special:FilePath/DepEd-Seal.svg',
+    logo:  'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a7/DepEd-Seal.svg/200px-DepEd-Seal.svg.png',
+    logo2: 'https://logo.clearbit.com/deped.gov.ph',
     bg: 'linear-gradient(135deg,#0b2d6c 0%,#1546b4 60%,#0d3892 100%)',
-    accent: '#93c5fd',
-    emoji: '📚',
+    accent: '#93c5fd', emoji: '📚',
   },
 };
 
@@ -384,7 +377,7 @@ export default function MembersPage() {
   );
 }
 
-// Logo with 3-tier fallback: Clearbit → Wikipedia Special:FilePath → text badge
+// Logo with 3-tier fallback: Wikimedia CDN → Clearbit → styled emoji badge
 function LogoImg({ asset, abbr, name, size = 100, style = {} }) {
   const [src, setSrc] = useState(asset.logo);
   const [tried, setTried] = useState(0);
@@ -396,8 +389,15 @@ function LogoImg({ asset, abbr, name, size = 100, style = {} }) {
 
   if (!src) {
     return (
-      <div style={{ width: size, height: size, borderRadius: size * 0.22, background: 'rgba(255,255,255,0.18)', border: '2px solid rgba(255,255,255,0.32)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: size * 0.22, fontWeight: 900, color: '#fff', letterSpacing: '-0.5px', ...style }}>
-        {abbr}
+      <div style={{
+        width: size, height: size, borderRadius: size * 0.22,
+        background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(8px)',
+        border: '2px solid rgba(255,255,255,0.35)',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+        gap: size * 0.04, ...style,
+      }}>
+        <span style={{ fontSize: size * 0.32 }}>{asset.emoji || '🏛️'}</span>
+        <span style={{ fontSize: size * 0.14, fontWeight: 900, color: '#fff', letterSpacing: '0.5px', textAlign: 'center', lineHeight: 1, padding: '0 4px' }}>{abbr}</span>
       </div>
     );
   }
