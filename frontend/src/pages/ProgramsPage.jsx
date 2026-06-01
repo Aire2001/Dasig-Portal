@@ -752,20 +752,21 @@ function EventsTab({ user }) {
     }
   }
 
-  // Check conflict before opening form
+  // Check ALL conflicts before opening form
   function openForm(ev) {
     if (!user) { setErrModal('login'); return; }
-    // Find conflicting registered event
     const range = parseRange(ev.date);
     if (range) {
-      for (const id of Object.keys(myRegs)) {
-        const other = events.find(e => e.id === +id);
-        if (!other || other.id === ev.id) continue;
-        const oRange = parseRange(other.date);
-        if (oRange && range.start <= oRange.end && oRange.start <= range.end) {
-          setConflict({ event: ev, conflictsWith: other });
-          return;
-        }
+      const allConflicts = Object.keys(myRegs)
+        .map(id => events.find(e => e.id === +id))
+        .filter(other => {
+          if (!other || other.id === ev.id) return false;
+          const oRange = parseRange(other.date);
+          return oRange && range.start <= oRange.end && oRange.start <= range.end;
+        });
+      if (allConflicts.length > 0) {
+        setConflict({ event: ev, conflictsWith: allConflicts });
+        return;
       }
     }
     prefill(ev);
@@ -834,40 +835,50 @@ function EventsTab({ user }) {
         />
       )}
 
-      {/* Conflict warning */}
+      {/* Conflict warning — shows ALL conflicting events */}
       {conflict && (
-        <div onClick={() => setConflict(null)} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.78)', zIndex:9300, display:'flex', alignItems:'center', justifyContent:'center', padding:20, backdropFilter:'blur(4px)' }}>
-          <div onClick={e => e.stopPropagation()} style={{ background:'linear-gradient(180deg,#0f1832,#080e1e)', border:'1px solid rgba(245,158,11,0.35)', borderRadius:24, maxWidth:'min(460px,calc(100vw - 32px))', width:'100%', overflow:'hidden', animation:'modalIn .22s ease', boxShadow:'0 32px 80px rgba(0,0,0,0.8)' }}>
+        <div onClick={() => setConflict(null)} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.78)', zIndex:9300, display:'flex', alignItems:'center', justifyContent:'center', padding:20, backdropFilter:'blur(4px)', overflowY:'auto' }}>
+          <div onClick={e => e.stopPropagation()} style={{ background:'linear-gradient(180deg,#0f1832,#080e1e)', border:'1px solid rgba(245,158,11,0.35)', borderRadius:24, maxWidth:'min(480px,calc(100vw - 32px))', width:'100%', overflow:'hidden', animation:'modalIn .22s ease', boxShadow:'0 32px 80px rgba(0,0,0,0.8)', margin:'auto' }}>
             {/* Header */}
             <div style={{ background:'linear-gradient(135deg,rgba(245,158,11,0.2),rgba(249,115,22,0.12))', padding:'22px 24px 18px', textAlign:'center', borderBottom:'1px solid rgba(245,158,11,0.2)' }}>
               <div style={{ fontSize:44, marginBottom:8 }}>⚠️</div>
               <div style={{ color:'#fbbf24', fontWeight:900, fontSize:19, letterSpacing:'-0.3px' }}>Scheduling Conflict Detected</div>
-              <p style={{ color:'rgba(255,255,255,0.5)', fontSize:13, marginTop:5, lineHeight:1.5 }}>You already have an event registered on the same dates.</p>
+              <p style={{ color:'rgba(255,255,255,0.5)', fontSize:13, marginTop:5, lineHeight:1.5 }}>
+                {conflict.conflictsWith.length === 1
+                  ? 'You already have an event registered on the same dates.'
+                  : `You have ${conflict.conflictsWith.length} registered events that overlap these dates.`}
+              </p>
             </div>
-            <div style={{ padding:'20px 24px' }}>
-              {/* Existing registration */}
+            <div style={{ padding:'20px 24px', maxHeight:'65vh', overflowY:'auto' }}>
+              {/* All conflicting registered events */}
               <div style={{ marginBottom:10 }}>
-                <div style={{ fontSize:10.5, fontWeight:700, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:7 }}>Already registered</div>
-                <div style={{ background:'rgba(239,68,68,0.1)', border:'1px solid rgba(239,68,68,0.3)', borderRadius:12, padding:'12px 14px', display:'flex', gap:12, alignItems:'flex-start' }}>
-                  <span style={{ fontSize:20, flexShrink:0 }}>📅</span>
-                  <div>
-                    <div style={{ color:'#fff', fontWeight:800, fontSize:14, marginBottom:3 }}>{conflict.conflictsWith.title}</div>
-                    <div style={{ color:'rgba(255,255,255,0.55)', fontSize:12.5 }}>{conflict.conflictsWith.date}</div>
-                    {conflict.conflictsWith.start_time && <div style={{ color:'rgba(239,68,68,0.8)', fontSize:12, fontWeight:700, marginTop:3 }}>🕐 {conflict.conflictsWith.start_time}{conflict.conflictsWith.end_time ? ` – ${conflict.conflictsWith.end_time}` : ''}</div>}
-                  </div>
+                <div style={{ fontSize:10.5, fontWeight:700, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:8 }}>
+                  Already registered ({conflict.conflictsWith.length})
+                </div>
+                <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+                  {conflict.conflictsWith.map((ev, i) => (
+                    <div key={ev.id} style={{ background:'rgba(239,68,68,0.1)', border:'1px solid rgba(239,68,68,0.3)', borderRadius:12, padding:'12px 14px', display:'flex', gap:12, alignItems:'flex-start' }}>
+                      <span style={{ fontSize:18, flexShrink:0, marginTop:1 }}>📅</span>
+                      <div style={{ flex:1 }}>
+                        <div style={{ color:'#fff', fontWeight:800, fontSize:13.5, marginBottom:2 }}>{ev.title}</div>
+                        <div style={{ color:'rgba(255,255,255,0.55)', fontSize:12 }}>{ev.date}</div>
+                        {ev.start_time && <div style={{ color:'rgba(239,68,68,0.85)', fontSize:12, fontWeight:700, marginTop:2 }}>🕐 {ev.start_time}{ev.end_time ? ` – ${ev.end_time}` : ''}</div>}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
-              {/* Conflict arrow */}
-              <div style={{ textAlign:'center', color:'rgba(245,158,11,0.7)', fontSize:20, margin:'6px 0' }}>⬇</div>
-              {/* New event */}
+              {/* Arrow */}
+              <div style={{ textAlign:'center', color:'rgba(245,158,11,0.7)', fontSize:20, margin:'8px 0' }}>⬇</div>
+              {/* New event trying to register */}
               <div style={{ marginBottom:20 }}>
-                <div style={{ fontSize:10.5, fontWeight:700, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:7 }}>You're trying to register</div>
+                <div style={{ fontSize:10.5, fontWeight:700, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:8 }}>You're trying to register</div>
                 <div style={{ background:'rgba(245,158,11,0.1)', border:'1px solid rgba(245,158,11,0.3)', borderRadius:12, padding:'12px 14px', display:'flex', gap:12, alignItems:'flex-start' }}>
-                  <span style={{ fontSize:20, flexShrink:0 }}>🆕</span>
+                  <span style={{ fontSize:18, flexShrink:0, marginTop:1 }}>🆕</span>
                   <div>
-                    <div style={{ color:'#fff', fontWeight:800, fontSize:14, marginBottom:3 }}>{conflict.event.title}</div>
-                    <div style={{ color:'rgba(255,255,255,0.55)', fontSize:12.5 }}>{conflict.event.date}</div>
-                    {conflict.event.start_time && <div style={{ color:'rgba(245,158,11,0.8)', fontSize:12, fontWeight:700, marginTop:3 }}>🕐 {conflict.event.start_time}{conflict.event.end_time ? ` – ${conflict.event.end_time}` : ''}</div>}
+                    <div style={{ color:'#fff', fontWeight:800, fontSize:13.5, marginBottom:2 }}>{conflict.event.title}</div>
+                    <div style={{ color:'rgba(255,255,255,0.55)', fontSize:12 }}>{conflict.event.date}</div>
+                    {conflict.event.start_time && <div style={{ color:'rgba(245,158,11,0.85)', fontSize:12, fontWeight:700, marginTop:2 }}>🕐 {conflict.event.start_time}{conflict.event.end_time ? ` – ${conflict.event.end_time}` : ''}</div>}
                   </div>
                 </div>
               </div>
@@ -875,7 +886,7 @@ function EventsTab({ user }) {
                 <button onClick={() => setConflict(null)} style={{ flex:1, background:'rgba(255,255,255,0.07)', color:'rgba(255,255,255,0.7)', border:'1px solid rgba(255,255,255,0.12)', borderRadius:13, padding:'13px', fontSize:13.5, fontWeight:700, cursor:'pointer', fontFamily:'inherit', transition:'all .15s' }}
                   onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,0.12)'}
                   onMouseLeave={e=>e.currentTarget.style.background='rgba(255,255,255,0.07)'}
-                >Cancel</button>
+                >Go Back</button>
                 <button onClick={() => prefill(conflict.event)} style={{ flex:1, background:'linear-gradient(90deg,#f59e0b,#f97316)', color:'#fff', border:'none', borderRadius:13, padding:'13px', fontSize:13.5, fontWeight:800, cursor:'pointer', fontFamily:'inherit', boxShadow:'0 4px 14px rgba(249,115,22,0.35)', transition:'all .15s' }}
                   onMouseEnter={e=>{e.currentTarget.style.opacity='.85'; e.currentTarget.style.transform='translateY(-1px)';}}
                   onMouseLeave={e=>{e.currentTarget.style.opacity='1'; e.currentTarget.style.transform='none';}}
@@ -1229,17 +1240,19 @@ function TrainingTab({ user }) {
 
   function openEnroll(t) {
     if (!user) { setErrModal('login'); return; }
-    // Check for schedule conflict with already-registered trainings
+    // Check ALL schedule conflicts with already-registered trainings
     const tRange = parseRange(t.schedule);
     if (tRange) {
-      for (const id of Object.keys(myEnr)) {
-        const other = trainings.find(tr => tr.id === +id);
-        if (!other || other.id === t.id) continue;
-        const oRange = parseRange(other.schedule);
-        if (oRange && tRange.start <= oRange.end && oRange.start <= tRange.end) {
-          setConflictTr({ training: t, conflictsWith: other });
-          return;
-        }
+      const allConflicts = Object.keys(myEnr)
+        .map(id => trainings.find(tr => tr.id === +id))
+        .filter(other => {
+          if (!other || other.id === t.id) return false;
+          const oRange = parseRange(other.schedule);
+          return oRange && tRange.start <= oRange.end && oRange.start <= tRange.end;
+        });
+      if (allConflicts.length > 0) {
+        setConflictTr({ training: t, conflictsWith: allConflicts });
+        return;
       }
     }
     setFname(user.name || '');
@@ -1307,36 +1320,46 @@ function TrainingTab({ user }) {
         />
       )}
 
-      {/* Training conflict warning modal */}
+      {/* Training conflict warning modal — shows ALL conflicting programs */}
       {conflictTr && (
-        <div onClick={() => setConflictTr(null)} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.78)', zIndex:9300, display:'flex', alignItems:'center', justifyContent:'center', padding:20, backdropFilter:'blur(4px)' }}>
-          <div onClick={e => e.stopPropagation()} style={{ background:'linear-gradient(180deg,#0f1832,#080e1e)', border:'1px solid rgba(245,158,11,0.35)', borderRadius:24, maxWidth:'min(460px,calc(100vw - 32px))', width:'100%', overflow:'hidden', animation:'modalIn .22s ease', boxShadow:'0 32px 80px rgba(0,0,0,0.8)' }}>
+        <div onClick={() => setConflictTr(null)} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.78)', zIndex:9300, display:'flex', alignItems:'center', justifyContent:'center', padding:20, backdropFilter:'blur(4px)', overflowY:'auto' }}>
+          <div onClick={e => e.stopPropagation()} style={{ background:'linear-gradient(180deg,#0f1832,#080e1e)', border:'1px solid rgba(245,158,11,0.35)', borderRadius:24, maxWidth:'min(480px,calc(100vw - 32px))', width:'100%', overflow:'hidden', animation:'modalIn .22s ease', boxShadow:'0 32px 80px rgba(0,0,0,0.8)', margin:'auto' }}>
             <div style={{ background:'linear-gradient(135deg,rgba(245,158,11,0.2),rgba(249,115,22,0.12))', padding:'22px 24px 18px', textAlign:'center', borderBottom:'1px solid rgba(245,158,11,0.2)' }}>
               <div style={{ fontSize:44, marginBottom:8 }}>⚠️</div>
               <div style={{ color:'#fbbf24', fontWeight:900, fontSize:19, letterSpacing:'-0.3px' }}>Schedule Conflict Detected</div>
-              <p style={{ color:'rgba(255,255,255,0.5)', fontSize:13, marginTop:5, lineHeight:1.5 }}>You already have a program registered on overlapping dates.</p>
+              <p style={{ color:'rgba(255,255,255,0.5)', fontSize:13, marginTop:5, lineHeight:1.5 }}>
+                {conflictTr.conflictsWith.length === 1
+                  ? 'You already have a program registered on overlapping dates.'
+                  : `You have ${conflictTr.conflictsWith.length} registered programs that overlap these dates.`}
+              </p>
             </div>
-            <div style={{ padding:'20px 24px' }}>
+            <div style={{ padding:'20px 24px', maxHeight:'65vh', overflowY:'auto' }}>
               <div style={{ marginBottom:10 }}>
-                <div style={{ fontSize:10.5, fontWeight:700, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:7 }}>Already registered</div>
-                <div style={{ background:'rgba(239,68,68,0.1)', border:'1px solid rgba(239,68,68,0.3)', borderRadius:12, padding:'12px 14px', display:'flex', gap:12, alignItems:'flex-start' }}>
-                  <span style={{ fontSize:20, flexShrink:0 }}>🎓</span>
-                  <div>
-                    <div style={{ color:'#fff', fontWeight:800, fontSize:14, marginBottom:3 }}>{conflictTr.conflictsWith.title}</div>
-                    <div style={{ color:'rgba(255,255,255,0.55)', fontSize:12.5 }}>{conflictTr.conflictsWith.schedule?.split('|')[0]?.trim()}</div>
-                    {conflictTr.conflictsWith.session_start_time && <div style={{ color:'rgba(239,68,68,0.8)', fontSize:12, fontWeight:700, marginTop:3 }}>🕐 {conflictTr.conflictsWith.session_start_time}{conflictTr.conflictsWith.session_end_time ? ` – ${conflictTr.conflictsWith.session_end_time}` : ''}</div>}
-                  </div>
+                <div style={{ fontSize:10.5, fontWeight:700, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:8 }}>
+                  Already registered ({conflictTr.conflictsWith.length})
+                </div>
+                <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+                  {conflictTr.conflictsWith.map(t => (
+                    <div key={t.id} style={{ background:'rgba(239,68,68,0.1)', border:'1px solid rgba(239,68,68,0.3)', borderRadius:12, padding:'12px 14px', display:'flex', gap:12, alignItems:'flex-start' }}>
+                      <span style={{ fontSize:18, flexShrink:0, marginTop:1 }}>🎓</span>
+                      <div style={{ flex:1 }}>
+                        <div style={{ color:'#fff', fontWeight:800, fontSize:13.5, marginBottom:2 }}>{t.title}</div>
+                        <div style={{ color:'rgba(255,255,255,0.55)', fontSize:12 }}>{t.schedule?.split('|')[0]?.trim()}</div>
+                        {t.session_start_time && <div style={{ color:'rgba(239,68,68,0.85)', fontSize:12, fontWeight:700, marginTop:2 }}>🕐 {t.session_start_time}{t.session_end_time ? ` – ${t.session_end_time}` : ''}</div>}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
-              <div style={{ textAlign:'center', color:'rgba(245,158,11,0.7)', fontSize:20, margin:'6px 0' }}>⬇</div>
+              <div style={{ textAlign:'center', color:'rgba(245,158,11,0.7)', fontSize:20, margin:'8px 0' }}>⬇</div>
               <div style={{ marginBottom:20 }}>
-                <div style={{ fontSize:10.5, fontWeight:700, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:7 }}>You're trying to register</div>
+                <div style={{ fontSize:10.5, fontWeight:700, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:8 }}>You're trying to register</div>
                 <div style={{ background:'rgba(245,158,11,0.1)', border:'1px solid rgba(245,158,11,0.3)', borderRadius:12, padding:'12px 14px', display:'flex', gap:12, alignItems:'flex-start' }}>
-                  <span style={{ fontSize:20, flexShrink:0 }}>🆕</span>
+                  <span style={{ fontSize:18, flexShrink:0, marginTop:1 }}>🆕</span>
                   <div>
-                    <div style={{ color:'#fff', fontWeight:800, fontSize:14, marginBottom:3 }}>{conflictTr.training.title}</div>
-                    <div style={{ color:'rgba(255,255,255,0.55)', fontSize:12.5 }}>{conflictTr.training.schedule?.split('|')[0]?.trim()}</div>
-                    {conflictTr.training.session_start_time && <div style={{ color:'rgba(245,158,11,0.8)', fontSize:12, fontWeight:700, marginTop:3 }}>🕐 {conflictTr.training.session_start_time}{conflictTr.training.session_end_time ? ` – ${conflictTr.training.session_end_time}` : ''}</div>}
+                    <div style={{ color:'#fff', fontWeight:800, fontSize:13.5, marginBottom:2 }}>{conflictTr.training.title}</div>
+                    <div style={{ color:'rgba(255,255,255,0.55)', fontSize:12 }}>{conflictTr.training.schedule?.split('|')[0]?.trim()}</div>
+                    {conflictTr.training.session_start_time && <div style={{ color:'rgba(245,158,11,0.85)', fontSize:12, fontWeight:700, marginTop:2 }}>🕐 {conflictTr.training.session_start_time}{conflictTr.training.session_end_time ? ` – ${conflictTr.training.session_end_time}` : ''}</div>}
                   </div>
                 </div>
               </div>
