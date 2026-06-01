@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import SunSeal from '../components/SunSeal';
 import HaribonFace from '../components/HaribonFace';
@@ -106,6 +106,7 @@ export default function LoginPage() {
 function LoginForm({ setError }) {
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -123,7 +124,9 @@ function LoginForm({ setError }) {
     setLoading(true);
     try {
       await login(email, password);
-      navigate('/');
+      // Redirect back to the page the user was trying to access, or home
+      const from = location.state?.from || '/';
+      navigate(from, { replace: true });
     } catch (err) {
       setError(err.message);
     } finally {
@@ -152,6 +155,7 @@ function LoginForm({ setError }) {
 function RegisterForm({ setError }) {
   const { register } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [form, setForm] = useState({ name: '', email: '', password: '', institution: '', campus: '' });
   const [loading, setLoading] = useState(false);
   const [fe, setFe] = useState({});
@@ -175,7 +179,8 @@ function RegisterForm({ setError }) {
     setLoading(true);
     try {
       await register(form);
-      navigate('/');
+      const from = location.state?.from || '/';
+      navigate(from, { replace: true });
     } catch (err) {
       setError(err.message);
     } finally {

@@ -1114,7 +1114,7 @@ function NewsTab({ showToast }) {
                   <span style={{ fontSize:13, color:'rgba(255,255,255,0.3)' }}>JPG, PNG, WebP — max 10 MB</span>
                 </label>
               )}
-              <input id="news-img-upload" id2="news-img-replace" type="file" accept="image/*" onChange={handleImageUpload} style={{ display:'none' }} />
+              <input id="news-img-upload" type="file" accept="image/*" onChange={handleImageUpload} style={{ display:'none' }} />
               <input id="news-img-replace" type="file" accept="image/*" onChange={handleImageUpload} style={{ display:'none' }} />
             </div>
 

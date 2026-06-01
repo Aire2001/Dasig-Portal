@@ -193,12 +193,13 @@ export default function EventsPage() {
                 EVENT REGISTRATION
               </div>
               <div style={{ color:'#fff', fontSize:18, fontWeight:900, lineHeight:1.3 }}>{formModal.title}</div>
-              <div style={{ display:'flex', gap:16, marginTop:10 }}>
+              <div style={{ display:'flex', flexWrap:'wrap', gap:12, marginTop:10 }}>
                 {[
                   { icon:'📅', val: formModal.date },
                   { icon:'📍', val: formModal.venue },
+                  ...(formModal.start_time ? [{ icon:'🕐', val: `${formModal.start_time}${formModal.end_time ? ` – ${formModal.end_time}` : ''}` }] : []),
                 ].map(r => (
-                  <div key={r.val} style={{ color:'rgba(255,255,255,0.85)', fontSize:12, display:'flex', alignItems:'center', gap:4 }}>
+                  <div key={r.icon} style={{ color:'rgba(255,255,255,0.85)', fontSize:12, display:'flex', alignItems:'center', gap:4 }}>
                     <span>{r.icon}</span>{r.val}
                   </div>
                 ))}
@@ -626,6 +627,7 @@ function EventCard({ ev, myReg, isCancelling, onRegister, onAttend, onCancel }) 
             {ev.title}
           </h3>
           <div style={{ color:'rgba(255,255,255,0.6)', fontSize:12.5, marginBottom:4, zIndex:1, position:'relative' }}>📍 {ev.venue}</div>
+          {ev.start_time && <div style={{ color:'rgba(253,224,130,0.9)', fontSize:12.5, fontWeight:700, marginBottom:4, zIndex:1, position:'relative' }}>🕐 {ev.start_time}{ev.end_time ? ` – ${ev.end_time}` : ''}</div>}
           <div style={{ color:'rgba(255,255,255,0.6)', fontSize:12.5, marginBottom: ev.registration_deadline ? 4 : 16, zIndex:1, position:'relative' }}>🏛 {ev.organizer}</div>
           {ev.registration_deadline && (
             <div style={{ color: new Date(ev.registration_deadline) < new Date() ? '#f87171' : '#fbbf24', fontSize:12, marginBottom:16, zIndex:1, position:'relative', fontWeight:600 }}>

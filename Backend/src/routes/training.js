@@ -51,6 +51,8 @@ router.post('/', verifyToken, requireRole('ADMIN'), async (req, res) => {
     enrolled: 0, total: Number(total),
     description: description || null,
     schedule: schedule || null,
+    session_start_time: session_start_time || null,
+    session_end_time: session_end_time || null,
   }).select().single();
   if (error) return res.status(500).json({ error: error.message });
   res.status(201).json(data);
