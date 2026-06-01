@@ -177,8 +177,8 @@ const KB = [
   },
   {
     intent: 'event_capacity',
-    keywords: ['full', 'slot', 'available slot', 'seat', 'capacity', 'fully booked', 'no more slot', 'waitlist'],
-    reply: 'Each event has a maximum capacity. Once an event is fully booked, registration is closed. There is no waitlist feature currently — check the Events module regularly for newly added events or slot openings.',
+    keywords: ['full', 'slot', 'available slot', 'seat', 'capacity', 'fully booked', 'no more slot', 'waitlist', 'event is full', 'event full', 'full event', 'what if full', 'event i want is full', 'event is already full', 'no slot', 'already full', 'sold out', 'booked out', 'registration closed', 'no available slot', 'what if the event', 'if the event is full'],
+    reply: 'If an event is fully booked, the Register button will show "Fully Booked" and registration is closed. There is currently no waitlist feature.\n\nHere\'s what you can do:\n1. Check back regularly — cancellations can free up slots\n2. Browse other events in the Programs module with similar topics\n3. Contact the organizer at admin@dasig.ph to express your interest\n\nRegister early for future events — slots fill up fast!',
   },
   {
     intent: 'fees',
@@ -315,7 +315,7 @@ function matchIntent(text) {
       if (new RegExp(`\\b${escaped}\\b`).test(lower)) score += 2;
       else if (lower.includes(kw)) score += 1;
     }
-    if (score > bestScore) { bestScore = score; best = entry; }
+    if (score >= bestScore) { bestScore = score; best = entry; }
   }
 
   return bestScore > 0 ? { reply: best.reply, intent: best.intent, score: bestScore } : null;

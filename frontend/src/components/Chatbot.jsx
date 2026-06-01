@@ -254,7 +254,12 @@ export default function Chatbot() {
 
             {/* Action buttons */}
             <div style={{ display:'flex', gap:5, flexShrink:0 }}>
-              <button onClick={() => { setOpen(false); navigate('/chatbot'); }} style={{
+              <button onClick={() => {
+                // Save current messages so ChatbotPage can resume them
+                sessionStorage.setItem('haribon_resume', JSON.stringify(messages));
+                setOpen(false);
+                navigate('/chatbot');
+              }} style={{
                 background:'rgba(255,255,255,0.12)', border:'1px solid rgba(255,255,255,0.2)',
                 borderRadius:7, padding:'5px 11px', fontSize:11, fontWeight:700,
                 color:'#fff', cursor:'pointer', fontFamily:'inherit',

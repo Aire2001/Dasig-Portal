@@ -172,7 +172,22 @@ export default function ChatbotPage() {
   const rb        = ROLE_BADGE[role] || ROLE_BADGE.GUEST;
 
   const initMsg = { from:'bot', text: makeInitMsg(user), time: new Date() };
-  const [messages, setMessages]       = useState([initMsg]);
+
+  // Resume chat from mini widget if available, otherwise fresh start
+  const [messages, setMessages] = useState(() => {
+    try {
+      const saved = sessionStorage.getItem('haribon_resume');
+      if (saved) {
+        sessionStorage.removeItem('haribon_resume');
+        const msgs = JSON.parse(saved);
+        if (Array.isArray(msgs) && msgs.length > 0) {
+          // Re-attach time objects (JSON loses Date type)
+          return msgs.map(m => ({ ...m, time: m.time ? new Date(m.time) : new Date() }));
+        }
+      }
+    } catch (_) {}
+    return [initMsg];
+  });
   const [input, setInput]             = useState('');
   const [thinking, setThinking]       = useState(false);
   const [matchRate, setMatchRate]     = useState(null);
@@ -180,7 +195,13 @@ export default function ChatbotPage() {
   const [totalMatched, setTotalMatched] = useState(0);
   const [ended, setEnded]             = useState(false);
   const [showEndConfirm, setShowEndConfirm] = useState(false);
-  const [hasReplied, setHasReplied]   = useState(false);
+  const [hasReplied, setHasReplied]   = useState(() => {
+    // If resuming, mark as already replied so chips stay hidden
+    try {
+      const saved = sessionStorage.getItem('haribon_resume');
+      return saved ? true : false;
+    } catch { return false; }
+  });
 
   // Reset chat when user changes (login/logout)
   useEffect(() => {
