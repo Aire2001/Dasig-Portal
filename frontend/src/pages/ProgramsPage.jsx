@@ -1657,43 +1657,116 @@ function CalendarTab({ user }) {
 
           {/* Date Picker Shortcut */}
           <div style={{ position:'relative' }}>
+            {/* ── Premium Date Picker Trigger Button ── */}
             <button
-              onClick={() => setDatePickerOpen(o => !o)}
-              style={{ height:40, background: datePickerOpen?'rgba(249,115,22,0.2)':'rgba(255,255,255,0.07)', border:`1.5px solid ${datePickerOpen?'rgba(249,115,22,0.5)':'rgba(255,255,255,0.15)'}`, borderRadius:10, padding:'0 16px', color: datePickerOpen?'#f97316':'rgba(255,255,255,0.75)', fontSize:13.5, fontWeight:700, cursor:'pointer', fontFamily:'inherit', display:'flex', alignItems:'center', gap:7, transition:'all .15s' }}
+              onClick={() => { setPickerYear(pickerYear); setDatePickerOpen(o => !o); }}
+              style={{
+                height:42,
+                background: datePickerOpen
+                  ? 'linear-gradient(135deg,rgba(249,115,22,0.25),rgba(225,29,72,0.18))'
+                  : 'rgba(255,255,255,0.07)',
+                border: `1.5px solid ${datePickerOpen ? 'rgba(249,115,22,0.55)' : 'rgba(255,255,255,0.14)'}`,
+                borderRadius:12, padding:'0 18px',
+                color: datePickerOpen ? '#f97316' : 'rgba(255,255,255,0.8)',
+                fontSize:14, fontWeight:800, cursor:'pointer', fontFamily:'inherit',
+                display:'flex', alignItems:'center', gap:8, transition:'all .18s',
+                boxShadow: datePickerOpen ? '0 4px 20px rgba(249,115,22,0.25)' : 'none',
+              }}
+              onMouseEnter={e => { if (!datePickerOpen) { e.currentTarget.style.background='rgba(255,255,255,0.11)'; e.currentTarget.style.borderColor='rgba(255,255,255,0.25)'; } }}
+              onMouseLeave={e => { if (!datePickerOpen) { e.currentTarget.style.background='rgba(255,255,255,0.07)'; e.currentTarget.style.borderColor='rgba(255,255,255,0.14)'; } }}
             >
-              📅 {MONTH_NAMES[pickerMonth]?.slice(0,3)} {pickerYear} <span style={{ fontSize:10 }}>▼</span>
+              <span style={{ fontSize:16 }}>📅</span>
+              <span>{MONTH_NAMES[pickerMonth]?.slice(0,3)} {pickerYear}</span>
+              <span style={{ fontSize:9, opacity:.7, transition:'transform .2s', transform: datePickerOpen ? 'rotate(180deg)' : 'rotate(0)' }}>▼</span>
             </button>
 
+            {/* ── Premium Date Picker Dropdown ── */}
             {datePickerOpen && (
-              <div onClick={e => e.stopPropagation()} style={{ position:'absolute', top:46, left:0, zIndex:9999, background:'#0d1424', border:'1px solid rgba(255,255,255,0.15)', borderRadius:16, padding:'16px', boxShadow:'0 20px 60px rgba(0,0,0,0.7)', minWidth:270 }}>
-                {/* Year nav */}
-                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:14 }}>
-                  <button onClick={() => setPickerYear(y => Math.max(2020, y-1))} style={{ background:'rgba(255,255,255,0.07)', border:'none', borderRadius:8, width:32, height:32, color:'#fff', fontSize:16, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>‹</button>
-                  <span style={{ color:'#fff', fontWeight:900, fontSize:16, minWidth:50, textAlign:'center' }}>{pickerYear}</span>
-                  <button onClick={() => setPickerYear(y => Math.min(2035, y+1))} style={{ background:'rgba(255,255,255,0.07)', border:'none', borderRadius:8, width:32, height:32, color:'#fff', fontSize:16, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>›</button>
+              <div onClick={e => e.stopPropagation()} style={{
+                position:'absolute', top:50, left:0, zIndex:9999,
+                background:'linear-gradient(180deg,#0f1832,#0a1020)',
+                border:'1px solid rgba(255,255,255,0.12)',
+                borderRadius:20, overflow:'hidden',
+                boxShadow:'0 32px 80px rgba(0,0,0,0.8), 0 0 0 1px rgba(249,115,22,0.08)',
+                width:300,
+                animation:'dropIn .18s ease',
+              }}>
+                {/* Header bar */}
+                <div style={{ background:'linear-gradient(135deg,rgba(249,115,22,0.15),rgba(225,29,72,0.1))', borderBottom:'1px solid rgba(255,255,255,0.07)', padding:'14px 18px 12px' }}>
+                  <div style={{ fontSize:10.5, fontWeight:800, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', letterSpacing:'1px', marginBottom:2 }}>Navigate to</div>
+                  <div style={{ fontSize:16, fontWeight:900, color:'#fff', letterSpacing:'-0.3px' }}>{MONTH_NAMES[pickerMonth]} {pickerYear}</div>
                 </div>
-                {/* Month grid */}
-                <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:6, marginBottom:10 }}>
-                  {MONTH_NAMES.map((mn, mi) => {
-                    const isSel = mi === pickerMonth && pickerYear === new Date().getFullYear() ? false : (mi === pickerMonth);
-                    const isToday = mi === new Date().getMonth() && pickerYear === new Date().getFullYear();
-                    return (
-                      <button key={mi} onClick={() => jumpToDate(pickerYear, mi)} style={{
-                        padding:'8px 4px', borderRadius:9, border:'none', fontSize:12.5, fontWeight:700,
-                        cursor:'pointer', fontFamily:'inherit', transition:'all .13s',
-                        background: isSel ? 'linear-gradient(90deg,#f97316,#e11d48)' : isToday ? 'rgba(249,115,22,0.18)' : 'rgba(255,255,255,0.05)',
-                        color: isSel ? '#fff' : isToday ? '#fb923c' : 'rgba(255,255,255,0.75)',
-                        boxShadow: isSel ? '0 3px 10px rgba(249,115,22,0.4)' : 'none',
-                      }}
-                      onMouseEnter={e => { if (!isSel) e.currentTarget.style.background='rgba(255,255,255,0.12)'; }}
-                      onMouseLeave={e => { if (!isSel) e.currentTarget.style.background = isToday?'rgba(249,115,22,0.18)':'rgba(255,255,255,0.05)'; }}
-                      >{mn.slice(0,3)}</button>
-                    );
-                  })}
-                </div>
-                <div style={{ display:'flex', gap:8 }}>
-                  <button onClick={jumpToToday} style={{ flex:1, background:'rgba(249,115,22,0.12)', border:'1px solid rgba(249,115,22,0.3)', borderRadius:9, padding:'8px', color:'#fb923c', fontSize:12.5, fontWeight:800, cursor:'pointer', fontFamily:'inherit' }}>Today</button>
-                  <button onClick={() => setDatePickerOpen(false)} style={{ flex:1, background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:9, padding:'8px', color:'rgba(255,255,255,0.55)', fontSize:12.5, fontWeight:700, cursor:'pointer', fontFamily:'inherit' }}>Close</button>
+
+                <div style={{ padding:'16px' }}>
+                  {/* Year navigation */}
+                  <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:16, background:'rgba(255,255,255,0.04)', borderRadius:12, padding:'6px 8px' }}>
+                    <button
+                      onClick={() => setPickerYear(y => Math.max(2020, y-1))}
+                      disabled={pickerYear <= 2020}
+                      style={{ width:36, height:36, borderRadius:10, border:'none', background: pickerYear<=2020?'transparent':'rgba(255,255,255,0.07)', color: pickerYear<=2020?'rgba(255,255,255,0.15)':'rgba(255,255,255,0.8)', fontSize:18, cursor: pickerYear<=2020?'not-allowed':'pointer', display:'flex', alignItems:'center', justifyContent:'center', transition:'all .14s' }}
+                      onMouseEnter={e => { if (pickerYear>2020) e.currentTarget.style.background='rgba(249,115,22,0.15)'; }}
+                      onMouseLeave={e => { if (pickerYear>2020) e.currentTarget.style.background='rgba(255,255,255,0.07)'; }}
+                    >‹</button>
+                    <div style={{ textAlign:'center' }}>
+                      <div style={{ color:'#fff', fontWeight:900, fontSize:22, letterSpacing:'-0.5px', lineHeight:1 }}>{pickerYear}</div>
+                      <div style={{ color:'rgba(255,255,255,0.35)', fontSize:10.5, fontWeight:600, marginTop:2 }}>{pickerYear === new Date().getFullYear() ? 'This year' : pickerYear < new Date().getFullYear() ? `${new Date().getFullYear() - pickerYear}y ago` : `in ${pickerYear - new Date().getFullYear()}y`}</div>
+                    </div>
+                    <button
+                      onClick={() => setPickerYear(y => Math.min(2035, y+1))}
+                      disabled={pickerYear >= 2035}
+                      style={{ width:36, height:36, borderRadius:10, border:'none', background: pickerYear>=2035?'transparent':'rgba(255,255,255,0.07)', color: pickerYear>=2035?'rgba(255,255,255,0.15)':'rgba(255,255,255,0.8)', fontSize:18, cursor: pickerYear>=2035?'not-allowed':'pointer', display:'flex', alignItems:'center', justifyContent:'center', transition:'all .14s' }}
+                      onMouseEnter={e => { if (pickerYear<2035) e.currentTarget.style.background='rgba(249,115,22,0.15)'; }}
+                      onMouseLeave={e => { if (pickerYear<2035) e.currentTarget.style.background='rgba(255,255,255,0.07)'; }}
+                    >›</button>
+                  </div>
+
+                  {/* Month grid 4×3 */}
+                  <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:5, marginBottom:14 }}>
+                    {MONTH_NAMES.map((mn, mi) => {
+                      const isSelected = mi === pickerMonth && pickerYear === (() => { const calApi = calendarRef.current?.getApi(); return calApi ? calApi.getDate().getFullYear() : new Date().getFullYear(); })();
+                      const isCurrentMonth = mi === new Date().getMonth() && pickerYear === new Date().getFullYear();
+                      const isPast = new Date(pickerYear, mi, 1) < new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+                      return (
+                        <button
+                          key={mi}
+                          onClick={() => jumpToDate(pickerYear, mi)}
+                          style={{
+                            padding:'10px 4px', borderRadius:10, border: isCurrentMonth&&!isSelected ? '1.5px solid rgba(249,115,22,0.4)' : '1.5px solid transparent',
+                            fontSize:12.5, fontWeight: isSelected||isCurrentMonth ? 800 : 600,
+                            cursor:'pointer', fontFamily:'inherit', transition:'all .14s',
+                            background: isSelected
+                              ? 'linear-gradient(135deg,#f97316,#e11d48)'
+                              : isCurrentMonth
+                                ? 'rgba(249,115,22,0.1)'
+                                : 'rgba(255,255,255,0.04)',
+                            color: isSelected ? '#fff' : isCurrentMonth ? '#fb923c' : isPast ? 'rgba(255,255,255,0.38)' : 'rgba(255,255,255,0.78)',
+                            boxShadow: isSelected ? '0 4px 14px rgba(249,115,22,0.45)' : 'none',
+                            transform: isSelected ? 'scale(1.05)' : 'scale(1)',
+                          }}
+                          onMouseEnter={e => { if (!isSelected) { e.currentTarget.style.background='rgba(255,255,255,0.12)'; e.currentTarget.style.color='#fff'; e.currentTarget.style.transform='scale(1.04)'; } }}
+                          onMouseLeave={e => { if (!isSelected) { e.currentTarget.style.background = isCurrentMonth?'rgba(249,115,22,0.1)':'rgba(255,255,255,0.04)'; e.currentTarget.style.color = isCurrentMonth?'#fb923c':isPast?'rgba(255,255,255,0.38)':'rgba(255,255,255,0.78)'; e.currentTarget.style.transform='scale(1)'; } }}
+                        >
+                          {mn.slice(0,3)}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Footer actions */}
+                  <div style={{ display:'flex', gap:8 }}>
+                    <button
+                      onClick={jumpToToday}
+                      style={{ flex:1, background:'linear-gradient(90deg,#f97316,#e11d48)', border:'none', borderRadius:11, padding:'10px', color:'#fff', fontSize:13, fontWeight:800, cursor:'pointer', fontFamily:'inherit', boxShadow:'0 4px 14px rgba(249,115,22,0.35)', transition:'all .15s' }}
+                      onMouseEnter={e => { e.currentTarget.style.opacity='.85'; e.currentTarget.style.transform='translateY(-1px)'; }}
+                      onMouseLeave={e => { e.currentTarget.style.opacity='1'; e.currentTarget.style.transform='none'; }}
+                    >📍 Today</button>
+                    <button
+                      onClick={() => setDatePickerOpen(false)}
+                      style={{ flex:1, background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:11, padding:'10px', color:'rgba(255,255,255,0.6)', fontSize:13, fontWeight:700, cursor:'pointer', fontFamily:'inherit', transition:'all .15s' }}
+                      onMouseEnter={e => { e.currentTarget.style.background='rgba(255,255,255,0.1)'; e.currentTarget.style.color='#fff'; }}
+                      onMouseLeave={e => { e.currentTarget.style.background='rgba(255,255,255,0.06)'; e.currentTarget.style.color='rgba(255,255,255,0.6)'; }}
+                    >✕ Close</button>
+                  </div>
                 </div>
               </div>
             )}
