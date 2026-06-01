@@ -684,7 +684,59 @@ function ApplicationsTab({ showToast }) {
 /* ═══════════════════════════════════════════════════════════════════
    EVENTS
 ═══════════════════════════════════════════════════════════════════ */
-const EV_BLANK = { title:'', date:'', venue:'', organizer:'', category:'Summit', total:50, description:'', registration_deadline:'' };
+const EV_BLANK = { title:'', date:'', venue:'', organizer:'', category:'Summit', total:50, description:'', registration_deadline:'', start_time:'', end_time:'' };
+
+const EV_CAT_OPTIONS = [
+  { value:'Summit',   icon:'🏛', color:'#818cf8', desc:'Annual consortium summit' },
+  { value:'Workshop', icon:'🔬', color:'#34d399', desc:'Hands-on skill workshops' },
+  { value:'Seminar',  icon:'📢', color:'#f9a8d4', desc:'Knowledge sharing seminars' },
+  { value:'Funding',  icon:'💰', color:'#fcd34d', desc:'Scholarship & grant events' },
+];
+
+const TR_CAT_OPTIONS = [
+  { value:'Technology',  icon:'💻', color:'#60a5fa', desc:'ICT & digital skills' },
+  { value:'Research',    icon:'🔭', color:'#6ee7b7', desc:'Research methods & output' },
+  { value:'Leadership',  icon:'🎯', color:'#fbbf24', desc:'Governance & leadership' },
+  { value:'Governance',  icon:'📋', color:'#c4b5fd', desc:'Policy & administration' },
+];
+
+function CategoryDropdown({ value, onChange, options }) {
+  const [open, setOpen] = useState(false);
+  const sel = options.find(o => o.value === value) || options[0];
+  return (
+    <div style={{ position:'relative' }}>
+      <button type="button" onClick={() => setOpen(o => !o)} style={{ width:'100%', height:38, background: open?'rgba(255,255,255,0.1)':'rgba(255,255,255,0.05)', border:`1.5px solid ${open?'rgba(255,255,255,0.22)':'rgba(255,255,255,0.1)'}`, borderRadius:9, padding:'0 12px', cursor:'pointer', fontFamily:'inherit', display:'flex', alignItems:'center', gap:8, transition:'all .15s', color:'#fff' }}
+        onMouseEnter={e => { if (!open) e.currentTarget.style.background='rgba(255,255,255,0.08)'; }}
+        onMouseLeave={e => { if (!open) e.currentTarget.style.background='rgba(255,255,255,0.05)'; }}
+      >
+        <div style={{ width:24, height:24, borderRadius:6, background:`${sel.color}22`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, flexShrink:0, border:`1px solid ${sel.color}40` }}>{sel.icon}</div>
+        <span style={{ flex:1, textAlign:'left', fontSize:13, fontWeight:700 }}>{sel.value}</span>
+        <span style={{ fontSize:9, color:'rgba(255,255,255,0.4)', transition:'transform .2s', transform: open?'rotate(180deg)':'none' }}>▼</span>
+      </button>
+      {open && (
+        <div onClick={e => e.stopPropagation()} style={{ position:'absolute', top:42, left:0, zIndex:9999, width:220, background:'linear-gradient(180deg,#141e36,#0d1424)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:12, overflow:'hidden', boxShadow:'0 16px 48px rgba(0,0,0,0.7)' }}>
+          {options.map((opt, idx) => {
+            const isActive = value === opt.value;
+            return (
+              <button key={opt.value} type="button" onClick={() => { onChange(opt.value); setOpen(false); }} style={{ width:'100%', display:'flex', alignItems:'center', gap:10, padding:'9px 12px', background: isActive?`${opt.color}18`:'transparent', border:'none', borderBottom: idx<options.length-1?'1px solid rgba(255,255,255,0.04)':'none', borderLeft:`3px solid ${isActive?opt.color:'transparent'}`, cursor:'pointer', fontFamily:'inherit', transition:'background .12s' }}
+                onMouseEnter={e => { if (!isActive) e.currentTarget.style.background='rgba(255,255,255,0.05)'; }}
+                onMouseLeave={e => { if (!isActive) e.currentTarget.style.background='transparent'; }}
+              >
+                <div style={{ width:30, height:30, borderRadius:8, background: isActive?`${opt.color}20`:'rgba(255,255,255,0.06)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:15, flexShrink:0, border:`1px solid ${isActive?opt.color+'50':'rgba(255,255,255,0.07)'}` }}>{opt.icon}</div>
+                <div style={{ flex:1, textAlign:'left' }}>
+                  <div style={{ fontSize:13, fontWeight: isActive?800:600, color: isActive?'#fff':'rgba(255,255,255,0.75)' }}>{opt.value}</div>
+                  <div style={{ fontSize:10.5, color:'rgba(255,255,255,0.35)', marginTop:1 }}>{opt.desc}</div>
+                </div>
+                {isActive && <span style={{ color: opt.color, fontSize:13, flexShrink:0 }}>✓</span>}
+              </button>
+            );
+          })}
+        </div>
+      )}
+      {open && <div onClick={() => setOpen(false)} style={{ position:'fixed', inset:0, zIndex:9998 }} />}
+    </div>
+  );
+}
 
 function EventsTab({ showToast }) {
   const [items, setItems]         = useState([]);
@@ -803,9 +855,22 @@ function EventsTab({ showToast }) {
             <DInput label="Title *" name="title" value={form.title} onChange={fc} required span="1/-1" />
             <DInput label="Date *" name="date" value={form.date} onChange={fc} type="date" required />
             <DInput label="Registration Deadline" name="registration_deadline" value={form.registration_deadline} onChange={fc} type="date" />
+            {/* Start / End Time */}
+            <div>
+              <label style={{ display:'block', fontSize:11, fontWeight:700, color:'rgba(255,255,255,0.6)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:5 }}>Start Time</label>
+              <input type="time" name="start_time" value={form.start_time || ''} onChange={fc} className="ap-input" style={{ cursor:'pointer' }} />
+            </div>
+            <div>
+              <label style={{ display:'block', fontSize:11, fontWeight:700, color:'rgba(255,255,255,0.6)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:5 }}>End Time</label>
+              <input type="time" name="end_time" value={form.end_time || ''} onChange={fc} className="ap-input" style={{ cursor:'pointer' }} />
+            </div>
             <DInput label="Venue *" name="venue" value={form.venue} onChange={fc} required />
             <DInput label="Organizer *" name="organizer" value={form.organizer} onChange={fc} required />
-            <DInput label="Category" name="category" value={form.category} onChange={fc} as="select" opts={['Summit','Workshop','Seminar','Funding']} />
+            {/* Custom Category Dropdown */}
+            <div>
+              <label style={{ display:'block', fontSize:11, fontWeight:700, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:5 }}>Category</label>
+              <CategoryDropdown value={form.category} onChange={val => setForm(p => ({ ...p, category: val }))} options={EV_CAT_OPTIONS} />
+            </div>
             <DInput label="Capacity" name="total" value={form.total} onChange={fc} type="number" />
             <DInput label="Description" name="description" value={form.description} onChange={fc} as="textarea" span="1/-1" />
           </div>
@@ -1107,7 +1172,7 @@ function NewsTab({ showToast }) {
 /* ═══════════════════════════════════════════════════════════════════
    TRAINING
 ═══════════════════════════════════════════════════════════════════ */
-const TR_BLANK = { icon:'💻', category:'Technology', title:'', org:'', duration:'2 weeks', level:'Beginner', total:20, description:'', schedule:'' };
+const TR_BLANK = { icon:'💻', category:'Technology', title:'', org:'', duration:'2 weeks', level:'Beginner', total:20, description:'', schedule:'', session_start_time:'', session_end_time:'' };
 const TR_DURATIONS = ['1 week','2 weeks','3 weeks','4 weeks','5 weeks','6 weeks','8 weeks','10 weeks','12 weeks','3 months','4 months','6 months'];
 
 function TrainingTab({ showToast }) {
@@ -1199,10 +1264,24 @@ function TrainingTab({ showToast }) {
             <DInput label="Title *" name="title" value={form.title} onChange={fc} required span="1/-1" />
             <DInput label="Organization *" name="org" value={form.org} onChange={fc} required />
             <DInput label="Duration *" name="duration" value={form.duration} onChange={fc} as="select" opts={TR_DURATIONS} required />
-            <DInput label="Category" name="category" value={form.category} onChange={fc} as="select" opts={['Technology','Research','Leadership','Governance']} />
+            {/* Custom Category Dropdown */}
+            <div>
+              <label style={{ display:'block', fontSize:11, fontWeight:700, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:5 }}>Category</label>
+              <CategoryDropdown value={form.category} onChange={val => setForm(p => ({ ...p, category: val }))} options={TR_CAT_OPTIONS} />
+            </div>
             <DInput label="Level" name="level" value={form.level} onChange={fc} as="select" opts={['Beginner','Intermediate','Advanced']} />
             <DInput label="Capacity" name="total" value={form.total} onChange={fc} type="number" />
-            <DInput label="Schedule (Start Date)" name="schedule" value={form.schedule} onChange={fc} type="date" span="1/-1" />
+            <DInput label="Schedule (Start Date)" name="schedule" value={form.schedule} onChange={fc} type="date" />
+            <div />
+            {/* Session Times */}
+            <div>
+              <label style={{ display:'block', fontSize:11, fontWeight:700, color:'rgba(255,255,255,0.6)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:5 }}>Session Start Time</label>
+              <input type="time" name="session_start_time" value={form.session_start_time || ''} onChange={fc} className="ap-input" style={{ cursor:'pointer' }} />
+            </div>
+            <div>
+              <label style={{ display:'block', fontSize:11, fontWeight:700, color:'rgba(255,255,255,0.6)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:5 }}>Session End Time</label>
+              <input type="time" name="session_end_time" value={form.session_end_time || ''} onChange={fc} className="ap-input" style={{ cursor:'pointer' }} />
+            </div>
             <DInput label="Description" name="description" value={form.description} onChange={fc} as="textarea" span="1/-1" />
           </div>
           <FormActions onCancel={() => setModal(null)} onSave={save} saving={saving} saveLabel={modal === 'create' ? 'Create Program' : 'Save Changes'} />

@@ -812,17 +812,51 @@ function EventsTab({ user }) {
 
       {/* Conflict warning */}
       {conflict && (
-        <div onClick={() => setConflict(null)} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.72)', zIndex:9300, display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
-          <div onClick={e => e.stopPropagation()} style={{ background:'#0f172a', border:'1px solid rgba(245,158,11,0.4)', borderRadius:22, maxWidth:'min(420px,calc(100vw - 32px))', width:'100%', padding:'32px', animation:'modalIn .22s ease' }}>
-            <div style={{ fontSize:42, textAlign:'center', marginBottom:12 }}>⚠️</div>
-            <div style={{ color:'#fbbf24', fontWeight:900, fontSize:17, textAlign:'center', marginBottom:8 }}>Scheduling Conflict</div>
-            <p style={{ color:'rgba(255,255,255,0.6)', fontSize:13.5, textAlign:'center', lineHeight:1.65, marginBottom:6 }}>
-              You're registered for <strong style={{ color:'#fff' }}>{conflict.conflictsWith.title}</strong> which overlaps with <strong style={{ color:'#fff' }}>{conflict.event.title}</strong>.
-            </p>
-            <p style={{ color:'rgba(245,158,11,0.8)', fontSize:12.5, textAlign:'center', marginBottom:24 }}>📅 {conflict.conflictsWith.date}</p>
-            <div style={{ display:'flex', gap:10 }}>
-              <button onClick={() => setConflict(null)} style={{ flex:1, background:'rgba(255,255,255,0.07)', color:'rgba(255,255,255,0.65)', border:'1px solid rgba(255,255,255,0.12)', borderRadius:12, padding:'12px', fontSize:13, fontWeight:700, cursor:'pointer', fontFamily:'inherit' }}>Cancel</button>
-              <button onClick={() => prefill(conflict.event)} style={{ flex:1, background:'linear-gradient(90deg,#f59e0b,#f97316)', color:'#fff', border:'none', borderRadius:12, padding:'12px', fontSize:13, fontWeight:800, cursor:'pointer', fontFamily:'inherit' }}>Register Anyway</button>
+        <div onClick={() => setConflict(null)} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.78)', zIndex:9300, display:'flex', alignItems:'center', justifyContent:'center', padding:20, backdropFilter:'blur(4px)' }}>
+          <div onClick={e => e.stopPropagation()} style={{ background:'linear-gradient(180deg,#0f1832,#080e1e)', border:'1px solid rgba(245,158,11,0.35)', borderRadius:24, maxWidth:'min(460px,calc(100vw - 32px))', width:'100%', overflow:'hidden', animation:'modalIn .22s ease', boxShadow:'0 32px 80px rgba(0,0,0,0.8)' }}>
+            {/* Header */}
+            <div style={{ background:'linear-gradient(135deg,rgba(245,158,11,0.2),rgba(249,115,22,0.12))', padding:'22px 24px 18px', textAlign:'center', borderBottom:'1px solid rgba(245,158,11,0.2)' }}>
+              <div style={{ fontSize:44, marginBottom:8 }}>⚠️</div>
+              <div style={{ color:'#fbbf24', fontWeight:900, fontSize:19, letterSpacing:'-0.3px' }}>Scheduling Conflict Detected</div>
+              <p style={{ color:'rgba(255,255,255,0.5)', fontSize:13, marginTop:5, lineHeight:1.5 }}>You already have an event registered on the same dates.</p>
+            </div>
+            <div style={{ padding:'20px 24px' }}>
+              {/* Existing registration */}
+              <div style={{ marginBottom:10 }}>
+                <div style={{ fontSize:10.5, fontWeight:700, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:7 }}>Already registered</div>
+                <div style={{ background:'rgba(239,68,68,0.1)', border:'1px solid rgba(239,68,68,0.3)', borderRadius:12, padding:'12px 14px', display:'flex', gap:12, alignItems:'flex-start' }}>
+                  <span style={{ fontSize:20, flexShrink:0 }}>📅</span>
+                  <div>
+                    <div style={{ color:'#fff', fontWeight:800, fontSize:14, marginBottom:3 }}>{conflict.conflictsWith.title}</div>
+                    <div style={{ color:'rgba(255,255,255,0.55)', fontSize:12.5 }}>{conflict.conflictsWith.date}</div>
+                    {conflict.conflictsWith.start_time && <div style={{ color:'rgba(239,68,68,0.8)', fontSize:12, fontWeight:700, marginTop:3 }}>🕐 {conflict.conflictsWith.start_time}{conflict.conflictsWith.end_time ? ` – ${conflict.conflictsWith.end_time}` : ''}</div>}
+                  </div>
+                </div>
+              </div>
+              {/* Conflict arrow */}
+              <div style={{ textAlign:'center', color:'rgba(245,158,11,0.7)', fontSize:20, margin:'6px 0' }}>⬇</div>
+              {/* New event */}
+              <div style={{ marginBottom:20 }}>
+                <div style={{ fontSize:10.5, fontWeight:700, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:7 }}>You're trying to register</div>
+                <div style={{ background:'rgba(245,158,11,0.1)', border:'1px solid rgba(245,158,11,0.3)', borderRadius:12, padding:'12px 14px', display:'flex', gap:12, alignItems:'flex-start' }}>
+                  <span style={{ fontSize:20, flexShrink:0 }}>🆕</span>
+                  <div>
+                    <div style={{ color:'#fff', fontWeight:800, fontSize:14, marginBottom:3 }}>{conflict.event.title}</div>
+                    <div style={{ color:'rgba(255,255,255,0.55)', fontSize:12.5 }}>{conflict.event.date}</div>
+                    {conflict.event.start_time && <div style={{ color:'rgba(245,158,11,0.8)', fontSize:12, fontWeight:700, marginTop:3 }}>🕐 {conflict.event.start_time}{conflict.event.end_time ? ` – ${conflict.event.end_time}` : ''}</div>}
+                  </div>
+                </div>
+              </div>
+              <div style={{ display:'flex', gap:10 }}>
+                <button onClick={() => setConflict(null)} style={{ flex:1, background:'rgba(255,255,255,0.07)', color:'rgba(255,255,255,0.7)', border:'1px solid rgba(255,255,255,0.12)', borderRadius:13, padding:'13px', fontSize:13.5, fontWeight:700, cursor:'pointer', fontFamily:'inherit', transition:'all .15s' }}
+                  onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,0.12)'}
+                  onMouseLeave={e=>e.currentTarget.style.background='rgba(255,255,255,0.07)'}
+                >Cancel</button>
+                <button onClick={() => prefill(conflict.event)} style={{ flex:1, background:'linear-gradient(90deg,#f59e0b,#f97316)', color:'#fff', border:'none', borderRadius:13, padding:'13px', fontSize:13.5, fontWeight:800, cursor:'pointer', fontFamily:'inherit', boxShadow:'0 4px 14px rgba(249,115,22,0.35)', transition:'all .15s' }}
+                  onMouseEnter={e=>{e.currentTarget.style.opacity='.85'; e.currentTarget.style.transform='translateY(-1px)';}}
+                  onMouseLeave={e=>{e.currentTarget.style.opacity='1'; e.currentTarget.style.transform='none';}}
+                >Register Anyway →</button>
+              </div>
             </div>
           </div>
         </div>
