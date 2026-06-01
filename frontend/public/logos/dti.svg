@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <!-- Circular background -->
+  <circle cx="100" cy="100" r="98" fill="#b91c1c" stroke="#fff" stroke-width="3"/>
+  <circle cx="100" cy="100" r="85" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1"/>
+  <!-- Globe lines (simplified) -->
+  <ellipse cx="100" cy="100" rx="50" ry="50" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="1.5"/>
+  <ellipse cx="100" cy="100" rx="30" ry="50" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="1.5"/>
+  <ellipse cx="100" cy="100" rx="50" ry="20" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="1.5"/>
+  <line x1="50" y1="100" x2="150" y2="100" stroke="rgba(255,255,255,0.25)" stroke-width="1.5"/>
+  <line x1="100" y1="50" x2="100" y2="150" stroke="rgba(255,255,255,0.25)" stroke-width="1.5"/>
+  <!-- DTI bold text -->
+  <text x="100" y="112" font-family="Arial Black, sans-serif" font-size="38" font-weight="900" fill="#ffffff" text-anchor="middle" letter-spacing="3">DTI</text>
+  <!-- Bottom label -->
+  <path id="curve-dti" d="M 28,120 A 72,72 0 0,0 172,120" fill="none"/>
+  <text font-family="Arial, sans-serif" font-size="8" fill="rgba(255,255,255,0.85)" text-anchor="middle">
+    <textPath href="#curve-dti" startOffset="50%">DEPT. OF TRADE &amp; INDUSTRY</textPath>
+  </text>
+  <!-- Top label -->
+  <path id="curve-dti-t" d="M 22,95 A 78,78 0 0,1 178,95" fill="none"/>
+  <text font-family="Arial, sans-serif" font-size="8" fill="rgba(255,255,255,0.7)" text-anchor="middle">
+    <textPath href="#curve-dti-t" startOffset="50%">REPUBLIC OF THE PHILIPPINES</textPath>
+  </text>
+</svg>

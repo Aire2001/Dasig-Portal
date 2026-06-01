@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <circle cx="100" cy="100" r="98" fill="#003087" stroke="#60a5fa" stroke-width="3.5"/>
+  <circle cx="100" cy="100" r="85" fill="none" stroke="#60a5fa" stroke-width="1"/>
+  <!-- Network nodes (ICT theme) -->
+  <circle cx="100" cy="72" r="7" fill="#60a5fa"/>
+  <circle cx="65" cy="95" r="5" fill="#60a5fa" opacity="0.8"/>
+  <circle cx="135" cy="95" r="5" fill="#60a5fa" opacity="0.8"/>
+  <circle cx="75" cy="120" r="4" fill="#60a5fa" opacity="0.6"/>
+  <circle cx="125" cy="120" r="4" fill="#60a5fa" opacity="0.6"/>
+  <!-- Network connections -->
+  <g stroke="#60a5fa" stroke-width="1.5" opacity="0.6">
+    <line x1="100" y1="72" x2="65" y2="95"/>
+    <line x1="100" y1="72" x2="135" y2="95"/>
+    <line x1="65" y1="95" x2="75" y2="120"/>
+    <line x1="135" y1="95" x2="125" y2="120"/>
+    <line x1="65" y1="95" x2="125" y2="120"/>
+    <line x1="135" y1="95" x2="75" y2="120"/>
+  </g>
+  <!-- DICT text -->
+  <text x="100" y="162" font-family="Arial Black, sans-serif" font-size="24" font-weight="900" fill="#60a5fa" text-anchor="middle" letter-spacing="4">DICT</text>
+  <!-- Top curved text -->
+  <path id="curve-di-top" d="M 22,96 A 78,78 0 0,1 178,96" fill="none"/>
+  <text font-family="Arial, sans-serif" font-size="7.5" fill="#93c5fd" text-anchor="middle">
+    <textPath href="#curve-di-top" startOffset="50%">DEPT. OF INFO. &amp; COMM. TECHNOLOGY</textPath>
+  </text>
+  <!-- Bottom curved text -->
+  <path id="curve-di-bot" d="M 30,120 A 70,70 0 0,0 170,120" fill="none"/>
+  <text font-family="Arial, sans-serif" font-size="7" fill="rgba(147,197,253,0.75)" text-anchor="middle">
+    <textPath href="#curve-di-bot" startOffset="50%">REGION VII · PHILIPPINES</textPath>
+  </text>
+</svg>
