@@ -5,7 +5,7 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import tippy from 'tippy.js';
 import 'tippy.js/dist/tippy.css';
 import 'tippy.js/animations/shift-away.css';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import PageHeader from '../components/PageHeader';
 import ParticleBackground from '../components/ParticleBackground';
@@ -1428,9 +1428,12 @@ function CalendarTab({ user }) {
   const [refreshing, setRefreshing] = useState(false);
   const [detail, setDetail]       = useState(null);
   
-  const [searchQuery, setSearchQuery] = useState(''); 
-  const [hiddenCats, setHiddenCats] = useState(new Set());
-  
+  const [searchQuery, setSearchQuery]   = useState('');
+  const [selectedCat, setSelectedCat]   = useState('All');
+  const [datePickerOpen, setDatePickerOpen] = useState(false);
+  const [pickerYear, setPickerYear]     = useState(new Date().getFullYear());
+  const [pickerMonth, setPickerMonth]   = useState(new Date().getMonth());
+  const calendarRef = useRef(null);
   const navigate = useNavigate();
 
   function loadData(isRefresh = false) {
@@ -1468,16 +1471,25 @@ function CalendarTab({ user }) {
     }),
   ];
 
-  const allCategories = Array.from(new Set(calItems.map(it => it.category))).filter(Boolean);
+  const allCategories = Array.from(new Set(calItems.map(it => it.category))).filter(Boolean).sort();
 
-  const toggleCategory = (cat) => {
-    setHiddenCats(prev => {
-      const next = new Set(prev);
-      if (next.has(cat)) next.delete(cat); 
-      else next.add(cat); 
-      return next;
-    });
-  };
+  // Date picker: jump FullCalendar to selected month/year
+  function jumpToDate(year, month) {
+    const calApi = calendarRef.current?.getApi();
+    if (calApi) calApi.gotoDate(new Date(year, month, 1));
+    setPickerYear(year);
+    setPickerMonth(month);
+    setDatePickerOpen(false);
+  }
+
+  function jumpToToday() {
+    const calApi = calendarRef.current?.getApi();
+    if (calApi) calApi.today();
+    const now = new Date();
+    setPickerYear(now.getFullYear());
+    setPickerMonth(now.getMonth());
+    setDatePickerOpen(false);
+  }
 
   // Conflict check logic
   const myIds = new Set([...Object.keys(myRegs).map(id => +id), ...Object.keys(myEnr).map(id => +id)]);
@@ -1492,11 +1504,11 @@ function CalendarTab({ user }) {
     }
   }
 
-  // Map to FullCalendar format 
+  // Map to FullCalendar format
   const fcEvents = calItems
     .filter(it => it.startDate)
-    .filter(it => !hiddenCats.has(it.category)) 
-    .filter(it => it.title.toLowerCase().includes(searchQuery.toLowerCase())) 
+    .filter(it => selectedCat === 'All' || it.category === selectedCat)
+    .filter(it => !searchQuery || it.title.toLowerCase().includes(searchQuery.toLowerCase())) 
     .map(it => {
       const colors = getUniqueEventColor(it.title + it.id);
       const isConflict = conflictIds.has(it.id);
@@ -1609,59 +1621,143 @@ function CalendarTab({ user }) {
       {/* Main UI */}
       <div style={{ background:'rgba(13,20,40,0.85)', border:'1px solid rgba(255,255,255,0.09)', borderRadius:20, padding: 24, marginBottom:28 }}>
         
-        {/* Top Controls: Search & Refresh */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <div style={{ position: 'relative', width: 300 }}>
-            <span style={{ position: 'absolute', left: 12, top: 10 }}>🔍</span>
-            <input
-              type="text"
-              placeholder="Search scheduled events..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="prog-input"
-              style={{ paddingLeft: 38 }}
-            />
+        {/* ── Top Controls Row ── */}
+        <div style={{ display:'flex', gap:10, alignItems:'center', marginBottom:16, flexWrap:'wrap' }}>
+
+          {/* Search */}
+          <div style={{ position:'relative', flex:'1', minWidth:180, maxWidth:280 }}>
+            <span style={{ position:'absolute', left:12, top:'50%', transform:'translateY(-50%)', fontSize:14, pointerEvents:'none' }}>🔍</span>
+            <input type="text" placeholder="Search events or training…" value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="prog-input" style={{ paddingLeft:38, height:40 }} />
           </div>
-          
-          <button onClick={() => loadData(true)} disabled={refreshing} style={{ background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.12)', borderRadius:8, padding:'9px 16px', color:'rgba(255,255,255,0.65)', fontSize:12.5, fontWeight:700, cursor: refreshing?'default':'pointer', fontFamily:'inherit', display:'flex', alignItems:'center', gap:6 }}>
-            {refreshing ? 'Refreshing…' : '↻ Refresh'}
+
+          {/* Category Dropdown */}
+          <div style={{ position:'relative', minWidth:190 }}>
+            <select
+              value={selectedCat}
+              onChange={e => setSelectedCat(e.target.value)}
+              style={{
+                width:'100%', height:40, background:'rgba(255,255,255,0.07)',
+                border:'1.5px solid rgba(255,255,255,0.15)', borderRadius:10,
+                color:'#fff', fontSize:13.5, fontWeight:700, fontFamily:'inherit',
+                padding:'0 36px 0 14px', cursor:'pointer', outline:'none',
+                appearance:'none', transition:'border-color .15s',
+              }}
+            >
+              <option value="All" style={{ background:'#0f172a' }}>📂 All Categories</option>
+              {allCategories.map(cat => (
+                <option key={cat} value={cat} style={{ background:'#0f172a' }}>
+                  {cat}
+                </option>
+              ))}
+            </select>
+            <span style={{ position:'absolute', right:12, top:'50%', transform:'translateY(-50%)', pointerEvents:'none', color:'rgba(255,255,255,0.5)', fontSize:12 }}>▼</span>
+          </div>
+
+          {/* Date Picker Shortcut */}
+          <div style={{ position:'relative' }}>
+            <button
+              onClick={() => setDatePickerOpen(o => !o)}
+              style={{ height:40, background: datePickerOpen?'rgba(249,115,22,0.2)':'rgba(255,255,255,0.07)', border:`1.5px solid ${datePickerOpen?'rgba(249,115,22,0.5)':'rgba(255,255,255,0.15)'}`, borderRadius:10, padding:'0 16px', color: datePickerOpen?'#f97316':'rgba(255,255,255,0.75)', fontSize:13.5, fontWeight:700, cursor:'pointer', fontFamily:'inherit', display:'flex', alignItems:'center', gap:7, transition:'all .15s' }}
+            >
+              📅 {MONTH_NAMES[pickerMonth]?.slice(0,3)} {pickerYear} <span style={{ fontSize:10 }}>▼</span>
+            </button>
+
+            {datePickerOpen && (
+              <div onClick={e => e.stopPropagation()} style={{ position:'absolute', top:46, left:0, zIndex:9999, background:'#0d1424', border:'1px solid rgba(255,255,255,0.15)', borderRadius:16, padding:'16px', boxShadow:'0 20px 60px rgba(0,0,0,0.7)', minWidth:270 }}>
+                {/* Year nav */}
+                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:14 }}>
+                  <button onClick={() => setPickerYear(y => Math.max(2020, y-1))} style={{ background:'rgba(255,255,255,0.07)', border:'none', borderRadius:8, width:32, height:32, color:'#fff', fontSize:16, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>‹</button>
+                  <span style={{ color:'#fff', fontWeight:900, fontSize:16, minWidth:50, textAlign:'center' }}>{pickerYear}</span>
+                  <button onClick={() => setPickerYear(y => Math.min(2035, y+1))} style={{ background:'rgba(255,255,255,0.07)', border:'none', borderRadius:8, width:32, height:32, color:'#fff', fontSize:16, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>›</button>
+                </div>
+                {/* Month grid */}
+                <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:6, marginBottom:10 }}>
+                  {MONTH_NAMES.map((mn, mi) => {
+                    const isSel = mi === pickerMonth && pickerYear === new Date().getFullYear() ? false : (mi === pickerMonth);
+                    const isToday = mi === new Date().getMonth() && pickerYear === new Date().getFullYear();
+                    return (
+                      <button key={mi} onClick={() => jumpToDate(pickerYear, mi)} style={{
+                        padding:'8px 4px', borderRadius:9, border:'none', fontSize:12.5, fontWeight:700,
+                        cursor:'pointer', fontFamily:'inherit', transition:'all .13s',
+                        background: isSel ? 'linear-gradient(90deg,#f97316,#e11d48)' : isToday ? 'rgba(249,115,22,0.18)' : 'rgba(255,255,255,0.05)',
+                        color: isSel ? '#fff' : isToday ? '#fb923c' : 'rgba(255,255,255,0.75)',
+                        boxShadow: isSel ? '0 3px 10px rgba(249,115,22,0.4)' : 'none',
+                      }}
+                      onMouseEnter={e => { if (!isSel) e.currentTarget.style.background='rgba(255,255,255,0.12)'; }}
+                      onMouseLeave={e => { if (!isSel) e.currentTarget.style.background = isToday?'rgba(249,115,22,0.18)':'rgba(255,255,255,0.05)'; }}
+                      >{mn.slice(0,3)}</button>
+                    );
+                  })}
+                </div>
+                <div style={{ display:'flex', gap:8 }}>
+                  <button onClick={jumpToToday} style={{ flex:1, background:'rgba(249,115,22,0.12)', border:'1px solid rgba(249,115,22,0.3)', borderRadius:9, padding:'8px', color:'#fb923c', fontSize:12.5, fontWeight:800, cursor:'pointer', fontFamily:'inherit' }}>Today</button>
+                  <button onClick={() => setDatePickerOpen(false)} style={{ flex:1, background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:9, padding:'8px', color:'rgba(255,255,255,0.55)', fontSize:12.5, fontWeight:700, cursor:'pointer', fontFamily:'inherit' }}>Close</button>
+                </div>
+              </div>
+            )}
+            {/* Close picker on outside click */}
+            {datePickerOpen && <div onClick={() => setDatePickerOpen(false)} style={{ position:'fixed', inset:0, zIndex:9998 }} />}
+          </div>
+
+          {/* Refresh */}
+          <button onClick={() => loadData(true)} disabled={refreshing} style={{ height:40, background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.12)', borderRadius:10, padding:'0 16px', color:'rgba(255,255,255,0.65)', fontSize:13, fontWeight:700, cursor: refreshing?'default':'pointer', fontFamily:'inherit', display:'flex', alignItems:'center', gap:6, transition:'all .13s', marginLeft:'auto' }}
+            onMouseEnter={e => { if (!refreshing) e.currentTarget.style.background='rgba(255,255,255,0.12)'; }}
+            onMouseLeave={e => e.currentTarget.style.background='rgba(255,255,255,0.07)'}
+          >
+            <span style={{ display:'inline-block', animation: refreshing?'spin .7s linear infinite':'none' }}>↻</span>
+            {refreshing ? 'Refreshing…' : 'Refresh'}
           </button>
         </div>
 
-        {/* Interactive Category Legend */}
-        {allCategories.length > 0 && (
-          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '20px', alignItems: 'center' }}>
-            <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', fontWeight: 'bold', marginRight: '4px' }}>Filters:</span>
-            {allCategories.map(cat => {
-              const isHidden = hiddenCats.has(cat);
-              return (
-                <button
-                  key={cat}
-                  onClick={() => toggleCategory(cat)}
-                  style={{
-                    padding: '4px 12px',
-                    borderRadius: '16px',
-                    fontSize: '12px',
-                    fontWeight: 'bold',
-                    cursor: 'pointer',
-                    border: `1px solid ${isHidden ? 'rgba(255,255,255,0.2)' : '#f97316'}`,
-                    background: isHidden ? 'transparent' : 'rgba(249,115,22,0.2)',
-                    color: isHidden ? 'rgba(255,255,255,0.5)' : '#f97316',
-                    transition: 'all 0.2s ease-in-out'
-                  }}
-                >
-                  {cat} {isHidden ? '⨯' : '✓'}
-                </button>
-              );
-            })}
+        {/* Active filter badge */}
+        {selectedCat !== 'All' && (
+          <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:14 }}>
+            <span style={{ fontSize:12.5, color:'rgba(255,255,255,0.45)', fontWeight:600 }}>Showing:</span>
+            <span style={{ background:'rgba(249,115,22,0.18)', border:'1px solid rgba(249,115,22,0.4)', borderRadius:20, padding:'4px 14px', fontSize:13, fontWeight:800, color:'#f97316' }}>
+              {selectedCat}
+            </span>
+            <button onClick={() => setSelectedCat('All')} style={{ background:'none', border:'none', color:'rgba(255,255,255,0.4)', fontSize:12.5, cursor:'pointer', fontFamily:'inherit', fontWeight:600, transition:'color .13s' }}
+              onMouseEnter={e => e.currentTarget.style.color='#f43f5e'}
+              onMouseLeave={e => e.currentTarget.style.color='rgba(255,255,255,0.4)'}
+            >✕ Clear filter</button>
           </div>
         )}
 
         {loading ? (
           <div style={{ textAlign:'center', padding:'80px 0', color:'rgba(255,255,255,0.3)' }}><div style={{ fontSize:36, marginBottom:12 }}>⏳</div>Loading calendar…</div>
+        ) : fcEvents.length === 0 && !loading ? (
+          /* ── Not Available state ── */
+          <div style={{ textAlign:'center', padding:'80px 24px', background:'rgba(255,255,255,0.02)', borderRadius:16, border:'1px dashed rgba(255,255,255,0.08)' }}>
+            <div style={{ fontSize:56, marginBottom:16 }}>📭</div>
+            <div style={{ color:'#fff', fontWeight:900, fontSize:20, marginBottom:8 }}>
+              No events available{selectedCat !== 'All' ? ` for "${selectedCat}"` : ''}
+            </div>
+            <p style={{ color:'rgba(255,255,255,0.45)', fontSize:14, lineHeight:1.7, maxWidth:380, margin:'0 auto 24px' }}>
+              {selectedCat !== 'All'
+                ? `There are currently no scheduled events or training programs in the "${selectedCat}" category.`
+                : searchQuery
+                  ? `No results matching "${searchQuery}". Try a different search term.`
+                  : 'No events or training programs are currently scheduled.'}
+            </p>
+            <div style={{ display:'flex', gap:10, justifyContent:'center', flexWrap:'wrap' }}>
+              {selectedCat !== 'All' && (
+                <button onClick={() => setSelectedCat('All')} style={{ background:'linear-gradient(90deg,#f97316,#e11d48)', color:'#fff', border:'none', borderRadius:11, padding:'10px 22px', fontSize:13.5, fontWeight:800, cursor:'pointer', fontFamily:'inherit' }}>
+                  Show All Categories
+                </button>
+              )}
+              {searchQuery && (
+                <button onClick={() => setSearchQuery('')} style={{ background:'rgba(255,255,255,0.07)', color:'rgba(255,255,255,0.75)', border:'1px solid rgba(255,255,255,0.15)', borderRadius:11, padding:'10px 22px', fontSize:13.5, fontWeight:700, cursor:'pointer', fontFamily:'inherit' }}>
+                  Clear Search
+                </button>
+              )}
+            </div>
+          </div>
         ) : (
           <div className="fc-dark-theme" style={{ background: '#0d1424', borderRadius: 12, padding: '4px', border: '1px solid rgba(255,255,255,0.05)' }}>
             <FullCalendar
+              ref={calendarRef}
               plugins={[timeGridPlugin, dayGridPlugin, interactionPlugin]}
               initialView="dayGridMonth"
               headerToolbar={{
