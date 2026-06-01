@@ -1619,7 +1619,7 @@ function CalendarTab({ user }) {
       )}
 
       {/* Main UI */}
-      <div style={{ background:'rgba(13,20,40,0.85)', border:'1px solid rgba(255,255,255,0.09)', borderRadius:20, padding: 24, marginBottom:28 }}>
+      <div style={{ background:'linear-gradient(180deg,rgba(10,17,42,0.95),rgba(8,13,32,0.95))', border:'1px solid rgba(255,255,255,0.08)', borderRadius:20, padding:'20px 22px 22px', marginBottom:28, boxShadow:'0 16px 48px rgba(0,0,0,0.4)', backdropFilter:'blur(10px)' }}>
         
         {/* ── Top Controls Row ── */}
         <div style={{ display:'flex', gap:10, alignItems:'center', marginBottom:16, flexWrap:'wrap' }}>
@@ -1755,7 +1755,13 @@ function CalendarTab({ user }) {
             </div>
           </div>
         ) : (
-          <div className="fc-dark-theme" style={{ background: '#0d1424', borderRadius: 12, padding: '4px', border: '1px solid rgba(255,255,255,0.05)' }}>
+          /* ── FullCalendar with vibrant dark theme ── */
+          <div className="fc-dark-theme" style={{
+            background: 'linear-gradient(180deg,#08112a 0%,#0d1424 100%)',
+            borderRadius: 16, padding: '12px 8px 8px',
+            border: '1px solid rgba(255,255,255,0.07)',
+            boxShadow: '0 8px 40px rgba(0,0,0,0.4)',
+          }}>
             <FullCalendar
               ref={calendarRef}
               plugins={[timeGridPlugin, dayGridPlugin, interactionPlugin]}
@@ -1763,46 +1769,73 @@ function CalendarTab({ user }) {
               headerToolbar={{
                 left: 'prev,next today',
                 center: 'title',
-                right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                right: 'dayGridMonth,timeGridWeek,timeGridDay',
               }}
               slotMinTime="08:00:00"
-              slotMaxTime="18:00:00"
+              slotMaxTime="20:00:00"
               allDaySlot={false}
               events={fcEvents}
-              height="85vh"
+              height="80vh"
               eventDisplay="block"
-              nowIndicator={true} /* <--- ADD THIS LINE HERE */
-              eventClick={(info) => setDetail(info.event.extendedProps.originalData)}
+              nowIndicator={true}
+              dayMaxEvents={3}
+              moreLinkClick="popover"
+              /* Custom event content — icon prefix + title */
+              eventContent={(arg) => {
+                const it = arg.event.extendedProps.originalData;
+                const icon = it._type === 'event' ? '📅' : '🎓';
+                return (
+                  <div style={{ display:'flex', alignItems:'center', gap:4, overflow:'hidden', padding:'1px 2px' }}>
+                    <span style={{ fontSize:10, flexShrink:0 }}>{icon}</span>
+                    <span style={{ fontSize:11.5, fontWeight:800, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', lineHeight:1.3 }}>
+                      {arg.event.title}
+                    </span>
+                  </div>
+                );
+              }}
+              eventClick={(info) => {
+                setDetail(info.event.extendedProps.originalData);
+                info.jsEvent.preventDefault();
+              }}
+              dateClick={(info) => {
+                /* Clicking a date cell focuses the day view */
+                const calApi = calendarRef.current?.getApi();
+                if (calApi) { calApi.changeView('timeGridDay', info.date); }
+              }}
               eventDidMount={(info) => {
                 const it = info.event.extendedProps.originalData;
                 const isEv = it._type === 'event';
-                const detail1 = isEv ? `📍 ${it.venue}` : `🏛 ${it.org}`;
-                const detail2 = isEv ? `👥 ${it.enrolled}/${it.total} seats` : `⏱ ${it.duration} · 📊 ${it.level}`;
+                const icon = isEv ? '📅' : '🎓';
+                const d1   = isEv ? `📍 ${it.venue}` : `🏛 ${it.org}`;
+                const d2   = isEv ? `👥 ${it.enrolled}/${it.total} seats` : `⏱ ${it.duration} · 📊 ${it.level}`;
+                const isConflict = conflictIds.has(it.id);
 
                 tippy(info.el, {
                   content: `
-                    <div style="text-align: left; font-family: inherit;">
-                      <div style="font-size: 10px; font-weight: 800; color: #f97316; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;">
-                        ${it.category}
+                    <div style="font-family:inherit;min-width:220px">
+                      <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+                        <span style="font-size:14px">${icon}</span>
+                        <span style="font-size:10px;font-weight:800;color:#f97316;text-transform:uppercase;letter-spacing:.5px">${it.category}</span>
+                        ${isConflict ? '<span style="font-size:10px;background:rgba(245,158,11,0.2);color:#fbbf24;border-radius:5px;padding:1px 6px;font-weight:800">⚠ Conflict</span>' : ''}
                       </div>
-                      <div style="font-size: 13.5px; font-weight: 800; color: #ffffff; margin-bottom: 6px; line-height: 1.3;">
-                        ${it.title}
+                      <div style="font-size:14px;font-weight:900;color:#fff;margin-bottom:8px;line-height:1.35">${it.title}</div>
+                      <div style="font-size:12px;color:rgba(255,255,255,0.65);margin-bottom:3px">${d1}</div>
+                      <div style="font-size:12px;color:rgba(255,255,255,0.65);margin-bottom:10px">${d2}</div>
+                      <div style="font-size:11px;font-weight:700;color:#f97316;background:rgba(249,115,22,0.1);border-radius:6px;padding:5px 8px;text-align:center">
+                        Click to view details →
                       </div>
-                      <div style="font-size: 11.5px; color: rgba(255,255,255,0.7); margin-bottom: 3px;">
-                        ${detail1}
-                      </div>
-                      <div style="font-size: 11.5px; color: rgba(255,255,255,0.7);">
-                        ${detail2}
-                      </div>
-                    </div>
-                  `,
+                    </div>`,
                   allowHTML: true,
                   theme: 'dasig',
-                  placement: 'top',
+                  placement: 'auto',
                   animation: 'shift-away',
                   arrow: true,
-                  delay: [150, 0], 
+                  delay: [200, 0],
+                  maxWidth: 280,
                 });
+
+                /* Cursor pointer */
+                info.el.style.cursor = 'pointer';
               }}
             />
           </div>
