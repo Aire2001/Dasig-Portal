@@ -1406,6 +1406,18 @@ function TrainingTab({ user }) {
    CALENDAR TAB — FullCalendar implementation
 ═══════════════════════════════════════════════════════════ */
 
+const CAT_META = {
+  'All':         { icon:'📂', color:'#94a3b8', bg:'rgba(148,163,184,0.15)' },
+  'Summit':      { icon:'🏛', color:'#818cf8', bg:'rgba(129,140,248,0.15)' },
+  'Workshop':    { icon:'🔬', color:'#34d399', bg:'rgba(52,211,153,0.15)' },
+  'Seminar':     { icon:'📢', color:'#f9a8d4', bg:'rgba(249,168,212,0.15)' },
+  'Funding':     { icon:'💰', color:'#fcd34d', bg:'rgba(252,211,77,0.15)' },
+  'Technology':  { icon:'💻', color:'#60a5fa', bg:'rgba(96,165,250,0.15)' },
+  'Research':    { icon:'🔭', color:'#6ee7b7', bg:'rgba(110,231,183,0.15)' },
+  'Leadership':  { icon:'🎯', color:'#fbbf24', bg:'rgba(251,191,36,0.15)' },
+  'Governance':  { icon:'📋', color:'#c4b5fd', bg:'rgba(196,181,253,0.15)' },
+};
+
 function getUniqueEventColor(stringId) {
   let hash = 0;
   for (let i = 0; i < stringId.length; i++) {
@@ -1430,6 +1442,7 @@ function CalendarTab({ user }) {
   
   const [searchQuery, setSearchQuery]   = useState('');
   const [selectedCat, setSelectedCat]   = useState('All');
+  const [filterOpen, setFilterOpen]     = useState(false);
   const [datePickerOpen, setDatePickerOpen] = useState(false);
   const [pickerYear, setPickerYear]   = useState(new Date().getFullYear());
   const [pickerMonth, setPickerMonth] = useState(new Date().getMonth());
@@ -1645,27 +1658,91 @@ function CalendarTab({ user }) {
               className="prog-input" style={{ paddingLeft:38, height:40 }} />
           </div>
 
-          {/* Category Dropdown */}
-          <div style={{ position:'relative', minWidth:190 }}>
-            <select
-              value={selectedCat}
-              onChange={e => setSelectedCat(e.target.value)}
+          {/* ── Custom Category Filter Dropdown ── */}
+          <div style={{ position:'relative', minWidth:210 }}>
+            {/* Trigger */}
+            <button
+              onClick={() => { setFilterOpen(o => !o); setDatePickerOpen(false); }}
               style={{
-                width:'100%', height:40, background:'rgba(255,255,255,0.07)',
-                border:'1.5px solid rgba(255,255,255,0.15)', borderRadius:10,
-                color:'#fff', fontSize:13.5, fontWeight:700, fontFamily:'inherit',
-                padding:'0 36px 0 14px', cursor:'pointer', outline:'none',
-                appearance:'none', transition:'border-color .15s',
+                width:'100%', height:42,
+                background: filterOpen ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.06)',
+                border: `1.5px solid ${filterOpen ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.12)'}`,
+                borderRadius:12, padding:'0 14px', cursor:'pointer', fontFamily:'inherit',
+                display:'flex', alignItems:'center', gap:9, transition:'all .15s',
               }}
+              onMouseEnter={e => { if (!filterOpen) { e.currentTarget.style.background='rgba(255,255,255,0.09)'; e.currentTarget.style.borderColor='rgba(255,255,255,0.2)'; } }}
+              onMouseLeave={e => { if (!filterOpen) { e.currentTarget.style.background='rgba(255,255,255,0.06)'; e.currentTarget.style.borderColor='rgba(255,255,255,0.12)'; } }}
             >
-              <option value="All" style={{ background:'#0f172a' }}>📂 All Categories</option>
-              {allCategories.map(cat => (
-                <option key={cat} value={cat} style={{ background:'#0f172a' }}>
-                  {cat}
-                </option>
-              ))}
-            </select>
-            <span style={{ position:'absolute', right:12, top:'50%', transform:'translateY(-50%)', pointerEvents:'none', color:'rgba(255,255,255,0.5)', fontSize:12 }}>▼</span>
+              <span style={{ fontSize:16, flexShrink:0 }}>{(CAT_META[selectedCat]||CAT_META.All).icon}</span>
+              <span style={{ flex:1, textAlign:'left', fontSize:13.5, fontWeight:700, color: selectedCat==='All'?'rgba(255,255,255,0.75)':'#fff' }}>
+                {selectedCat === 'All' ? 'All Categories' : selectedCat}
+              </span>
+              {selectedCat !== 'All' && (
+                <span style={{
+                  background: (CAT_META[selectedCat]||CAT_META.All).bg,
+                  color: (CAT_META[selectedCat]||CAT_META.All).color,
+                  borderRadius:20, padding:'2px 8px', fontSize:11, fontWeight:800,
+                }}>
+                  {fcEvents.length}
+                </span>
+              )}
+              <span style={{ fontSize:10, color:'rgba(255,255,255,0.4)', transition:'transform .2s', transform: filterOpen?'rotate(180deg)':'rotate(0)', flexShrink:0 }}>▼</span>
+            </button>
+
+            {/* Dropdown menu */}
+            {filterOpen && (
+              <div onClick={e => e.stopPropagation()} style={{
+                position:'absolute', top:48, left:0, zIndex:9999, width:240,
+                background:'linear-gradient(180deg,#0f1832,#0a1020)',
+                border:'1px solid rgba(255,255,255,0.1)', borderRadius:16, overflow:'hidden',
+                boxShadow:'0 24px 60px rgba(0,0,0,0.75)',
+                animation:'dropIn .16s ease',
+              }}>
+                {/* All Categories */}
+                {['All', ...allCategories].map((cat, idx) => {
+                  const meta = CAT_META[cat] || { icon:'📁', color:'#94a3b8', bg:'rgba(148,163,184,0.1)' };
+                  const isActive = selectedCat === cat;
+                  const count = cat === 'All'
+                    ? calItems.filter(it => it.startDate).length
+                    : calItems.filter(it => it.startDate && it.category === cat).length;
+                  return (
+                    <button
+                      key={cat}
+                      onClick={() => { setSelectedCat(cat); setFilterOpen(false); }}
+                      style={{
+                        width:'100%', display:'flex', alignItems:'center', gap:11,
+                        padding:'11px 16px',
+                        background: isActive ? `${meta.bg}` : 'transparent',
+                        border:'none', borderBottom: idx < allCategories.length ? '1px solid rgba(255,255,255,0.04)' : 'none',
+                        cursor:'pointer', fontFamily:'inherit', transition:'background .13s',
+                        borderLeft: isActive ? `3px solid ${meta.color}` : '3px solid transparent',
+                      }}
+                      onMouseEnter={e => { if (!isActive) e.currentTarget.style.background='rgba(255,255,255,0.05)'; }}
+                      onMouseLeave={e => { if (!isActive) e.currentTarget.style.background='transparent'; }}
+                    >
+                      {/* Icon circle */}
+                      <div style={{ width:32, height:32, borderRadius:9, background: isActive ? meta.bg : 'rgba(255,255,255,0.05)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:15, flexShrink:0, border: isActive ? `1px solid ${meta.color}40` : '1px solid rgba(255,255,255,0.06)' }}>
+                        {meta.icon}
+                      </div>
+                      {/* Label */}
+                      <div style={{ flex:1, textAlign:'left' }}>
+                        <div style={{ fontSize:13.5, fontWeight: isActive ? 800 : 600, color: isActive ? '#fff' : 'rgba(255,255,255,0.75)', lineHeight:1.2 }}>{cat === 'All' ? 'All Categories' : cat}</div>
+                        {cat !== 'All' && <div style={{ fontSize:11, color:'rgba(255,255,255,0.35)', marginTop:1 }}>{cat.includes('Summit')||cat.includes('Workshop')||cat.includes('Seminar')||cat.includes('Funding') ? 'Event' : 'Training'}</div>}
+                      </div>
+                      {/* Count badge */}
+                      <span style={{
+                        background: isActive ? meta.bg : 'rgba(255,255,255,0.06)',
+                        color: isActive ? meta.color : 'rgba(255,255,255,0.45)',
+                        border: isActive ? `1px solid ${meta.color}40` : '1px solid rgba(255,255,255,0.08)',
+                        borderRadius:20, padding:'2px 9px', fontSize:12, fontWeight:800, flexShrink:0,
+                      }}>{count}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+            {/* Backdrop close */}
+            {filterOpen && <div onClick={() => setFilterOpen(false)} style={{ position:'fixed', inset:0, zIndex:9998 }} />}
           </div>
 
           {/* Date Picker Shortcut */}
