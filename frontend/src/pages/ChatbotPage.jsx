@@ -56,6 +56,30 @@ function BotText({ text }) {
   );
 }
 
+// Autocomplete suggestions
+const SUGGESTIONS = [
+  'What events are coming up?',
+  'How do I become a DASIG member?',
+  'What training programs are available?',
+  'What if the event I want is full?',
+  'How do I register for an event?',
+  'What funding opportunities are open?',
+  'Tell me about DASIG partnerships',
+  'What governance policies are available?',
+  'How do I check my event registrations?',
+  'How do I reset my password?',
+  'What are the membership fees?',
+  'How many events are available?',
+  'What are the upcoming events?',
+  'How do I cancel my registration?',
+  'Who are the DASIG member institutions?',
+  'What can the admin panel do?',
+  'What is DASIG?',
+  'How do I create a DASIG account?',
+  'What is my membership status?',
+  'How do I update my profile?',
+];
+
 // Role-based quick chips
 const QUICK_CHIPS_BY_ROLE = {
   GUEST: [
@@ -202,12 +226,19 @@ export default function ChatbotPage() {
       return saved ? true : false;
     } catch { return false; }
   });
+  const [suggestions, setSuggestions] = useState([]);
+  const [resumed, setResumed]         = useState(() => {
+    try { return !!sessionStorage.getItem('haribon_resume'); } catch { return false; }
+  });
+  const [atBottom, setAtBottom]       = useState(true);
+  const msgsContainerRef              = useRef(null);
 
   // Reset chat when user changes (login/logout)
   useEffect(() => {
     setMessages([{ from:'bot', text: makeInitMsg(user), time: new Date() }]);
     setTotalAsked(0); setTotalMatched(0); setMatchRate(null);
     setEnded(false); setHasReplied(false); setInput('');
+    setSuggestions([]); setResumed(false);
   }, [user?.id]);
   const msgsEnd = useRef(null);
   const inputRef = useRef(null);
@@ -220,6 +251,8 @@ export default function ChatbotPage() {
     const trimmed = (text || input).trim();
     if (!trimmed || thinking) return;
     setInput('');
+    setSuggestions([]);
+    setResumed(false);
     const userMsg = { from: 'user', text: trimmed, time: new Date() };
     setMessages(prev => [...prev, userMsg]);
     setThinking(true);
@@ -272,6 +305,8 @@ export default function ChatbotPage() {
     setMatchRate(null);
     setEnded(false);
     setHasReplied(false);
+    setSuggestions([]);
+    setResumed(false);
     setTimeout(() => inputRef.current?.focus(), 50);
   }
 
@@ -279,6 +314,23 @@ export default function ChatbotPage() {
     setInput(e.target.value);
     e.target.style.height = 'auto';
     e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
+    const q = e.target.value.trim().toLowerCase();
+    if (q.length >= 2) {
+      setSuggestions(SUGGESTIONS.filter(s => s.toLowerCase().includes(q)).slice(0, 4));
+    } else {
+      setSuggestions([]);
+    }
+  }
+
+  function handleScroll(e) {
+    const el = e.currentTarget;
+    const distFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    setAtBottom(distFromBottom < 200);
+  }
+
+  function jumpToBottom() {
+    msgsContainerRef.current?.scrollTo({ top: msgsContainerRef.current.scrollHeight, behavior: 'smooth' });
+    setAtBottom(true);
   }
 
   return (
@@ -404,7 +456,15 @@ export default function ChatbotPage() {
               boxShadow: '0 20px 60px rgba(0,0,0,0.4)',
             }}>
               {/* Messages area */}
-              <div style={{ height: 460, overflowY: 'auto', padding: ended ? 0 : '24px 24px 16px', display: 'flex', flexDirection: 'column', gap: ended ? 0 : 14 }}>
+              <div ref={msgsContainerRef} onScroll={handleScroll} style={{ height: 460, overflowY: 'auto', padding: ended ? 0 : '24px 24px 16px', display: 'flex', flexDirection: 'column', gap: ended ? 0 : 14, position: 'relative' }}>
+                {/* Jump to bottom button */}
+                {!ended && !atBottom && (
+                  <div style={{ position: 'sticky', bottom: 8, zIndex: 5, display: 'flex', justifyContent: 'center', pointerEvents: 'none' }}>
+                    <button onClick={jumpToBottom} style={{ pointerEvents: 'all', background: 'rgba(249,115,22,0.85)', border: 'none', borderRadius: 20, padding: '6px 16px', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 16px rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)' }}>
+                      ↓ Jump to latest
+                    </button>
+                  </div>
+                )}
                 {ended ? (
                   <div style={{
                     height: '100%', display: 'flex', flexDirection: 'column',
@@ -427,8 +487,29 @@ export default function ChatbotPage() {
                   </div>
                 ) : (
                   <>
-                {messages.map((msg, i) => (
-                  <div key={i} className="chat-msg" style={{ display: 'flex', flexDirection: 'column', alignItems: msg.from === 'user' ? 'flex-end' : 'flex-start' }}>
+                {/* Resumed from mini-widget banner */}
+                {resumed && (
+                  <div style={{ textAlign: 'center', padding: '8px 16px', background: 'rgba(249,115,22,0.08)', border: '1px solid rgba(249,115,22,0.2)', borderRadius: 10, margin: '0 0 12px', fontSize: 12, color: 'rgba(249,115,22,0.8)' }}>
+                    ↩ Resumed from mini chat
+                  </div>
+                )}
+                {messages.map((msg, i) => {
+                  // Timestamp divider between messages more than 5 minutes apart
+                  const prevMsg = messages[i - 1];
+                  const showDivider = prevMsg && msg.time && prevMsg.time &&
+                    (new Date(msg.time) - new Date(prevMsg.time)) > 5 * 60 * 1000;
+                  return (
+                  <div key={i}>
+                    {showDivider && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '4px 0 8px' }}>
+                        <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.06)' }} />
+                        <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.28)', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                          {formatTime(new Date(msg.time))}
+                        </span>
+                        <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.06)' }} />
+                      </div>
+                    )}
+                  <div className="chat-msg" style={{ display: 'flex', flexDirection: 'column', alignItems: msg.from === 'user' ? 'flex-end' : 'flex-start' }}>
 
                     {/* Bot avatar row */}
                     {msg.from === 'bot' && (
@@ -509,7 +590,9 @@ export default function ChatbotPage() {
                       </div>
                     )}
                   </div>
-                ))}
+                  </div>
+                  );
+                })}
 
                 {thinking && (
                   <div className="chat-msg" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
@@ -541,11 +624,9 @@ export default function ChatbotPage() {
                   <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', fontWeight: 700, marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                     Quick questions
                   </div>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
-                    {quickChips.map(c => (
-                      <button key={c.label} className="chip-btn" onClick={() => send(c.q)} disabled={thinking}>
-                        {c.label}
-                      </button>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px,1fr))', gap: 10 }}>
+                    {quickChips.map(({ label, q }) => (
+                      <button key={label} className="chip-btn" onClick={() => send(q)} disabled={thinking}>{label}</button>
                     ))}
                   </div>
                 </div>
@@ -556,34 +637,59 @@ export default function ChatbotPage() {
                 padding: '14px 20px 18px',
                 borderTop: '1px solid rgba(255,255,255,0.06)',
                 background: 'rgba(255,255,255,0.02)',
-                display: 'flex', gap: 10, alignItems: 'flex-end',
               }}>
-                <textarea
-                  ref={inputRef}
-                  className="chat-input"
-                  rows={1}
-                  value={input}
-                  onChange={handleInputChange}
-                  onKeyDown={onKey}
-                  placeholder={user ? `Ask Haribon, ${(user.name || 'there').split(' ')[0]}…` : 'Ask Haribon about events, membership, training, policies…'}
-                  disabled={thinking}
-                  style={{ maxHeight: 120, overflowY: 'auto' }}
-                />
-                <button
-                  onClick={() => send()}
-                  disabled={thinking || !input.trim()}
-                  style={{
-                    background: thinking || !input.trim()
-                      ? 'rgba(255,255,255,0.08)'
-                      : 'linear-gradient(135deg,#f97316,#e11d48)',
-                    color: thinking || !input.trim() ? 'rgba(255,255,255,0.3)' : '#fff',
-                    border: 'none', borderRadius: 12, padding: '13px 20px',
-                    fontSize: 15, fontWeight: 800, cursor: thinking || !input.trim() ? 'not-allowed' : 'pointer',
-                    fontFamily: 'inherit', flexShrink: 0, transition: 'all 0.18s',
-                    boxShadow: thinking || !input.trim() ? 'none' : '0 4px 16px rgba(249,115,22,0.4)',
-                    animation: !thinking && input.trim() ? 'pulseGlow 2s infinite' : 'none',
-                  }}
-                >→</button>
+                {/* Autocomplete dropdown + textarea wrapper */}
+                <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end', position: 'relative' }}>
+                  {/* Autocomplete suggestions dropdown */}
+                  {suggestions.length > 0 && (
+                    <div style={{ position: 'absolute', bottom: '100%', left: 0, right: 0, marginBottom: 6, background: 'rgba(10,16,32,0.98)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 14, overflow: 'hidden', boxShadow: '0 -16px 48px rgba(0,0,0,0.6)', zIndex: 10 }}>
+                      {suggestions.map(s => (
+                        <button key={s} onClick={() => { setInput(s); setSuggestions([]); setTimeout(() => inputRef.current?.focus(), 10); }}
+                          style={{ width: '100%', padding: '11px 18px', background: 'transparent', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.78)', fontSize: 13.5, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left', transition: 'background .12s' }}
+                          onMouseEnter={e => e.currentTarget.style.background = 'rgba(249,115,22,0.1)'}
+                          onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                          <span style={{ color: 'rgba(255,255,255,0.35)', marginRight: 8 }}>🔍</span>{s}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  <textarea
+                    ref={inputRef}
+                    className="chat-input"
+                    rows={1}
+                    value={input}
+                    onChange={handleInputChange}
+                    onKeyDown={onKey}
+                    placeholder={user ? `Ask Haribon, ${(user.name || 'there').split(' ')[0]}…` : 'Ask Haribon about events, membership, training, policies…'}
+                    disabled={thinking}
+                    style={{ maxHeight: 120, overflowY: 'auto' }}
+                  />
+                  {/* Character count when over 80 chars */}
+                  {input.length > 80 && (
+                    <div style={{ position: 'absolute', bottom: '100%', right: 0, marginBottom: 4, fontSize: 11, color: input.length > 200 ? '#f87171' : 'rgba(255,255,255,0.35)', fontWeight: 600, background: 'rgba(10,16,32,0.85)', borderRadius: 6, padding: '2px 7px', pointerEvents: 'none' }}>
+                      {input.length}/400
+                    </div>
+                  )}
+                  <button
+                    onClick={() => send()}
+                    disabled={thinking || !input.trim()}
+                    style={{
+                      background: thinking || !input.trim()
+                        ? 'rgba(255,255,255,0.08)'
+                        : 'linear-gradient(135deg,#f97316,#e11d48)',
+                      color: thinking || !input.trim() ? 'rgba(255,255,255,0.3)' : '#fff',
+                      border: 'none', borderRadius: 12, padding: '13px 20px',
+                      fontSize: 15, fontWeight: 800, cursor: thinking || !input.trim() ? 'not-allowed' : 'pointer',
+                      fontFamily: 'inherit', flexShrink: 0, transition: 'all 0.18s',
+                      boxShadow: thinking || !input.trim() ? 'none' : '0 4px 16px rgba(249,115,22,0.4)',
+                      animation: !thinking && input.trim() ? 'pulseGlow 2s infinite' : 'none',
+                    }}
+                  >→</button>
+                </div>
+                {/* Disclaimer */}
+                <div style={{ textAlign: 'center', fontSize: 11, color: 'rgba(255,255,255,0.2)', marginTop: 8 }}>
+                  Haribon is scoped to DASIG knowledge · Not a general-purpose AI
+                </div>
               </div>}
             </div>
 
