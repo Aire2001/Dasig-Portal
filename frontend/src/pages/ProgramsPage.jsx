@@ -1431,8 +1431,9 @@ function CalendarTab({ user }) {
   const [searchQuery, setSearchQuery]   = useState('');
   const [selectedCat, setSelectedCat]   = useState('All');
   const [datePickerOpen, setDatePickerOpen] = useState(false);
-  const [pickerYear, setPickerYear]     = useState(new Date().getFullYear());
-  const [pickerMonth, setPickerMonth]   = useState(new Date().getMonth());
+  const [pickerYear, setPickerYear]   = useState(new Date().getFullYear());
+  const [pickerMonth, setPickerMonth] = useState(new Date().getMonth());
+  const [pickerView, setPickerView]   = useState('month'); // 'month' | 'day'
   const calendarRef = useRef(null);
   const navigate = useNavigate();
 
@@ -1475,11 +1476,22 @@ function CalendarTab({ user }) {
 
   // Date picker: jump FullCalendar to selected month/year
   function jumpToDate(year, month) {
-    const calApi = calendarRef.current?.getApi();
-    if (calApi) calApi.gotoDate(new Date(year, month, 1));
+    // Month selected → switch to day view
     setPickerYear(year);
     setPickerMonth(month);
+    setPickerView('day');
+  }
+
+  function jumpToDay(day) {
+    const calApi = calendarRef.current?.getApi();
+    if (calApi) {
+      const target = new Date(pickerYear, pickerMonth, day);
+      calApi.gotoDate(target);
+      // Switch to day view in FullCalendar so the selected day is focused
+      calApi.changeView('timeGridDay', target);
+    }
     setDatePickerOpen(false);
+    setPickerView('month');
   }
 
   function jumpToToday() {
@@ -1489,6 +1501,7 @@ function CalendarTab({ user }) {
     setPickerYear(now.getFullYear());
     setPickerMonth(now.getMonth());
     setDatePickerOpen(false);
+    setPickerView('month');
   }
 
   // Conflict check logic
@@ -1692,12 +1705,24 @@ function CalendarTab({ user }) {
                 animation:'dropIn .18s ease',
               }}>
                 {/* Header bar */}
-                <div style={{ background:'linear-gradient(135deg,rgba(249,115,22,0.15),rgba(225,29,72,0.1))', borderBottom:'1px solid rgba(255,255,255,0.07)', padding:'14px 18px 12px' }}>
-                  <div style={{ fontSize:10.5, fontWeight:800, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', letterSpacing:'1px', marginBottom:2 }}>Navigate to</div>
-                  <div style={{ fontSize:16, fontWeight:900, color:'#fff', letterSpacing:'-0.3px' }}>{MONTH_NAMES[pickerMonth]} {pickerYear}</div>
+                <div style={{ background:'linear-gradient(135deg,rgba(249,115,22,0.15),rgba(225,29,72,0.1))', borderBottom:'1px solid rgba(255,255,255,0.07)', padding:'12px 16px', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+                  <div>
+                    <div style={{ fontSize:10, fontWeight:800, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', letterSpacing:'1px', marginBottom:2 }}>
+                      {pickerView === 'day' ? `Select Day — ${MONTH_NAMES[pickerMonth].slice(0,3)} ${pickerYear}` : 'Navigate to'}
+                    </div>
+                    <div style={{ fontSize:15, fontWeight:900, color:'#fff', letterSpacing:'-0.3px' }}>
+                      {pickerView === 'day' ? MONTH_NAMES[pickerMonth] + ' ' + pickerYear : MONTH_NAMES[pickerMonth] + ' ' + pickerYear}
+                    </div>
+                  </div>
+                  {pickerView === 'day' && (
+                    <button onClick={() => setPickerView('month')} style={{ background:'rgba(255,255,255,0.1)', border:'1px solid rgba(255,255,255,0.18)', borderRadius:9, padding:'6px 12px', color:'rgba(255,255,255,0.75)', fontSize:12, fontWeight:700, cursor:'pointer', fontFamily:'inherit', display:'flex', alignItems:'center', gap:5, transition:'all .13s' }}
+                      onMouseEnter={e => { e.currentTarget.style.background='rgba(255,255,255,0.17)'; e.currentTarget.style.color='#fff'; }}
+                      onMouseLeave={e => { e.currentTarget.style.background='rgba(255,255,255,0.10)'; e.currentTarget.style.color='rgba(255,255,255,0.75)'; }}
+                    >‹ Back</button>
+                  )}
                 </div>
 
-                <div style={{ padding:'16px' }}>
+                <div style={{ padding:'14px' }}>
                   {/* Year navigation */}
                   <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:16, background:'rgba(255,255,255,0.04)', borderRadius:12, padding:'6px 8px' }}>
                     <button
@@ -1720,37 +1745,73 @@ function CalendarTab({ user }) {
                     >›</button>
                   </div>
 
-                  {/* Month grid 4×3 */}
-                  <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:5, marginBottom:14 }}>
-                    {MONTH_NAMES.map((mn, mi) => {
-                      const isSelected = mi === pickerMonth && pickerYear === (() => { const calApi = calendarRef.current?.getApi(); return calApi ? calApi.getDate().getFullYear() : new Date().getFullYear(); })();
-                      const isCurrentMonth = mi === new Date().getMonth() && pickerYear === new Date().getFullYear();
-                      const isPast = new Date(pickerYear, mi, 1) < new Date(new Date().getFullYear(), new Date().getMonth(), 1);
-                      return (
-                        <button
-                          key={mi}
-                          onClick={() => jumpToDate(pickerYear, mi)}
-                          style={{
+                  {pickerView === 'month' ? (
+                    /* ── Month grid 4×3 ── */
+                    <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:5, marginBottom:14 }}>
+                      {MONTH_NAMES.map((mn, mi) => {
+                        const isSelected = mi === pickerMonth;
+                        const isCurrentMonth = mi === new Date().getMonth() && pickerYear === new Date().getFullYear();
+                        const isPast = new Date(pickerYear, mi, 1) < new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+                        return (
+                          <button key={mi} onClick={() => jumpToDate(pickerYear, mi)} style={{
                             padding:'10px 4px', borderRadius:10, border: isCurrentMonth&&!isSelected ? '1.5px solid rgba(249,115,22,0.4)' : '1.5px solid transparent',
                             fontSize:12.5, fontWeight: isSelected||isCurrentMonth ? 800 : 600,
                             cursor:'pointer', fontFamily:'inherit', transition:'all .14s',
-                            background: isSelected
-                              ? 'linear-gradient(135deg,#f97316,#e11d48)'
-                              : isCurrentMonth
-                                ? 'rgba(249,115,22,0.1)'
-                                : 'rgba(255,255,255,0.04)',
+                            background: isSelected ? 'linear-gradient(135deg,#f97316,#e11d48)' : isCurrentMonth ? 'rgba(249,115,22,0.1)' : 'rgba(255,255,255,0.04)',
                             color: isSelected ? '#fff' : isCurrentMonth ? '#fb923c' : isPast ? 'rgba(255,255,255,0.38)' : 'rgba(255,255,255,0.78)',
                             boxShadow: isSelected ? '0 4px 14px rgba(249,115,22,0.45)' : 'none',
                             transform: isSelected ? 'scale(1.05)' : 'scale(1)',
                           }}
                           onMouseEnter={e => { if (!isSelected) { e.currentTarget.style.background='rgba(255,255,255,0.12)'; e.currentTarget.style.color='#fff'; e.currentTarget.style.transform='scale(1.04)'; } }}
                           onMouseLeave={e => { if (!isSelected) { e.currentTarget.style.background = isCurrentMonth?'rgba(249,115,22,0.1)':'rgba(255,255,255,0.04)'; e.currentTarget.style.color = isCurrentMonth?'#fb923c':isPast?'rgba(255,255,255,0.38)':'rgba(255,255,255,0.78)'; e.currentTarget.style.transform='scale(1)'; } }}
-                        >
-                          {mn.slice(0,3)}
-                        </button>
+                          >{mn.slice(0,3)}</button>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    /* ── Day grid (Sun-Sat header + day numbers) ── */
+                    (() => {
+                      const today = new Date();
+                      const daysInMonth = new Date(pickerYear, pickerMonth + 1, 0).getDate();
+                      const firstDow = new Date(pickerYear, pickerMonth, 1).getDay(); // 0=Sun
+                      const cells = [];
+                      for (let i = 0; i < firstDow; i++) cells.push(null);
+                      for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+                      while (cells.length % 7 !== 0) cells.push(null);
+
+                      return (
+                        <div style={{ marginBottom:14 }}>
+                          {/* Day-of-week headers */}
+                          <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', marginBottom:4 }}>
+                            {['Su','Mo','Tu','We','Th','Fr','Sa'].map(d => (
+                              <div key={d} style={{ textAlign:'center', fontSize:10.5, fontWeight:700, color:'rgba(255,255,255,0.3)', padding:'3px 0' }}>{d}</div>
+                            ))}
+                          </div>
+                          {/* Day cells */}
+                          <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', gap:2 }}>
+                            {cells.map((d, i) => {
+                              if (!d) return <div key={i} />;
+                              const isToday = d === today.getDate() && pickerMonth === today.getMonth() && pickerYear === today.getFullYear();
+                              const isPast = new Date(pickerYear, pickerMonth, d) < new Date(today.getFullYear(), today.getMonth(), today.getDate());
+                              return (
+                                <button key={i} onClick={() => jumpToDay(d)} style={{
+                                  width:'100%', aspectRatio:'1', borderRadius:8, border:'none',
+                                  fontSize:12, fontWeight: isToday ? 900 : 600,
+                                  cursor:'pointer', fontFamily:'inherit', transition:'all .13s',
+                                  background: isToday ? 'linear-gradient(135deg,#f97316,#e11d48)' : 'rgba(255,255,255,0.04)',
+                                  color: isToday ? '#fff' : isPast ? 'rgba(255,255,255,0.28)' : 'rgba(255,255,255,0.82)',
+                                  boxShadow: isToday ? '0 3px 10px rgba(249,115,22,0.5)' : 'none',
+                                }}
+                                onMouseEnter={e => { if (!isToday) { e.currentTarget.style.background='rgba(249,115,22,0.22)'; e.currentTarget.style.color='#f97316'; e.currentTarget.style.fontWeight='800'; } }}
+                                onMouseLeave={e => { if (!isToday) { e.currentTarget.style.background='rgba(255,255,255,0.04)'; e.currentTarget.style.color = isPast?'rgba(255,255,255,0.28)':'rgba(255,255,255,0.82)'; e.currentTarget.style.fontWeight='600'; } }}
+                                >{d}</button>
+                              );
+                            })}
+                          </div>
+                        </div>
                       );
-                    })}
-                  </div>
+                    })()
+                  )}
 
                   {/* Footer actions */}
                   <div style={{ display:'flex', gap:8 }}>
