@@ -1122,11 +1122,26 @@ function EventsTab({ user }) {
           ))}
         </div>
       )}
+      {!loading && search && (
+        <div style={{ marginBottom:14, display:'flex', alignItems:'center', gap:8 }}>
+          <span style={{ fontSize:12.5, color:'rgba(255,255,255,0.35)', fontWeight:600 }}>
+            {filteredEvents.length > 0
+              ? `${filteredEvents.length} result${filteredEvents.length > 1 ? 's' : ''} for "${search}"`
+              : `No results for "${search}"`}
+          </span>
+          {filteredEvents.length > 0 && <div style={{ flex:1, height:1, background:'rgba(255,255,255,0.06)' }} />}
+        </div>
+      )}
       {!loading && filteredEvents.length === 0 && (
         <div style={{ textAlign:'center', padding:'60px 0' }}>
-          <div style={{ fontSize:36, marginBottom:12 }}>🔍</div>
-          <div style={{ color:'rgba(255,255,255,0.4)', fontSize:15, fontWeight:700 }}>{search ? `No events found for "${search}"` : 'No events found.'}</div>
-          {search && <button onClick={() => setSearch('')} style={{ marginTop:12, background:'rgba(255,255,255,0.07)', color:'rgba(255,255,255,0.6)', border:'1px solid rgba(255,255,255,0.12)', borderRadius:8, padding:'7px 16px', fontSize:13, cursor:'pointer', fontFamily:'inherit' }}>Clear search</button>}
+          <div style={{ fontSize:42, marginBottom:14 }}>🔍</div>
+          <div style={{ color:'rgba(255,255,255,0.55)', fontSize:16, fontWeight:800, marginBottom:8 }}>
+            No events found
+          </div>
+          <div style={{ color:'rgba(255,255,255,0.3)', fontSize:13, marginBottom:20 }}>
+            {search ? `No events match "${search}"` : 'No events available in this category.'}
+          </div>
+          {search && <button onClick={() => setSearch('')} style={{ background:'linear-gradient(90deg,#f97316,#e11d48)', color:'#fff', border:'none', borderRadius:10, padding:'9px 22px', fontSize:13, fontWeight:700, cursor:'pointer', fontFamily:'inherit' }}>Clear Search</button>}
         </div>
       )}
     </>
@@ -1544,6 +1559,7 @@ function TrainingTab({ user }) {
               {loading ? 'Refreshing…' : 'Refresh'}
             </button>
           </div>
+        </div>
       </div>
 
       {/* Training cards */}
@@ -1554,11 +1570,26 @@ function TrainingTab({ user }) {
           ))}
         </div>
       )}
+      {!loading && search && (
+        <div style={{ marginBottom:14, display:'flex', alignItems:'center', gap:8 }}>
+          <span style={{ fontSize:12.5, color:'rgba(255,255,255,0.35)', fontWeight:600 }}>
+            {filtered.length > 0
+              ? `${filtered.length} result${filtered.length > 1 ? 's' : ''} for "${search}"`
+              : `No results for "${search}"`}
+          </span>
+          {filtered.length > 0 && <div style={{ flex:1, height:1, background:'rgba(255,255,255,0.06)' }} />}
+        </div>
+      )}
       {!loading && filtered.length === 0 && (
         <div style={{ textAlign:'center', padding:'60px 0' }}>
-          <div style={{ fontSize:36, marginBottom:12 }}>🔍</div>
-          <div style={{ color:'rgba(255,255,255,0.4)', fontSize:15, fontWeight:700 }}>{search ? `No programs found for "${search}"` : 'No programs found.'}</div>
-          {search && <button onClick={() => setSearch('')} style={{ marginTop:12, background:'rgba(255,255,255,0.07)', color:'rgba(255,255,255,0.6)', border:'1px solid rgba(255,255,255,0.12)', borderRadius:8, padding:'7px 16px', fontSize:13, cursor:'pointer', fontFamily:'inherit' }}>Clear search</button>}
+          <div style={{ fontSize:42, marginBottom:14 }}>🔍</div>
+          <div style={{ color:'rgba(255,255,255,0.55)', fontSize:16, fontWeight:800, marginBottom:8 }}>
+            No programs found
+          </div>
+          <div style={{ color:'rgba(255,255,255,0.3)', fontSize:13, marginBottom:20 }}>
+            {search ? `No programs match "${search}"` : 'No programs available in this category.'}
+          </div>
+          {search && <button onClick={() => setSearch('')} style={{ background:'linear-gradient(90deg,#f97316,#e11d48)', color:'#fff', border:'none', borderRadius:10, padding:'9px 22px', fontSize:13, fontWeight:700, cursor:'pointer', fontFamily:'inherit' }}>Clear Search</button>}
         </div>
       )}
     </>
