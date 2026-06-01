@@ -763,25 +763,6 @@ function CategoryDropdown({ value, onChange, options }) {
   );
 }
 
-// Parse any date string → { start, end } Date objects, or null
-const M2I = { Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11 };
-function parseAdminDate(str) {
-  if (!str) return null;
-  // ISO: 2026-06-05
-  if (/^\d{4}-\d{2}-\d{2}$/.test(str)) { const d = new Date(str); return isNaN(d) ? null : { start: d, end: d }; }
-  const yM = str.match(/\b(\d{4})\b/); if (!yM) return null;
-  const yr = +yM[1];
-  const cross = str.match(/([A-Z][a-z]{2})\s+(\d+)\s*[–\-]\s*([A-Z][a-z]{2})\s+(\d+)/);
-  if (cross && M2I[cross[1]] !== undefined && M2I[cross[3]] !== undefined)
-    return { start: new Date(yr, M2I[cross[1]], +cross[2]), end: new Date(yr, M2I[cross[3]], +cross[4]) };
-  const same = str.match(/([A-Z][a-z]{2})\s+(\d+)[–\-](\d+)/);
-  if (same && M2I[same[1]] !== undefined)
-    return { start: new Date(yr, M2I[same[1]], +same[2]), end: new Date(yr, M2I[same[1]], +same[3]) };
-  const single = str.match(/([A-Z][a-z]{2})\s+(\d+)/);
-  if (single && M2I[single[1]] !== undefined) { const d = new Date(yr, M2I[single[1]], +single[2]); return { start: d, end: d }; }
-  return null;
-}
-
 function EventsTab({ showToast }) {
   const [items, setItems]         = useState([]);
   const [loading, setLoading]     = useState(true);
@@ -911,16 +892,7 @@ function EventsTab({ showToast }) {
         </Modal>
       )}
 
-      {modal && (() => {
-        // Live conflict check — runs whenever form.date changes
-        const editingId = typeof modal === 'object' ? modal.id : null;
-        const formRange = parseAdminDate(form.date);
-        const conflicts = formRange ? items.filter(ev => {
-          if (ev.id === editingId) return false;
-          const r = parseAdminDate(ev.date);
-          return r && formRange.start <= r.end && r.start <= formRange.end;
-        }) : [];
-        return (
+      {modal && (
         <Modal title={modal === 'create' ? 'Create Event' : 'Edit Event'} onClose={() => setModal(null)} wide>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
             <DInput label="Title *" name="title" value={form.title} onChange={fc} required span="1/-1" />
@@ -945,33 +917,9 @@ function EventsTab({ showToast }) {
             <DInput label="Capacity" name="total" value={form.total} onChange={fc} type="number" />
             <DInput label="Description" name="description" value={form.description} onChange={fc} as="textarea" span="1/-1" />
           </div>
-
-          {/* ── Auto conflict warning ── */}
-          {conflicts.length > 0 && (
-            <div style={{ margin:'14px 0 4px', background:'rgba(245,158,11,0.1)', border:'1px solid rgba(245,158,11,0.4)', borderRadius:12, padding:'12px 16px' }}>
-              <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:8 }}>
-                <span style={{ fontSize:18 }}>⚠️</span>
-                <span style={{ color:'#fbbf24', fontWeight:800, fontSize:13.5 }}>Date Conflict Detected</span>
-                <span style={{ color:'rgba(251,191,36,0.7)', fontSize:12, marginLeft:2 }}>— {conflicts.length} existing event{conflicts.length > 1 ? 's' : ''} overlap this date</span>
-              </div>
-              {conflicts.map(ev => (
-                <div key={ev.id} style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 10px', background:'rgba(245,158,11,0.07)', borderRadius:8, marginBottom:4 }}>
-                  <span style={{ fontSize:14 }}>📅</span>
-                  <div style={{ flex:1 }}>
-                    <div style={{ color:'#fff', fontWeight:700, fontSize:13 }}>{ev.title}</div>
-                    <div style={{ color:'rgba(255,255,255,0.5)', fontSize:12 }}>{ev.date}{ev.start_time ? ` · ${ev.start_time}${ev.end_time ? ` – ${ev.end_time}` : ''}` : ''} · {ev.enrolled}/{ev.total} registered</div>
-                  </div>
-                  <span style={{ background:'rgba(245,158,11,0.2)', color:'#fbbf24', borderRadius:6, padding:'3px 10px', fontSize:11.5, fontWeight:700, border:'1px solid rgba(245,158,11,0.35)' }}>CONFLICT</span>
-                </div>
-              ))}
-              <div style={{ color:'rgba(245,158,11,0.65)', fontSize:12, marginTop:6 }}>Users who register for this event will see a conflict warning.</div>
-            </div>
-          )}
-
           <FormActions onCancel={() => setModal(null)} onSave={save} saving={saving} saveLabel={modal === 'create' ? 'Create Event' : 'Save Changes'} />
         </Modal>
-        );
-      })()}
+      )}
       {loading ? <Loading /> : (
         <DataTable head={['Event','Date','Category','Fill Rate','Actions']}>
           {items.length === 0 ? <EmptyTR cols={5} /> : items.map(ev => {
@@ -1353,15 +1301,7 @@ function TrainingTab({ showToast }) {
         </Modal>
       )}
 
-      {modal && (() => {
-        const editingId = typeof modal === 'object' ? modal.id : null;
-        const formRange = parseAdminDate(form.schedule);
-        const trConflicts = formRange ? items.filter(t => {
-          if (t.id === editingId) return false;
-          const r = parseAdminDate(t.schedule);
-          return r && formRange.start <= r.end && r.start <= formRange.end;
-        }) : [];
-        return (
+      {modal && (
         <Modal title={modal === 'create' ? 'Create Program' : 'Edit Program'} onClose={() => setModal(null)} wide>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
             <DInput label="Title *" name="title" value={form.title} onChange={fc} required span="1/-1" />
@@ -1387,33 +1327,9 @@ function TrainingTab({ showToast }) {
             </div>
             <DInput label="Description" name="description" value={form.description} onChange={fc} as="textarea" span="1/-1" />
           </div>
-
-          {/* ── Auto conflict warning for training ── */}
-          {trConflicts.length > 0 && (
-            <div style={{ margin:'14px 0 4px', background:'rgba(245,158,11,0.1)', border:'1px solid rgba(245,158,11,0.4)', borderRadius:12, padding:'12px 16px' }}>
-              <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:8 }}>
-                <span style={{ fontSize:18 }}>⚠️</span>
-                <span style={{ color:'#fbbf24', fontWeight:800, fontSize:13.5 }}>Schedule Conflict Detected</span>
-                <span style={{ color:'rgba(251,191,36,0.7)', fontSize:12 }}>— {trConflicts.length} program{trConflicts.length > 1 ? 's' : ''} overlap this schedule</span>
-              </div>
-              {trConflicts.map(t => (
-                <div key={t.id} style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 10px', background:'rgba(245,158,11,0.07)', borderRadius:8, marginBottom:4 }}>
-                  <span style={{ fontSize:14 }}>🎓</span>
-                  <div style={{ flex:1 }}>
-                    <div style={{ color:'#fff', fontWeight:700, fontSize:13 }}>{t.title}</div>
-                    <div style={{ color:'rgba(255,255,255,0.5)', fontSize:12 }}>{t.schedule} · {t.enrolled || 0}/{t.total} enrolled</div>
-                  </div>
-                  <span style={{ background:'rgba(245,158,11,0.2)', color:'#fbbf24', borderRadius:6, padding:'3px 10px', fontSize:11.5, fontWeight:700, border:'1px solid rgba(245,158,11,0.35)' }}>CONFLICT</span>
-                </div>
-              ))}
-              <div style={{ color:'rgba(245,158,11,0.65)', fontSize:12, marginTop:6 }}>Participants registering for this program will see a conflict warning.</div>
-            </div>
-          )}
-
           <FormActions onCancel={() => setModal(null)} onSave={save} saving={saving} saveLabel={modal === 'create' ? 'Create Program' : 'Save Changes'} />
         </Modal>
-        );
-      })()}
+      )}
       {loading ? <Loading /> : (
         <DataTable head={['Program','Category','Level','Fill Rate','Actions']}>
           {items.length === 0 ? <EmptyTR cols={5} /> : items.map(t => {
