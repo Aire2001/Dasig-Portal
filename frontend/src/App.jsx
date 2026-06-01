@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import Nav from './components/Nav';
 import Footer from './components/Footer';
@@ -20,6 +20,7 @@ import ContactAdminPage from './pages/ContactAdminPage';
 import TermsPage from './pages/TermsPage';
 import ChatbotPage from './pages/ChatbotPage';
 import ProfilePage from './pages/ProfilePage';
+import NotFoundPage from './pages/NotFoundPage';
 
 export default function App() {
   return (
@@ -34,9 +35,9 @@ export default function App() {
               <Routes>
                 <Route path="/"             element={<HomePage />} />
                 <Route path="/programs"     element={<ProgramsPage />} />
-                <Route path="/events"       element={<EventsPage />} />
+                <Route path="/events"       element={<Navigate to="/programs?tab=events" replace />} />
                 <Route path="/news"         element={<NewsPage />} />
-                <Route path="/training"     element={<TrainingPage />} />
+                <Route path="/training"     element={<Navigate to="/programs?tab=training" replace />} />
                 <Route path="/members"      element={<MembersPage />} />
                 <Route path="/membership"   element={<MembershipPage />} />
                 <Route path="/policies"     element={<PoliciesPage />} />
@@ -47,6 +48,7 @@ export default function App() {
                 <Route path="/terms"         element={<TermsPage />} />
                 <Route path="/chatbot"       element={<ChatbotPage />} />
                 <Route path="/profile"       element={<ProfilePage />} />
+                <Route path="*"             element={<NotFoundPage />} />
               </Routes>
               <Footer />
               <Chatbot />

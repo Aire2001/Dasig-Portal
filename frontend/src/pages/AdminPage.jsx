@@ -107,7 +107,10 @@ const NAV_GROUPS = [
   },
   {
     label: 'Insights',
-    items: [{ key:'reports', icon:'📈', label:'Reports' }],
+    items: [
+      { key:'reports',  icon:'📈', label:'Reports'  },
+      { key:'messages', icon:'📬', label:'Messages' },
+    ],
   },
 ];
 
@@ -303,7 +306,7 @@ function FormActions({ onCancel, onSave, saving, saveLabel }) {
 }
 
 /* ─── Main page ─────────────────────────────────────────────────── */
-const VALID_TABS = ['dashboard','calendar','users','applications','events','news','training','policies','funding','partnerships','reports'];
+const VALID_TABS = ['dashboard','calendar','users','applications','events','news','training','policies','funding','partnerships','reports','messages'];
 
 export default function AdminPage() {
   const { user, logout } = useAuth();
@@ -408,6 +411,7 @@ export default function AdminPage() {
           {tab === 'funding'      && <FundingTab showToast={showToast} />}
           {tab === 'partnerships' && <PartnershipsTab showToast={showToast} />}
           {tab === 'reports'      && <ReportsTab showToast={showToast} />}
+          {tab === 'messages'     && <MessagesTab showToast={showToast} />}
         </main>
       </div>
       </div>
@@ -512,17 +516,20 @@ function DashboardTab({ showToast, setTab }) {
 /* ═══════════════════════════════════════════════════════════════════
    USERS
 ═══════════════════════════════════════════════════════════════════ */
+const PAGE_SIZE = 15;
+
 function UsersTab({ showToast }) {
   const [users, setUsers]   = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [roleF, setRoleF]   = useState('All');
   const [acting, setActing] = useState(null);
+  const [page, setPage]     = useState(1);
 
   const load = useCallback(() => {
     setLoading(true);
     api.admin.users({ search, role: roleF })
-      .then(r => setUsers(r.data || []))
+      .then(r => { setUsers(r.data || []); setPage(1); })
       .catch(() => showToast('Failed to load users', false))
       .finally(() => setLoading(false));
   }, [search, roleF]);
@@ -567,9 +574,12 @@ function UsersTab({ showToast }) {
         </div>
       } />
 
-      {loading ? <Loading /> : (
+      {loading ? <Loading /> : (() => {
+        const totalPages = Math.max(1, Math.ceil(users.length / PAGE_SIZE));
+        const paged = users.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+        return (<>
         <DataTable head={['User','Institution','Role','Status','Joined','Actions']}>
-          {users.length === 0 ? <EmptyTR cols={6} /> : users.map(u => {
+          {users.length === 0 ? <EmptyTR cols={6} /> : paged.map(u => {
             const rs = ROLE_STYLE[u.role] || ROLE_STYLE.GUEST;
             return (
               <TR key={u.id}>
@@ -606,7 +616,22 @@ function UsersTab({ showToast }) {
             );
           })}
         </DataTable>
-      )}
+        {totalPages > 1 && (
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginTop:16, flexWrap:'wrap', gap:8 }}>
+            <span style={{ fontSize:12.5, color:'rgba(255,255,255,0.4)' }}>
+              Showing {(page-1)*PAGE_SIZE+1}–{Math.min(page*PAGE_SIZE, users.length)} of {users.length} users
+            </span>
+            <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
+              <button onClick={() => setPage(p => Math.max(1,p-1))} disabled={page===1} className="ap-btn ap-btn-ghost" style={{ opacity:page===1?0.4:1 }}>← Prev</button>
+              {Array.from({length:totalPages},(_,i)=>i+1).map(p => (
+                <button key={p} onClick={() => setPage(p)} className={`ap-btn ${p===page?'ap-btn-primary':'ap-btn-ghost'}`} style={{ minWidth:34 }}>{p}</button>
+              ))}
+              <button onClick={() => setPage(p => Math.min(totalPages,p+1))} disabled={page===totalPages} className="ap-btn ap-btn-ghost" style={{ opacity:page===totalPages?0.4:1 }}>Next →</button>
+            </div>
+          </div>
+        )}
+        </>);
+      })()}
     </div>
   );
 }
@@ -804,7 +829,7 @@ function EventsTab({ showToast }) {
       {/* ── Attendees Modal ── */}
       {attnEvent && (
         <Modal title={`Attendance — ${attnEvent.title}`} onClose={() => { setAttnEvent(null); load(); }} wide>
-          <div style={{ marginBottom:14, display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+          <div style={{ marginBottom:14, display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap:8 }}>
             <div>
               <span style={{ fontSize:13, fontWeight:700, color:'#fff' }}>
                 {attnList.filter(r => r.attended).length} attended
@@ -813,7 +838,25 @@ function EventsTab({ showToast }) {
                 / {attnList.length} registered
               </span>
             </div>
-            <button onClick={() => reloadAttendees(attnEvent)} className="ap-btn ap-btn-ghost" style={{ fontSize:12.5 }}>↻ Refresh</button>
+            <div style={{ display:'flex', gap:8 }}>
+              <button onClick={() => {
+                if (!attnList.length) return;
+                const rows = [
+                  ['Name','Email','Institution','Attended','Registered At'],
+                  ...attnList.map(r => [
+                    r.users?.name || '', r.users?.email || '', r.users?.institution || '',
+                    r.attended ? 'Yes' : 'No',
+                    r.created_at ? new Date(r.created_at).toLocaleDateString('en-PH') : '',
+                  ])
+                ];
+                const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(new Blob([csv], { type:'text/csv' }));
+                a.download = `${attnEvent.title.replace(/[^a-z0-9]/gi,'_')}_attendees.csv`;
+                a.click();
+              }} className="ap-btn ap-btn-green" style={{ fontSize:12 }}>⬇ Export CSV</button>
+              <button onClick={() => reloadAttendees(attnEvent)} className="ap-btn ap-btn-ghost" style={{ fontSize:12.5 }}>↻ Refresh</button>
+            </div>
           </div>
           {attnLoading ? <Loading /> : attnList.length === 0 ? (
             <div style={{ textAlign:'center', padding:'28px 0', color:'rgba(255,255,255,0.5)', fontSize:13 }}>No registrations yet</div>
@@ -2175,6 +2218,103 @@ function AdminCalendarTab({ showToast, setTab }) {
               </button>
             </div>
           </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   MESSAGES
+═══════════════════════════════════════════════════════════════════ */
+function MessagesTab({ showToast }) {
+  const [msgs, setMsgs]     = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [open, setOpen]     = useState(null);
+
+  useEffect(() => {
+    api.contact.messages()
+      .then(setMsgs)
+      .catch(() => showToast('Failed to load messages', false))
+      .finally(() => setLoading(false));
+  }, []);
+
+  async function markRead(msg) {
+    if (msg.read) return;
+    try {
+      await api.contact.markRead(msg.id);
+      setMsgs(p => p.map(m => m.id === msg.id ? { ...m, read: true } : m));
+    } catch (_) {}
+  }
+
+  function openMsg(msg) { setOpen(msg); markRead(msg); }
+
+  const unread = msgs.filter(m => !m.read).length;
+
+  return (
+    <div>
+      <PageHeader
+        title="Contact Messages"
+        desc={unread > 0 ? `${unread} unread message${unread > 1 ? 's' : ''}` : 'All messages from the contact form'}
+      />
+      {open && (
+        <Modal title="Message Details" onClose={() => setOpen(null)}>
+          <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+            {[
+              { l:'From',     v:`${open.name} <${open.email}>` },
+              { l:'Category', v:open.category },
+              { l:'Subject',  v:open.subject },
+              { l:'Received', v:new Date(open.created_at).toLocaleString('en-PH', { dateStyle:'medium', timeStyle:'short' }) },
+            ].map(r => (
+              <div key={r.l} style={{ display:'flex', gap:10, padding:'8px 12px', background:'rgba(255,255,255,0.04)', borderRadius:9 }}>
+                <span style={{ fontSize:11, fontWeight:700, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', width:70, flexShrink:0, paddingTop:2 }}>{r.l}</span>
+                <span style={{ fontSize:13, color:'#fff', fontWeight:600 }}>{r.v}</span>
+              </div>
+            ))}
+            <div style={{ background:'rgba(255,255,255,0.04)', borderRadius:9, padding:'12px 14px' }}>
+              <div style={{ fontSize:11, fontWeight:700, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', marginBottom:8 }}>Message</div>
+              <p style={{ color:'rgba(255,255,255,0.85)', fontSize:13.5, lineHeight:1.75, margin:0, whiteSpace:'pre-wrap' }}>{open.message}</p>
+            </div>
+            <a href={`mailto:${open.email}?subject=Re: ${encodeURIComponent(open.subject)}`}
+              style={{ display:'block', textAlign:'center', background:'linear-gradient(90deg,#f97316,#e11d48)', color:'#fff', textDecoration:'none', borderRadius:10, padding:'11px', fontSize:13.5, fontWeight:800 }}>
+              ✉ Reply to {open.name}
+            </a>
+          </div>
+        </Modal>
+      )}
+      {loading ? <Loading /> : msgs.length === 0 ? (
+        <div style={{ textAlign:'center', padding:'60px 0', color:'rgba(255,255,255,0.3)' }}>
+          <div style={{ fontSize:40, marginBottom:10 }}>📭</div>
+          <div style={{ fontSize:14 }}>No messages yet</div>
+        </div>
+      ) : (
+        <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+          {msgs.map(m => (
+            <div key={m.id} onClick={() => openMsg(m)} style={{
+              display:'flex', alignItems:'center', gap:14, padding:'12px 16px',
+              background: m.read ? 'rgba(255,255,255,0.03)' : 'rgba(249,115,22,0.07)',
+              border:`1px solid ${m.read ? 'rgba(255,255,255,0.07)' : 'rgba(249,115,22,0.25)'}`,
+              borderRadius:12, cursor:'pointer', transition:'background .12s',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = m.read ? 'rgba(255,255,255,0.06)' : 'rgba(249,115,22,0.12)'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = m.read ? 'rgba(255,255,255,0.03)' : 'rgba(249,115,22,0.07)'; }}>
+              <div style={{ width:38, height:38, borderRadius:10, background:'linear-gradient(135deg,#1e3a8a,#4f46e5)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, fontWeight:900, color:'#fff', flexShrink:0 }}>
+                {(m.name||'?')[0].toUpperCase()}
+              </div>
+              <div style={{ flex:1, minWidth:0 }}>
+                <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:2 }}>
+                  <span style={{ fontWeight: m.read ? 600 : 800, color:'#fff', fontSize:13.5 }}>{m.name}</span>
+                  {!m.read && <span style={{ background:'#f97316', color:'#fff', borderRadius:5, padding:'1px 7px', fontSize:10.5, fontWeight:800 }}>NEW</span>}
+                  <span style={{ fontSize:11.5, color:'rgba(255,255,255,0.35)', background:'rgba(255,255,255,0.07)', borderRadius:5, padding:'1px 7px' }}>{m.category}</span>
+                </div>
+                <div style={{ fontWeight:700, color: m.read ? 'rgba(255,255,255,0.6)' : '#fff', fontSize:12.5, marginBottom:2 }}>{m.subject}</div>
+                <div style={{ color:'rgba(255,255,255,0.35)', fontSize:12, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{m.message}</div>
+              </div>
+              <div style={{ fontSize:11.5, color:'rgba(255,255,255,0.3)', flexShrink:0 }}>
+                {new Date(m.created_at).toLocaleDateString('en-PH', { month:'short', day:'numeric' })}
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>

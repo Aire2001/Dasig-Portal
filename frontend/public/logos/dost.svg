@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <circle cx="100" cy="100" r="98" fill="#1a5c2a" stroke="#f0b323" stroke-width="3.5"/>
+  <circle cx="100" cy="100" r="85" fill="none" stroke="#f0b323" stroke-width="1.2"/>
+  <!-- Atom orbits -->
+  <ellipse cx="100" cy="100" rx="42" ry="16" fill="none" stroke="#7ec8a4" stroke-width="2" transform="rotate(0 100 100)"/>
+  <ellipse cx="100" cy="100" rx="42" ry="16" fill="none" stroke="#7ec8a4" stroke-width="2" transform="rotate(60 100 100)"/>
+  <ellipse cx="100" cy="100" rx="42" ry="16" fill="none" stroke="#7ec8a4" stroke-width="2" transform="rotate(120 100 100)"/>
+  <!-- Nucleus -->
+  <circle cx="100" cy="100" r="8" fill="#f0b323"/>
+  <!-- DOST text -->
+  <text x="100" y="160" font-family="Arial Black, sans-serif" font-size="20" font-weight="900" fill="#f0b323" text-anchor="middle" letter-spacing="4">DOST</text>
+  <!-- Stars -->
+  <text x="50" y="78" font-size="10" fill="#f0b323">★</text>
+  <text x="140" y="78" font-size="10" fill="#f0b323">★</text>
+  <!-- Curved text top -->
+  <path id="curve-dost-top" d="M 22,100 A 78,78 0 0,1 178,100" fill="none"/>
+  <text font-family="Arial, sans-serif" font-size="8" fill="#f0b323" text-anchor="middle" letter-spacing="1">
+    <textPath href="#curve-dost-top" startOffset="50%">DEPT. OF SCIENCE &amp; TECHNOLOGY</textPath>
+  </text>
+  <path id="curve-dost-bot" d="M 28,110 A 72,72 0 0,0 172,110" fill="none"/>
+  <text font-family="Arial, sans-serif" font-size="7.5" fill="#f0b323" text-anchor="middle">
+    <textPath href="#curve-dost-bot" startOffset="50%">REGION VII · PHILIPPINES</textPath>
+  </text>
+</svg>

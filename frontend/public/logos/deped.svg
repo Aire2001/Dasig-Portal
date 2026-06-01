@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <circle cx="100" cy="100" r="98" fill="#0032a0" stroke="#fbbf24" stroke-width="4"/>
+  <circle cx="100" cy="100" r="85" fill="none" stroke="#fbbf24" stroke-width="1.5"/>
+  <!-- Philippine Sun -->
+  <circle cx="100" cy="88" r="18" fill="#fbbf24"/>
+  <!-- Sun rays -->
+  <g stroke="#fbbf24" stroke-width="3" stroke-linecap="round">
+    <line x1="100" y1="58" x2="100" y2="50"/>
+    <line x1="122" y1="64" x2="127" y2="57"/>
+    <line x1="137" y1="82" x2="145" y2="79"/>
+    <line x1="138" y1="106" x2="147" y2="108"/>
+    <line x1="122" y1="122" x2="127" y2="130"/>
+    <line x1="78" y1="64" x2="73" y2="57"/>
+    <line x1="63" y1="82" x2="55" y2="79"/>
+    <line x1="62" y1="106" x2="53" y2="108"/>
+    <line x1="78" y1="122" x2="73" y2="130"/>
+  </g>
+  <circle cx="100" cy="88" r="9" fill="#0032a0"/>
+  <!-- Stars (3 stars of Philippines) -->
+  <text x="65" y="82" font-size="11" fill="#fbbf24">★</text>
+  <text x="128" y="82" font-size="11" fill="#fbbf24">★</text>
+  <text x="97" y="136" font-size="11" fill="#fbbf24">★</text>
+  <!-- DepEd text -->
+  <text x="100" y="163" font-family="Arial Black, sans-serif" font-size="17" font-weight="900" fill="#fbbf24" text-anchor="middle" letter-spacing="2">DepEd</text>
+  <!-- Top curved text -->
+  <path id="curve-de-top" d="M 22,95 A 78,78 0 0,1 178,95" fill="none"/>
+  <text font-family="Arial, sans-serif" font-size="8" fill="#fbbf24" text-anchor="middle">
+    <textPath href="#curve-de-top" startOffset="50%">DEPARTMENT OF EDUCATION</textPath>
+  </text>
+  <!-- Bottom curved text -->
+  <path id="curve-de-bot" d="M 30,118 A 72,72 0 0,0 170,118" fill="none"/>
+  <text font-family="Arial, sans-serif" font-size="7.5" fill="rgba(251,191,36,0.8)" text-anchor="middle">
+    <textPath href="#curve-de-bot" startOffset="50%">REPUBLIC OF THE PHILIPPINES</textPath>
+  </text>
+</svg>

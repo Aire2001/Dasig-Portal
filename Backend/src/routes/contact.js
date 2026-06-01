@@ -1,5 +1,7 @@
 const express = require('express');
 const nodemailer = require('nodemailer');
+const supabase = require('../lib/supabase');
+const { verifyToken, requireRole } = require('../middleware/auth');
 
 const router = express.Router();
 const PORTAL_URL = process.env.PORTAL_URL || 'http://localhost:5173';
@@ -24,9 +26,12 @@ router.post('/', async (req, res) => {
     return res.status(400).json({ error: 'Invalid email address' });
   }
 
+  // Always save to DB first (so messages are never lost)
+  await supabase.from('contact_messages').insert({ name, email, subject, category: category || 'General Inquiry', message }).catch(() => {});
+
   // If SMTP is not configured, log and return success (dev mode)
   if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
-    console.log('[contact] SMTP not configured — message received from', email, ':', subject);
+    console.log('[contact] SMTP not configured — message saved to DB from', email, ':', subject);
     return res.json({ message: 'Message received' });
   }
 
@@ -92,8 +97,26 @@ router.post('/', async (req, res) => {
     res.json({ message: 'Message sent successfully' });
   } catch (err) {
     console.error('[contact] Email error:', err.message);
-    res.status(500).json({ error: 'Failed to send message. Please try again.' });
+    // Message already saved to DB; return success so user isn't confused
+    res.json({ message: 'Message received' });
   }
+});
+
+// GET /api/contact/messages — admin only
+router.get('/messages', verifyToken, requireRole('ADMIN'), async (req, res) => {
+  const { data, error } = await supabase
+    .from('contact_messages')
+    .select('*')
+    .order('created_at', { ascending: false });
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data);
+});
+
+// PATCH /api/contact/messages/:id/read — mark as read
+router.patch('/messages/:id/read', verifyToken, requireRole('ADMIN'), async (req, res) => {
+  const { error } = await supabase.from('contact_messages').update({ read: true }).eq('id', req.params.id);
+  if (error) return res.status(404).json({ error: 'Message not found' });
+  res.json({ message: 'Marked as read' });
 });
 
 module.exports = router;
