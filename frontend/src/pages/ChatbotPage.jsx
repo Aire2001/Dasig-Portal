@@ -172,7 +172,15 @@ export default function ChatbotPage() {
   const rb        = ROLE_BADGE[role] || ROLE_BADGE.GUEST;
 
   const initMsg = { from:'bot', text: makeInitMsg(user), time: new Date() };
-  const [messages, setMessages] = useState([initMsg]);
+  const [messages, setMessages]       = useState([initMsg]);
+  const [input, setInput]             = useState('');
+  const [thinking, setThinking]       = useState(false);
+  const [matchRate, setMatchRate]     = useState(null);
+  const [totalAsked, setTotalAsked]   = useState(0);
+  const [totalMatched, setTotalMatched] = useState(0);
+  const [ended, setEnded]             = useState(false);
+  const [showEndConfirm, setShowEndConfirm] = useState(false);
+  const [hasReplied, setHasReplied]   = useState(false);
 
   // Reset chat when user changes (login/logout)
   useEffect(() => {
@@ -180,14 +188,6 @@ export default function ChatbotPage() {
     setTotalAsked(0); setTotalMatched(0); setMatchRate(null);
     setEnded(false); setHasReplied(false); setInput('');
   }, [user?.id]);
-  const [input, setInput]       = useState('');
-  const [thinking, setThinking] = useState(false);
-  const [matchRate, setMatchRate] = useState(null);
-  const [totalAsked, setTotalAsked] = useState(0);
-  const [totalMatched, setTotalMatched] = useState(0);
-  const [ended, setEnded] = useState(false);
-  const [showEndConfirm, setShowEndConfirm] = useState(false);
-  const [hasReplied, setHasReplied] = useState(false);
   const msgsEnd = useRef(null);
   const inputRef = useRef(null);
 

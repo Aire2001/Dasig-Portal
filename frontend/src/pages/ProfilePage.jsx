@@ -146,7 +146,7 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (!user) navigate('/login');
-  }, [user]);
+  }, [user, navigate]);
 
   function showToast(msg, ok = true) {
     setToast({ msg, ok });

@@ -534,9 +534,14 @@ function EvCard({ ev, idx, registered, onRegister, onCancel, cancelling }) {
           {full && !registered && <span style={{ background:'rgba(225,29,72,0.28)', color:'#f87171', borderRadius:6, padding:'3px 10px', fontSize:10.5, fontWeight:700 }}>Full</span>}
         </div>
         <div style={{ color:'#fff', fontSize:15, fontWeight:900, lineHeight:1.3, marginBottom:5 }}>{ev.title}</div>
-        <div style={{ display:'flex', gap:10 }}>
+        <div style={{ display:'flex', flexWrap:'wrap', gap:8, rowGap:4 }}>
           <span style={{ color:'rgba(255,255,255,0.78)', fontSize:11.5 }}>📅 {ev.date}</span>
           <span style={{ color:'rgba(255,255,255,0.78)', fontSize:11.5 }}>📍 {ev.venue}</span>
+          {ev.start_time && (
+            <span style={{ color:'rgba(253,224,130,0.95)', fontSize:11.5, fontWeight:700 }}>
+              🕐 {ev.start_time}{ev.end_time ? ` – ${ev.end_time}` : ''}
+            </span>
+          )}
         </div>
       </div>
       <div style={{ padding:'12px 16px' }}>
@@ -584,7 +589,7 @@ function EvCard({ ev, idx, registered, onRegister, onCancel, cancelling }) {
   );
 }
 
-function TrCard({ t, idx, enrolled, onEnroll, onCancel, cancelling }) {
+function TrCard({ t, idx, registered, onRegister, onCancel, cancelling }) {
   const [hov, setHov] = useState(false);
   const pct  = t.total > 0 ? Math.min(100, Math.round(t.enrolled / t.total * 100)) : 0;
   const full = t.total > 0 && t.enrolled >= t.total;
@@ -605,10 +610,11 @@ function TrCard({ t, idx, enrolled, onEnroll, onCancel, cancelling }) {
         </div>
       </div>
       <div style={{ padding:'12px 16px' }}>
-        {t.schedule && <div style={{ fontSize:11.5, color:'rgba(255,255,255,0.4)', marginBottom:10 }}>📅 {t.schedule.split('|')[0].trim()}</div>}
+        {t.schedule && <div style={{ fontSize:11.5, color:'rgba(255,255,255,0.4)', marginBottom: t.session_start_time ? 4 : 10 }}>📅 {t.schedule.split('|')[0].trim()}</div>}
+        {t.session_start_time && <div style={{ fontSize:11.5, color:'rgba(253,224,130,0.9)', fontWeight:700, marginBottom:10 }}>🕐 {t.session_start_time}{t.session_end_time ? ` – ${t.session_end_time}` : ''}</div>}
         <div style={{ marginBottom:10 }}>
           <div style={{ display:'flex', justifyContent:'space-between', marginBottom:3 }}>
-            <span style={{ fontSize:11, color:'rgba(255,255,255,0.38)' }}>Enrollment</span>
+            <span style={{ fontSize:11, color:'rgba(255,255,255,0.38)' }}>Registration</span>
             <span style={{ fontSize:11.5, color: full?'#f87171':'#6ee7b7', fontWeight:700 }}>{t.enrolled}/{t.total}</span>
           </div>
           <div style={{ height:5, background:'rgba(255,255,255,0.07)', borderRadius:3, overflow:'hidden' }}>
@@ -617,15 +623,15 @@ function TrCard({ t, idx, enrolled, onEnroll, onCancel, cancelling }) {
         </div>
         <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
           <div style={{ display:'flex', justifyContent:'flex-end' }}>
-            {enrolled
-              ? <span style={{ background:'rgba(16,185,129,0.12)', color:'#34d399', borderRadius:10, padding:'8px 14px', fontSize:12.5, fontWeight:700, border:'1px solid rgba(16,185,129,0.22)' }}>✓ Enrolled</span>
-              : <button onClick={onEnroll} disabled={full} style={{ background: full?'rgba(255,255,255,0.05)':s.accent, color: full?'rgba(255,255,255,0.3)':'#fff', border: full?'1px solid rgba(255,255,255,0.08)':'none', borderRadius:10, padding:'9px 20px', fontSize:13, fontWeight:800, cursor: full?'not-allowed':'pointer', fontFamily:'inherit', boxShadow: full?'none':`0 4px 12px ${s.color}40` }}>
-                  {full?'Fully Booked':'Enroll →'}
+            {registered
+              ? <span style={{ background:'rgba(16,185,129,0.12)', color:'#34d399', borderRadius:10, padding:'8px 14px', fontSize:12.5, fontWeight:700, border:'1px solid rgba(16,185,129,0.22)' }}>✓ Registered</span>
+              : <button onClick={onRegister} disabled={full} style={{ background: full?'rgba(255,255,255,0.05)':s.accent, color: full?'rgba(255,255,255,0.3)':'#fff', border: full?'1px solid rgba(255,255,255,0.08)':'none', borderRadius:10, padding:'9px 20px', fontSize:13, fontWeight:800, cursor: full?'not-allowed':'pointer', fontFamily:'inherit', boxShadow: full?'none':`0 4px 12px ${s.color}40` }}>
+                  {full?'Fully Booked':'Register →'}
                 </button>
             }
           </div>
-          {/* Cancel enrollment — shown for all enrolled users */}
-          {enrolled && (
+          {/* Cancel registration — shown for all registered users */}
+          {registered && (
             <button
               onClick={onCancel}
               disabled={cancelling}
@@ -640,7 +646,7 @@ function TrCard({ t, idx, enrolled, onEnroll, onCancel, cancelling }) {
               onMouseEnter={e => { if (!cancelling) { e.currentTarget.style.background='rgba(225,29,72,0.12)'; e.currentTarget.style.borderColor='rgba(225,29,72,0.6)'; } }}
               onMouseLeave={e => { e.currentTarget.style.background='transparent'; e.currentTarget.style.borderColor='rgba(225,29,72,0.35)'; }}
             >
-              {cancelling ? '⏳ Cancelling…' : '✕ Cancel Enrollment'}
+              {cancelling ? '⏳ Cancelling…' : '✕ Cancel Registration'}
             </button>
           )}
         </div>
@@ -812,17 +818,51 @@ function EventsTab({ user }) {
 
       {/* Conflict warning */}
       {conflict && (
-        <div onClick={() => setConflict(null)} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.72)', zIndex:9300, display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
-          <div onClick={e => e.stopPropagation()} style={{ background:'#0f172a', border:'1px solid rgba(245,158,11,0.4)', borderRadius:22, maxWidth:'min(420px,calc(100vw - 32px))', width:'100%', padding:'32px', animation:'modalIn .22s ease' }}>
-            <div style={{ fontSize:42, textAlign:'center', marginBottom:12 }}>⚠️</div>
-            <div style={{ color:'#fbbf24', fontWeight:900, fontSize:17, textAlign:'center', marginBottom:8 }}>Scheduling Conflict</div>
-            <p style={{ color:'rgba(255,255,255,0.6)', fontSize:13.5, textAlign:'center', lineHeight:1.65, marginBottom:6 }}>
-              You're registered for <strong style={{ color:'#fff' }}>{conflict.conflictsWith.title}</strong> which overlaps with <strong style={{ color:'#fff' }}>{conflict.event.title}</strong>.
-            </p>
-            <p style={{ color:'rgba(245,158,11,0.8)', fontSize:12.5, textAlign:'center', marginBottom:24 }}>📅 {conflict.conflictsWith.date}</p>
-            <div style={{ display:'flex', gap:10 }}>
-              <button onClick={() => setConflict(null)} style={{ flex:1, background:'rgba(255,255,255,0.07)', color:'rgba(255,255,255,0.65)', border:'1px solid rgba(255,255,255,0.12)', borderRadius:12, padding:'12px', fontSize:13, fontWeight:700, cursor:'pointer', fontFamily:'inherit' }}>Cancel</button>
-              <button onClick={() => prefill(conflict.event)} style={{ flex:1, background:'linear-gradient(90deg,#f59e0b,#f97316)', color:'#fff', border:'none', borderRadius:12, padding:'12px', fontSize:13, fontWeight:800, cursor:'pointer', fontFamily:'inherit' }}>Register Anyway</button>
+        <div onClick={() => setConflict(null)} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.78)', zIndex:9300, display:'flex', alignItems:'center', justifyContent:'center', padding:20, backdropFilter:'blur(4px)' }}>
+          <div onClick={e => e.stopPropagation()} style={{ background:'linear-gradient(180deg,#0f1832,#080e1e)', border:'1px solid rgba(245,158,11,0.35)', borderRadius:24, maxWidth:'min(460px,calc(100vw - 32px))', width:'100%', overflow:'hidden', animation:'modalIn .22s ease', boxShadow:'0 32px 80px rgba(0,0,0,0.8)' }}>
+            {/* Header */}
+            <div style={{ background:'linear-gradient(135deg,rgba(245,158,11,0.2),rgba(249,115,22,0.12))', padding:'22px 24px 18px', textAlign:'center', borderBottom:'1px solid rgba(245,158,11,0.2)' }}>
+              <div style={{ fontSize:44, marginBottom:8 }}>⚠️</div>
+              <div style={{ color:'#fbbf24', fontWeight:900, fontSize:19, letterSpacing:'-0.3px' }}>Scheduling Conflict Detected</div>
+              <p style={{ color:'rgba(255,255,255,0.5)', fontSize:13, marginTop:5, lineHeight:1.5 }}>You already have an event registered on the same dates.</p>
+            </div>
+            <div style={{ padding:'20px 24px' }}>
+              {/* Existing registration */}
+              <div style={{ marginBottom:10 }}>
+                <div style={{ fontSize:10.5, fontWeight:700, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:7 }}>Already registered</div>
+                <div style={{ background:'rgba(239,68,68,0.1)', border:'1px solid rgba(239,68,68,0.3)', borderRadius:12, padding:'12px 14px', display:'flex', gap:12, alignItems:'flex-start' }}>
+                  <span style={{ fontSize:20, flexShrink:0 }}>📅</span>
+                  <div>
+                    <div style={{ color:'#fff', fontWeight:800, fontSize:14, marginBottom:3 }}>{conflict.conflictsWith.title}</div>
+                    <div style={{ color:'rgba(255,255,255,0.55)', fontSize:12.5 }}>{conflict.conflictsWith.date}</div>
+                    {conflict.conflictsWith.start_time && <div style={{ color:'rgba(239,68,68,0.8)', fontSize:12, fontWeight:700, marginTop:3 }}>🕐 {conflict.conflictsWith.start_time}{conflict.conflictsWith.end_time ? ` – ${conflict.conflictsWith.end_time}` : ''}</div>}
+                  </div>
+                </div>
+              </div>
+              {/* Conflict arrow */}
+              <div style={{ textAlign:'center', color:'rgba(245,158,11,0.7)', fontSize:20, margin:'6px 0' }}>⬇</div>
+              {/* New event */}
+              <div style={{ marginBottom:20 }}>
+                <div style={{ fontSize:10.5, fontWeight:700, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:7 }}>You're trying to register</div>
+                <div style={{ background:'rgba(245,158,11,0.1)', border:'1px solid rgba(245,158,11,0.3)', borderRadius:12, padding:'12px 14px', display:'flex', gap:12, alignItems:'flex-start' }}>
+                  <span style={{ fontSize:20, flexShrink:0 }}>🆕</span>
+                  <div>
+                    <div style={{ color:'#fff', fontWeight:800, fontSize:14, marginBottom:3 }}>{conflict.event.title}</div>
+                    <div style={{ color:'rgba(255,255,255,0.55)', fontSize:12.5 }}>{conflict.event.date}</div>
+                    {conflict.event.start_time && <div style={{ color:'rgba(245,158,11,0.8)', fontSize:12, fontWeight:700, marginTop:3 }}>🕐 {conflict.event.start_time}{conflict.event.end_time ? ` – ${conflict.event.end_time}` : ''}</div>}
+                  </div>
+                </div>
+              </div>
+              <div style={{ display:'flex', gap:10 }}>
+                <button onClick={() => setConflict(null)} style={{ flex:1, background:'rgba(255,255,255,0.07)', color:'rgba(255,255,255,0.7)', border:'1px solid rgba(255,255,255,0.12)', borderRadius:13, padding:'13px', fontSize:13.5, fontWeight:700, cursor:'pointer', fontFamily:'inherit', transition:'all .15s' }}
+                  onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,0.12)'}
+                  onMouseLeave={e=>e.currentTarget.style.background='rgba(255,255,255,0.07)'}
+                >Cancel</button>
+                <button onClick={() => prefill(conflict.event)} style={{ flex:1, background:'linear-gradient(90deg,#f59e0b,#f97316)', color:'#fff', border:'none', borderRadius:13, padding:'13px', fontSize:13.5, fontWeight:800, cursor:'pointer', fontFamily:'inherit', boxShadow:'0 4px 14px rgba(249,115,22,0.35)', transition:'all .15s' }}
+                  onMouseEnter={e=>{e.currentTarget.style.opacity='.85'; e.currentTarget.style.transform='translateY(-1px)';}}
+                  onMouseLeave={e=>{e.currentTarget.style.opacity='1'; e.currentTarget.style.transform='none';}}
+                >Register Anyway →</button>
+              </div>
             </div>
           </div>
         </div>
@@ -980,6 +1020,7 @@ function EventsTab({ user }) {
               {[
                 {i:'📋',l:'EVENT',v:okModal.event.title},
                 {i:'📅',l:'DATE',v:okModal.event.date||'TBA'},
+                ...(okModal.event.start_time ? [{i:'🕐',l:'TIME',v:`${okModal.event.start_time}${okModal.event.end_time ? ` – ${okModal.event.end_time}` : ''}`}] : []),
                 {i:'📍',l:'VENUE',v:okModal.event.venue||'TBA'},
                 {i:'🏛',l:'ORGANIZER',v:okModal.event.organizer},
                 {i:'🎫',l:'CATEGORY',v:okModal.event.category},
@@ -1068,7 +1109,8 @@ function TrainingTab({ user }) {
   const [errModal, setErrModal]   = useState('');
   const [submitting, setSub]      = useState(false);
   const [cancellingEnrId, setCancellingEnrId] = useState(null);
-  const [cancelEnrConfirm, setCancelEnrConfirm] = useState(null); // training to cancel
+  const [cancelEnrConfirm, setCancelEnrConfirm] = useState(null);
+  const [conflictTr, setConflictTr] = useState(null); // { training, conflictsWith }
   const [fname, setFname]         = useState('');
   const [email, setEmail]         = useState('');
   const [phone, setPhone]         = useState('');
@@ -1130,6 +1172,19 @@ function TrainingTab({ user }) {
 
   function openEnroll(t) {
     if (!user) { setErrModal('login'); return; }
+    // Check for schedule conflict with already-registered trainings
+    const tRange = parseRange(t.schedule);
+    if (tRange) {
+      for (const id of Object.keys(myEnr)) {
+        const other = trainings.find(tr => tr.id === +id);
+        if (!other || other.id === t.id) continue;
+        const oRange = parseRange(other.schedule);
+        if (oRange && tRange.start <= oRange.end && oRange.start <= tRange.end) {
+          setConflictTr({ training: t, conflictsWith: other });
+          return;
+        }
+      }
+    }
     setFname(user.name || '');
     setEmail(user.email || '');
     setPhone(user.phone || '');
@@ -1171,7 +1226,7 @@ function TrainingTab({ user }) {
     } catch (err) {
       const msg = err.message || '';
       setFormModal(null);
-      setErrModal(msg.toLowerCase().includes('already') ? 'already' : msg || 'Enrollment failed');
+      setErrModal(msg.toLowerCase().includes('already') ? 'already' : msg || 'Registration failed');
     } finally { setSub(false); }
   }
 
@@ -1181,15 +1236,57 @@ function TrainingTab({ user }) {
     <>
       <ErrModal err={errModal} onClose={() => setErrModal('')} />
 
-      {/* Cancel enrollment confirmation */}
+      {/* Cancel registration confirmation */}
       {cancelEnrConfirm && (
         <CancelConfirmModal
-          title="Cancel Enrollment?"
-          subtitle={`Are you sure you want to cancel your enrollment in "${cancelEnrConfirm.title}"? Your slot will be returned to the available pool.`}
+          title="Cancel Registration?"
+          subtitle={`Are you sure you want to cancel your registration in "${cancelEnrConfirm.title}"? Your slot will be returned to the available pool.`}
           confirming={!!cancellingEnrId}
           onConfirm={doCancelEnr}
           onCancel={() => setCancelEnrConfirm(null)}
         />
+      )}
+
+      {/* Training conflict warning modal */}
+      {conflictTr && (
+        <div onClick={() => setConflictTr(null)} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.78)', zIndex:9300, display:'flex', alignItems:'center', justifyContent:'center', padding:20, backdropFilter:'blur(4px)' }}>
+          <div onClick={e => e.stopPropagation()} style={{ background:'linear-gradient(180deg,#0f1832,#080e1e)', border:'1px solid rgba(245,158,11,0.35)', borderRadius:24, maxWidth:'min(460px,calc(100vw - 32px))', width:'100%', overflow:'hidden', animation:'modalIn .22s ease', boxShadow:'0 32px 80px rgba(0,0,0,0.8)' }}>
+            <div style={{ background:'linear-gradient(135deg,rgba(245,158,11,0.2),rgba(249,115,22,0.12))', padding:'22px 24px 18px', textAlign:'center', borderBottom:'1px solid rgba(245,158,11,0.2)' }}>
+              <div style={{ fontSize:44, marginBottom:8 }}>⚠️</div>
+              <div style={{ color:'#fbbf24', fontWeight:900, fontSize:19, letterSpacing:'-0.3px' }}>Schedule Conflict Detected</div>
+              <p style={{ color:'rgba(255,255,255,0.5)', fontSize:13, marginTop:5, lineHeight:1.5 }}>You already have a program registered on overlapping dates.</p>
+            </div>
+            <div style={{ padding:'20px 24px' }}>
+              <div style={{ marginBottom:10 }}>
+                <div style={{ fontSize:10.5, fontWeight:700, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:7 }}>Already registered</div>
+                <div style={{ background:'rgba(239,68,68,0.1)', border:'1px solid rgba(239,68,68,0.3)', borderRadius:12, padding:'12px 14px', display:'flex', gap:12, alignItems:'flex-start' }}>
+                  <span style={{ fontSize:20, flexShrink:0 }}>🎓</span>
+                  <div>
+                    <div style={{ color:'#fff', fontWeight:800, fontSize:14, marginBottom:3 }}>{conflictTr.conflictsWith.title}</div>
+                    <div style={{ color:'rgba(255,255,255,0.55)', fontSize:12.5 }}>{conflictTr.conflictsWith.schedule?.split('|')[0]?.trim()}</div>
+                    {conflictTr.conflictsWith.session_start_time && <div style={{ color:'rgba(239,68,68,0.8)', fontSize:12, fontWeight:700, marginTop:3 }}>🕐 {conflictTr.conflictsWith.session_start_time}{conflictTr.conflictsWith.session_end_time ? ` – ${conflictTr.conflictsWith.session_end_time}` : ''}</div>}
+                  </div>
+                </div>
+              </div>
+              <div style={{ textAlign:'center', color:'rgba(245,158,11,0.7)', fontSize:20, margin:'6px 0' }}>⬇</div>
+              <div style={{ marginBottom:20 }}>
+                <div style={{ fontSize:10.5, fontWeight:700, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:7 }}>You're trying to register</div>
+                <div style={{ background:'rgba(245,158,11,0.1)', border:'1px solid rgba(245,158,11,0.3)', borderRadius:12, padding:'12px 14px', display:'flex', gap:12, alignItems:'flex-start' }}>
+                  <span style={{ fontSize:20, flexShrink:0 }}>🆕</span>
+                  <div>
+                    <div style={{ color:'#fff', fontWeight:800, fontSize:14, marginBottom:3 }}>{conflictTr.training.title}</div>
+                    <div style={{ color:'rgba(255,255,255,0.55)', fontSize:12.5 }}>{conflictTr.training.schedule?.split('|')[0]?.trim()}</div>
+                    {conflictTr.training.session_start_time && <div style={{ color:'rgba(245,158,11,0.8)', fontSize:12, fontWeight:700, marginTop:3 }}>🕐 {conflictTr.training.session_start_time}{conflictTr.training.session_end_time ? ` – ${conflictTr.training.session_end_time}` : ''}</div>}
+                  </div>
+                </div>
+              </div>
+              <div style={{ display:'flex', gap:10 }}>
+                <button onClick={() => setConflictTr(null)} style={{ flex:1, background:'rgba(255,255,255,0.07)', color:'rgba(255,255,255,0.7)', border:'1px solid rgba(255,255,255,0.15)', borderRadius:12, padding:'11px', fontSize:13.5, fontWeight:700, cursor:'pointer', fontFamily:'inherit' }}>Go Back</button>
+                <button onClick={() => { const t = conflictTr.training; setConflictTr(null); setFname(user?.name||''); setEmail(user?.email||''); setPhone(user?.phone||''); setInst(user?.institution||''); setPosition(user?.campus||''); setFnameErr(false); setFormModal(t); }} style={{ flex:2, background:'linear-gradient(90deg,#f97316,#e11d48)', color:'#fff', border:'none', borderRadius:12, padding:'11px', fontSize:13.5, fontWeight:800, cursor:'pointer', fontFamily:'inherit' }}>Register Anyway</button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Detail panel */}
@@ -1224,11 +1321,11 @@ function TrainingTab({ user }) {
               )}
               {detail.description && <p style={{ color:'rgba(255,255,255,0.5)', fontSize:12.5, lineHeight:1.65, marginBottom:14 }}>{detail.description}</p>}
               {myEnr[detail.id]
-                ? <div style={{ background:'rgba(16,185,129,0.12)', border:'1px solid rgba(16,185,129,0.3)', borderRadius:12, padding:'12px 14px', textAlign:'center', color:'#34d399', fontWeight:700 }}>✓ You are enrolled</div>
+                ? <div style={{ background:'rgba(16,185,129,0.12)', border:'1px solid rgba(16,185,129,0.3)', borderRadius:12, padding:'12px 14px', textAlign:'center', color:'#34d399', fontWeight:700 }}>✓ You are registered</div>
                 : detail.enrolled >= detail.total
                   ? <div style={{ background:'rgba(225,29,72,0.1)', border:'1px solid rgba(225,29,72,0.3)', borderRadius:12, padding:'12px', textAlign:'center', color:'#f87171', fontWeight:700 }}>Fully booked</div>
                   : <button onClick={() => openEnroll(detail)} style={{ width:'100%', background: ts(detail).accent, color:'#fff', border:'none', borderRadius:12, padding:'12px', fontSize:14, fontWeight:800, cursor:'pointer', fontFamily:'inherit' }}>
-                      Enroll in this program →
+                      Register for this program →
                     </button>
               }
             </div>
@@ -1242,7 +1339,7 @@ function TrainingTab({ user }) {
           <div onClick={e => e.stopPropagation()} style={{ background:'linear-gradient(180deg,#0f172a,#020817)', borderRadius:22, maxWidth:'min(480px,calc(100vw - 32px))', width:'100%', position:'relative', border:'1px solid rgba(255,255,255,0.1)', animation:'modalIn .24s cubic-bezier(.34,1.56,.64,1)', margin:'auto' }}>
             <div style={{ background: ts(formModal).accent, padding:'22px 24px 18px', position:'relative' }}>
               <button onClick={() => setFormModal(null)} style={{ position:'absolute', top:14, right:14, background:'rgba(0,0,0,0.70)', border:'2px solid rgba(255,255,255,0.5)', backdropFilter:'blur(10px)', borderRadius:'50%', width:36, height:36, color:'#fff', fontSize:16, fontWeight:700, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', backdropFilter:'blur(6px)', boxShadow:'0 2px 8px rgba(0,0,0,0.4)' }}>✕</button>
-              <div style={{ color:'rgba(255,255,255,0.65)', fontSize:10.5, fontWeight:700, letterSpacing:1, marginBottom:4 }}>PROGRAM ENROLLMENT</div>
+              <div style={{ color:'rgba(255,255,255,0.65)', fontSize:10.5, fontWeight:700, letterSpacing:1, marginBottom:4 }}>PROGRAM REGISTRATION</div>
               <div style={{ color:'#fff', fontSize:17, fontWeight:900 }}>{formModal.title}</div>
               <div style={{ display:'flex', gap:12, marginTop:8, flexWrap:'wrap' }}>
                 {[{i:'🏛',v:formModal.org},{i:'⏱',v:formModal.duration},{i:'📊',v:formModal.level}].map(r=>
@@ -1299,7 +1396,7 @@ function TrainingTab({ user }) {
               <div style={{ display:'flex', gap:10, marginTop:4 }}>
                 <button onClick={() => setFormModal(null)} style={{ flex:1, background:'rgba(255,255,255,0.06)', color:'rgba(255,255,255,0.55)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:12, padding:'12px', fontSize:13.5, fontWeight:700, cursor:'pointer', fontFamily:'inherit' }}>Cancel</button>
                 <button onClick={submitEnroll} disabled={submitting} style={{ flex:2, background: submitting?'#475569':ts(formModal).accent, color:'#fff', border:'none', borderRadius:12, padding:'12px', fontSize:14, fontWeight:800, cursor: submitting?'not-allowed':'pointer', fontFamily:'inherit' }}>
-                  {submitting ? '⏳ Enrolling…' : '✅ Confirm Enrollment'}
+                  {submitting ? '⏳ Registering…' : '✅ Confirm Registration'}
                 </button>
               </div>
             </div>
@@ -1312,7 +1409,7 @@ function TrainingTab({ user }) {
         <div onClick={() => setOkModal(null)} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.65)', zIndex:9200, display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
           <div onClick={e => e.stopPropagation()} style={{ background:'#0f172a', borderRadius:24, maxWidth:'min(420px,calc(100vw - 32px))', width:'100%', overflow:'hidden', border:'1px solid rgba(255,255,255,0.1)', animation:'modalIn .26s cubic-bezier(.34,1.56,.64,1)' }}>
             <div style={{ background: ts(okModal.training).accent, padding:'26px 26px 48px', textAlign:'center', position:'relative' }}>
-              <div style={{ color:'rgba(255,255,255,0.6)', fontSize:10.5, fontWeight:700, letterSpacing:1, textTransform:'uppercase', marginBottom:6 }}>Enrollment Confirmed</div>
+              <div style={{ color:'rgba(255,255,255,0.6)', fontSize:10.5, fontWeight:700, letterSpacing:1, textTransform:'uppercase', marginBottom:6 }}>Registration Confirmed</div>
               <div style={{ color:'#fff', fontSize:18, fontWeight:900 }}>{okModal.training.title}</div>
               <div style={{ position:'absolute', bottom:-32, left:'50%', transform:'translateX(-50%)', width:64, height:64, borderRadius:'50%', background: ts(okModal.training).accent, border:'4px solid #0f172a', display:'flex', alignItems:'center', justifyContent:'center', fontSize:24, fontWeight:900, color:'#fff' }}>
                 {(okModal.name||'U')[0].toUpperCase()}
@@ -1331,7 +1428,7 @@ function TrainingTab({ user }) {
                 {i:'⏱',l:'DURATION',v:okModal.training.duration},
                 {i:'📊',l:'LEVEL',v:okModal.training.level},
                 {i:'📅',l:'SCHEDULE',v:okModal.training.schedule?.split('|')[0]?.trim()},
-                {i:'👥',l:'SLOTS',v:`${okModal.training.enrolled}/${okModal.training.total} enrolled`},
+                {i:'👥',l:'SLOTS',v:`${okModal.training.enrolled}/${okModal.training.total} registered`},
               ].filter(r=>r.v).map(r => (
                 <div key={r.l} style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 12px', background:'rgba(255,255,255,0.04)', borderRadius:10 }}>
                   <span style={{ fontSize:14 }}>{r.i}</span>
@@ -1339,7 +1436,7 @@ function TrainingTab({ user }) {
                 </div>
               ))}
               <div style={{ background:'rgba(16,185,129,0.12)', border:'1px solid rgba(16,185,129,0.3)', borderRadius:12, padding:'11px 14px', marginTop:4 }}>
-                <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:3 }}><span style={{ animation:'checkPop 0.4s 0.15s both', display:'inline-block', fontSize:14 }}>✅</span><span style={{ fontSize:12.5, color:'#34d399', fontWeight:700 }}>You&apos;re enrolled!</span></div>
+                <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:3 }}><span style={{ animation:'checkPop 0.4s 0.15s both', display:'inline-block', fontSize:14 }}>✅</span><span style={{ fontSize:12.5, color:'#34d399', fontWeight:700 }}>You&apos;re registered!</span></div>
                 <div style={{ fontSize:11.5, color:'rgba(52,211,153,0.8)', lineHeight:1.5 }}>Confirmation email sent to <strong style={{ color:'#34d399' }}>{okModal.email}</strong>.</div>
               </div>
               <button onClick={() => setOkModal(null)} style={{ width:'100%', background: ts(okModal.training).accent, color:'#fff', border:'none', borderRadius:14, padding:'12px', fontSize:14, fontWeight:800, cursor:'pointer', fontFamily:'inherit', marginTop:4 }}>Done</button>
@@ -1390,7 +1487,7 @@ function TrainingTab({ user }) {
       {!loading && (
         <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(300px,1fr))', gap:18 }}>
           {filtered.map((t, idx) => (
-            <TrCard key={t.id} t={t} idx={idx} enrolled={!!myEnr[t.id]} onEnroll={() => openEnroll(t)} onCancel={() => cancelEnr(t)} cancelling={cancellingEnrId === t.id} />
+            <TrCard key={t.id} t={t} idx={idx} registered={!!myEnr[t.id]} onRegister={() => openEnroll(t)} onCancel={() => cancelEnr(t)} cancelling={cancellingEnrId === t.id} />
           ))}
         </div>
       )}
@@ -1405,6 +1502,18 @@ function TrainingTab({ user }) {
 /* ═══════════════════════════════════════════════════════════
    CALENDAR TAB — FullCalendar implementation
 ═══════════════════════════════════════════════════════════ */
+
+const CAT_META = {
+  'All':         { icon:'📂', color:'#94a3b8', bg:'rgba(148,163,184,0.15)' },
+  'Summit':      { icon:'🏛', color:'#818cf8', bg:'rgba(129,140,248,0.15)' },
+  'Workshop':    { icon:'🔬', color:'#34d399', bg:'rgba(52,211,153,0.15)' },
+  'Seminar':     { icon:'📢', color:'#f9a8d4', bg:'rgba(249,168,212,0.15)' },
+  'Funding':     { icon:'💰', color:'#fcd34d', bg:'rgba(252,211,77,0.15)' },
+  'Technology':  { icon:'💻', color:'#60a5fa', bg:'rgba(96,165,250,0.15)' },
+  'Research':    { icon:'🔭', color:'#6ee7b7', bg:'rgba(110,231,183,0.15)' },
+  'Leadership':  { icon:'🎯', color:'#fbbf24', bg:'rgba(251,191,36,0.15)' },
+  'Governance':  { icon:'📋', color:'#c4b5fd', bg:'rgba(196,181,253,0.15)' },
+};
 
 function getUniqueEventColor(stringId) {
   let hash = 0;
@@ -1430,9 +1539,11 @@ function CalendarTab({ user }) {
   
   const [searchQuery, setSearchQuery]   = useState('');
   const [selectedCat, setSelectedCat]   = useState('All');
+  const [filterOpen, setFilterOpen]     = useState(false);
   const [datePickerOpen, setDatePickerOpen] = useState(false);
-  const [pickerYear, setPickerYear]     = useState(new Date().getFullYear());
-  const [pickerMonth, setPickerMonth]   = useState(new Date().getMonth());
+  const [pickerYear, setPickerYear]   = useState(new Date().getFullYear());
+  const [pickerMonth, setPickerMonth] = useState(new Date().getMonth());
+  const [pickerView, setPickerView]   = useState('month'); // 'month' | 'day'
   const calendarRef = useRef(null);
   const navigate = useNavigate();
 
@@ -1475,11 +1586,22 @@ function CalendarTab({ user }) {
 
   // Date picker: jump FullCalendar to selected month/year
   function jumpToDate(year, month) {
-    const calApi = calendarRef.current?.getApi();
-    if (calApi) calApi.gotoDate(new Date(year, month, 1));
+    // Month selected → switch to day view
     setPickerYear(year);
     setPickerMonth(month);
+    setPickerView('day');
+  }
+
+  function jumpToDay(day) {
+    const calApi = calendarRef.current?.getApi();
+    if (calApi) {
+      const target = new Date(pickerYear, pickerMonth, day);
+      calApi.gotoDate(target);
+      // Switch to day view in FullCalendar so the selected day is focused
+      calApi.changeView('timeGridDay', target);
+    }
     setDatePickerOpen(false);
+    setPickerView('month');
   }
 
   function jumpToToday() {
@@ -1489,6 +1611,7 @@ function CalendarTab({ user }) {
     setPickerYear(now.getFullYear());
     setPickerMonth(now.getMonth());
     setDatePickerOpen(false);
+    setPickerView('month');
   }
 
   // Conflict check logic
@@ -1619,7 +1742,7 @@ function CalendarTab({ user }) {
       )}
 
       {/* Main UI */}
-      <div style={{ background:'rgba(13,20,40,0.85)', border:'1px solid rgba(255,255,255,0.09)', borderRadius:20, padding: 24, marginBottom:28 }}>
+      <div style={{ background:'linear-gradient(180deg,rgba(10,17,42,0.95),rgba(8,13,32,0.95))', border:'1px solid rgba(255,255,255,0.08)', borderRadius:20, padding:'20px 22px 22px', marginBottom:28, boxShadow:'0 16px 48px rgba(0,0,0,0.4)', backdropFilter:'blur(10px)' }}>
         
         {/* ── Top Controls Row ── */}
         <div style={{ display:'flex', gap:10, alignItems:'center', marginBottom:16, flexWrap:'wrap' }}>
@@ -1632,68 +1755,253 @@ function CalendarTab({ user }) {
               className="prog-input" style={{ paddingLeft:38, height:40 }} />
           </div>
 
-          {/* Category Dropdown */}
-          <div style={{ position:'relative', minWidth:190 }}>
-            <select
-              value={selectedCat}
-              onChange={e => setSelectedCat(e.target.value)}
+          {/* ── Custom Category Filter Dropdown ── */}
+          <div style={{ position:'relative', minWidth:210 }}>
+            {/* Trigger */}
+            <button
+              onClick={() => { setFilterOpen(o => !o); setDatePickerOpen(false); }}
               style={{
-                width:'100%', height:40, background:'rgba(255,255,255,0.07)',
-                border:'1.5px solid rgba(255,255,255,0.15)', borderRadius:10,
-                color:'#fff', fontSize:13.5, fontWeight:700, fontFamily:'inherit',
-                padding:'0 36px 0 14px', cursor:'pointer', outline:'none',
-                appearance:'none', transition:'border-color .15s',
+                width:'100%', height:42,
+                background: filterOpen ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.06)',
+                border: `1.5px solid ${filterOpen ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.12)'}`,
+                borderRadius:12, padding:'0 14px', cursor:'pointer', fontFamily:'inherit',
+                display:'flex', alignItems:'center', gap:9, transition:'all .15s',
               }}
+              onMouseEnter={e => { if (!filterOpen) { e.currentTarget.style.background='rgba(255,255,255,0.09)'; e.currentTarget.style.borderColor='rgba(255,255,255,0.2)'; } }}
+              onMouseLeave={e => { if (!filterOpen) { e.currentTarget.style.background='rgba(255,255,255,0.06)'; e.currentTarget.style.borderColor='rgba(255,255,255,0.12)'; } }}
             >
-              <option value="All" style={{ background:'#0f172a' }}>📂 All Categories</option>
-              {allCategories.map(cat => (
-                <option key={cat} value={cat} style={{ background:'#0f172a' }}>
-                  {cat}
-                </option>
-              ))}
-            </select>
-            <span style={{ position:'absolute', right:12, top:'50%', transform:'translateY(-50%)', pointerEvents:'none', color:'rgba(255,255,255,0.5)', fontSize:12 }}>▼</span>
+              <span style={{ fontSize:16, flexShrink:0 }}>{(CAT_META[selectedCat]||CAT_META.All).icon}</span>
+              <span style={{ flex:1, textAlign:'left', fontSize:13.5, fontWeight:700, color: selectedCat==='All'?'rgba(255,255,255,0.75)':'#fff' }}>
+                {selectedCat === 'All' ? 'All Categories' : selectedCat}
+              </span>
+              {selectedCat !== 'All' && (
+                <span style={{
+                  background: (CAT_META[selectedCat]||CAT_META.All).bg,
+                  color: (CAT_META[selectedCat]||CAT_META.All).color,
+                  borderRadius:20, padding:'2px 8px', fontSize:11, fontWeight:800,
+                }}>
+                  {fcEvents.length}
+                </span>
+              )}
+              <span style={{ fontSize:10, color:'rgba(255,255,255,0.4)', transition:'transform .2s', transform: filterOpen?'rotate(180deg)':'rotate(0)', flexShrink:0 }}>▼</span>
+            </button>
+
+            {/* Dropdown menu */}
+            {filterOpen && (
+              <div onClick={e => e.stopPropagation()} style={{
+                position:'absolute', top:48, left:0, zIndex:9999, width:240,
+                background:'linear-gradient(180deg,#0f1832,#0a1020)',
+                border:'1px solid rgba(255,255,255,0.1)', borderRadius:16, overflow:'hidden',
+                boxShadow:'0 24px 60px rgba(0,0,0,0.75)',
+                animation:'dropIn .16s ease',
+              }}>
+                {/* All Categories */}
+                {['All', ...allCategories].map((cat, idx) => {
+                  const meta = CAT_META[cat] || { icon:'📁', color:'#94a3b8', bg:'rgba(148,163,184,0.1)' };
+                  const isActive = selectedCat === cat;
+                  const count = cat === 'All'
+                    ? calItems.filter(it => it.startDate).length
+                    : calItems.filter(it => it.startDate && it.category === cat).length;
+                  return (
+                    <button
+                      key={cat}
+                      onClick={() => { setSelectedCat(cat); setFilterOpen(false); }}
+                      style={{
+                        width:'100%', display:'flex', alignItems:'center', gap:11,
+                        padding:'11px 16px',
+                        background: isActive ? `${meta.bg}` : 'transparent',
+                        border:'none', borderBottom: idx < allCategories.length ? '1px solid rgba(255,255,255,0.04)' : 'none',
+                        cursor:'pointer', fontFamily:'inherit', transition:'background .13s',
+                        borderLeft: isActive ? `3px solid ${meta.color}` : '3px solid transparent',
+                      }}
+                      onMouseEnter={e => { if (!isActive) e.currentTarget.style.background='rgba(255,255,255,0.05)'; }}
+                      onMouseLeave={e => { if (!isActive) e.currentTarget.style.background='transparent'; }}
+                    >
+                      {/* Icon circle */}
+                      <div style={{ width:32, height:32, borderRadius:9, background: isActive ? meta.bg : 'rgba(255,255,255,0.05)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:15, flexShrink:0, border: isActive ? `1px solid ${meta.color}40` : '1px solid rgba(255,255,255,0.06)' }}>
+                        {meta.icon}
+                      </div>
+                      {/* Label */}
+                      <div style={{ flex:1, textAlign:'left' }}>
+                        <div style={{ fontSize:13.5, fontWeight: isActive ? 800 : 600, color: isActive ? '#fff' : 'rgba(255,255,255,0.75)', lineHeight:1.2 }}>{cat === 'All' ? 'All Categories' : cat}</div>
+                        {cat !== 'All' && <div style={{ fontSize:11, color:'rgba(255,255,255,0.35)', marginTop:1 }}>{cat.includes('Summit')||cat.includes('Workshop')||cat.includes('Seminar')||cat.includes('Funding') ? 'Event' : 'Training'}</div>}
+                      </div>
+                      {/* Count badge */}
+                      <span style={{
+                        background: isActive ? meta.bg : 'rgba(255,255,255,0.06)',
+                        color: isActive ? meta.color : 'rgba(255,255,255,0.45)',
+                        border: isActive ? `1px solid ${meta.color}40` : '1px solid rgba(255,255,255,0.08)',
+                        borderRadius:20, padding:'2px 9px', fontSize:12, fontWeight:800, flexShrink:0,
+                      }}>{count}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+            {/* Backdrop close */}
+            {filterOpen && <div onClick={() => setFilterOpen(false)} style={{ position:'fixed', inset:0, zIndex:9998 }} />}
           </div>
 
           {/* Date Picker Shortcut */}
           <div style={{ position:'relative' }}>
+            {/* ── Premium Date Picker Trigger Button ── */}
             <button
-              onClick={() => setDatePickerOpen(o => !o)}
-              style={{ height:40, background: datePickerOpen?'rgba(249,115,22,0.2)':'rgba(255,255,255,0.07)', border:`1.5px solid ${datePickerOpen?'rgba(249,115,22,0.5)':'rgba(255,255,255,0.15)'}`, borderRadius:10, padding:'0 16px', color: datePickerOpen?'#f97316':'rgba(255,255,255,0.75)', fontSize:13.5, fontWeight:700, cursor:'pointer', fontFamily:'inherit', display:'flex', alignItems:'center', gap:7, transition:'all .15s' }}
+              onClick={() => { setPickerYear(pickerYear); setDatePickerOpen(o => !o); }}
+              style={{
+                height:42,
+                background: datePickerOpen
+                  ? 'linear-gradient(135deg,rgba(249,115,22,0.25),rgba(225,29,72,0.18))'
+                  : 'rgba(255,255,255,0.07)',
+                border: `1.5px solid ${datePickerOpen ? 'rgba(249,115,22,0.55)' : 'rgba(255,255,255,0.14)'}`,
+                borderRadius:12, padding:'0 18px',
+                color: datePickerOpen ? '#f97316' : 'rgba(255,255,255,0.8)',
+                fontSize:14, fontWeight:800, cursor:'pointer', fontFamily:'inherit',
+                display:'flex', alignItems:'center', gap:8, transition:'all .18s',
+                boxShadow: datePickerOpen ? '0 4px 20px rgba(249,115,22,0.25)' : 'none',
+              }}
+              onMouseEnter={e => { if (!datePickerOpen) { e.currentTarget.style.background='rgba(255,255,255,0.11)'; e.currentTarget.style.borderColor='rgba(255,255,255,0.25)'; } }}
+              onMouseLeave={e => { if (!datePickerOpen) { e.currentTarget.style.background='rgba(255,255,255,0.07)'; e.currentTarget.style.borderColor='rgba(255,255,255,0.14)'; } }}
             >
-              📅 {MONTH_NAMES[pickerMonth]?.slice(0,3)} {pickerYear} <span style={{ fontSize:10 }}>▼</span>
+              <span style={{ fontSize:16 }}>📅</span>
+              <span>{MONTH_NAMES[pickerMonth]?.slice(0,3)} {pickerYear}</span>
+              <span style={{ fontSize:9, opacity:.7, transition:'transform .2s', transform: datePickerOpen ? 'rotate(180deg)' : 'rotate(0)' }}>▼</span>
             </button>
 
+            {/* ── Premium Date Picker Dropdown ── */}
             {datePickerOpen && (
-              <div onClick={e => e.stopPropagation()} style={{ position:'absolute', top:46, left:0, zIndex:9999, background:'#0d1424', border:'1px solid rgba(255,255,255,0.15)', borderRadius:16, padding:'16px', boxShadow:'0 20px 60px rgba(0,0,0,0.7)', minWidth:270 }}>
-                {/* Year nav */}
-                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:14 }}>
-                  <button onClick={() => setPickerYear(y => Math.max(2020, y-1))} style={{ background:'rgba(255,255,255,0.07)', border:'none', borderRadius:8, width:32, height:32, color:'#fff', fontSize:16, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>‹</button>
-                  <span style={{ color:'#fff', fontWeight:900, fontSize:16, minWidth:50, textAlign:'center' }}>{pickerYear}</span>
-                  <button onClick={() => setPickerYear(y => Math.min(2035, y+1))} style={{ background:'rgba(255,255,255,0.07)', border:'none', borderRadius:8, width:32, height:32, color:'#fff', fontSize:16, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>›</button>
+              <div onClick={e => e.stopPropagation()} style={{
+                position:'absolute', top:50, left:0, zIndex:9999,
+                background:'linear-gradient(180deg,#0f1832,#0a1020)',
+                border:'1px solid rgba(255,255,255,0.12)',
+                borderRadius:20, overflow:'hidden',
+                boxShadow:'0 32px 80px rgba(0,0,0,0.8), 0 0 0 1px rgba(249,115,22,0.08)',
+                width:300,
+                animation:'dropIn .18s ease',
+              }}>
+                {/* Header bar */}
+                <div style={{ background:'linear-gradient(135deg,rgba(249,115,22,0.15),rgba(225,29,72,0.1))', borderBottom:'1px solid rgba(255,255,255,0.07)', padding:'12px 16px', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+                  <div>
+                    <div style={{ fontSize:10, fontWeight:800, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', letterSpacing:'1px', marginBottom:2 }}>
+                      {pickerView === 'day' ? `Select Day — ${MONTH_NAMES[pickerMonth].slice(0,3)} ${pickerYear}` : 'Navigate to'}
+                    </div>
+                    <div style={{ fontSize:15, fontWeight:900, color:'#fff', letterSpacing:'-0.3px' }}>
+                      {pickerView === 'day' ? MONTH_NAMES[pickerMonth] + ' ' + pickerYear : MONTH_NAMES[pickerMonth] + ' ' + pickerYear}
+                    </div>
+                  </div>
+                  {pickerView === 'day' && (
+                    <button onClick={() => setPickerView('month')} style={{ background:'rgba(255,255,255,0.1)', border:'1px solid rgba(255,255,255,0.18)', borderRadius:9, padding:'6px 12px', color:'rgba(255,255,255,0.75)', fontSize:12, fontWeight:700, cursor:'pointer', fontFamily:'inherit', display:'flex', alignItems:'center', gap:5, transition:'all .13s' }}
+                      onMouseEnter={e => { e.currentTarget.style.background='rgba(255,255,255,0.17)'; e.currentTarget.style.color='#fff'; }}
+                      onMouseLeave={e => { e.currentTarget.style.background='rgba(255,255,255,0.10)'; e.currentTarget.style.color='rgba(255,255,255,0.75)'; }}
+                    >‹ Back</button>
+                  )}
                 </div>
-                {/* Month grid */}
-                <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:6, marginBottom:10 }}>
-                  {MONTH_NAMES.map((mn, mi) => {
-                    const isSel = mi === pickerMonth && pickerYear === new Date().getFullYear() ? false : (mi === pickerMonth);
-                    const isToday = mi === new Date().getMonth() && pickerYear === new Date().getFullYear();
-                    return (
-                      <button key={mi} onClick={() => jumpToDate(pickerYear, mi)} style={{
-                        padding:'8px 4px', borderRadius:9, border:'none', fontSize:12.5, fontWeight:700,
-                        cursor:'pointer', fontFamily:'inherit', transition:'all .13s',
-                        background: isSel ? 'linear-gradient(90deg,#f97316,#e11d48)' : isToday ? 'rgba(249,115,22,0.18)' : 'rgba(255,255,255,0.05)',
-                        color: isSel ? '#fff' : isToday ? '#fb923c' : 'rgba(255,255,255,0.75)',
-                        boxShadow: isSel ? '0 3px 10px rgba(249,115,22,0.4)' : 'none',
-                      }}
-                      onMouseEnter={e => { if (!isSel) e.currentTarget.style.background='rgba(255,255,255,0.12)'; }}
-                      onMouseLeave={e => { if (!isSel) e.currentTarget.style.background = isToday?'rgba(249,115,22,0.18)':'rgba(255,255,255,0.05)'; }}
-                      >{mn.slice(0,3)}</button>
-                    );
-                  })}
-                </div>
-                <div style={{ display:'flex', gap:8 }}>
-                  <button onClick={jumpToToday} style={{ flex:1, background:'rgba(249,115,22,0.12)', border:'1px solid rgba(249,115,22,0.3)', borderRadius:9, padding:'8px', color:'#fb923c', fontSize:12.5, fontWeight:800, cursor:'pointer', fontFamily:'inherit' }}>Today</button>
-                  <button onClick={() => setDatePickerOpen(false)} style={{ flex:1, background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:9, padding:'8px', color:'rgba(255,255,255,0.55)', fontSize:12.5, fontWeight:700, cursor:'pointer', fontFamily:'inherit' }}>Close</button>
+
+                <div style={{ padding:'14px' }}>
+                  {/* Year navigation */}
+                  <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:16, background:'rgba(255,255,255,0.04)', borderRadius:12, padding:'6px 8px' }}>
+                    <button
+                      onClick={() => setPickerYear(y => Math.max(2020, y-1))}
+                      disabled={pickerYear <= 2020}
+                      style={{ width:36, height:36, borderRadius:10, border:'none', background: pickerYear<=2020?'transparent':'rgba(255,255,255,0.07)', color: pickerYear<=2020?'rgba(255,255,255,0.15)':'rgba(255,255,255,0.8)', fontSize:18, cursor: pickerYear<=2020?'not-allowed':'pointer', display:'flex', alignItems:'center', justifyContent:'center', transition:'all .14s' }}
+                      onMouseEnter={e => { if (pickerYear>2020) e.currentTarget.style.background='rgba(249,115,22,0.15)'; }}
+                      onMouseLeave={e => { if (pickerYear>2020) e.currentTarget.style.background='rgba(255,255,255,0.07)'; }}
+                    >‹</button>
+                    <div style={{ textAlign:'center' }}>
+                      <div style={{ color:'#fff', fontWeight:900, fontSize:22, letterSpacing:'-0.5px', lineHeight:1 }}>{pickerYear}</div>
+                      <div style={{ color:'rgba(255,255,255,0.35)', fontSize:10.5, fontWeight:600, marginTop:2 }}>{pickerYear === new Date().getFullYear() ? 'This year' : pickerYear < new Date().getFullYear() ? `${new Date().getFullYear() - pickerYear}y ago` : `in ${pickerYear - new Date().getFullYear()}y`}</div>
+                    </div>
+                    <button
+                      onClick={() => setPickerYear(y => Math.min(2035, y+1))}
+                      disabled={pickerYear >= 2035}
+                      style={{ width:36, height:36, borderRadius:10, border:'none', background: pickerYear>=2035?'transparent':'rgba(255,255,255,0.07)', color: pickerYear>=2035?'rgba(255,255,255,0.15)':'rgba(255,255,255,0.8)', fontSize:18, cursor: pickerYear>=2035?'not-allowed':'pointer', display:'flex', alignItems:'center', justifyContent:'center', transition:'all .14s' }}
+                      onMouseEnter={e => { if (pickerYear<2035) e.currentTarget.style.background='rgba(249,115,22,0.15)'; }}
+                      onMouseLeave={e => { if (pickerYear<2035) e.currentTarget.style.background='rgba(255,255,255,0.07)'; }}
+                    >›</button>
+                  </div>
+
+                  {pickerView === 'month' ? (
+                    /* ── Month grid 4×3 ── */
+                    <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:5, marginBottom:14 }}>
+                      {MONTH_NAMES.map((mn, mi) => {
+                        const isSelected = mi === pickerMonth;
+                        const isCurrentMonth = mi === new Date().getMonth() && pickerYear === new Date().getFullYear();
+                        const isPast = new Date(pickerYear, mi, 1) < new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+                        return (
+                          <button key={mi} onClick={() => jumpToDate(pickerYear, mi)} style={{
+                            padding:'10px 4px', borderRadius:10, border: isCurrentMonth&&!isSelected ? '1.5px solid rgba(249,115,22,0.4)' : '1.5px solid transparent',
+                            fontSize:12.5, fontWeight: isSelected||isCurrentMonth ? 800 : 600,
+                            cursor:'pointer', fontFamily:'inherit', transition:'all .14s',
+                            background: isSelected ? 'linear-gradient(135deg,#f97316,#e11d48)' : isCurrentMonth ? 'rgba(249,115,22,0.1)' : 'rgba(255,255,255,0.04)',
+                            color: isSelected ? '#fff' : isCurrentMonth ? '#fb923c' : isPast ? 'rgba(255,255,255,0.38)' : 'rgba(255,255,255,0.78)',
+                            boxShadow: isSelected ? '0 4px 14px rgba(249,115,22,0.45)' : 'none',
+                            transform: isSelected ? 'scale(1.05)' : 'scale(1)',
+                          }}
+                          onMouseEnter={e => { if (!isSelected) { e.currentTarget.style.background='rgba(255,255,255,0.12)'; e.currentTarget.style.color='#fff'; e.currentTarget.style.transform='scale(1.04)'; } }}
+                          onMouseLeave={e => { if (!isSelected) { e.currentTarget.style.background = isCurrentMonth?'rgba(249,115,22,0.1)':'rgba(255,255,255,0.04)'; e.currentTarget.style.color = isCurrentMonth?'#fb923c':isPast?'rgba(255,255,255,0.38)':'rgba(255,255,255,0.78)'; e.currentTarget.style.transform='scale(1)'; } }}
+                          >{mn.slice(0,3)}</button>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    /* ── Day grid (Sun-Sat header + day numbers) ── */
+                    (() => {
+                      const today = new Date();
+                      const daysInMonth = new Date(pickerYear, pickerMonth + 1, 0).getDate();
+                      const firstDow = new Date(pickerYear, pickerMonth, 1).getDay(); // 0=Sun
+                      const cells = [];
+                      for (let i = 0; i < firstDow; i++) cells.push(null);
+                      for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+                      while (cells.length % 7 !== 0) cells.push(null);
+
+                      return (
+                        <div style={{ marginBottom:14 }}>
+                          {/* Day-of-week headers */}
+                          <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', marginBottom:4 }}>
+                            {['Su','Mo','Tu','We','Th','Fr','Sa'].map(d => (
+                              <div key={d} style={{ textAlign:'center', fontSize:10.5, fontWeight:700, color:'rgba(255,255,255,0.3)', padding:'3px 0' }}>{d}</div>
+                            ))}
+                          </div>
+                          {/* Day cells */}
+                          <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', gap:2 }}>
+                            {cells.map((d, i) => {
+                              if (!d) return <div key={i} />;
+                              const isToday = d === today.getDate() && pickerMonth === today.getMonth() && pickerYear === today.getFullYear();
+                              const isPast = new Date(pickerYear, pickerMonth, d) < new Date(today.getFullYear(), today.getMonth(), today.getDate());
+                              return (
+                                <button key={i} onClick={() => jumpToDay(d)} style={{
+                                  width:'100%', aspectRatio:'1', borderRadius:8, border:'none',
+                                  fontSize:12, fontWeight: isToday ? 900 : 600,
+                                  cursor:'pointer', fontFamily:'inherit', transition:'all .13s',
+                                  background: isToday ? 'linear-gradient(135deg,#f97316,#e11d48)' : 'rgba(255,255,255,0.04)',
+                                  color: isToday ? '#fff' : isPast ? 'rgba(255,255,255,0.28)' : 'rgba(255,255,255,0.82)',
+                                  boxShadow: isToday ? '0 3px 10px rgba(249,115,22,0.5)' : 'none',
+                                }}
+                                onMouseEnter={e => { if (!isToday) { e.currentTarget.style.background='rgba(249,115,22,0.22)'; e.currentTarget.style.color='#f97316'; e.currentTarget.style.fontWeight='800'; } }}
+                                onMouseLeave={e => { if (!isToday) { e.currentTarget.style.background='rgba(255,255,255,0.04)'; e.currentTarget.style.color = isPast?'rgba(255,255,255,0.28)':'rgba(255,255,255,0.82)'; e.currentTarget.style.fontWeight='600'; } }}
+                                >{d}</button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })()
+                  )}
+
+                  {/* Footer actions */}
+                  <div style={{ display:'flex', gap:8 }}>
+                    <button
+                      onClick={jumpToToday}
+                      style={{ flex:1, background:'linear-gradient(90deg,#f97316,#e11d48)', border:'none', borderRadius:11, padding:'10px', color:'#fff', fontSize:13, fontWeight:800, cursor:'pointer', fontFamily:'inherit', boxShadow:'0 4px 14px rgba(249,115,22,0.35)', transition:'all .15s' }}
+                      onMouseEnter={e => { e.currentTarget.style.opacity='.85'; e.currentTarget.style.transform='translateY(-1px)'; }}
+                      onMouseLeave={e => { e.currentTarget.style.opacity='1'; e.currentTarget.style.transform='none'; }}
+                    >📍 Today</button>
+                    <button
+                      onClick={() => setDatePickerOpen(false)}
+                      style={{ flex:1, background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:11, padding:'10px', color:'rgba(255,255,255,0.6)', fontSize:13, fontWeight:700, cursor:'pointer', fontFamily:'inherit', transition:'all .15s' }}
+                      onMouseEnter={e => { e.currentTarget.style.background='rgba(255,255,255,0.1)'; e.currentTarget.style.color='#fff'; }}
+                      onMouseLeave={e => { e.currentTarget.style.background='rgba(255,255,255,0.06)'; e.currentTarget.style.color='rgba(255,255,255,0.6)'; }}
+                    >✕ Close</button>
+                  </div>
                 </div>
               </div>
             )}
@@ -1755,7 +2063,13 @@ function CalendarTab({ user }) {
             </div>
           </div>
         ) : (
-          <div className="fc-dark-theme" style={{ background: '#0d1424', borderRadius: 12, padding: '4px', border: '1px solid rgba(255,255,255,0.05)' }}>
+          /* ── FullCalendar with vibrant dark theme ── */
+          <div className="fc-dark-theme" style={{
+            background: 'linear-gradient(180deg,#08112a 0%,#0d1424 100%)',
+            borderRadius: 16, padding: '12px 8px 8px',
+            border: '1px solid rgba(255,255,255,0.07)',
+            boxShadow: '0 8px 40px rgba(0,0,0,0.4)',
+          }}>
             <FullCalendar
               ref={calendarRef}
               plugins={[timeGridPlugin, dayGridPlugin, interactionPlugin]}
@@ -1763,46 +2077,73 @@ function CalendarTab({ user }) {
               headerToolbar={{
                 left: 'prev,next today',
                 center: 'title',
-                right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                right: 'dayGridMonth,timeGridWeek,timeGridDay',
               }}
               slotMinTime="08:00:00"
-              slotMaxTime="18:00:00"
+              slotMaxTime="20:00:00"
               allDaySlot={false}
               events={fcEvents}
-              height="85vh"
+              height="80vh"
               eventDisplay="block"
-              nowIndicator={true} /* <--- ADD THIS LINE HERE */
-              eventClick={(info) => setDetail(info.event.extendedProps.originalData)}
+              nowIndicator={true}
+              dayMaxEvents={3}
+              moreLinkClick="popover"
+              /* Custom event content — icon prefix + title */
+              eventContent={(arg) => {
+                const it = arg.event.extendedProps.originalData;
+                const icon = it._type === 'event' ? '📅' : '🎓';
+                return (
+                  <div style={{ display:'flex', alignItems:'center', gap:4, overflow:'hidden', padding:'1px 2px' }}>
+                    <span style={{ fontSize:10, flexShrink:0 }}>{icon}</span>
+                    <span style={{ fontSize:11.5, fontWeight:800, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', lineHeight:1.3 }}>
+                      {arg.event.title}
+                    </span>
+                  </div>
+                );
+              }}
+              eventClick={(info) => {
+                setDetail(info.event.extendedProps.originalData);
+                info.jsEvent.preventDefault();
+              }}
+              dateClick={(info) => {
+                /* Clicking a date cell focuses the day view */
+                const calApi = calendarRef.current?.getApi();
+                if (calApi) { calApi.changeView('timeGridDay', info.date); }
+              }}
               eventDidMount={(info) => {
                 const it = info.event.extendedProps.originalData;
                 const isEv = it._type === 'event';
-                const detail1 = isEv ? `📍 ${it.venue}` : `🏛 ${it.org}`;
-                const detail2 = isEv ? `👥 ${it.enrolled}/${it.total} seats` : `⏱ ${it.duration} · 📊 ${it.level}`;
+                const icon = isEv ? '📅' : '🎓';
+                const d1   = isEv ? `📍 ${it.venue}` : `🏛 ${it.org}`;
+                const d2   = isEv ? `👥 ${it.enrolled}/${it.total} seats` : `⏱ ${it.duration} · 📊 ${it.level}`;
+                const isConflict = conflictIds.has(it.id);
 
                 tippy(info.el, {
                   content: `
-                    <div style="text-align: left; font-family: inherit;">
-                      <div style="font-size: 10px; font-weight: 800; color: #f97316; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;">
-                        ${it.category}
+                    <div style="font-family:inherit;min-width:220px">
+                      <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+                        <span style="font-size:14px">${icon}</span>
+                        <span style="font-size:10px;font-weight:800;color:#f97316;text-transform:uppercase;letter-spacing:.5px">${it.category}</span>
+                        ${isConflict ? '<span style="font-size:10px;background:rgba(245,158,11,0.2);color:#fbbf24;border-radius:5px;padding:1px 6px;font-weight:800">⚠ Conflict</span>' : ''}
                       </div>
-                      <div style="font-size: 13.5px; font-weight: 800; color: #ffffff; margin-bottom: 6px; line-height: 1.3;">
-                        ${it.title}
+                      <div style="font-size:14px;font-weight:900;color:#fff;margin-bottom:8px;line-height:1.35">${it.title}</div>
+                      <div style="font-size:12px;color:rgba(255,255,255,0.65);margin-bottom:3px">${d1}</div>
+                      <div style="font-size:12px;color:rgba(255,255,255,0.65);margin-bottom:10px">${d2}</div>
+                      <div style="font-size:11px;font-weight:700;color:#f97316;background:rgba(249,115,22,0.1);border-radius:6px;padding:5px 8px;text-align:center">
+                        Click to view details →
                       </div>
-                      <div style="font-size: 11.5px; color: rgba(255,255,255,0.7); margin-bottom: 3px;">
-                        ${detail1}
-                      </div>
-                      <div style="font-size: 11.5px; color: rgba(255,255,255,0.7);">
-                        ${detail2}
-                      </div>
-                    </div>
-                  `,
+                    </div>`,
                   allowHTML: true,
                   theme: 'dasig',
-                  placement: 'top',
+                  placement: 'auto',
                   animation: 'shift-away',
                   arrow: true,
-                  delay: [150, 0], 
+                  delay: [200, 0],
+                  maxWidth: 280,
                 });
+
+                /* Cursor pointer */
+                info.el.style.cursor = 'pointer';
               }}
             />
           </div>

@@ -2,107 +2,247 @@
 @tailwind components;
 @tailwind utilities;
 
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
-body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
-  background: #f8fafc;
-  color: #0f172a;
-}
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; background: #f8fafc; color: #0f172a; }
+#root { width: 100%; min-height: 100vh; }
 
-#root {
-  width: 100%;
-  min-height: 100vh;
-}
+.grad-text { background: linear-gradient(90deg,#f97316,#e11d48); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+.grad-btn  { background: linear-gradient(90deg,#f97316,#e11d48); }
+.grad-blue { background: linear-gradient(135deg,#001d5c,#1a56db 55%,#4f46e5); }
 
-.grad-text {
-  background: linear-gradient(90deg, #f97316, #e11d48);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
+.scrollbar-hide::-webkit-scrollbar { display:none; }
+.scrollbar-hide { -ms-overflow-style:none; scrollbar-width:none; }
 
-.grad-btn {
-  background: linear-gradient(90deg, #f97316, #e11d48);
-}
+/* ═══════════════════════════════════════════
+   FULLCALENDAR — Complete Dark Theme Redesign
+═══════════════════════════════════════════ */
 
-.grad-blue {
-  background: linear-gradient(135deg, #001d5c, #1a56db 55%, #4f46e5);
-}
+/* Base */
+.fc-dark-theme .fc { color:#e2e8f0; font-family:inherit; }
 
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
-}
-.scrollbar-hide {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-/* --- FullCalendar Dark Theme Overrides --- */
-.fc-dark-theme .fc {
-  color: #e2e8f0;
-}
-.fc-dark-theme .fc-theme-standard td, 
-.fc-dark-theme .fc-theme-standard th, 
+/* Grid borders */
+.fc-dark-theme .fc-theme-standard td,
+.fc-dark-theme .fc-theme-standard th,
 .fc-dark-theme .fc-theme-standard .fc-scrollgrid {
-  border-color: rgba(255,255,255,0.1);
+  border-color: rgba(255,255,255,0.06);
 }
-.fc-dark-theme .fc-timegrid-slot {
-  border-color: rgba(255,255,255,0.05);
+.fc-dark-theme .fc-timegrid-slot     { border-color: rgba(255,255,255,0.03); }
+.fc-dark-theme .fc-scrollgrid        { border-color: rgba(255,255,255,0.06) !important; }
+.fc-dark-theme .fc-scrollgrid-section > * { border-color: rgba(255,255,255,0.06) !important; }
+
+/* Day cells */
+.fc-dark-theme .fc-daygrid-day {
+  background: transparent;
+  transition: background .15s;
 }
-.fc-dark-theme .fc-button-primary {
-  background-color: rgba(255,255,255,0.08) !important;
-  border-color: rgba(255,255,255,0.15) !important;
-  color: #e2e8f0 !important;
-  text-transform: capitalize;
+.fc-dark-theme .fc-daygrid-day:hover {
+  background: rgba(255,255,255,0.03) !important;
+  cursor: pointer;
 }
-.fc-dark-theme .fc-button-primary:hover {
-  background-color: rgba(249,115,22,0.8) !important; /* DASIG Orange */
-  border-color: #f97316 !important;
+.fc-dark-theme .fc-daygrid-day.fc-day-today {
+  background: rgba(249,115,22,0.08) !important;
 }
-.fc-dark-theme .fc-button-active {
-  background-color: #f97316 !important;
-  border-color: #ea580c !important;
+.fc-dark-theme .fc-daygrid-day.fc-day-today .fc-daygrid-day-number {
+  background: #f97316;
+  color: #fff !important;
+  border-radius: 50%;
+  width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 900;
+}
+
+/* Day numbers */
+.fc-dark-theme .fc-daygrid-day-number {
+  color: rgba(255,255,255,0.7) !important;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 10px;
+  transition: color .15s;
+}
+.fc-dark-theme .fc-daygrid-day:hover .fc-daygrid-day-number {
+  color: #f97316 !important;
+}
+.fc-dark-theme .fc-day-other .fc-daygrid-day-number {
+  color: rgba(255,255,255,0.2) !important;
+}
+
+/* Column headers (Sun Mon Tue…) */
+.fc-dark-theme .fc-col-header-cell {
+  background: rgba(255,255,255,0.03);
+  border-bottom: 1px solid rgba(255,255,255,0.08) !important;
 }
 .fc-dark-theme .fc-col-header-cell-cushion {
-  color: #94a3b8;
-  padding: 8px;
-  font-weight: 700;
+  color: rgba(255,255,255,0.6) !important;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  padding: 10px 8px;
+  text-decoration: none !important;
 }
-.fc-dark-theme .fc-timegrid-axis-cushion, 
-.fc-dark-theme .fc-timegrid-slot-label-cushion {
-  color: #64748b;
-}
-/* --- Tippy.js Custom Dark Theme for DASIG --- */
-.tippy-box[data-theme~='dasig'] {
-  background-color: #0f172a;
-  border: 1px solid rgba(255,255,255,0.15);
-  border-radius: 12px;
-  box-shadow: 0 16px 40px rgba(0,0,0,0.6);
-  backdrop-filter: blur(8px);
-}
-.tippy-box[data-theme~='dasig'][data-placement^='top'] > .tippy-arrow::before {
-  border-top-color: rgba(255,255,255,0.15);
-}
-.tippy-box[data-theme~='dasig'][data-placement^='bottom'] > .tippy-arrow::before {
-  border-bottom-color: rgba(255,255,255,0.15);
-}
-.tippy-content {
-  padding: 8px 10px;
-}
-/* --- FullCalendar Current Time Indicator Styling --- */
-.fc-dark-theme .fc-now-indicator-line {
-  border-color: #f97316; /* DASIG Orange */
-  border-width: 2px;
-  box-shadow: 0 0 8px rgba(249,115,22,0.8);
-  z-index: 10;
+.fc-dark-theme .fc-col-header-cell.fc-day-sat .fc-col-header-cell-cushion,
+.fc-dark-theme .fc-col-header-cell.fc-day-sun .fc-col-header-cell-cushion {
+  color: rgba(255,255,255,0.3) !important;
 }
 
-.fc-dark-theme .fc-now-indicator-arrow {
-  border-color: transparent transparent transparent #f97316;
-  border-width: 6px 0 6px 6px;
-  margin-top: -5px;
+/* Navigation buttons */
+.fc-dark-theme .fc-button-primary {
+  background: rgba(255,255,255,0.07) !important;
+  border: 1px solid rgba(255,255,255,0.14) !important;
+  color: rgba(255,255,255,0.8) !important;
+  border-radius: 9px !important;
+  font-weight: 700 !important;
+  font-size: 13px !important;
+  padding: 7px 14px !important;
+  transition: all .15s !important;
+  text-transform: capitalize;
+  letter-spacing: .2px;
 }
+.fc-dark-theme .fc-button-primary:hover {
+  background: rgba(249,115,22,0.2) !important;
+  border-color: rgba(249,115,22,0.5) !important;
+  color: #f97316 !important;
+  transform: translateY(-1px);
+}
+.fc-dark-theme .fc-button-primary:focus { box-shadow: none !important; }
+.fc-dark-theme .fc-button-active,
+.fc-dark-theme .fc-button-primary:not(:disabled).fc-button-active {
+  background: linear-gradient(90deg,#f97316,#e11d48) !important;
+  border-color: #f97316 !important;
+  color: #fff !important;
+  box-shadow: 0 4px 14px rgba(249,115,22,0.4) !important;
+}
+.fc-dark-theme .fc-button-group { gap: 4px; }
+.fc-dark-theme .fc-button-group .fc-button { border-radius: 9px !important; }
+
+/* Title (June 2026) */
+.fc-dark-theme .fc-toolbar-title {
+  color: #fff !important;
+  font-size: 20px !important;
+  font-weight: 900 !important;
+  letter-spacing: -.3px;
+}
+
+/* Toolbar */
+.fc-dark-theme .fc-header-toolbar { padding: 10px 4px 14px; gap: 12px; }
+
+/* Events — core pill style */
+.fc-dark-theme .fc-event {
+  border-radius: 8px !important;
+  border: none !important;
+  padding: 3px 8px !important;
+  cursor: pointer !important;
+  transition: transform .15s, box-shadow .15s !important;
+  font-weight: 700 !important;
+}
+.fc-dark-theme .fc-event:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.4) !important;
+  filter: brightness(1.15) !important;
+}
+.fc-dark-theme .fc-event-title {
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.fc-dark-theme .fc-event-time {
+  font-size: 10.5px !important;
+  font-weight: 800 !important;
+  opacity: .85;
+  margin-right: 4px;
+}
+
+/* Multi-day event bar */
+.fc-dark-theme .fc-daygrid-event-harness { margin-bottom: 3px !important; }
+.fc-dark-theme .fc-daygrid-event {
+  border-radius: 7px !important;
+  padding: 2px 8px !important;
+  min-height: 24px !important;
+}
+.fc-dark-theme .fc-daygrid-block-event .fc-event-title {
+  padding: 2px 0 !important;
+}
+
+/* "+N more" link */
+.fc-dark-theme .fc-daygrid-more-link {
+  color: #f97316 !important;
+  font-size: 11.5px !important;
+  font-weight: 800 !important;
+  background: rgba(249,115,22,0.1) !important;
+  border-radius: 6px !important;
+  padding: 2px 7px !important;
+  margin-top: 2px !important;
+}
+.fc-dark-theme .fc-daygrid-more-link:hover {
+  background: rgba(249,115,22,0.22) !important;
+}
+
+/* Popover for overflow events */
+.fc-dark-theme .fc-popover {
+  background: #0d1424 !important;
+  border: 1px solid rgba(255,255,255,0.12) !important;
+  border-radius: 14px !important;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.7) !important;
+  overflow: hidden !important;
+}
+.fc-dark-theme .fc-popover-header {
+  background: rgba(255,255,255,0.05) !important;
+  color: #fff !important;
+  font-weight: 800 !important;
+  font-size: 13px !important;
+  padding: 10px 14px !important;
+  border-bottom: 1px solid rgba(255,255,255,0.08) !important;
+}
+.fc-dark-theme .fc-popover-close {
+  color: rgba(255,255,255,0.5) !important;
+  font-size: 16px !important;
+}
+.fc-dark-theme .fc-popover-body { padding: 8px !important; }
+
+/* Time grid */
+.fc-dark-theme .fc-timegrid-axis-cushion,
+.fc-dark-theme .fc-timegrid-slot-label-cushion {
+  color: rgba(255,255,255,0.3) !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+}
+.fc-dark-theme .fc-timegrid-col.fc-day-today {
+  background: rgba(249,115,22,0.04) !important;
+}
+
+/* Now indicator */
+.fc-dark-theme .fc-now-indicator-line {
+  border-color: #f97316 !important;
+  border-width: 2px !important;
+  box-shadow: 0 0 10px rgba(249,115,22,0.7) !important;
+}
+.fc-dark-theme .fc-now-indicator-arrow {
+  border-color: transparent transparent transparent #f97316 !important;
+  border-width: 6px 0 6px 8px !important;
+  margin-top: -6px !important;
+}
+
+/* Scrollbar inside FullCalendar */
+.fc-dark-theme .fc-scroller::-webkit-scrollbar { width: 5px; height: 5px; }
+.fc-dark-theme .fc-scroller::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+.fc-dark-theme .fc-scroller::-webkit-scrollbar-track { background: transparent; }
+
+/* ═══════════════════════════════════════════
+   TIPPY.JS — Dark tooltip theme for DASIG
+═══════════════════════════════════════════ */
+.tippy-box[data-theme~='dasig'] {
+  background: rgba(13,20,36,0.98);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 14px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.7);
+  backdrop-filter: blur(12px);
+  max-width: 280px !important;
+}
+.tippy-box[data-theme~='dasig'][data-placement^='top']    > .tippy-arrow::before { border-top-color:    rgba(255,255,255,0.12); }
+.tippy-box[data-theme~='dasig'][data-placement^='bottom'] > .tippy-arrow::before { border-bottom-color: rgba(255,255,255,0.12); }
+.tippy-box[data-theme~='dasig'][data-placement^='left']   > .tippy-arrow::before { border-left-color:   rgba(255,255,255,0.12); }
+.tippy-box[data-theme~='dasig'][data-placement^='right']  > .tippy-arrow::before { border-right-color:  rgba(255,255,255,0.12); }
+.tippy-content { padding: 12px 14px !important; }

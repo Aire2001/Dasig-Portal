@@ -69,6 +69,10 @@ ALTER TABLE event_registrations ADD COLUMN IF NOT EXISTS attended BOOLEAN NOT NU
 ALTER TABLE users ADD COLUMN IF NOT EXISTS phone TEXT;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url TEXT;
 ALTER TABLE news ADD COLUMN IF NOT EXISTS image_url TEXT;
+ALTER TABLE events ADD COLUMN IF NOT EXISTS start_time TEXT;
+ALTER TABLE events ADD COLUMN IF NOT EXISTS end_time TEXT;
+ALTER TABLE trainings ADD COLUMN IF NOT EXISTS session_start_time TEXT;
+ALTER TABLE trainings ADD COLUMN IF NOT EXISTS session_end_time TEXT;
 
 CREATE TABLE IF NOT EXISTS event_registrations (
   id         BIGSERIAL PRIMARY KEY,
@@ -307,37 +311,66 @@ ON CONFLICT (email) DO NOTHING;
 
 
 -- Events (ON CONFLICT on unique title — safe to re-run)
-INSERT INTO events (title, date, venue, organizer, category, enrolled, total, description)
+INSERT INTO events (title, date, venue, organizer, category, enrolled, total, description, start_time, end_time)
 VALUES
   (
     'DASIG Annual Summit 2026',
     'Jun 18–20, 2026',
     'Cebu City Convention Center',
     'DASIG Consortium', 'Summit', 0, 180,
-    'The annual summit gathers all six Region VII consortium institutions for a three-day innovation forum, research showcase, and networking event in Cebu City.'
+    'The annual summit gathers all six Region VII consortium institutions for a three-day innovation forum, research showcase, and networking event in Cebu City.',
+    '09:00', '17:00'
   ),
   (
     'Advanced Data Analytics Workshop',
     'Jun 5, 2026',
     'Online Zoom',
     'DICT VII', 'Workshop', 0, 40,
-    'Hands-on training in data analytics tools and techniques for public sector professionals.'
+    'Hands-on training in data analytics tools and techniques for public sector professionals.',
+    '08:00', '12:00'
   ),
   (
     'Governance & Innovation in ASEAN',
     'May 30, 2026',
     'University of San Agustin',
     'USan Agustin', 'Seminar', 0, 60,
-    'Regional seminar on governance innovation and ASEAN best practices.'
+    'Regional seminar on governance innovation and ASEAN best practices.',
+    '08:30', '16:30'
   ),
   (
     'DOST SEI Scholarship Information Day',
     'May 27, 2026',
     'UP Visayas',
     'DOST Region VII', 'Funding', 0, 100,
-    'Information session on DOST SEI scholarship programs for DASIG member institution nominees.'
+    'Information session on DOST SEI scholarship programs for DASIG member institution nominees.',
+    '09:00', '12:00'
+  ),
+  -- ⚠️ TEST CONFLICT EVENT — same dates + overlapping time as DASIG Annual Summit 2026
+  -- Register for DASIG Summit first, then try to register for this to see the conflict modal
+  (
+    'Region VII Research Symposium 2026',
+    'Jun 19–20, 2026',
+    'UP Visayas, Iloilo City',
+    'UP Visayas', 'Seminar', 0, 80,
+    'Annual research symposium showcasing faculty and student research outputs across all DASIG member institutions. CONFLICTS with DASIG Annual Summit 2026 (Jun 18-20).',
+    '10:00', '18:00'
+  ),
+  -- ⚠️ TEST CONFLICT 2 — exact same day + time as Advanced Data Analytics Workshop
+  (
+    'ICT Innovation Forum 2026',
+    'Jun 5, 2026',
+    'Cebu Institute of Technology',
+    'DICT VII', 'Workshop', 0, 50,
+    'Forum on ICT innovation and digital transformation for public sector organizations. CONFLICTS with Advanced Data Analytics Workshop (Jun 5, 08:00-12:00).',
+    '09:00', '14:00'
   )
 ON CONFLICT (title) DO NOTHING;
+
+-- Update existing events with times (if they already exist without times)
+UPDATE events SET start_time = '09:00', end_time = '17:00' WHERE title = 'DASIG Annual Summit 2026'     AND start_time IS NULL;
+UPDATE events SET start_time = '08:00', end_time = '12:00' WHERE title = 'Advanced Data Analytics Workshop' AND start_time IS NULL;
+UPDATE events SET start_time = '08:30', end_time = '16:30' WHERE title = 'Governance & Innovation in ASEAN' AND start_time IS NULL;
+UPDATE events SET start_time = '09:00', end_time = '12:00' WHERE title = 'DOST SEI Scholarship Information Day' AND start_time IS NULL;
 
 
 -- News articles (DELETE + fresh INSERT so content is always current)

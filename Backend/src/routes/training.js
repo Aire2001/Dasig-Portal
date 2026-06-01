@@ -41,7 +41,7 @@ router.get('/:id', async (req, res) => {
 
 // POST /api/training — create (ADMIN only)
 router.post('/', verifyToken, requireRole('ADMIN'), async (req, res) => {
-  const { icon, category, title, org, duration, level, total, description, schedule } = req.body;
+  const { icon, category, title, org, duration, level, total, description, schedule, session_start_time, session_end_time } = req.body;
   if (!category || !title || !org || !duration || !level || !total) {
     return res.status(400).json({ error: 'category, title, org, duration, level and total are required' });
   }
@@ -51,6 +51,8 @@ router.post('/', verifyToken, requireRole('ADMIN'), async (req, res) => {
     enrolled: 0, total: Number(total),
     description: description || null,
     schedule: schedule || null,
+    session_start_time: session_start_time || null,
+    session_end_time: session_end_time || null,
   }).select().single();
   if (error) return res.status(500).json({ error: error.message });
   res.status(201).json(data);
@@ -58,7 +60,7 @@ router.post('/', verifyToken, requireRole('ADMIN'), async (req, res) => {
 
 // PUT /api/training/:id — update (ADMIN only)
 router.put('/:id', verifyToken, requireRole('ADMIN'), async (req, res) => {
-  const { icon, category, title, org, duration, level, total, description, schedule } = req.body;
+  const { icon, category, title, org, duration, level, total, description, schedule, session_start_time, session_end_time } = req.body;
   const updates = {};
   if (icon !== undefined) updates.icon = icon;
   if (category !== undefined) updates.category = category;
@@ -69,6 +71,8 @@ router.put('/:id', verifyToken, requireRole('ADMIN'), async (req, res) => {
   if (total !== undefined) updates.total = Number(total);
   if (description !== undefined) updates.description = description;
   if (schedule !== undefined) updates.schedule = schedule || null;
+  if (session_start_time !== undefined) updates.session_start_time = session_start_time || null;
+  if (session_end_time !== undefined) updates.session_end_time = session_end_time || null;
 
   const { data, error } = await supabase.from('trainings').update(updates).eq('id', req.params.id).select().single();
   if (error) return res.status(404).json({ error: 'Training not found' });
