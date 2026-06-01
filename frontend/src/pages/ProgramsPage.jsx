@@ -445,24 +445,38 @@ export default function ProgramsPage() {
         />
         <div style={{ maxWidth: isCalendar ? '95%' : 1120, margin:'0 auto', padding:'0 24px 80px', transition: 'max-width 0.3s ease' }}>
 
-          {/* Tab switcher — only show on Programs (not Calendar) */}
+          {/* Tab switcher — pill segmented control */}
           {!isCalendar && (
-            <div style={{ display:'flex', gap:10, marginBottom:28, flexWrap:'wrap' }}>
-              {[
-                { key:'events',   label:'📅 Events',           sub:'Summits, workshops & seminars' },
-                { key:'training', label:'🎓 Training Programs', sub:'Professional development programs' },
-              ].map(t => (
-                <button key={t.key} onClick={() => setTab(t.key)} style={{
-                  flex:'0 0 auto', minWidth:220, padding:'14px 22px', borderRadius:16,
-                  background: tab === t.key ? 'linear-gradient(135deg,rgba(249,115,22,0.18),rgba(225,29,72,0.12))' : 'rgba(255,255,255,0.04)',
-                  border: tab === t.key ? '1.5px solid rgba(249,115,22,0.45)' : '1.5px solid rgba(255,255,255,0.08)',
-                  cursor:'pointer', fontFamily:'inherit', textAlign:'left', transition:'all .18s',
-                  boxShadow: tab === t.key ? '0 4px 20px rgba(249,115,22,0.13)' : 'none',
-                }}>
-                  <div style={{ fontSize:14.5, fontWeight:800, color: tab === t.key ? '#fb923c' : 'rgba(255,255,255,0.72)', marginBottom:3 }}>{t.label}</div>
-                  <div style={{ fontSize:11.5, color:'rgba(255,255,255,0.35)', fontWeight:500 }}>{t.sub}</div>
-                </button>
-              ))}
+            <div style={{ marginBottom:28 }}>
+              <div style={{
+                display:'inline-flex', background:'rgba(255,255,255,0.05)',
+                border:'1px solid rgba(255,255,255,0.1)', borderRadius:18,
+                padding:5, gap:4, backdropFilter:'blur(12px)',
+              }}>
+                {[
+                  { key:'events',   icon:'📅', label:'Events',           sub:'Summits, workshops & seminars' },
+                  { key:'training', icon:'🎓', label:'Training Programs', sub:'Professional development' },
+                ].map(t => {
+                  const isActive = tab === t.key;
+                  return (
+                    <button key={t.key} onClick={() => setTab(t.key)} style={{
+                      display:'flex', alignItems:'center', gap:10,
+                      padding:'10px 20px', borderRadius:14,
+                      background: isActive ? 'linear-gradient(135deg,#f97316,#e11d48)' : 'transparent',
+                      border:'none', cursor:'pointer', fontFamily:'inherit',
+                      transition:'all .2s cubic-bezier(.34,1.56,.64,1)',
+                      boxShadow: isActive ? '0 4px 18px rgba(249,115,22,0.35)' : 'none',
+                      transform: isActive ? 'scale(1.02)' : 'scale(1)',
+                    }}>
+                      <span style={{ fontSize:16 }}>{t.icon}</span>
+                      <div style={{ textAlign:'left' }}>
+                        <div style={{ fontSize:13.5, fontWeight:800, color: isActive ? '#fff' : 'rgba(255,255,255,0.6)', lineHeight:1.2, whiteSpace:'nowrap' }}>{t.label}</div>
+                        <div style={{ fontSize:10.5, color: isActive ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.28)', fontWeight:500, whiteSpace:'nowrap' }}>{t.sub}</div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           )}
 
@@ -1045,51 +1059,58 @@ function EventsTab({ user }) {
         </div>
       )}
 
-      {/* Search + Filter chips + live refresh bar */}
-      <div style={{ marginBottom:14, marginTop:4 }}>
-        <div style={{ position:'relative', maxWidth:360 }}>
-          <span style={{ position:'absolute', left:12, top:'50%', transform:'translateY(-50%)', color:'rgba(255,255,255,0.35)', fontSize:14, pointerEvents:'none' }}>🔍</span>
+      {/* Search + Filter toolbar */}
+      <div style={{
+        background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.09)',
+        borderRadius:18, padding:'14px 16px', marginBottom:22, backdropFilter:'blur(10px)',
+        display:'flex', flexDirection:'column', gap:12,
+      }}>
+        {/* Search row */}
+        <div style={{ position:'relative' }}>
+          <span style={{ position:'absolute', left:14, top:'50%', transform:'translateY(-50%)', color:'rgba(255,255,255,0.3)', fontSize:15, pointerEvents:'none' }}>⌕</span>
           <input
             className="prog-input"
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Search events by title or venue…"
-            style={{ paddingLeft:36 }}
+            style={{ paddingLeft:40, background:'rgba(255,255,255,0.05)', border:'1.5px solid rgba(255,255,255,0.1)', borderRadius:12, fontSize:13.5 }}
           />
-        </div>
-      </div>
-      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:20, flexWrap:'wrap', gap:10 }}>
-        <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
-          {EV_FILTERS.map(f => (
-            <button key={f} onClick={() => setActive(f)} style={{
-              background: active === f ? 'linear-gradient(90deg,#f97316,#e11d48)' : 'rgba(255,255,255,0.06)',
-              color: active === f ? '#fff' : 'rgba(255,255,255,0.6)',
-              border: active === f ? 'none' : '1px solid rgba(255,255,255,0.12)',
-              borderRadius:20, padding:'7px 18px', fontSize:12.5, fontWeight:700,
-              cursor:'pointer', fontFamily:'inherit', transition:'all .15s',
-              boxShadow: active === f ? '0 4px 14px rgba(249,115,22,0.3)' : 'none',
-            }}>{f}</button>
-          ))}
-        </div>
-        <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-          {lastUpdated && (
-            <span style={{ fontSize:11.5, color:'rgba(255,255,255,0.3)', fontWeight:500 }}>
-              Updated {lastUpdated.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' })}
-            </span>
+          {search && (
+            <button onClick={() => setSearch('')} style={{ position:'absolute', right:12, top:'50%', transform:'translateY(-50%)', background:'rgba(255,255,255,0.12)', border:'none', borderRadius:'50%', width:22, height:22, color:'rgba(255,255,255,0.7)', cursor:'pointer', fontSize:12, display:'flex', alignItems:'center', justifyContent:'center', fontFamily:'inherit' }}>✕</button>
           )}
-          <button onClick={() => loadEvents(true)} disabled={loading} style={{
-            background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.12)',
-            borderRadius:9, padding:'6px 13px', color:'rgba(255,255,255,0.65)',
-            fontSize:12, fontWeight:700, cursor: loading ? 'default' : 'pointer',
-            fontFamily:'inherit', display:'flex', alignItems:'center', gap:6,
-            transition:'all .14s',
-          }}
-          onMouseEnter={e => { if (!loading) { e.currentTarget.style.background='rgba(255,255,255,0.12)'; e.currentTarget.style.color='#fff'; } }}
-          onMouseLeave={e => { e.currentTarget.style.background='rgba(255,255,255,0.07)'; e.currentTarget.style.color='rgba(255,255,255,0.65)'; }}
-          >
-            <span style={{ display:'inline-block', animation: loading ? 'spin .7s linear infinite' : 'none' }}>↻</span>
-            {loading ? 'Refreshing…' : 'Refresh'}
-          </button>
+        </div>
+        {/* Filter + refresh row */}
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:8 }}>
+          <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
+            {EV_FILTERS.map(f => {
+              const isActive = active === f;
+              return (
+                <button key={f} onClick={() => setActive(f)} style={{
+                  background: isActive ? 'linear-gradient(90deg,#f97316,#e11d48)' : 'rgba(255,255,255,0.07)',
+                  color: isActive ? '#fff' : 'rgba(255,255,255,0.55)',
+                  border: isActive ? 'none' : '1px solid rgba(255,255,255,0.1)',
+                  borderRadius:20, padding:'6px 16px', fontSize:12.5, fontWeight:700,
+                  cursor:'pointer', fontFamily:'inherit', transition:'all .15s',
+                  boxShadow: isActive ? '0 3px 12px rgba(249,115,22,0.35)' : 'none',
+                  transform: isActive ? 'scale(1.04)' : 'scale(1)',
+                }}>{f}</button>
+              );
+            })}
+          </div>
+          <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+            {lastUpdated && <span style={{ fontSize:11, color:'rgba(255,255,255,0.25)', fontWeight:500 }}>Updated {lastUpdated.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' })}</span>}
+            <button onClick={() => loadEvents(true)} disabled={loading} style={{
+              background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.1)',
+              borderRadius:9, padding:'6px 13px', color:'rgba(255,255,255,0.6)',
+              fontSize:12, fontWeight:700, cursor: loading ? 'default' : 'pointer',
+              fontFamily:'inherit', display:'flex', alignItems:'center', gap:5, transition:'all .14s',
+            }}
+            onMouseEnter={e => { if (!loading) { e.currentTarget.style.background='rgba(255,255,255,0.13)'; e.currentTarget.style.color='#fff'; }}}
+            onMouseLeave={e => { e.currentTarget.style.background='rgba(255,255,255,0.07)'; e.currentTarget.style.color='rgba(255,255,255,0.6)'; }}>
+              <span style={{ display:'inline-block', animation: loading ? 'spin .7s linear infinite' : 'none' }}>↻</span>
+              {loading ? 'Refreshing…' : 'Refresh'}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -1471,54 +1492,58 @@ function TrainingTab({ user }) {
 
       {loading && <div style={{ textAlign:'center', padding:'60px 0', color:'rgba(255,255,255,0.3)' }}><div style={{ fontSize:32, marginBottom:10 }}>⏳</div>Loading…</div>}
 
-      {/* Search bar */}
-      <div style={{ marginBottom:14, marginTop:4 }}>
-        <div style={{ position:'relative', maxWidth:360 }}>
-          <span style={{ position:'absolute', left:12, top:'50%', transform:'translateY(-50%)', color:'rgba(255,255,255,0.35)', fontSize:14, pointerEvents:'none' }}>🔍</span>
+      {/* Search + Filter toolbar */}
+      <div style={{
+        background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.09)',
+        borderRadius:18, padding:'14px 16px', marginBottom:22, backdropFilter:'blur(10px)',
+        display:'flex', flexDirection:'column', gap:12,
+      }}>
+        {/* Search row */}
+        <div style={{ position:'relative' }}>
+          <span style={{ position:'absolute', left:14, top:'50%', transform:'translateY(-50%)', color:'rgba(255,255,255,0.3)', fontSize:15, pointerEvents:'none' }}>⌕</span>
           <input
             className="prog-input"
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Search programs by title or organizer…"
-            style={{ paddingLeft:36 }}
+            style={{ paddingLeft:40, background:'rgba(255,255,255,0.05)', border:'1.5px solid rgba(255,255,255,0.1)', borderRadius:12, fontSize:13.5 }}
           />
-        </div>
-      </div>
-
-      {/* Category filters + refresh */}
-      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:20, flexWrap:'wrap', gap:10 }}>
-        <div style={{ display:'flex', gap:8, flexWrap:'wrap', alignItems:'center' }}>
-          <span style={{ fontSize:12, fontWeight:700, color:'rgba(255,255,255,0.35)' }}>Filter:</span>
-          {TR_CATS.map(c => (
-            <button key={c} onClick={() => setCat(c)} style={{
-              background: catFilter === c ? 'linear-gradient(90deg,#f97316,#e11d48)' : 'rgba(255,255,255,0.06)',
-              color: catFilter === c ? '#fff' : 'rgba(255,255,255,0.6)',
-              border: catFilter === c ? 'none' : '1px solid rgba(255,255,255,0.12)',
-              borderRadius:20, padding:'7px 18px', fontSize:12.5, fontWeight:700,
-              cursor:'pointer', fontFamily:'inherit', transition:'all .15s',
-              boxShadow: catFilter === c ? '0 4px 14px rgba(249,115,22,0.3)' : 'none',
-            }}>{c}</button>
-          ))}
-        </div>
-        <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-          {lastUpdated && (
-            <span style={{ fontSize:11.5, color:'rgba(255,255,255,0.3)', fontWeight:500 }}>
-              Updated {lastUpdated.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' })}
-            </span>
+          {search && (
+            <button onClick={() => setSearch('')} style={{ position:'absolute', right:12, top:'50%', transform:'translateY(-50%)', background:'rgba(255,255,255,0.12)', border:'none', borderRadius:'50%', width:22, height:22, color:'rgba(255,255,255,0.7)', cursor:'pointer', fontSize:12, display:'flex', alignItems:'center', justifyContent:'center', fontFamily:'inherit' }}>✕</button>
           )}
-          <button onClick={() => loadTrainings(true)} disabled={loading} style={{
-            background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.12)',
-            borderRadius:9, padding:'6px 13px', color:'rgba(255,255,255,0.65)',
-            fontSize:12, fontWeight:700, cursor: loading ? 'default' : 'pointer',
-            fontFamily:'inherit', display:'flex', alignItems:'center', gap:6, transition:'all .14s',
-          }}
-          onMouseEnter={e => { if (!loading) { e.currentTarget.style.background='rgba(255,255,255,0.12)'; e.currentTarget.style.color='#fff'; } }}
-          onMouseLeave={e => { e.currentTarget.style.background='rgba(255,255,255,0.07)'; e.currentTarget.style.color='rgba(255,255,255,0.65)'; }}
-          >
-            <span style={{ display:'inline-block', animation: loading ? 'spin .7s linear infinite' : 'none' }}>↻</span>
-            {loading ? 'Refreshing…' : 'Refresh'}
-          </button>
         </div>
+        {/* Filter + refresh row */}
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:8 }}>
+          <div style={{ display:'flex', gap:6, flexWrap:'wrap', alignItems:'center' }}>
+            {TR_CATS.map(c => {
+              const isActive = catFilter === c;
+              return (
+                <button key={c} onClick={() => setCat(c)} style={{
+                  background: isActive ? 'linear-gradient(90deg,#f97316,#e11d48)' : 'rgba(255,255,255,0.07)',
+                  color: isActive ? '#fff' : 'rgba(255,255,255,0.55)',
+                  border: isActive ? 'none' : '1px solid rgba(255,255,255,0.1)',
+                  borderRadius:20, padding:'6px 16px', fontSize:12.5, fontWeight:700,
+                  cursor:'pointer', fontFamily:'inherit', transition:'all .15s',
+                  boxShadow: isActive ? '0 3px 12px rgba(249,115,22,0.35)' : 'none',
+                  transform: isActive ? 'scale(1.04)' : 'scale(1)',
+                }}>{c}</button>
+              );
+            })}
+          </div>
+          <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+            {lastUpdated && <span style={{ fontSize:11, color:'rgba(255,255,255,0.25)', fontWeight:500 }}>Updated {lastUpdated.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' })}</span>}
+            <button onClick={() => loadTrainings(true)} disabled={loading} style={{
+              background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.1)',
+              borderRadius:9, padding:'6px 13px', color:'rgba(255,255,255,0.6)',
+              fontSize:12, fontWeight:700, cursor: loading ? 'default' : 'pointer',
+              fontFamily:'inherit', display:'flex', alignItems:'center', gap:5, transition:'all .14s',
+            }}
+            onMouseEnter={e => { if (!loading) { e.currentTarget.style.background='rgba(255,255,255,0.13)'; e.currentTarget.style.color='#fff'; }}}
+            onMouseLeave={e => { e.currentTarget.style.background='rgba(255,255,255,0.07)'; e.currentTarget.style.color='rgba(255,255,255,0.6)'; }}>
+              <span style={{ display:'inline-block', animation: loading ? 'spin .7s linear infinite' : 'none' }}>↻</span>
+              {loading ? 'Refreshing…' : 'Refresh'}
+            </button>
+          </div>
       </div>
 
       {/* Training cards */}
