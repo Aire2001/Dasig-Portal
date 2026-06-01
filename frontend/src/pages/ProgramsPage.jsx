@@ -589,7 +589,7 @@ function EvCard({ ev, idx, registered, onRegister, onCancel, cancelling }) {
   );
 }
 
-function TrCard({ t, idx, enrolled, onEnroll, onCancel, cancelling }) {
+function TrCard({ t, idx, registered, onRegister, onCancel, cancelling }) {
   const [hov, setHov] = useState(false);
   const pct  = t.total > 0 ? Math.min(100, Math.round(t.enrolled / t.total * 100)) : 0;
   const full = t.total > 0 && t.enrolled >= t.total;
@@ -614,7 +614,7 @@ function TrCard({ t, idx, enrolled, onEnroll, onCancel, cancelling }) {
         {t.session_start_time && <div style={{ fontSize:11.5, color:'rgba(253,224,130,0.9)', fontWeight:700, marginBottom:10 }}>🕐 {t.session_start_time}{t.session_end_time ? ` – ${t.session_end_time}` : ''}</div>}
         <div style={{ marginBottom:10 }}>
           <div style={{ display:'flex', justifyContent:'space-between', marginBottom:3 }}>
-            <span style={{ fontSize:11, color:'rgba(255,255,255,0.38)' }}>Enrollment</span>
+            <span style={{ fontSize:11, color:'rgba(255,255,255,0.38)' }}>Registration</span>
             <span style={{ fontSize:11.5, color: full?'#f87171':'#6ee7b7', fontWeight:700 }}>{t.enrolled}/{t.total}</span>
           </div>
           <div style={{ height:5, background:'rgba(255,255,255,0.07)', borderRadius:3, overflow:'hidden' }}>
@@ -623,15 +623,15 @@ function TrCard({ t, idx, enrolled, onEnroll, onCancel, cancelling }) {
         </div>
         <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
           <div style={{ display:'flex', justifyContent:'flex-end' }}>
-            {enrolled
-              ? <span style={{ background:'rgba(16,185,129,0.12)', color:'#34d399', borderRadius:10, padding:'8px 14px', fontSize:12.5, fontWeight:700, border:'1px solid rgba(16,185,129,0.22)' }}>✓ Enrolled</span>
-              : <button onClick={onEnroll} disabled={full} style={{ background: full?'rgba(255,255,255,0.05)':s.accent, color: full?'rgba(255,255,255,0.3)':'#fff', border: full?'1px solid rgba(255,255,255,0.08)':'none', borderRadius:10, padding:'9px 20px', fontSize:13, fontWeight:800, cursor: full?'not-allowed':'pointer', fontFamily:'inherit', boxShadow: full?'none':`0 4px 12px ${s.color}40` }}>
-                  {full?'Fully Booked':'Enroll →'}
+            {registered
+              ? <span style={{ background:'rgba(16,185,129,0.12)', color:'#34d399', borderRadius:10, padding:'8px 14px', fontSize:12.5, fontWeight:700, border:'1px solid rgba(16,185,129,0.22)' }}>✓ Registered</span>
+              : <button onClick={onRegister} disabled={full} style={{ background: full?'rgba(255,255,255,0.05)':s.accent, color: full?'rgba(255,255,255,0.3)':'#fff', border: full?'1px solid rgba(255,255,255,0.08)':'none', borderRadius:10, padding:'9px 20px', fontSize:13, fontWeight:800, cursor: full?'not-allowed':'pointer', fontFamily:'inherit', boxShadow: full?'none':`0 4px 12px ${s.color}40` }}>
+                  {full?'Fully Booked':'Register →'}
                 </button>
             }
           </div>
-          {/* Cancel enrollment — shown for all enrolled users */}
-          {enrolled && (
+          {/* Cancel registration — shown for all registered users */}
+          {registered && (
             <button
               onClick={onCancel}
               disabled={cancelling}
@@ -646,7 +646,7 @@ function TrCard({ t, idx, enrolled, onEnroll, onCancel, cancelling }) {
               onMouseEnter={e => { if (!cancelling) { e.currentTarget.style.background='rgba(225,29,72,0.12)'; e.currentTarget.style.borderColor='rgba(225,29,72,0.6)'; } }}
               onMouseLeave={e => { e.currentTarget.style.background='transparent'; e.currentTarget.style.borderColor='rgba(225,29,72,0.35)'; }}
             >
-              {cancelling ? '⏳ Cancelling…' : '✕ Cancel Enrollment'}
+              {cancelling ? '⏳ Cancelling…' : '✕ Cancel Registration'}
             </button>
           )}
         </div>
@@ -1109,7 +1109,8 @@ function TrainingTab({ user }) {
   const [errModal, setErrModal]   = useState('');
   const [submitting, setSub]      = useState(false);
   const [cancellingEnrId, setCancellingEnrId] = useState(null);
-  const [cancelEnrConfirm, setCancelEnrConfirm] = useState(null); // training to cancel
+  const [cancelEnrConfirm, setCancelEnrConfirm] = useState(null);
+  const [conflictTr, setConflictTr] = useState(null); // { training, conflictsWith }
   const [fname, setFname]         = useState('');
   const [email, setEmail]         = useState('');
   const [phone, setPhone]         = useState('');
@@ -1171,6 +1172,19 @@ function TrainingTab({ user }) {
 
   function openEnroll(t) {
     if (!user) { setErrModal('login'); return; }
+    // Check for schedule conflict with already-registered trainings
+    const tRange = parseRange(t.schedule);
+    if (tRange) {
+      for (const id of Object.keys(myEnr)) {
+        const other = trainings.find(tr => tr.id === +id);
+        if (!other || other.id === t.id) continue;
+        const oRange = parseRange(other.schedule);
+        if (oRange && tRange.start <= oRange.end && oRange.start <= tRange.end) {
+          setConflictTr({ training: t, conflictsWith: other });
+          return;
+        }
+      }
+    }
     setFname(user.name || '');
     setEmail(user.email || '');
     setPhone(user.phone || '');
@@ -1212,7 +1226,7 @@ function TrainingTab({ user }) {
     } catch (err) {
       const msg = err.message || '';
       setFormModal(null);
-      setErrModal(msg.toLowerCase().includes('already') ? 'already' : msg || 'Enrollment failed');
+      setErrModal(msg.toLowerCase().includes('already') ? 'already' : msg || 'Registration failed');
     } finally { setSub(false); }
   }
 
@@ -1222,15 +1236,57 @@ function TrainingTab({ user }) {
     <>
       <ErrModal err={errModal} onClose={() => setErrModal('')} />
 
-      {/* Cancel enrollment confirmation */}
+      {/* Cancel registration confirmation */}
       {cancelEnrConfirm && (
         <CancelConfirmModal
-          title="Cancel Enrollment?"
-          subtitle={`Are you sure you want to cancel your enrollment in "${cancelEnrConfirm.title}"? Your slot will be returned to the available pool.`}
+          title="Cancel Registration?"
+          subtitle={`Are you sure you want to cancel your registration in "${cancelEnrConfirm.title}"? Your slot will be returned to the available pool.`}
           confirming={!!cancellingEnrId}
           onConfirm={doCancelEnr}
           onCancel={() => setCancelEnrConfirm(null)}
         />
+      )}
+
+      {/* Training conflict warning modal */}
+      {conflictTr && (
+        <div onClick={() => setConflictTr(null)} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.78)', zIndex:9300, display:'flex', alignItems:'center', justifyContent:'center', padding:20, backdropFilter:'blur(4px)' }}>
+          <div onClick={e => e.stopPropagation()} style={{ background:'linear-gradient(180deg,#0f1832,#080e1e)', border:'1px solid rgba(245,158,11,0.35)', borderRadius:24, maxWidth:'min(460px,calc(100vw - 32px))', width:'100%', overflow:'hidden', animation:'modalIn .22s ease', boxShadow:'0 32px 80px rgba(0,0,0,0.8)' }}>
+            <div style={{ background:'linear-gradient(135deg,rgba(245,158,11,0.2),rgba(249,115,22,0.12))', padding:'22px 24px 18px', textAlign:'center', borderBottom:'1px solid rgba(245,158,11,0.2)' }}>
+              <div style={{ fontSize:44, marginBottom:8 }}>⚠️</div>
+              <div style={{ color:'#fbbf24', fontWeight:900, fontSize:19, letterSpacing:'-0.3px' }}>Schedule Conflict Detected</div>
+              <p style={{ color:'rgba(255,255,255,0.5)', fontSize:13, marginTop:5, lineHeight:1.5 }}>You already have a program registered on overlapping dates.</p>
+            </div>
+            <div style={{ padding:'20px 24px' }}>
+              <div style={{ marginBottom:10 }}>
+                <div style={{ fontSize:10.5, fontWeight:700, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:7 }}>Already registered</div>
+                <div style={{ background:'rgba(239,68,68,0.1)', border:'1px solid rgba(239,68,68,0.3)', borderRadius:12, padding:'12px 14px', display:'flex', gap:12, alignItems:'flex-start' }}>
+                  <span style={{ fontSize:20, flexShrink:0 }}>🎓</span>
+                  <div>
+                    <div style={{ color:'#fff', fontWeight:800, fontSize:14, marginBottom:3 }}>{conflictTr.conflictsWith.title}</div>
+                    <div style={{ color:'rgba(255,255,255,0.55)', fontSize:12.5 }}>{conflictTr.conflictsWith.schedule?.split('|')[0]?.trim()}</div>
+                    {conflictTr.conflictsWith.session_start_time && <div style={{ color:'rgba(239,68,68,0.8)', fontSize:12, fontWeight:700, marginTop:3 }}>🕐 {conflictTr.conflictsWith.session_start_time}{conflictTr.conflictsWith.session_end_time ? ` – ${conflictTr.conflictsWith.session_end_time}` : ''}</div>}
+                  </div>
+                </div>
+              </div>
+              <div style={{ textAlign:'center', color:'rgba(245,158,11,0.7)', fontSize:20, margin:'6px 0' }}>⬇</div>
+              <div style={{ marginBottom:20 }}>
+                <div style={{ fontSize:10.5, fontWeight:700, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:7 }}>You're trying to register</div>
+                <div style={{ background:'rgba(245,158,11,0.1)', border:'1px solid rgba(245,158,11,0.3)', borderRadius:12, padding:'12px 14px', display:'flex', gap:12, alignItems:'flex-start' }}>
+                  <span style={{ fontSize:20, flexShrink:0 }}>🆕</span>
+                  <div>
+                    <div style={{ color:'#fff', fontWeight:800, fontSize:14, marginBottom:3 }}>{conflictTr.training.title}</div>
+                    <div style={{ color:'rgba(255,255,255,0.55)', fontSize:12.5 }}>{conflictTr.training.schedule?.split('|')[0]?.trim()}</div>
+                    {conflictTr.training.session_start_time && <div style={{ color:'rgba(245,158,11,0.8)', fontSize:12, fontWeight:700, marginTop:3 }}>🕐 {conflictTr.training.session_start_time}{conflictTr.training.session_end_time ? ` – ${conflictTr.training.session_end_time}` : ''}</div>}
+                  </div>
+                </div>
+              </div>
+              <div style={{ display:'flex', gap:10 }}>
+                <button onClick={() => setConflictTr(null)} style={{ flex:1, background:'rgba(255,255,255,0.07)', color:'rgba(255,255,255,0.7)', border:'1px solid rgba(255,255,255,0.15)', borderRadius:12, padding:'11px', fontSize:13.5, fontWeight:700, cursor:'pointer', fontFamily:'inherit' }}>Go Back</button>
+                <button onClick={() => { const t = conflictTr.training; setConflictTr(null); setFname(user?.name||''); setEmail(user?.email||''); setPhone(user?.phone||''); setInst(user?.institution||''); setPosition(user?.campus||''); setFnameErr(false); setFormModal(t); }} style={{ flex:2, background:'linear-gradient(90deg,#f97316,#e11d48)', color:'#fff', border:'none', borderRadius:12, padding:'11px', fontSize:13.5, fontWeight:800, cursor:'pointer', fontFamily:'inherit' }}>Register Anyway</button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Detail panel */}
@@ -1265,11 +1321,11 @@ function TrainingTab({ user }) {
               )}
               {detail.description && <p style={{ color:'rgba(255,255,255,0.5)', fontSize:12.5, lineHeight:1.65, marginBottom:14 }}>{detail.description}</p>}
               {myEnr[detail.id]
-                ? <div style={{ background:'rgba(16,185,129,0.12)', border:'1px solid rgba(16,185,129,0.3)', borderRadius:12, padding:'12px 14px', textAlign:'center', color:'#34d399', fontWeight:700 }}>✓ You are enrolled</div>
+                ? <div style={{ background:'rgba(16,185,129,0.12)', border:'1px solid rgba(16,185,129,0.3)', borderRadius:12, padding:'12px 14px', textAlign:'center', color:'#34d399', fontWeight:700 }}>✓ You are registered</div>
                 : detail.enrolled >= detail.total
                   ? <div style={{ background:'rgba(225,29,72,0.1)', border:'1px solid rgba(225,29,72,0.3)', borderRadius:12, padding:'12px', textAlign:'center', color:'#f87171', fontWeight:700 }}>Fully booked</div>
                   : <button onClick={() => openEnroll(detail)} style={{ width:'100%', background: ts(detail).accent, color:'#fff', border:'none', borderRadius:12, padding:'12px', fontSize:14, fontWeight:800, cursor:'pointer', fontFamily:'inherit' }}>
-                      Enroll in this program →
+                      Register for this program →
                     </button>
               }
             </div>
@@ -1283,7 +1339,7 @@ function TrainingTab({ user }) {
           <div onClick={e => e.stopPropagation()} style={{ background:'linear-gradient(180deg,#0f172a,#020817)', borderRadius:22, maxWidth:'min(480px,calc(100vw - 32px))', width:'100%', position:'relative', border:'1px solid rgba(255,255,255,0.1)', animation:'modalIn .24s cubic-bezier(.34,1.56,.64,1)', margin:'auto' }}>
             <div style={{ background: ts(formModal).accent, padding:'22px 24px 18px', position:'relative' }}>
               <button onClick={() => setFormModal(null)} style={{ position:'absolute', top:14, right:14, background:'rgba(0,0,0,0.70)', border:'2px solid rgba(255,255,255,0.5)', backdropFilter:'blur(10px)', borderRadius:'50%', width:36, height:36, color:'#fff', fontSize:16, fontWeight:700, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', backdropFilter:'blur(6px)', boxShadow:'0 2px 8px rgba(0,0,0,0.4)' }}>✕</button>
-              <div style={{ color:'rgba(255,255,255,0.65)', fontSize:10.5, fontWeight:700, letterSpacing:1, marginBottom:4 }}>PROGRAM ENROLLMENT</div>
+              <div style={{ color:'rgba(255,255,255,0.65)', fontSize:10.5, fontWeight:700, letterSpacing:1, marginBottom:4 }}>PROGRAM REGISTRATION</div>
               <div style={{ color:'#fff', fontSize:17, fontWeight:900 }}>{formModal.title}</div>
               <div style={{ display:'flex', gap:12, marginTop:8, flexWrap:'wrap' }}>
                 {[{i:'🏛',v:formModal.org},{i:'⏱',v:formModal.duration},{i:'📊',v:formModal.level}].map(r=>
@@ -1340,7 +1396,7 @@ function TrainingTab({ user }) {
               <div style={{ display:'flex', gap:10, marginTop:4 }}>
                 <button onClick={() => setFormModal(null)} style={{ flex:1, background:'rgba(255,255,255,0.06)', color:'rgba(255,255,255,0.55)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:12, padding:'12px', fontSize:13.5, fontWeight:700, cursor:'pointer', fontFamily:'inherit' }}>Cancel</button>
                 <button onClick={submitEnroll} disabled={submitting} style={{ flex:2, background: submitting?'#475569':ts(formModal).accent, color:'#fff', border:'none', borderRadius:12, padding:'12px', fontSize:14, fontWeight:800, cursor: submitting?'not-allowed':'pointer', fontFamily:'inherit' }}>
-                  {submitting ? '⏳ Enrolling…' : '✅ Confirm Enrollment'}
+                  {submitting ? '⏳ Registering…' : '✅ Confirm Registration'}
                 </button>
               </div>
             </div>
@@ -1353,7 +1409,7 @@ function TrainingTab({ user }) {
         <div onClick={() => setOkModal(null)} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.65)', zIndex:9200, display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
           <div onClick={e => e.stopPropagation()} style={{ background:'#0f172a', borderRadius:24, maxWidth:'min(420px,calc(100vw - 32px))', width:'100%', overflow:'hidden', border:'1px solid rgba(255,255,255,0.1)', animation:'modalIn .26s cubic-bezier(.34,1.56,.64,1)' }}>
             <div style={{ background: ts(okModal.training).accent, padding:'26px 26px 48px', textAlign:'center', position:'relative' }}>
-              <div style={{ color:'rgba(255,255,255,0.6)', fontSize:10.5, fontWeight:700, letterSpacing:1, textTransform:'uppercase', marginBottom:6 }}>Enrollment Confirmed</div>
+              <div style={{ color:'rgba(255,255,255,0.6)', fontSize:10.5, fontWeight:700, letterSpacing:1, textTransform:'uppercase', marginBottom:6 }}>Registration Confirmed</div>
               <div style={{ color:'#fff', fontSize:18, fontWeight:900 }}>{okModal.training.title}</div>
               <div style={{ position:'absolute', bottom:-32, left:'50%', transform:'translateX(-50%)', width:64, height:64, borderRadius:'50%', background: ts(okModal.training).accent, border:'4px solid #0f172a', display:'flex', alignItems:'center', justifyContent:'center', fontSize:24, fontWeight:900, color:'#fff' }}>
                 {(okModal.name||'U')[0].toUpperCase()}
@@ -1372,7 +1428,7 @@ function TrainingTab({ user }) {
                 {i:'⏱',l:'DURATION',v:okModal.training.duration},
                 {i:'📊',l:'LEVEL',v:okModal.training.level},
                 {i:'📅',l:'SCHEDULE',v:okModal.training.schedule?.split('|')[0]?.trim()},
-                {i:'👥',l:'SLOTS',v:`${okModal.training.enrolled}/${okModal.training.total} enrolled`},
+                {i:'👥',l:'SLOTS',v:`${okModal.training.enrolled}/${okModal.training.total} registered`},
               ].filter(r=>r.v).map(r => (
                 <div key={r.l} style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 12px', background:'rgba(255,255,255,0.04)', borderRadius:10 }}>
                   <span style={{ fontSize:14 }}>{r.i}</span>
@@ -1380,7 +1436,7 @@ function TrainingTab({ user }) {
                 </div>
               ))}
               <div style={{ background:'rgba(16,185,129,0.12)', border:'1px solid rgba(16,185,129,0.3)', borderRadius:12, padding:'11px 14px', marginTop:4 }}>
-                <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:3 }}><span style={{ animation:'checkPop 0.4s 0.15s both', display:'inline-block', fontSize:14 }}>✅</span><span style={{ fontSize:12.5, color:'#34d399', fontWeight:700 }}>You&apos;re enrolled!</span></div>
+                <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:3 }}><span style={{ animation:'checkPop 0.4s 0.15s both', display:'inline-block', fontSize:14 }}>✅</span><span style={{ fontSize:12.5, color:'#34d399', fontWeight:700 }}>You&apos;re registered!</span></div>
                 <div style={{ fontSize:11.5, color:'rgba(52,211,153,0.8)', lineHeight:1.5 }}>Confirmation email sent to <strong style={{ color:'#34d399' }}>{okModal.email}</strong>.</div>
               </div>
               <button onClick={() => setOkModal(null)} style={{ width:'100%', background: ts(okModal.training).accent, color:'#fff', border:'none', borderRadius:14, padding:'12px', fontSize:14, fontWeight:800, cursor:'pointer', fontFamily:'inherit', marginTop:4 }}>Done</button>
@@ -1431,7 +1487,7 @@ function TrainingTab({ user }) {
       {!loading && (
         <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(300px,1fr))', gap:18 }}>
           {filtered.map((t, idx) => (
-            <TrCard key={t.id} t={t} idx={idx} enrolled={!!myEnr[t.id]} onEnroll={() => openEnroll(t)} onCancel={() => cancelEnr(t)} cancelling={cancellingEnrId === t.id} />
+            <TrCard key={t.id} t={t} idx={idx} registered={!!myEnr[t.id]} onRegister={() => openEnroll(t)} onCancel={() => cancelEnr(t)} cancelling={cancellingEnrId === t.id} />
           ))}
         </div>
       )}
