@@ -534,9 +534,14 @@ function EvCard({ ev, idx, registered, onRegister, onCancel, cancelling }) {
           {full && !registered && <span style={{ background:'rgba(225,29,72,0.28)', color:'#f87171', borderRadius:6, padding:'3px 10px', fontSize:10.5, fontWeight:700 }}>Full</span>}
         </div>
         <div style={{ color:'#fff', fontSize:15, fontWeight:900, lineHeight:1.3, marginBottom:5 }}>{ev.title}</div>
-        <div style={{ display:'flex', gap:10 }}>
+        <div style={{ display:'flex', flexWrap:'wrap', gap:8, rowGap:4 }}>
           <span style={{ color:'rgba(255,255,255,0.78)', fontSize:11.5 }}>📅 {ev.date}</span>
           <span style={{ color:'rgba(255,255,255,0.78)', fontSize:11.5 }}>📍 {ev.venue}</span>
+          {ev.start_time && (
+            <span style={{ color:'rgba(253,224,130,0.95)', fontSize:11.5, fontWeight:700 }}>
+              🕐 {ev.start_time}{ev.end_time ? ` – ${ev.end_time}` : ''}
+            </span>
+          )}
         </div>
       </div>
       <div style={{ padding:'12px 16px' }}>
@@ -605,7 +610,8 @@ function TrCard({ t, idx, enrolled, onEnroll, onCancel, cancelling }) {
         </div>
       </div>
       <div style={{ padding:'12px 16px' }}>
-        {t.schedule && <div style={{ fontSize:11.5, color:'rgba(255,255,255,0.4)', marginBottom:10 }}>📅 {t.schedule.split('|')[0].trim()}</div>}
+        {t.schedule && <div style={{ fontSize:11.5, color:'rgba(255,255,255,0.4)', marginBottom: t.session_start_time ? 4 : 10 }}>📅 {t.schedule.split('|')[0].trim()}</div>}
+        {t.session_start_time && <div style={{ fontSize:11.5, color:'rgba(253,224,130,0.9)', fontWeight:700, marginBottom:10 }}>🕐 {t.session_start_time}{t.session_end_time ? ` – ${t.session_end_time}` : ''}</div>}
         <div style={{ marginBottom:10 }}>
           <div style={{ display:'flex', justifyContent:'space-between', marginBottom:3 }}>
             <span style={{ fontSize:11, color:'rgba(255,255,255,0.38)' }}>Enrollment</span>
@@ -1014,6 +1020,7 @@ function EventsTab({ user }) {
               {[
                 {i:'📋',l:'EVENT',v:okModal.event.title},
                 {i:'📅',l:'DATE',v:okModal.event.date||'TBA'},
+                ...(okModal.event.start_time ? [{i:'🕐',l:'TIME',v:`${okModal.event.start_time}${okModal.event.end_time ? ` – ${okModal.event.end_time}` : ''}`}] : []),
                 {i:'📍',l:'VENUE',v:okModal.event.venue||'TBA'},
                 {i:'🏛',l:'ORGANIZER',v:okModal.event.organizer},
                 {i:'🎫',l:'CATEGORY',v:okModal.event.category},
