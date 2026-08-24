@@ -247,6 +247,23 @@ export default function ChatbotPage() {
   const quickChips = QUICK_CHIPS_BY_ROLE[role] || QUICK_CHIPS_BY_ROLE.GUEST;
   const rb        = ROLE_BADGE[role] || ROLE_BADGE.GUEST;
 
+  const userKey = user ? `user_${user.id}` : 'guest';
+  const storageKey = `haribon_sessions_${userKey}`;
+
+  const [sessions, setSessions] = useState(() => {
+    try {
+      const saved = localStorage.getItem(`haribon_sessions_${user ? `user_${user.id}` : 'guest'}`);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch (_) {}
+    return [];
+  });
+
+  const [currentSessionId, setCurrentSessionId] = useState(null);
+  const [showHistory, setShowHistory] = useState(true);
+
   const initMsg = { from:'bot', text: makeInitMsg(user), time: new Date() };
 
   // Resume chat from mini widget if available, otherwise fresh start
@@ -272,7 +289,6 @@ export default function ChatbotPage() {
   const [ended, setEnded]             = useState(false);
   const [showEndConfirm, setShowEndConfirm] = useState(false);
   const [hasReplied, setHasReplied]   = useState(() => {
-    // If resuming, mark as already replied so chips stay hidden
     try {
       const saved = sessionStorage.getItem('haribon_resume');
       return saved ? true : false;
@@ -289,13 +305,100 @@ export default function ChatbotPage() {
   const recognitionRef = useRef(null);
   const msgsContainerRef              = useRef(null);
 
-  // Reset chat when user changes (login/logout)
+  // Sync sessions when user changes (login/logout)
   useEffect(() => {
+    try {
+      const saved = localStorage.getItem(storageKey);
+      setSessions(saved ? JSON.parse(saved) : []);
+    } catch (_) {
+      setSessions([]);
+    }
     setMessages([{ from:'bot', text: makeInitMsg(user), time: new Date() }]);
+    setCurrentSessionId(null);
     setTotalAsked(0); setTotalMatched(0); setMatchRate(null);
     setEnded(false); setHasReplied(false); setInput('');
     setSuggestions([]); setResumed(false);
   }, [user?.id]);
+
+  // Persist session whenever messages update beyond initial greeting
+  useEffect(() => {
+    if (messages.length <= 1) return;
+    const firstUserMsg = messages.find(m => m.from === 'user');
+    const title = firstUserMsg
+      ? (firstUserMsg.text.length > 26 ? firstUserMsg.text.slice(0, 26) + '…' : firstUserMsg.text)
+      : 'Inquiry Conversation';
+
+    setSessions(prev => {
+      const sId = currentSessionId || `sess_${Date.now()}`;
+      if (!currentSessionId) setCurrentSessionId(sId);
+
+      const existingIndex = prev.findIndex(s => s.id === sId);
+      const sessionObj = {
+        id: sId,
+        title,
+        updatedAt: new Date().toISOString(),
+        messages: messages.map(m => ({ ...m, time: m.time ? new Date(m.time).toISOString() : new Date().toISOString() })),
+      };
+
+      let updated;
+      if (existingIndex >= 0) {
+        updated = [...prev];
+        updated[existingIndex] = sessionObj;
+      } else {
+        updated = [sessionObj, ...prev].slice(0, 25);
+      }
+
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(updated));
+      } catch (_) {}
+      return updated;
+    });
+  }, [messages]);
+
+  function selectSession(sess) {
+    setCurrentSessionId(sess.id);
+    setMessages((sess.messages || []).map(m => ({ ...m, time: m.time ? new Date(m.time) : new Date() })));
+    setEnded(false);
+    setHasReplied(true);
+    setThinking(false);
+  }
+
+  function startNewChat() {
+    setCurrentSessionId(null);
+    setMessages([{ from:'bot', text: makeInitMsg(user), time: new Date() }]);
+    setTotalAsked(0);
+    setTotalMatched(0);
+    setMatchRate(null);
+    setEnded(false);
+    setHasReplied(false);
+    setSuggestions([]);
+    setResumed(false);
+    setTimeout(() => inputRef.current?.focus(), 50);
+  }
+
+  function deleteSession(e, sessId) {
+    e.stopPropagation();
+    setSessions(prev => {
+      const updated = prev.filter(s => s.id !== sessId);
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(updated));
+      } catch (_) {}
+      return updated;
+    });
+    if (currentSessionId === sessId) {
+      startNewChat();
+    }
+  }
+
+  function clearAllSessions() {
+    if (!window.confirm('Clear all your chat history with Haribon?')) return;
+    setSessions([]);
+    try {
+      localStorage.removeItem(storageKey);
+    } catch (_) {}
+    startNewChat();
+  }
+
   const msgsEnd = useRef(null);
   const inputRef = useRef(null);
 
@@ -463,11 +566,11 @@ export default function ChatbotPage() {
         <PageHeader eyebrow="DASIG AI Assistant" title="Ask Haribon" />
 
         <section style={{ padding: '24px 24px 80px' }}>
-          <div style={{ maxWidth: 900, margin: '0 auto' }}>
+          <div style={{ maxWidth: 1080, margin: '0 auto' }}>
 
             {/* Status bar */}
             <div style={{
-              display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20,
+              display: 'flex', alignItems: 'center', gap: 12, marginBottom: 18,
               background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
               borderRadius: 14, padding: '12px 18px', flexWrap: 'wrap',
             }}>
@@ -500,7 +603,20 @@ export default function ChatbotPage() {
                   </div>
                 </div>
               )}
-              <div style={{ marginLeft: 'auto', display: 'flex', gap: 10, alignItems: 'center' }}>
+              <div style={{ marginLeft: 'auto', display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                <button
+                  onClick={() => setShowHistory(!showHistory)}
+                  style={{
+                    background: showHistory ? 'rgba(249,115,22,0.18)' : 'rgba(255,255,255,0.06)',
+                    border: `1px solid ${showHistory ? 'rgba(249,115,22,0.4)' : 'rgba(255,255,255,0.12)'}`,
+                    borderRadius: 8, padding: '5px 12px', fontSize: 11.5, fontWeight: 700,
+                    color: showHistory ? '#fb923c' : 'rgba(255,255,255,0.7)', cursor: 'pointer', fontFamily: 'inherit',
+                    display: 'flex', alignItems: 'center', gap: 5,
+                  }}
+                >
+                  <span>💬</span>
+                  <span>History ({sessions.length})</span>
+                </button>
                 {matchRate !== null && (
                   <div style={{
                     background: matchRate >= 80
@@ -510,28 +626,20 @@ export default function ChatbotPage() {
                     borderRadius: 8, padding: '5px 12px', fontSize: 11.5, fontWeight: 800,
                     color: matchRate >= 80 ? '#34d399' : matchRate >= 60 ? '#fbbf24' : '#f87171',
                   }}>
-                    🎯 {matchRate}% intent accuracy
+                    🎯 {matchRate}% accuracy
                   </div>
                 )}
-                <div style={{
-                  background: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.25)',
-                  borderRadius: 8, padding: '5px 12px', fontSize: 11.5, fontWeight: 700, color: '#f97316',
-                }}>
-                  {totalAsked} queries
-                </div>
-                {ended ? (
-                  <button onClick={newChat} style={{
-                    background: 'rgba(249,115,22,0.12)', border: '1px solid rgba(249,115,22,0.3)',
-                    borderRadius: 8, padding: '5px 12px', fontSize: 11.5, fontWeight: 700,
-                    color: '#f97316', cursor: 'pointer', fontFamily: 'inherit',
-                  }}>New Chat</button>
-                ) : (
-                  <button onClick={() => setShowEndConfirm(true)} style={{
-                    background: 'rgba(225,29,72,0.08)', border: '1px solid rgba(225,29,72,0.22)',
-                    borderRadius: 8, padding: '5px 12px', fontSize: 11.5, fontWeight: 700,
-                    color: '#f43f5e', cursor: 'pointer', fontFamily: 'inherit',
-                  }}>End Chat</button>
-                )}
+                <button onClick={startNewChat} style={{
+                  background: 'linear-gradient(90deg,#f97316,#e11d48)',
+                  border: 'none', borderRadius: 8, padding: '6px 14px', fontSize: 11.5, fontWeight: 800,
+                  color: '#fff', cursor: 'pointer', fontFamily: 'inherit',
+                  boxShadow: '0 2px 8px rgba(249,115,22,0.35)',
+                }}>＋ New Chat</button>
+                <button onClick={() => setShowEndConfirm(true)} style={{
+                  background: 'rgba(225,29,72,0.08)', border: '1px solid rgba(225,29,72,0.22)',
+                  borderRadius: 8, padding: '5px 12px', fontSize: 11.5, fontWeight: 700,
+                  color: '#f43f5e', cursor: 'pointer', fontFamily: 'inherit',
+                }}>End Chat</button>
               </div>
             </div>
 
@@ -551,7 +659,7 @@ export default function ChatbotPage() {
                   <div style={{ fontSize: 48, marginBottom: 12 }}>👋</div>
                   <div style={{ color: '#fff', fontWeight: 900, fontSize: 18, marginBottom: 8 }}>End this session?</div>
                   <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, lineHeight: 1.65, marginBottom: 24 }}>
-                    Your chat history will be cleared. You can start a new conversation anytime.
+                    Your active conversation will be concluded. You can start a new one anytime.
                   </div>
                   <div style={{ display: 'flex', gap: 10 }}>
                     <button onClick={() => setShowEndConfirm(false)} style={{
@@ -571,14 +679,114 @@ export default function ChatbotPage() {
               </div>
             )}
 
-            {/* Chat window */}
-            <div style={{
-              background: 'rgba(15,23,42,0.7)', border: '1px solid rgba(255,255,255,0.08)',
-              borderRadius: 20, overflow: 'hidden',
-              boxShadow: '0 20px 60px rgba(0,0,0,0.4)',
-            }}>
-              {/* Messages area */}
-              <div ref={msgsContainerRef} onScroll={handleScroll} style={{ height: 460, overflowY: 'auto', padding: ended ? 0 : '24px 24px 16px', display: 'flex', flexDirection: 'column', gap: ended ? 0 : 14, position: 'relative' }}>
+            {/* ── 2-Column Chat & History Container ── */}
+            <div style={{ display: 'flex', gap: 16, alignItems: 'stretch' }}>
+
+              {/* Left Column: Chat History Sidebar */}
+              {showHistory && (
+                <aside style={{
+                  width: 260, background: 'rgba(10,16,32,0.85)',
+                  backdropFilter: 'blur(12px)',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  borderRadius: 20, padding: '16px 14px',
+                  display: 'flex', flexDirection: 'column',
+                  flexShrink: 0,
+                  boxShadow: '0 20px 60px rgba(0,0,0,0.4)',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, padding: '0 4px' }}>
+                    <span style={{ fontSize: 12, fontWeight: 800, color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase', letterSpacing: '.6px' }}>
+                      💬 Chat History
+                    </span>
+                    <button
+                      onClick={startNewChat}
+                      style={{
+                        background: 'linear-gradient(90deg,#f97316,#e11d48)',
+                        border: 'none', borderRadius: 8, padding: '4px 10px',
+                        color: '#fff', fontSize: 11.5, fontWeight: 800,
+                        cursor: 'pointer', fontFamily: 'inherit',
+                      }}
+                    >
+                      ＋ New
+                    </button>
+                  </div>
+
+                  {/* Sessions list */}
+                  <div style={{ flex: 1, overflowY: 'auto', maxHeight: 460, display: 'flex', flexDirection: 'column', gap: 6, paddingRight: 2 }}>
+                    {sessions.length === 0 ? (
+                      <div style={{ padding: '36px 10px', textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: 12, lineHeight: 1.5 }}>
+                        No saved sessions yet.<br />Ask Haribon a question to start your history!
+                      </div>
+                    ) : (
+                      sessions.map(s => {
+                        const isActive = s.id === currentSessionId;
+                        return (
+                          <div
+                            key={s.id}
+                            onClick={() => selectSession(s)}
+                            style={{
+                              padding: '10px 12px', borderRadius: 10,
+                              background: isActive ? 'rgba(249,115,22,0.18)' : 'rgba(255,255,255,0.03)',
+                              border: `1px solid ${isActive ? 'rgba(249,115,22,0.4)' : 'rgba(255,255,255,0.06)'}`,
+                              cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                              gap: 8, transition: 'all .14s',
+                            }}
+                            onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = 'rgba(255,255,255,0.07)'; }}
+                            onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; }}
+                          >
+                            <div style={{ minWidth: 0, flex: 1 }}>
+                              <div style={{ color: isActive ? '#fff' : 'rgba(255,255,255,0.85)', fontSize: 12.5, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                {s.title}
+                              </div>
+                              <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: 10.5, marginTop: 2 }}>
+                                {s.messages?.length || 0} msgs · {new Date(s.updatedAt).toLocaleDateString([], { month:'short', day:'numeric' })}
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={e => deleteSession(e, s.id)}
+                              title="Delete conversation"
+                              style={{
+                                background: 'none', border: 'none', color: 'rgba(255,255,255,0.35)',
+                                cursor: 'pointer', fontSize: 12, padding: '2px 4px', borderRadius: 4,
+                              }}
+                              onMouseEnter={e => e.currentTarget.style.color = '#f87171'}
+                              onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.35)'}
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+
+                  {sessions.length > 0 && (
+                    <button
+                      onClick={clearAllSessions}
+                      style={{
+                        marginTop: 12, background: 'none', border: 'none',
+                        color: 'rgba(255,255,255,0.35)', fontSize: 11.5,
+                        cursor: 'pointer', padding: '6px 0', textAlign: 'center',
+                        fontFamily: 'inherit', transition: 'color .15s',
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.color = '#f87171'}
+                      onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.35)'}
+                    >
+                      🗑️ Clear all history
+                    </button>
+                  )}
+                </aside>
+              )}
+
+              {/* Right Column: Chat window */}
+              <div style={{
+                flex: 1, minWidth: 0,
+                background: 'rgba(15,23,42,0.7)', border: '1px solid rgba(255,255,255,0.08)',
+                borderRadius: 20, overflow: 'hidden',
+                boxShadow: '0 20px 60px rgba(0,0,0,0.4)',
+              }}>
+                {/* Messages area */}
+                <div ref={msgsContainerRef} onScroll={handleScroll} style={{ height: 460, overflowY: 'auto', padding: ended ? 0 : '24px 24px 16px', display: 'flex', flexDirection: 'column', gap: ended ? 0 : 14, position: 'relative' }}>
                 {/* Jump to bottom button */}
                 {!ended && !atBottom && (
                   <div style={{ position: 'sticky', bottom: 8, zIndex: 5, display: 'flex', justifyContent: 'center', pointerEvents: 'none' }}>
@@ -918,6 +1126,7 @@ export default function ChatbotPage() {
                   Haribon is scoped to DASIG knowledge · Not a general-purpose AI
                 </div>
               </div>}
+            </div>
             </div>
 
             {/* Info strip */}
