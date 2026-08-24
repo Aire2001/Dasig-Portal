@@ -132,6 +132,8 @@ export default function MembersPage() {
   const [members, setMembers]   = useState([]);
   const [loading, setLoading]   = useState(true);
   const [selected, setSelected] = useState(null);
+  const [search, setSearch]     = useState('');
+  const [typeF, setTypeF]       = useState('All Types');
 
   useEffect(() => {
     api.members.list()
@@ -139,6 +141,15 @@ export default function MembersPage() {
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
+
+  const filteredMembers = members.filter(m => {
+    const matchSearch = !search.trim() ||
+      m.full_name?.toLowerCase().includes(search.toLowerCase()) ||
+      m.abbr?.toLowerCase().includes(search.toLowerCase()) ||
+      m.campus?.toLowerCase().includes(search.toLowerCase());
+    const matchType = typeF === 'All Types' || m.type === typeF;
+    return matchSearch && matchType;
+  });
 
   const selectedGrad = selected
     ? MEMBER_GRADS[members.indexOf(selected) % MEMBER_GRADS.length]
@@ -265,21 +276,31 @@ export default function MembersPage() {
           <div style={{ maxWidth: 1120, margin: '0 auto' }}>
 
             {/* Stats bar */}
-            <div style={{ display: 'flex', gap: 14, marginBottom: 36 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 14, marginBottom: 32 }}>
               {[
-                { label: 'Member Institutions', value: members.length || 6, icon: '🏛️', grad: 'linear-gradient(135deg,#1e3a8a,#3b82f6)' },
-                { label: 'Region VII',           value: 'VII',              icon: '📍', grad: 'linear-gradient(135deg,#7c3aed,#a855f7)' },
-                { label: 'Active Since',         value: '2022',             icon: '📅', grad: 'linear-gradient(135deg,#065f46,#10b981)' },
+                { label: 'Member Institutions', value: members.length || 6, icon: '🏛️', color: '#60a5fa' },
+                { label: 'Regional Scope',       value: 'Region VII',       icon: '📍', color: '#34d399' },
+                { label: 'Consortium Active',    value: 'Since 2022',       icon: '📅', color: '#a78bfa' },
               ].map(s => (
                 <div key={s.label} style={{
-                  flex: 1, background: s.grad, borderRadius: 16, padding: '18px 20px',
+                  background: 'rgba(8, 14, 28, 0.75)',
+                  backdropFilter: 'blur(12px)',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  borderRadius: 16, padding: '18px 20px',
                   display: 'flex', alignItems: 'center', gap: 14,
-                  boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
+                  boxShadow: '0 4px 16px rgba(0,0,0,0.3)',
                   position: 'relative', overflow: 'hidden',
                 }}>
-                  <div style={{ position: 'absolute', bottom: -10, right: 5, fontSize: 56, opacity: 0.1, lineHeight: 1 }}>{s.icon}</div>
-                  <div style={{ fontSize: 28, fontWeight: 900, color: '#fff' }}>{s.value}</div>
-                  <div style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.7)', fontWeight: 600 }}>{s.label}</div>
+                  <div style={{
+                    width: 44, height: 44, borderRadius: 12,
+                    background: `${s.color}15`, border: `1px solid ${s.color}35`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 20, flexShrink: 0,
+                  }}>{s.icon}</div>
+                  <div>
+                    <div style={{ fontSize: 22, fontWeight: 900, color: '#fff', lineHeight: 1.1 }}>{s.value}</div>
+                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', fontWeight: 600, marginTop: 3 }}>{s.label}</div>
+                  </div>
                 </div>
               ))}
             </div>
@@ -335,18 +356,46 @@ export default function MembersPage() {
               </div>
             </div>
 
-            {/* Section heading */}
-            <div style={{ marginBottom: 20 }}>
-              <div style={{
-                fontSize: 12, fontWeight: 800, letterSpacing: '.8px', textTransform: 'uppercase', marginBottom: 7,
-                background: 'linear-gradient(90deg,#f97316,#e11d48)',
-                WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-              }}>Member Institutions</div>
-              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+            {/* Section heading & Search Filter */}
+            <div style={{ marginBottom: 24, display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:14 }}>
+              <div>
+                <div style={{
+                  fontSize: 12, fontWeight: 800, letterSpacing: '.8px', textTransform: 'uppercase', marginBottom: 5,
+                  background: 'linear-gradient(90deg,#f97316,#e11d48)',
+                  WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+                }}>Member Institutions</div>
                 <h3 style={{ color: '#fff', fontSize: 18, fontWeight: 900, margin: 0 }}>
                   Click any institution to learn more
                 </h3>
-                <button onClick={() => { setLoading(true); api.members.list().then(setMembers).catch(()=>{}).finally(()=>setLoading(false)); }} style={{ background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.12)', borderRadius:20, padding:'6px 16px', color:'rgba(255,255,255,0.65)', fontSize:12.5, fontWeight:700, cursor:'pointer', fontFamily:'inherit', display:'flex', alignItems:'center', gap:5, transition:'all .13s' }}
+              </div>
+              <div style={{ display:'flex', alignItems:'center', gap:10, flexWrap:'wrap' }}>
+                <input
+                  type="text"
+                  placeholder="Search institution, campus…"
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  style={{
+                    background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.14)',
+                    borderRadius:20, padding:'7px 16px', color:'#fff', fontSize:12.5,
+                    fontFamily:'inherit', outline:'none', width:200,
+                  }}
+                  onFocus={e => e.target.style.borderColor = '#f97316'}
+                  onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.14)'}
+                />
+                <select
+                  value={typeF}
+                  onChange={e => setTypeF(e.target.value)}
+                  style={{
+                    background:'#0d1424', border:'1px solid rgba(255,255,255,0.14)',
+                    borderRadius:20, padding:'7px 14px', color:'rgba(255,255,255,0.85)',
+                    fontSize:12.5, fontWeight:600, cursor:'pointer', outline:'none',
+                  }}
+                >
+                  {['All Types','State University','Private University','Government Agency'].map(t => (
+                    <option key={t} value={t} style={{ background:'#0d1424' }}>{t}</option>
+                  ))}
+                </select>
+                <button onClick={() => { setLoading(true); api.members.list().then(setMembers).catch(()=>{}).finally(()=>setLoading(false)); }} style={{ background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.12)', borderRadius:20, padding:'7px 16px', color:'rgba(255,255,255,0.65)', fontSize:12.5, fontWeight:700, cursor:'pointer', fontFamily:'inherit', display:'flex', alignItems:'center', gap:5, transition:'all .13s' }}
                   onMouseEnter={e=>{e.currentTarget.style.background='rgba(255,255,255,0.13)'; e.currentTarget.style.color='#fff';}}
                   onMouseLeave={e=>{e.currentTarget.style.background='rgba(255,255,255,0.07)'; e.currentTarget.style.color='rgba(255,255,255,0.65)';}}
                 >↻ Refresh</button>
@@ -357,9 +406,17 @@ export default function MembersPage() {
               <div style={{ textAlign: 'center', padding: '60px 0', color: 'rgba(255,255,255,0.35)' }}>
                 <div style={{ fontSize: 36, marginBottom: 12 }}>⏳</div>Loading members…
               </div>
+            ) : filteredMembers.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '60px 0', color: 'rgba(255,255,255,0.4)' }}>
+                <div style={{ fontSize: 40, marginBottom: 10 }}>🏛️</div>
+                <div style={{ fontSize: 16, fontWeight: 700, color: '#fff' }}>No institutions match your search</div>
+                <button onClick={() => { setSearch(''); setTypeF('All Types'); }} style={{ marginTop: 14, background:'rgba(249,115,22,0.2)', color:'#fb923c', border:'1px solid rgba(249,115,22,0.4)', borderRadius:12, padding:'8px 18px', fontSize:13, fontWeight:700, cursor:'pointer' }}>
+                  Clear Filters
+                </button>
+              </div>
             ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 18 }}>
-                {members.map((m, i) => (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(320px,1fr))', gap: 18 }}>
+                {filteredMembers.map((m, i) => (
                   <MemberCard
                     key={m.id}
                     member={m}

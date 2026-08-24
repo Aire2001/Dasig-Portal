@@ -1716,6 +1716,35 @@ function CalendarTab({ user }) {
     setPickerView('day');
   }
 
+  function jumpToMonthYear(year, month) {
+    setPickerYear(year);
+    setPickerMonth(month);
+    setDatePickerOpen(false);
+    setPickerView('month');
+    const calApi = calendarRef.current?.getApi();
+    if (calApi) {
+      const target = new Date(year, month, 1);
+      calApi.gotoDate(target);
+      calApi.changeView('dayGridMonth', target);
+    }
+  }
+
+  // Auto-jump to the first month with scheduled events on load (e.g. June 2026)
+  useEffect(() => {
+    if (events.length > 0) {
+      const sorted = [...events].map(e => ({ ...e, r: parseRange(e.date) })).filter(e => e.r?.start).sort((a, b) => a.r.start - b.r.start);
+      if (sorted.length > 0 && sorted[0].r.start) {
+        const d = sorted[0].r.start;
+        setPickerMonth(d.getMonth());
+        setPickerYear(d.getFullYear());
+        const calApi = calendarRef.current?.getApi();
+        if (calApi) {
+          calApi.gotoDate(d);
+        }
+      }
+    }
+  }, [events.length]);
+
   function jumpToDay(day) {
     const calApi = calendarRef.current?.getApi();
     if (calApi) {
@@ -2133,6 +2162,44 @@ function CalendarTab({ user }) {
             {datePickerOpen && <div onClick={() => setDatePickerOpen(false)} style={{ position:'fixed', inset:0, zIndex:9998 }} />}
           </div>
 
+          {/* Quick Month Shortcuts bar */}
+          <div style={{ display:'flex', alignItems:'center', gap:8, flexWrap:'wrap', marginTop: 10, marginBottom: 14 }}>
+            <span style={{ fontSize:12, color:'rgba(255,255,255,0.45)', fontWeight:700 }}>Quick Jump:</span>
+            <button
+              onClick={() => jumpToMonthYear(2026, 5)}
+              style={{
+                background: pickerMonth === 5 && pickerYear === 2026 ? 'linear-gradient(90deg,#f97316,#e11d48)' : 'rgba(255,255,255,0.06)',
+                color: pickerMonth === 5 && pickerYear === 2026 ? '#fff' : 'rgba(255,255,255,0.8)',
+                border: `1px solid ${pickerMonth === 5 && pickerYear === 2026 ? 'transparent' : 'rgba(255,255,255,0.12)'}`,
+                borderRadius: 8, padding: '5px 11px', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+              }}
+            >
+              📅 June 2026 (Summit Month · 5 events)
+            </button>
+            <button
+              onClick={() => jumpToMonthYear(2026, 4)}
+              style={{
+                background: pickerMonth === 4 && pickerYear === 2026 ? 'linear-gradient(90deg,#f97316,#e11d48)' : 'rgba(255,255,255,0.06)',
+                color: pickerMonth === 4 && pickerYear === 2026 ? '#fff' : 'rgba(255,255,255,0.8)',
+                border: `1px solid ${pickerMonth === 4 && pickerYear === 2026 ? 'transparent' : 'rgba(255,255,255,0.12)'}`,
+                borderRadius: 8, padding: '5px 11px', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+              }}
+            >
+              📅 May 2026 (2 events)
+            </button>
+            <button
+              onClick={jumpToToday}
+              style={{
+                background: pickerMonth === new Date().getMonth() && pickerYear === new Date().getFullYear() ? 'linear-gradient(90deg,#10b981,#059669)' : 'rgba(255,255,255,0.06)',
+                color: pickerMonth === new Date().getMonth() && pickerYear === new Date().getFullYear() ? '#fff' : 'rgba(255,255,255,0.7)',
+                border: '1px solid rgba(255,255,255,0.12)',
+                borderRadius: 8, padding: '5px 11px', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+              }}
+            >
+              📍 Today ({MONTH_NAMES[new Date().getMonth()].slice(0,3)} {new Date().getFullYear()})
+            </button>
+          </div>
+
           {/* Refresh */}
           <button onClick={() => loadData(true)} disabled={refreshing} style={{ height:40, background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.12)', borderRadius:10, padding:'0 16px', color:'rgba(255,255,255,0.65)', fontSize:13, fontWeight:700, cursor: refreshing?'default':'pointer', fontFamily:'inherit', display:'flex', alignItems:'center', gap:6, transition:'all .13s', marginLeft:'auto' }}
             onMouseEnter={e => { if (!refreshing) e.currentTarget.style.background='rgba(255,255,255,0.12)'; }}
@@ -2207,7 +2274,7 @@ function CalendarTab({ user }) {
               slotMaxTime="20:00:00"
               allDaySlot={false}
               events={fcEvents}
-              height="80vh"
+              height="75vh"
               eventDisplay="block"
               nowIndicator={true}
               dayMaxEvents={3}
@@ -2230,7 +2297,6 @@ function CalendarTab({ user }) {
                 info.jsEvent.preventDefault();
               }}
               dateClick={(info) => {
-                /* Clicking a date cell focuses the day view */
                 const calApi = calendarRef.current?.getApi();
                 if (calApi) { calApi.changeView('timeGridDay', info.date); }
               }}
@@ -2265,13 +2331,51 @@ function CalendarTab({ user }) {
                   delay: [200, 0],
                   maxWidth: 280,
                 });
-
-                /* Cursor pointer */
                 info.el.style.cursor = 'pointer';
               }}
             />
           </div>
         )}
+
+        {/* ── Scheduled Consortium Agenda (Below Calendar) ── */}
+        <div style={{ marginTop: 24, paddingTop: 20, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom: 14 }}>
+            <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', display:'flex', alignItems:'center', gap:7 }}>
+              <span>📋</span> Scheduled Consortium Agenda
+            </div>
+            <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)' }}>{calItems.length} total scheduled items</span>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 12 }}>
+            {calItems.slice(0, 6).map(it => (
+              <div
+                key={it.id}
+                onClick={() => setDetail(it)}
+                style={{
+                  background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)',
+                  borderRadius: 12, padding: '12px 14px', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', gap: 12,
+                  transition: 'all 0.15s ease',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.borderColor = 'rgba(249,115,22,0.4)'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)'; }}
+              >
+                <div style={{ width: 38, height: 38, borderRadius: 10, background: 'rgba(249,115,22,0.15)', border:'1px solid rgba(249,115,22,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}>
+                  {it._type === 'event' ? '📅' : '🎓'}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 11, color: '#f97316', fontWeight: 800 }}>{it.category} · {it.date || it.schedule}</div>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{it.title}</div>
+                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>📍 {it.venue || it.org}</div>
+                </div>
+                <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.6)', background: 'rgba(255,255,255,0.06)', borderRadius: 6, padding: '3px 8px' }}>
+                  Details →
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+
       </div>
     </>
   );

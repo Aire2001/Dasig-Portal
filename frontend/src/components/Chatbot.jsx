@@ -7,46 +7,53 @@ import { useAuth } from '../context/AuthContext';
 /* ── Role-based quick chips ───────────────────────────────────── */
 const QUICK_BY_ROLE = {
   GUEST: [
-    'What is DASIG?',
-    'What events are upcoming?',
-    'How do I become a member?',
-    'What training programs are offered?',
-    'Latest news and announcements',
-    'Who are the consortium members?',
+    { label: '📅 Upcoming Events',        q: 'What events are coming up?' },
+    { label: '🎓 Training Programs',      q: 'What training programs are available?' },
+    { label: '👥 How to become a member', q: 'How do I become a DASIG member?' },
+    { label: '💰 Funding Opportunities',  q: 'What funding opportunities are available?' },
+    { label: '📰 News & Announcements',   q: 'What are the latest news and announcements?' },
+    { label: '🏛 Member Institutions',    q: 'Who are the DASIG member institutions?' },
+    { label: '🦅 About Haribon',          q: 'Who are you and what can you do?' },
+    { label: '🔐 How to register',        q: 'How do I create a DASIG account?' },
   ],
   MEMBER: [
-    'What events are coming up?',
-    'What training programs can I enroll in?',
-    'What funding opportunities are open?',
-    'Tell me about DASIG partnerships',
-    'How do I check my registrations?',
-    'What policies are available?',
+    { label: '📅 Upcoming Events',        q: 'What events are coming up?' },
+    { label: '🎓 Enroll in Training',     q: 'What training programs can I enroll in?' },
+    { label: '💰 Open Funding',           q: 'What funding opportunities are open?' },
+    { label: '🤝 Partnerships',           q: 'Tell me about DASIG partnerships' },
+    { label: '📋 View Policies',          q: 'What governance policies are available?' },
+    { label: '📰 Latest News',            q: 'What are the latest news and announcements?' },
+    { label: '📊 My Membership Status',   q: 'What is my membership status?' },
+    { label: '🏛 Member Institutions',    q: 'Who are the DASIG member institutions?' },
   ],
   ADMIN: [
-    'What events are coming up?',
-    'What can the admin panel do?',
-    'How is the chatbot performing?',
-    'What training programs are offered?',
-    'What funding is available?',
-    'How do I manage members?',
+    { label: '📅 All Events',             q: 'What events are coming up?' },
+    { label: '🎓 Training Programs',      q: 'What training programs are available?' },
+    { label: '👥 Member Management',      q: 'What can the admin panel manage?' },
+    { label: '🤖 Chatbot Accuracy',       q: 'How is the chatbot performing?' },
+    { label: '💰 Funding Opportunities',  q: 'What funding opportunities exist?' },
+    { label: '📋 Governance Policies',    q: 'What governance policies are available?' },
+    { label: '🤝 Partnerships',           q: 'Tell me about DASIG partnerships' },
+    { label: '🦅 What can Haribon do',    q: 'What topics can Haribon answer?' },
   ],
 };
 
 /* ── Role-based greeting ──────────────────────────────────────── */
 function getGreeting(user) {
   if (!user) {
-    return "Hi! I'm Haribon 🦅 — the DASIG AI Assistant.\n\nYou're browsing as a guest. Ask me about events, membership, training, and more!";
+    return "Hi! I'm Haribon 🦅 — the DASIG AI Assistant.\n\nI can answer questions about consortium events, training programs, membership, policies, funding opportunities, partnerships, and more.\n\nWhat would you like to know?";
   }
+  const first = (user.name || '').split(' ')[0];
   if (user.role === 'ADMIN') {
-    return `Hello, ${(user.name || 'Admin').split(' ')[0]} 🦅\n\nI'm Haribon, your DASIG AI Assistant. Need help with the portal, member management, or event information?`;
+    return `Hello, ${first}! I'm Haribon 🦅 — the DASIG AI Assistant.\n\nAs an administrator, I can help with portal information, event details, training programs, member management guidance, and system queries.\n\nWhat do you need?`;
   }
   if (user.role === 'MEMBER') {
-    return `Welcome back, ${(user.name || 'there').split(' ')[0]}! 🦅\n\nI'm Haribon — your DASIG AI. Ask about events, training programs, funding opportunities, or partnerships.`;
+    return `Welcome back, ${first}! 🦅 I'm Haribon — your DASIG AI Assistant.\n\nYou have full member access. Ask me about upcoming events, training enrollments, funding opportunities, partnerships, or governance policies.\n\nHow can I help you today?`;
   }
-  return "Hi! I'm Haribon 🦅 — the DASIG AI Assistant.\n\nAsk me about events, training, membership, or policies!";
+  return `Hi, ${first}! I'm Haribon 🦅 — the DASIG AI Assistant.\n\nI can help you learn about DASIG events, training programs, and how to become a member.\n\nWhat would you like to know?`;
 }
 
-/* ── Simple bot-text formatter ────────────────────────────────── */
+/* ── Bot-text formatter ───────────────────────────────────────── */
 function WBotText({ text }) {
   const blocks = (text || '').split('\n\n').filter(Boolean);
   return (
@@ -61,7 +68,7 @@ function WBotText({ text }) {
                 return (
                   <div key={li} style={{ display:'flex', gap:7, alignItems:'flex-start' }}>
                     <span style={{ color:'#f97316', fontSize:10, marginTop:3, flexShrink:0 }}>▸</span>
-                    <span style={{ color:'rgba(255,255,255,0.82)', fontSize:12, lineHeight:1.55 }}>{t.replace(/^[•\-]\s*/, '')}</span>
+                    <span style={{ color:'rgba(255,255,255,0.85)', fontSize:12, lineHeight:1.55 }}>{t.replace(/^[•\-]\s*/, '')}</span>
                   </div>
                 );
               }
@@ -71,14 +78,14 @@ function WBotText({ text }) {
                 return (
                   <div key={li} style={{ display:'flex', gap:7, alignItems:'flex-start' }}>
                     <span style={{ color:'#f97316', fontSize:11, fontWeight:800, flexShrink:0, minWidth:14 }}>{num}.</span>
-                    <span style={{ color:'rgba(255,255,255,0.82)', fontSize:12, lineHeight:1.55 }}>{body}</span>
+                    <span style={{ color:'rgba(255,255,255,0.85)', fontSize:12, lineHeight:1.55 }}>{body}</span>
                   </div>
                 );
               }
               if (t.endsWith(':') && t.length < 50) {
                 return <div key={li} style={{ color:'#fff', fontWeight:800, fontSize:12, marginTop: li > 0 ? 3 : 0 }}>{t}</div>;
               }
-              return <div key={li} style={{ color:'rgba(255,255,255,0.82)', fontSize:12, lineHeight:1.55 }}>{t}</div>;
+              return <div key={li} style={{ color:'rgba(255,255,255,0.85)', fontSize:12, lineHeight:1.55 }}>{t}</div>;
             })}
           </div>
         );
@@ -93,17 +100,19 @@ const WIDGET_CSS = `
   @keyframes blink    { 0%,80%,100%{opacity:0} 40%{opacity:1} }
   @keyframes badgePop { from{transform:scale(0)} to{transform:scale(1)} }
   @keyframes pulse    { 0%,100%{box-shadow:0 0 0 0 rgba(249,115,22,0.55)} 50%{box-shadow:0 0 0 8px rgba(249,115,22,0)} }
+  @keyframes micPulse { 0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0.6); transform:scale(1)} 50%{box-shadow:0 0 0 10px rgba(239,68,68,0); transform:scale(1.06)} }
 
   .w-dot { animation:blink 1.2s infinite; display:inline-block; width:5px; height:5px; border-radius:50%; background:#94a3b8; margin:0 1.5px; }
   .w-dot:nth-child(2){animation-delay:.2s} .w-dot:nth-child(3){animation-delay:.4s}
 
   .w-chip {
-    border-radius:12px; padding:6px 11px; font-size:11.5px; font-weight:700;
+    border-radius:10px; padding:6px 11px; font-size:11.5px; font-weight:700;
     cursor:pointer; font-family:inherit; white-space:nowrap;
-    background:rgba(255,255,255,0.07); color:rgba(255,255,255,0.68);
+    background:rgba(255,255,255,0.07); color:rgba(255,255,255,0.72);
     border:1px solid rgba(255,255,255,0.12); transition:all .15s;
+    text-align:left;
   }
-  .w-chip:hover { background:rgba(249,115,22,0.16); color:#f97316; border-color:rgba(249,115,22,0.35); transform:translateY(-1px); }
+  .w-chip:hover { background:rgba(249,115,22,0.16); color:#fb923c; border-color:rgba(249,115,22,0.35); transform:translateY(-1px); }
 
   .w-nav-btn {
     display:inline-flex; align-items:center; gap:5px;
@@ -121,6 +130,31 @@ const WIDGET_CSS = `
   }
   .w-input::placeholder{color:rgba(255,255,255,0.3)} .w-input:focus{border-color:#f97316; background:rgba(255,255,255,0.1)}
   ::-webkit-scrollbar{width:4px} ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1); border-radius:2px}
+
+  .w-msg-wrapper:hover .w-msg-actions { opacity: 1; }
+  .w-msg-actions {
+    display: flex;
+    gap: 4px;
+    margin-top: 4px;
+    opacity: 0;
+    transition: opacity 0.18s;
+  }
+  .w-action-btn {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 6px;
+    padding: 2px 7px;
+    font-size: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    color: rgba(255,255,255,0.5);
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+  .w-action-btn:hover { background: rgba(249,115,22,0.15); border-color: rgba(249,115,22,0.3); color: #f97316; }
+  .w-action-btn.rated-up { background: rgba(16,185,129,0.15); border-color: rgba(16,185,129,0.3); color: #34d399; }
+  .w-action-btn.rated-down { background: rgba(225,29,72,0.15); border-color: rgba(225,29,72,0.3); color: #f87171; }
+  .w-action-btn.copied { background: rgba(16,185,129,0.15); border-color: rgba(16,185,129,0.3); color: #34d399; }
 `;
 
 const ROLE_BADGE = {
@@ -146,7 +180,11 @@ export default function Chatbot() {
   const [ended, setEnded]       = useState(false);
   const [unread, setUnread]     = useState(0);
   const [hasReplied, setHasReplied] = useState(false);
-  const msgsRef = useRef(null);
+  const [ratings, setRatings]   = useState({});
+  const [copied, setCopied]     = useState(null);
+  const [listening, setListening] = useState(false);
+  const recognitionRef          = useRef(null);
+  const msgsRef                 = useRef(null);
 
   // Reset chat when user changes (login/logout)
   useEffect(() => {
@@ -168,6 +206,50 @@ export default function Chatbot() {
   function openWidget() { setOpen(true); setUnread(0); }
   function newChat()    { setMessages([{ from:'bot', text: getGreeting(user) }]); setEnded(false); setInput(''); setHasReplied(false); }
 
+  function rateMessage(idx, vote) {
+    setRatings(prev => ({ ...prev, [idx]: prev[idx] === vote ? null : vote }));
+  }
+
+  async function copyMessage(idx, text) {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(idx);
+      setTimeout(() => setCopied(c => c === idx ? null : c), 2000);
+    } catch (_) {}
+  }
+
+  function toggleVoiceInput() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert('Speech recognition is not supported in this browser.');
+      return;
+    }
+    if (listening) {
+      recognitionRef.current?.stop();
+      setListening(false);
+      return;
+    }
+    try {
+      const recognition = new SpeechRecognition();
+      recognition.lang = 'en-PH';
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+      recognition.onstart = () => setListening(true);
+      recognition.onend = () => setListening(false);
+      recognition.onerror = () => setListening(false);
+      recognition.onresult = (e) => {
+        const transcript = e.results[0][0].transcript;
+        if (transcript) {
+          setInput(prev => (prev ? `${prev} ${transcript}` : transcript));
+        }
+      };
+      recognitionRef.current = recognition;
+      recognition.start();
+    } catch (_) {
+      setListening(false);
+    }
+  }
+
   async function send(text) {
     const t = (text || input).trim();
     if (!t || thinking) return;
@@ -182,6 +264,8 @@ export default function Chatbot() {
         text: res.reply,
         followups: res.followups || [],
         navigate_to: res.navigate_to || null,
+        matched: res.matched,
+        suggestions: res.suggestions || [],
       }]);
     } catch {
       setHasReplied(true);
@@ -203,7 +287,7 @@ export default function Chatbot() {
       {/* ── Chat window ── */}
       {open && (
         <div style={{
-          position:'fixed', bottom:88, right:20, width:360,
+          position:'fixed', bottom:88, right:20, width:380,
           borderRadius:22, overflow:'hidden',
           background:'linear-gradient(180deg,#0b1120,#040a1a)',
           boxShadow:'0 24px 72px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.07)',
@@ -229,11 +313,11 @@ export default function Chatbot() {
             <div style={{ flex:1, minWidth:0 }}>
               <div style={{ display:'flex', alignItems:'center', gap:7 }}>
                 <span style={{ color:'#fff', fontWeight:900, fontSize:13.5 }}>Haribon</span>
-                <span style={{ color:'rgba(255,255,255,0.45)', fontSize:11.5, fontWeight:400 }}>DASIG AI</span>
+                <span style={{ color:'rgba(255,255,255,0.45)', fontSize:11.5, fontWeight:400 }}>DASIG NLP Engine</span>
               </div>
               <div style={{ display:'flex', alignItems:'center', gap:7, marginTop:2 }}>
                 <span style={{ width:6, height:6, borderRadius:'50%', background:'#4ade80', display:'inline-block', boxShadow:'0 0 5px rgba(74,222,128,0.8)' }} />
-                <span style={{ color:'rgba(255,255,255,0.45)', fontSize:10.5 }}>Online · NLP-powered</span>
+                <span style={{ color:'rgba(255,255,255,0.5)', fontSize:10.5 }}>Online · Scoped to DASIG KB</span>
               </div>
             </div>
 
@@ -255,7 +339,6 @@ export default function Chatbot() {
             {/* Action buttons */}
             <div style={{ display:'flex', gap:5, flexShrink:0 }}>
               <button onClick={() => {
-                // Save current messages so ChatbotPage can resume them
                 sessionStorage.setItem('haribon_resume', JSON.stringify(messages));
                 setOpen(false);
                 navigate('/chatbot');
@@ -291,7 +374,7 @@ export default function Chatbot() {
             ) : (
               <>
                 {messages.map((msg, i) => (
-                  <div key={i} style={{ display:'flex', flexDirection:'column', alignItems: msg.from === 'user' ? 'flex-end' : 'flex-start' }}>
+                  <div key={i} className="w-msg-wrapper" style={{ display:'flex', flexDirection:'column', alignItems: msg.from === 'user' ? 'flex-end' : 'flex-start' }}>
                     {/* Bot name */}
                     {msg.from === 'bot' && (
                       <div style={{ display:'flex', alignItems:'center', gap:5, marginBottom:4 }}>
@@ -311,6 +394,44 @@ export default function Chatbot() {
                     }}>
                       {msg.from === 'bot' ? <WBotText text={msg.text} /> : <span style={{ lineHeight:1.55 }}>{msg.text}</span>}
                     </div>
+
+                    {/* Rating & Copy actions for bot messages */}
+                    {msg.from === 'bot' && i > 0 && (
+                      <div className="w-msg-actions">
+                        <button
+                          className={`w-action-btn${ratings[i] === 'up' ? ' rated-up' : ''}`}
+                          onClick={() => rateMessage(i, 'up')}
+                        >
+                          👍{ratings[i] === 'up' ? ' Helpful' : ''}
+                        </button>
+                        <button
+                          className={`w-action-btn${ratings[i] === 'down' ? ' rated-down' : ''}`}
+                          onClick={() => rateMessage(i, 'down')}
+                        >
+                          👎
+                        </button>
+                        <button
+                          className={`w-action-btn${copied === i ? ' copied' : ''}`}
+                          onClick={() => copyMessage(i, msg.text)}
+                        >
+                          {copied === i ? '✓ Copied' : '⧉'}
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Related suggestions when no intent match found */}
+                    {i === messages.length - 1 && msg.from === 'bot' && !ended && msg.matched === false && msg.suggestions?.length > 0 && (
+                      <div style={{ marginTop: 8, padding: '8px 10px', background: 'rgba(249,115,22,0.07)', border: '1px solid rgba(249,115,22,0.18)', borderRadius: 10, maxWidth: '92%' }}>
+                        <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(249,115,22,0.8)', marginBottom: 5, textTransform: 'uppercase', letterSpacing: '.4px' }}>💡 Did you mean?</div>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                          {msg.suggestions.map((s, si) => (
+                            <button key={si} className="w-chip" onClick={() => send(s.sample)} style={{ fontSize: 11 }}>
+                              {s.sample}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
 
                     {/* Navigate CTA + follow-up chips — last bot message only */}
                     {msg.from === 'bot' && i === messages.length - 1 && !thinking && (
@@ -349,16 +470,16 @@ export default function Chatbot() {
 
           {/* ── Quick chips (until first reply) ── */}
           {!ended && !hasReplied && (
-            <div style={{ padding:'4px 12px 8px', display:'flex', gap:5, flexWrap:'wrap', borderTop:'1px solid rgba(255,255,255,0.05)' }}>
-              {quick.map(q => (
-                <button key={q} className="w-chip" onClick={() => send(q)} disabled={thinking}>{q}</button>
+            <div style={{ padding:'6px 12px 8px', display:'flex', gap:5, flexWrap:'wrap', borderTop:'1px solid rgba(255,255,255,0.05)', maxHeight: 110, overflowY: 'auto' }}>
+              {quick.map(({ label, q }) => (
+                <button key={label} className="w-chip" onClick={() => send(q)} disabled={thinking}>{label}</button>
               ))}
             </div>
           )}
 
           {/* ── Input ── */}
           {!ended && (
-            <div style={{ padding:'8px 12px 14px', borderTop:'1px solid rgba(255,255,255,0.06)', display:'flex', gap:7, flexShrink:0 }}>
+            <div style={{ padding:'8px 12px 14px', borderTop:'1px solid rgba(255,255,255,0.06)', display:'flex', gap:7, flexShrink:0, alignItems: 'center' }}>
               <input
                 className="w-input"
                 value={input}
@@ -367,6 +488,24 @@ export default function Chatbot() {
                 placeholder={user ? `Ask Haribon, ${(user.name || 'there').split(' ')[0]}…` : 'Ask Haribon…'}
                 disabled={thinking}
               />
+              <button
+                type="button"
+                onClick={toggleVoiceInput}
+                title={listening ? 'Listening... click to stop' : 'Speak (Voice input)'}
+                style={{
+                  background: listening ? 'linear-gradient(135deg,#ef4444,#dc2626)' : 'rgba(255,255,255,0.08)',
+                  color: listening ? '#fff' : 'rgba(255,255,255,0.7)',
+                  border: `1px solid ${listening ? '#ef4444' : 'rgba(255,255,255,0.12)'}`,
+                  borderRadius: 11, padding: '8px 10px',
+                  fontSize: 14, cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  animation: listening ? 'micPulse 1.4s infinite' : 'none',
+                  transition: 'all 0.15s',
+                  flexShrink: 0,
+                }}
+              >
+                {listening ? '🔴' : '🎙️'}
+              </button>
               <button onClick={() => send()} disabled={thinking || !input.trim()} style={{
                 background: thinking || !input.trim() ? 'rgba(255,255,255,0.07)' : 'linear-gradient(90deg,#f97316,#e11d48)',
                 color: thinking || !input.trim() ? 'rgba(255,255,255,0.28)' : '#fff',
@@ -374,42 +513,54 @@ export default function Chatbot() {
                 fontSize:14, fontWeight:900, cursor: thinking || !input.trim() ? 'not-allowed' : 'pointer',
                 fontFamily:'inherit', transition:'all .15s',
                 boxShadow: !thinking && input.trim() ? '0 4px 12px rgba(249,115,22,0.35)' : 'none',
+                flexShrink: 0,
               }}>→</button>
             </div>
           )}
         </div>
       )}
 
-      {/* ── Toggle button ── */}
+      {/* ── Meta AI-style Floating Toggle Button ── */}
       <button
         onClick={() => open ? setOpen(false) : openWidget()}
-        title="Chat with Haribon"
+        title="Chat with Haribon AI"
         style={{
           position:'fixed', bottom:20, right:20,
           width:58, height:58, borderRadius:'50%',
           border:'none', cursor:'pointer', zIndex:9999,
-          overflow:'hidden', padding:0, background:'transparent',
+          overflow:'visible', padding:0, background:'transparent',
           transition:'transform .22s cubic-bezier(.34,1.56,.64,1)',
-          animation: !open && unread > 0 ? 'pulse 2s infinite' : 'none',
-          boxShadow: open ? 'none' : '0 4px 22px rgba(249,115,22,0.5)',
+          boxShadow: open ? 'none' : '0 0 0 2px rgba(249,115,22,0.4), 0 8px 32px rgba(225,29,72,0.45), 0 0 24px rgba(59,130,246,0.3)',
         }}
         onMouseEnter={e => e.currentTarget.style.transform='scale(1.12)'}
         onMouseLeave={e => e.currentTarget.style.transform='scale(1)'}
       >
-        {open
-          ? <div style={{ width:'100%', height:'100%', background:'linear-gradient(135deg,#0f2d6b,#1e40af)', display:'flex', alignItems:'center', justifyContent:'center', color:'#fff', fontSize:20, fontWeight:700 }}>✕</div>
-          : <HaribonFace size={58} style={{ borderRadius:'50%' }} />
-        }
+        {/* Glowing Meta AI Pulse Halo Ring */}
+        {!open && (
+          <div style={{
+            position:'absolute', inset:-4, borderRadius:'50%',
+            background:'linear-gradient(135deg,#f97316,#e11d48,#3b82f6)',
+            zIndex:0, opacity:0.75, filter:'blur(4px)',
+            animation:'wDotBlink 2.5s ease-in-out infinite alternate',
+          }} />
+        )}
+        <div style={{ position:'relative', zIndex:1, width:'100%', height:'100%', borderRadius:'50%', overflow:'hidden' }}>
+          {open
+            ? <div style={{ width:'100%', height:'100%', background:'linear-gradient(135deg,#0f2d6b,#1e40af)', display:'flex', alignItems:'center', justifyContent:'center', color:'#fff', fontSize:20, fontWeight:700 }}>✕</div>
+            : <HaribonFace size={58} style={{ borderRadius:'50%' }} />
+          }
+        </div>
         {/* Unread badge */}
         {!open && unread > 0 && (
           <div style={{
-            position:'absolute', top:0, right:0,
-            width:18, height:18, borderRadius:'50%',
+            position:'absolute', top:-2, right:-2,
+            width:20, height:20, borderRadius:'50%',
             background:'linear-gradient(135deg,#e11d48,#f97316)',
-            border:'2px solid #0d1424',
+            border:'2px solid #0d1424', zIndex:2,
             display:'flex', alignItems:'center', justifyContent:'center',
-            fontSize:9.5, fontWeight:900, color:'#fff',
+            fontSize:10, fontWeight:900, color:'#fff',
             animation:'badgePop .3s cubic-bezier(.34,1.56,.64,1)',
+            boxShadow:'0 2px 8px rgba(225,29,72,0.6)',
           }}>
             {unread > 9 ? '9+' : unread}
           </div>

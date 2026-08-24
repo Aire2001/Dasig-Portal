@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../api';
 import ParticleBackground from '../components/ParticleBackground';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 
 /* ─── CSS ───────────────────────────────────────────────────────── */
 const CSS = `
@@ -294,6 +295,36 @@ function Loading() {
   );
 }
 
+function SectionKPIs({ items }) {
+  if (!items || !items.length) return null;
+  return (
+    <div style={{ display:'grid', gridTemplateColumns:`repeat(${items.length}, 1fr)`, gap:12, marginBottom:20 }}>
+      {items.map((kpi, idx) => (
+        <div key={idx} style={{
+          background:'rgba(8,14,28,0.75)',
+          backdropFilter:'blur(12px)',
+          border:'1px solid rgba(255,255,255,0.08)',
+          borderRadius:14, padding:'14px 16px',
+          display:'flex', alignItems:'center', gap:12,
+          boxShadow:'0 4px 16px rgba(0,0,0,0.25)',
+        }}>
+          <div style={{
+            width:38, height:38, borderRadius:10,
+            background: `${kpi.color || '#f97316'}15`,
+            border: `1px solid ${kpi.color || '#f97316'}35`,
+            display:'flex', alignItems:'center', justifyContent:'center',
+            fontSize:18, flexShrink:0,
+          }}>{kpi.icon}</div>
+          <div>
+            <div style={{ fontSize:20, fontWeight:900, color:'#fff', lineHeight:1 }}>{kpi.value}</div>
+            <div style={{ fontSize:11.5, color:'rgba(255,255,255,0.45)', fontWeight:600, marginTop:3 }}>{kpi.label}</div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function FormActions({ onCancel, onSave, saving, saveLabel }) {
   return (
     <div style={{ display:'flex', gap:10, marginTop:20 }}>
@@ -366,11 +397,13 @@ export default function AdminPage() {
         </div>
         <div style={{ flex:1 }} />
         <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-          <div style={{ textAlign:'right' }}>
-            <div style={{ fontSize:12.5, fontWeight:700, color:'rgba(255,255,255,0.8)' }}>{user?.name || 'Admin'}</div>
-            <div style={{ fontSize:12, color:'rgba(255,255,255,0.5)' }}>{user?.email}</div>
+          <div style={{ textAlign:'right', lineHeight:1.25 }}>
+            <div style={{ fontSize:13, fontWeight:800, color:'#fff' }}>{user?.name || 'Admin'}</div>
+            <div style={{ fontSize:11, color:'rgba(249,115,22,0.9)', fontWeight:700, marginTop:1 }}>
+              🏛️ {user?.institution || 'Region VII Consortium'}{user?.campus ? ` · ${user.campus}` : ''}
+            </div>
           </div>
-          <div style={{ width:34, height:34, borderRadius:10, background:'linear-gradient(135deg,#1e3a8a,#4f46e5)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, fontWeight:900, color:'#fff' }}>{initials}</div>
+          <div style={{ width:34, height:34, borderRadius:10, background:'linear-gradient(135deg,#e11d48,#9f1239)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, fontWeight:900, color:'#fff' }}>{initials}</div>
         </div>
       </header>
 
@@ -525,6 +558,7 @@ function UsersTab({ showToast }) {
   const [roleF, setRoleF]   = useState('All');
   const [acting, setActing] = useState(null);
   const [page, setPage]     = useState(1);
+  const [detailUser, setDetailUser] = useState(null);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -548,13 +582,28 @@ function UsersTab({ showToast }) {
       if (u.status === 'INACTIVE') {
         await api.admin.activate(u.id);
         setUsers(p => p.map(x => x.id === u.id ? { ...x, status: 'ACTIVE' } : x));
+        if (detailUser && detailUser.id === u.id) setDetailUser(prev => ({ ...prev, status: 'ACTIVE' }));
         showToast('Account activated successfully!', true, `${u.name} can now log in`);
       } else {
         await api.admin.suspend(u.id);
         setUsers(p => p.map(x => x.id === u.id ? { ...x, status: 'INACTIVE' } : x));
+        if (detailUser && detailUser.id === u.id) setDetailUser(prev => ({ ...prev, status: 'INACTIVE' }));
         showToast('Account suspended', false, `${u.name} has been suspended`);
       }
     } catch (e) { showToast(e.message, false); } finally { setActing(null); }
+  }
+
+  function exportUsersCSV() {
+    if (!users.length) return;
+    const headers = ['Name','Email','Institution','Campus','Role','Status','Tier','Joined'];
+    const rows = users.map(u => [
+      u.name || '', u.email || '', u.institution || '', u.campus || '', u.role || '', u.status || '', u.tier || '', u.created_at?.slice(0,10) || ''
+    ]);
+    const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+    a.download = 'dasig_users_export.csv';
+    a.click();
   }
 
   const ROLE_STYLE = {
@@ -565,14 +614,67 @@ function UsersTab({ showToast }) {
 
   return (
     <div>
+      {/* User Detail Modal */}
+      {detailUser && (
+        <Modal title="User Details" onClose={() => setDetailUser(null)}>
+          <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
+            <div style={{ display:'flex', alignItems:'center', gap:14, padding:'4px 0' }}>
+              <div style={{ width:52, height:52, borderRadius:14, background:'linear-gradient(135deg,#1e3a8a,#4f46e5)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:18, fontWeight:900, color:'#fff', flexShrink:0 }}>
+                {(detailUser.name || 'U').split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase()}
+              </div>
+              <div>
+                <div style={{ color:'#fff', fontWeight:900, fontSize:16.5 }}>{detailUser.name}</div>
+                <div style={{ color:'rgba(255,255,255,0.5)', fontSize:13 }}>{detailUser.email}</div>
+              </div>
+            </div>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
+              {[
+                { l:'Role', v:detailUser.role },
+                { l:'Status', v:detailUser.status },
+                { l:'Institution', v:detailUser.institution || '—' },
+                { l:'Campus', v:detailUser.campus || '—' },
+                { l:'Tier', v:detailUser.tier || '—' },
+                { l:'Joined Date', v:detailUser.created_at?.slice(0,10) || '—' },
+                { l:'Member Since', v:detailUser.member_since || '—' },
+                { l:'Renewal Due', v:detailUser.renewal_due || '—' },
+              ].map(r => (
+                <div key={r.l} style={{ background:'rgba(255,255,255,0.04)', borderRadius:9, padding:'10px 12px' }}>
+                  <div style={{ fontSize:10.5, fontWeight:800, color:'rgba(255,255,255,0.38)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:3 }}>{r.l}</div>
+                  <div style={{ fontSize:13.5, color:'#fff', fontWeight:600 }}>{r.v}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{ display:'flex', gap:10, marginTop:6 }}>
+              <button
+                onClick={() => toggleStatus(detailUser)}
+                disabled={acting === detailUser.id + 's'}
+                className={`ap-btn ${detailUser.status === 'INACTIVE' ? 'ap-btn-green' : 'ap-btn-red'}`}
+                style={{ flex:1, padding:'11px', fontSize:13 }}
+              >
+                {acting === detailUser.id + 's' ? '…' : detailUser.status === 'INACTIVE' ? 'Activate Account' : 'Suspend Account'}
+              </button>
+              <button onClick={() => setDetailUser(null)} className="ap-btn ap-btn-ghost" style={{ flex:1, padding:'11px', fontSize:13 }}>Close</button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
       <PageHeader title="Users" desc="Manage roles and account status" action={
-        <div style={{ display:'flex', gap:8 }}>
-          <input className="ap-input" placeholder="Search name, email…" value={search} onChange={e => setSearch(e.target.value)} style={{ width:200 }} />
-          <select className="ap-input" value={roleF} onChange={e => setRoleF(e.target.value)} style={{ width:120, cursor:'pointer' }}>
+        <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+          <button onClick={exportUsersCSV} className="ap-btn ap-btn-ghost" style={{ fontSize:12.5, whiteSpace:'nowrap' }}>⬇ Export CSV</button>
+          <input className="ap-input" placeholder="Search name, email…" value={search} onChange={e => setSearch(e.target.value)} style={{ width:190 }} />
+          <select className="ap-input" value={roleF} onChange={e => setRoleF(e.target.value)} style={{ width:110, cursor:'pointer' }}>
             {['All','ADMIN','MEMBER','GUEST'].map(r => <option key={r} value={r} style={{ background:'#0f172a' }}>{r}</option>)}
           </select>
         </div>
       } />
+
+      <SectionKPIs items={[
+        { label: 'Total Accounts', value: users.length, icon: '👥', color: '#60a5fa' },
+        { label: 'Verified Members', value: users.filter(u => u.role === 'MEMBER').length, icon: '🎓', color: '#34d399' },
+        { label: 'Administrators', value: users.filter(u => u.role === 'ADMIN').length, icon: '🛡️', color: '#f87171' },
+        { label: 'Active Status', value: users.filter(u => u.status === 'ACTIVE').length, icon: '🟢', color: '#fbbf24' },
+      ]} />
 
       {loading ? <Loading /> : (() => {
         const totalPages = Math.max(1, Math.ceil(users.length / PAGE_SIZE));
@@ -584,12 +686,19 @@ function UsersTab({ showToast }) {
             return (
               <TR key={u.id}>
                 <TD>
-                  <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+                  <div
+                    onClick={() => setDetailUser(u)}
+                    title="Click to view details"
+                    style={{ display:'flex', alignItems:'center', gap:10, cursor:'pointer' }}
+                  >
                     <div style={{ width:34, height:34, borderRadius:9, background:'linear-gradient(135deg,#1e3a8a,#4f46e5)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:12, fontWeight:900, color:'#fff', flexShrink:0 }}>
                       {(u.name || 'U').split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase()}
                     </div>
                     <div>
-                      <div style={{ fontWeight:700, color:'#fff', fontSize:13 }}>{u.name}</div>
+                      <div style={{ fontWeight:700, color:'#fff', fontSize:13, display:'flex', alignItems:'center', gap:6 }}>
+                        {u.name}
+                        <span style={{ fontSize:10, color:'rgba(255,255,255,0.3)', fontWeight:400 }}>🔍</span>
+                      </div>
                       <div style={{ fontSize:13, color:'rgba(255,255,255,0.55)' }}>{u.email}</div>
                     </div>
                   </div>
@@ -640,9 +749,12 @@ function UsersTab({ showToast }) {
    APPLICATIONS
 ═══════════════════════════════════════════════════════════════════ */
 function ApplicationsTab({ showToast }) {
-  const [apps, setApps]       = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [acting, setActing]   = useState(null);
+  const [apps, setApps]         = useState([]);
+  const [loading, setLoading]   = useState(true);
+  const [acting, setActing]     = useState(null);
+  const [statusF, setStatusF]   = useState('All');
+  const [rejectTarget, setRejectTarget] = useState(null);
+  const [rejectReason, setRejectReason] = useState('');
 
   useEffect(() => {
     api.membership.applications().then(setApps).catch(() => showToast('Failed', false)).finally(() => setLoading(false));
@@ -653,10 +765,16 @@ function ApplicationsTab({ showToast }) {
     try { await api.membership.approve(a.id); setApps(p => p.map(x => x.id === a.id ? { ...x, status:'APPROVED' } : x)); showToast('Application approved successfully!', true, `${a.name} is now a Member`); }
     catch (e) { showToast(e.message, false); } finally { setActing(null); }
   }
-  async function reject(a) {
-    setActing(a.id);
-    try { await api.membership.reject(a.id); setApps(p => p.map(x => x.id === a.id ? { ...x, status:'REJECTED' } : x)); showToast('Application rejected', false, `${a.name}'s request was declined`); }
-    catch (e) { showToast(e.message, false); } finally { setActing(null); }
+
+  async function confirmReject() {
+    if (!rejectTarget) return;
+    setActing(rejectTarget.id);
+    try {
+      await api.membership.reject(rejectTarget.id, rejectReason);
+      setApps(p => p.map(x => x.id === rejectTarget.id ? { ...x, status:'REJECTED', rejection_reason: rejectReason } : x));
+      showToast('Application rejected', false, `${rejectTarget.name}'s request was declined`);
+    } catch (e) { showToast(e.message, false); }
+    finally { setActing(null); setRejectTarget(null); setRejectReason(''); }
   }
 
   const STATUS = {
@@ -665,12 +783,70 @@ function ApplicationsTab({ showToast }) {
     REJECTED: { bg:'rgba(225,29,72,.15)',   color:'#fca5a5' },
   };
 
+  const filteredApps = apps.filter(a => statusF === 'All' || a.status === statusF);
+
   return (
     <div>
-      <PageHeader title="Applications" desc="Approve or reject membership requests" />
+      {/* Rejection Modal */}
+      {rejectTarget && (
+        <Modal title="Reject Application" onClose={() => { setRejectTarget(null); setRejectReason(''); }}>
+          <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
+            <p style={{ color:'rgba(255,255,255,0.75)', fontSize:13.5, margin:0, lineHeight:1.6 }}>
+              Rejecting membership application for <strong style={{ color:'#fff' }}>{rejectTarget.name}</strong> ({rejectTarget.institution}). Optionally specify a reason:
+            </p>
+            <div>
+              <label style={{ display:'block', fontSize:11.5, fontWeight:800, color:'rgba(255,255,255,0.5)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:6 }}>Rejection Reason (Optional)</label>
+              <textarea
+                className="ap-input"
+                value={rejectReason}
+                onChange={e => setRejectReason(e.target.value)}
+                rows={3}
+                placeholder="e.g., Incomplete institutional accreditation documents..."
+                style={{ resize:'vertical' }}
+              />
+            </div>
+            <div style={{ display:'flex', gap:10, marginTop:6 }}>
+              <button onClick={() => { setRejectTarget(null); setRejectReason(''); }} className="ap-btn ap-btn-ghost" style={{ flex:1, padding:'11px' }}>Cancel</button>
+              <button
+                onClick={confirmReject}
+                disabled={acting === rejectTarget.id}
+                className="ap-btn"
+                style={{ flex:2, padding:'11px', background:'linear-gradient(90deg,#e11d48,#be123c)', color:'#fff', fontWeight:800 }}
+              >
+                {acting === rejectTarget.id ? '…' : 'Confirm Rejection'}
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      <PageHeader
+        title="Applications"
+        desc="Approve or reject membership requests"
+        action={
+          <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+            <span style={{ fontSize:12, color:'rgba(255,255,255,0.4)', fontWeight:600 }}>Filter:</span>
+            <select
+              className="ap-input"
+              value={statusF}
+              onChange={e => setStatusF(e.target.value)}
+              style={{ width:130, cursor:'pointer' }}
+            >
+              {['All','PENDING','APPROVED','REJECTED'].map(s => <option key={s} value={s} style={{ background:'#0f172a' }}>{s}</option>)}
+            </select>
+          </div>
+        }
+      />
+
+      <SectionKPIs items={[
+        { label: 'Pending Review', value: apps.filter(a => a.status === 'PENDING').length, icon: '⏳', color: '#fbbf24' },
+        { label: 'Approved Tiers', value: apps.filter(a => a.status === 'APPROVED').length, icon: '✅', color: '#34d399' },
+        { label: 'Declined', value: apps.filter(a => a.status === 'REJECTED').length, icon: '❌', color: '#f87171' },
+        { label: 'Total Received', value: apps.length, icon: '📋', color: '#60a5fa' },
+      ]} />
       {loading ? <Loading /> : (
         <DataTable head={['Applicant','Institution','Tier','Applied','Status','Actions']}>
-          {apps.length === 0 ? <EmptyTR cols={6} /> : apps.map(a => {
+          {filteredApps.length === 0 ? <EmptyTR cols={6} /> : filteredApps.map(a => {
             const s = STATUS[a.status] || STATUS.PENDING;
             return (
               <TR key={a.id}>
@@ -693,7 +869,7 @@ function ApplicationsTab({ showToast }) {
                   {a.status === 'PENDING' ? (
                     <div style={{ display:'flex', gap:6 }}>
                       <button onClick={() => approve(a)} disabled={acting === a.id} className="ap-btn ap-btn-green">✓ Approve</button>
-                      <button onClick={() => reject(a)}  disabled={acting === a.id} className="ap-btn ap-btn-red">✕ Reject</button>
+                      <button onClick={() => { setRejectTarget(a); setRejectReason(''); }} disabled={acting === a.id} className="ap-btn ap-btn-red">✕ Reject</button>
                     </div>
                   ) : <span style={{ fontSize:12, color:'rgba(255,255,255,0.28)' }}>Resolved</span>}
                 </TD>
@@ -920,6 +1096,14 @@ function EventsTab({ showToast }) {
           <FormActions onCancel={() => setModal(null)} onSave={save} saving={saving} saveLabel={modal === 'create' ? 'Create Event' : 'Save Changes'} />
         </Modal>
       )}
+
+      <SectionKPIs items={[
+        { label: 'Total Events', value: items.length, icon: '📅', color: '#a855f7' },
+        { label: 'Total Enrolled', value: items.reduce((sum, e) => sum + (e.enrolled || 0), 0), icon: '👥', color: '#34d399' },
+        { label: 'Total Capacity', value: items.reduce((sum, e) => sum + (e.total || 0), 0), icon: '💺', color: '#60a5fa' },
+        { label: 'Avg Fill Rate', value: `${items.length ? Math.round(items.reduce((sum, e) => sum + (e.total > 0 ? (e.enrolled / e.total) * 100 : 0), 0) / items.length) : 0}%`, icon: '📊', color: '#fbbf24' },
+      ]} />
+
       {loading ? <Loading /> : (
         <DataTable head={['Event','Date','Category','Fill Rate','Actions']}>
           {items.length === 0 ? <EmptyTR cols={5} /> : items.map(ev => {
@@ -1062,9 +1246,22 @@ function NewsTab({ showToast }) {
   const [saving, setSaving]     = useState(false);
   const [confirm, setConfirm]   = useState(null);
   const [imgUploading, setImgUp] = useState(false);
+  const [search, setSearch]     = useState('');
+  const [badgeF, setBadgeF]     = useState('All');
 
-  const load = useCallback(() => { setLoading(true); api.news.list({ limit: 1000 }).then(r => setItems(r.data || [])).catch(() => showToast('Failed', false)).finally(() => setLoading(false)); }, []);
-  useEffect(load, [load]);
+  const load = useCallback(() => {
+    setLoading(true);
+    const params = { limit: 1000 };
+    if (badgeF && badgeF !== 'All') params.badge = badgeF;
+    if (search && search.trim()) params.search = search.trim();
+    api.news.list(params).then(r => setItems(r.data || [])).catch(() => showToast('Failed', false)).finally(() => setLoading(false));
+  }, [badgeF, search]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => { load(); }, 150);
+    return () => clearTimeout(timer);
+  }, [load]);
+
   const fc = e => setForm(p => ({ ...p, [e.target.name]: e.target.type === 'checkbox' ? e.target.checked : e.target.value }));
 
   async function handleImageUpload(e) {
@@ -1107,7 +1304,30 @@ function NewsTab({ showToast }) {
 
   return (
     <div>
-      <PageHeader title="News & Announcements" desc="Publish consortium news and updates" action={<AddBtn onClick={() => { setForm(NW_BLANK); setModal('create'); }} />} />
+      <PageHeader
+        title="News & Announcements"
+        desc="Publish consortium news and updates"
+        action={
+          <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+            <input
+              className="ap-input"
+              placeholder="Search title…"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              style={{ width:160 }}
+            />
+            <select
+              className="ap-input"
+              value={badgeF}
+              onChange={e => setBadgeF(e.target.value)}
+              style={{ width:130, cursor:'pointer' }}
+            >
+              {['All','Announcement','Policy','Funding','Training','Research'].map(b => <option key={b} value={b} style={{ background:'#0f172a' }}>{b}</option>)}
+            </select>
+            <AddBtn onClick={() => { setForm(NW_BLANK); setModal('create'); }} />
+          </div>
+        }
+      />
       {confirm && <ConfirmModal msg={`Delete "${confirm.title}"?`} onConfirm={() => del(confirm.id, confirm.title)} onCancel={() => setConfirm(null)} />}
       {modal && (
         <Modal title={modal === 'create' ? 'Publish Article' : 'Edit Article'} onClose={() => setModal(null)} wide>
@@ -1167,6 +1387,14 @@ function NewsTab({ showToast }) {
           <FormActions onCancel={() => setModal(null)} onSave={save} saving={saving} saveLabel={modal === 'create' ? 'Publish Article' : 'Save Changes'} />
         </Modal>
       )}
+
+      <SectionKPIs items={[
+        { label: 'Published News', value: items.length, icon: '📰', color: '#10b981' },
+        { label: 'Active Articles', value: items.filter(n => !n.archived).length, icon: '🟢', color: '#34d399' },
+        { label: 'Members Only', value: items.filter(n => n.members_only).length, icon: '🔒', color: '#fbbf24' },
+        { label: 'Archived', value: items.filter(n => n.archived).length, icon: '📦', color: '#94a3b8' },
+      ]} />
+
       {loading ? <Loading /> : (
         <DataTable head={['Cover','Title','Badge','Date','Access','Status','Actions']}>
           {items.length === 0 ? <EmptyTR cols={7} /> : items.map(n => {
@@ -1269,12 +1497,29 @@ function TrainingTab({ showToast }) {
       {/* Enrollments Modal */}
       {enrolEvent && (
         <Modal title={`Enrollments — ${enrolEvent.title}`} onClose={() => { setEnrolEvent(null); load(); }} wide>
-          <div style={{ marginBottom:14, display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+          <div style={{ marginBottom:14, display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap:8 }}>
             <div>
               <span style={{ fontSize:13, fontWeight:700, color:'#fff' }}>{enrolList.length} enrolled</span>
               <span style={{ fontSize:12.5, color:'rgba(255,255,255,0.45)', marginLeft:6 }}>/ {enrolEvent.total} capacity</span>
             </div>
-            <button onClick={() => { setEnrolLoading(true); api.training.enrollments(enrolEvent.id).then(setEnrolList).catch(() => {}).finally(() => setEnrolLoading(false)); }} className="ap-btn ap-btn-ghost" style={{ fontSize:12.5 }}>↻ Refresh</button>
+            <div style={{ display:'flex', gap:8 }}>
+              <button onClick={() => {
+                if (!enrolList.length) return;
+                const rows = [
+                  ['Name','Email','Institution','Enrolled At'],
+                  ...enrolList.map(en => [
+                    en.users?.name || '', en.users?.email || '', en.users?.institution || '',
+                    en.created_at ? new Date(en.created_at).toLocaleDateString('en-PH') : '',
+                  ])
+                ];
+                const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(new Blob([csv], { type:'text/csv' }));
+                a.download = `${enrolEvent.title.replace(/[^a-z0-9]/gi,'_')}_enrollees.csv`;
+                a.click();
+              }} className="ap-btn ap-btn-green" style={{ fontSize:12 }}>⬇ Export CSV</button>
+              <button onClick={() => { setEnrolLoading(true); api.training.enrollments(enrolEvent.id).then(setEnrolList).catch(() => {}).finally(() => setEnrolLoading(false)); }} className="ap-btn ap-btn-ghost" style={{ fontSize:12.5 }}>↻ Refresh</button>
+            </div>
           </div>
           {enrolLoading ? <Loading /> : enrolList.length === 0 ? (
             <div style={{ textAlign:'center', padding:'28px 0', color:'rgba(255,255,255,0.5)', fontSize:13 }}>No enrollments yet</div>
@@ -1330,6 +1575,14 @@ function TrainingTab({ showToast }) {
           <FormActions onCancel={() => setModal(null)} onSave={save} saving={saving} saveLabel={modal === 'create' ? 'Create Program' : 'Save Changes'} />
         </Modal>
       )}
+
+      <SectionKPIs items={[
+        { label: 'Active Programs', value: items.length, icon: '🎓', color: '#f43f5e' },
+        { label: 'Total Enrollees', value: items.reduce((sum, t) => sum + (t.enrolled || 0), 0), icon: '👥', color: '#34d399' },
+        { label: 'Total Capacity', value: items.reduce((sum, t) => sum + (t.total || 0), 0), icon: '💺', color: '#60a5fa' },
+        { label: 'Tech & Research', value: items.filter(t => t.category === 'Technology' || t.category === 'Research').length, icon: '💻', color: '#fbbf24' },
+      ]} />
+
       {loading ? <Loading /> : (
         <DataTable head={['Program','Category','Level','Fill Rate','Actions']}>
           {items.length === 0 ? <EmptyTR cols={5} /> : items.map(t => {
@@ -1422,6 +1675,14 @@ function PoliciesTab({ showToast }) {
           <FormActions onCancel={() => setModal(null)} onSave={save} saving={saving} saveLabel={modal === 'create' ? 'Create Policy' : 'Save Changes'} />
         </Modal>
       )}
+
+      <SectionKPIs items={[
+        { label: 'Total Policies', value: items.length, icon: '📜', color: '#0ea5e9' },
+        { label: 'Active Documents', value: items.filter(p => !p.archived).length, icon: '🟢', color: '#34d399' },
+        { label: 'Members Only', value: items.filter(p => p.members_only).length, icon: '🔒', color: '#fbbf24' },
+        { label: 'Governance & Rules', value: items.filter(p => p.category === 'Governance' || p.category === 'Membership').length, icon: '🏛️', color: '#a78bfa' },
+      ]} />
+
       {loading ? <Loading /> : (
         <DataTable head={['Title','Category','Effective','Access','Status','Actions']}>
           {items.length === 0 ? <EmptyTR cols={6} /> : items.map(p => {
@@ -1506,6 +1767,14 @@ function FundingTab({ showToast }) {
           <FormActions onCancel={() => setModal(null)} onSave={save} saving={saving} saveLabel={modal === 'create' ? 'Create Funding' : 'Save Changes'} />
         </Modal>
       )}
+
+      <SectionKPIs items={[
+        { label: 'Total Grants', value: items.length, icon: '💰', color: '#10b981' },
+        { label: 'Open Opportunities', value: items.filter(f => f.status === 'Open').length, icon: '🟢', color: '#34d399' },
+        { label: 'Upcoming', value: items.filter(f => f.status === 'Upcoming').length, icon: '🟡', color: '#fbbf24' },
+        { label: 'Closed / Archived', value: items.filter(f => f.status === 'Closed').length, icon: '🔒', color: '#94a3b8' },
+      ]} />
+
       {loading ? <Loading /> : (
         <DataTable head={['Title','Provider','Amount','Deadline','Status','Actions']}>
           {items.length === 0 ? <EmptyTR cols={6} /> : items.map(f => {
@@ -1588,6 +1857,14 @@ function PartnershipsTab({ showToast }) {
           <FormActions onCancel={() => setModal(null)} onSave={save} saving={saving} saveLabel={modal === 'create' ? 'Create Partnership' : 'Save Changes'} />
         </Modal>
       )}
+
+      <SectionKPIs items={[
+        { label: 'Total Alliances', value: items.length, icon: '🤝', color: '#8b5cf6' },
+        { label: 'Active Partners', value: items.filter(p => p.status === 'Active').length, icon: '🟢', color: '#34d399' },
+        { label: 'Academic Tracks', value: items.filter(p => p.type?.includes('Academic') || p.type?.includes('Research')).length, icon: '🎓', color: '#60a5fa' },
+        { label: 'Pending Review', value: items.filter(p => p.status === 'Pending').length, icon: '⏳', color: '#fbbf24' },
+      ]} />
+
       {loading ? <Loading /> : (
         <DataTable head={['Partner','Type','Started','Contact','Status','Actions']}>
           {items.length === 0 ? <EmptyTR cols={6} /> : items.map(p => {
@@ -1621,14 +1898,15 @@ function ReportsTab({ showToast }) {
   const [chatbot, setChatbot]   = useState(null);
   const [evRep, setEvRep]       = useState(null);
   const [trRep, setTrRep]       = useState(null);
+  const [statsData, setStatsData] = useState(null);
   const [loading, setLoading]   = useState(true);
   const [refreshing, setRef]    = useState(false);
   const [lastFetched, setLast]  = useState(null);
 
   const load = useCallback((isRefresh = false) => {
     if (isRefresh) setRef(true); else setLoading(true);
-    Promise.all([api.admin.reportChatbot(), api.admin.reportEvents(), api.admin.reportTraining()])
-      .then(([c,e,t]) => { setChatbot(c); setEvRep(e); setTrRep(t); setLast(new Date()); })
+    Promise.all([api.admin.reportChatbot(), api.admin.reportEvents(), api.admin.reportTraining(), api.admin.stats()])
+      .then(([c,e,t,s]) => { setChatbot(c); setEvRep(e); setTrRep(t); setStatsData(s); setLast(new Date()); })
       .catch(() => showToast('Failed to load reports', false))
       .finally(() => { setLoading(false); setRef(false); });
   }, []);
@@ -1651,6 +1929,13 @@ function ReportsTab({ showToast }) {
         </div>
       } />
 
+      <SectionKPIs items={[
+        { label: 'AI Accuracy Rate', value: `${chatbot?.accuracy || 0}%`, icon: '🦅', color: accColor },
+        { label: 'Total Inquiries', value: chatbot?.total || 0, icon: '💬', color: '#818cf8' },
+        { label: 'Events Active', value: statsData?.events?.total || 0, icon: '📅', color: '#a855f7' },
+        { label: 'Registered Members', value: statsData?.users?.member || 0, icon: '👥', color: '#34d399' },
+      ]} />
+
       {/* Chatbot accuracy panel */}
       <div style={{ background:'rgba(79,70,229,0.07)', border:'1px solid rgba(79,70,229,0.2)', borderRadius:16, padding:'22px 24px', marginBottom:22 }}>
         <div style={{ fontSize:13, fontWeight:800, color:'rgba(255,255,255,0.6)', textTransform:'uppercase', letterSpacing:'.6px', marginBottom:16 }}>
@@ -1669,7 +1954,7 @@ function ReportsTab({ showToast }) {
             </div>
           ))}
         </div>
-        <div style={{ marginBottom: chatbot?.topIntents?.length > 0 ? 14 : 0 }}>
+        <div style={{ marginBottom: chatbot?.topIntents?.length > 0 ? 16 : 0 }}>
           <div style={{ display:'flex', justifyContent:'space-between', marginBottom:7, fontSize:12, color:'rgba(255,255,255,0.45)' }}>
             <span>Overall accuracy rate</span>
             <span style={{ fontWeight:800, color:accColor }}>{chatbot?.accuracy || 0}%</span>
@@ -1678,71 +1963,139 @@ function ReportsTab({ showToast }) {
             <div style={{ height:'100%', width:`${chatbot?.accuracy || 0}%`, background: chatbot?.accuracy >= 80 ? 'linear-gradient(90deg,#059669,#6ee7b7)' : 'linear-gradient(90deg,#f59e0b,#fcd34d)', borderRadius:4, transition:'width .8s ease' }} />
           </div>
         </div>
+
+        {/* Top Intents BarChart */}
         {chatbot?.topIntents?.length > 0 && (
-          <div>
-            <div style={{ fontSize:12, fontWeight:800, color:'rgba(255,255,255,0.28)', textTransform:'uppercase', letterSpacing:'.8px', marginBottom:8 }}>Top Intents</div>
-            <div style={{ display:'flex', gap:7, flexWrap:'wrap' }}>
-              {chatbot.topIntents.map(i => (
-                <span key={i.intent} style={{ background:'rgba(79,70,229,0.2)', color:'#a5b4fc', border:'1px solid rgba(99,102,241,0.3)', borderRadius:7, padding:'4px 10px', fontSize:12, fontWeight:700 }}>
-                  {i.intent} · {i.count}
-                </span>
-              ))}
-            </div>
+          <div style={{ marginTop: 18 }}>
+            <div style={{ fontSize:12, fontWeight:800, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', letterSpacing:'.8px', marginBottom:12 }}>Top Intents Volume</div>
+            <ResponsiveContainer width="100%" height={Math.max(160, chatbot.topIntents.length * 28)}>
+              <BarChart data={chatbot.topIntents} layout="vertical" margin={{ left: 10, right: 30, top: 0, bottom: 0 }}>
+                <XAxis type="number" tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 11 }} axisLine={false} tickLine={false} />
+                <YAxis type="category" dataKey="intent" tick={{ fill: 'rgba(255,255,255,0.7)', fontSize: 11.5 }} axisLine={false} tickLine={false} width={130} />
+                <Tooltip contentStyle={{ background:'#0f172a', border:'1px solid rgba(255,255,255,0.1)', borderRadius:8, color:'#fff', fontSize:12 }} cursor={{ fill:'rgba(255,255,255,0.05)' }} />
+                <Bar dataKey="count" fill="#818cf8" radius={[0,4,4,0]} />
+              </BarChart>
+            </ResponsiveContainer>
           </div>
         )}
       </div>
 
-      {/* Event fill rates */}
-      <div style={{ marginBottom:22 }}>
-        <div style={{ fontSize:13, fontWeight:800, color:'rgba(255,255,255,0.6)', textTransform:'uppercase', letterSpacing:'.6px', marginBottom:14 }}>
+      {/* User Role Distribution Pie Chart */}
+      {statsData?.users && (
+        <div style={{ background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:16, padding:'22px 24px', marginBottom:22 }}>
+          <div style={{ fontSize:13, fontWeight:800, color:'rgba(255,255,255,0.6)', textTransform:'uppercase', letterSpacing:'.6px', marginBottom:16 }}>
+            👥 User Role Distribution
+          </div>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:20, alignItems:'center' }}>
+            <ResponsiveContainer width="100%" height={180}>
+              <PieChart>
+                <Pie
+                  data={[
+                    { name:'Members', value: statsData.users.member },
+                    { name:'Guests', value: statsData.users.guest },
+                    { name:'Admins', value: statsData.users.admin },
+                  ]}
+                  cx="50%" cy="50%" innerRadius={48} outerRadius={76}
+                  paddingAngle={3} dataKey="value"
+                >
+                  <Cell fill="#34d399" />
+                  <Cell fill="#60a5fa" />
+                  <Cell fill="#f87171" />
+                </Pie>
+                <Tooltip contentStyle={{ background:'#0f172a', border:'1px solid rgba(255,255,255,0.1)', borderRadius:8, color:'#fff', fontSize:12 }} />
+                <Legend formatter={(v) => <span style={{ color:'rgba(255,255,255,0.7)', fontSize:12 }}>{v}</span>} />
+              </PieChart>
+            </ResponsiveContainer>
+            <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+              {[
+                { label:'Members', value: statsData.users.member, color:'#34d399', pct: statsData.users.total > 0 ? Math.round(statsData.users.member/statsData.users.total*100) : 0 },
+                { label:'Guests',  value: statsData.users.guest,  color:'#60a5fa', pct: statsData.users.total > 0 ? Math.round(statsData.users.guest/statsData.users.total*100) : 0 },
+                { label:'Admins',  value: statsData.users.admin,  color:'#f87171', pct: statsData.users.total > 0 ? Math.round(statsData.users.admin/statsData.users.total*100) : 0 },
+              ].map(r => (
+                <div key={r.label} style={{ display:'flex', alignItems:'center', gap:12 }}>
+                  <div style={{ width:10, height:10, borderRadius:'50%', background:r.color, flexShrink:0 }} />
+                  <div style={{ flex:1 }}>
+                    <div style={{ display:'flex', justifyContent:'space-between', marginBottom:3 }}>
+                      <span style={{ fontSize:12.5, color:'rgba(255,255,255,0.7)', fontWeight:600 }}>{r.label}</span>
+                      <span style={{ fontSize:12.5, fontWeight:800, color:'#fff' }}>{r.value} <span style={{ color:'rgba(255,255,255,0.4)', fontWeight:400 }}>({r.pct}%)</span></span>
+                    </div>
+                    <div style={{ height:5, background:'rgba(255,255,255,0.08)', borderRadius:3, overflow:'hidden' }}>
+                      <div style={{ height:'100%', width:`${r.pct}%`, background:r.color, borderRadius:3 }} />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Event fill rates BarChart */}
+      <div style={{ background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:16, padding:'22px 24px', marginBottom:22 }}>
+        <div style={{ fontSize:13, fontWeight:800, color:'rgba(255,255,255,0.6)', textTransform:'uppercase', letterSpacing:'.6px', marginBottom:16 }}>
           📅 Event Fill Rates — {evRep?.summary?.overallFillRate || 0}% average
         </div>
-        <DataTable head={['Event','Category','Enrolled','Capacity','Fill Rate']}>
-          {(evRep?.events || []).map(ev => (
-            <TR key={ev.id}>
-              <TD><div style={{ fontWeight:700, color:'#fff' }}>{ev.title}</div></TD>
-              <TD muted>{ev.category}</TD>
-              <TD muted>{ev.enrolled}</TD>
-              <TD muted>{ev.total}</TD>
-              <TD>
-                <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-                  <div style={{ flex:1, height:6, background:'rgba(255,255,255,0.08)', borderRadius:3, overflow:'hidden', minWidth:80 }}>
-                    <div style={{ height:'100%', width:`${ev.fillRate}%`, background:'linear-gradient(90deg,#7c3aed,#a855f7)', borderRadius:3 }} />
-                  </div>
-                  <span style={{ fontSize:12, fontWeight:700, color:'#c4b5fd', width:36, textAlign:'right' }}>{ev.fillRate}%</span>
-                </div>
-              </TD>
-            </TR>
-          ))}
-          {!(evRep?.events?.length) && <EmptyTR cols={5} />}
-        </DataTable>
+        {evRep?.events?.length > 0 ? (
+          <ResponsiveContainer width="100%" height={Math.max(140, evRep.events.length * 36)}>
+            <BarChart data={evRep.events.map(ev => ({ name: ev.title.length > 25 ? ev.title.slice(0,25)+'…' : ev.title, fillRate: ev.fillRate, enrolled: ev.enrolled, total: ev.total }))} layout="vertical" margin={{ left:10, right:30, top:0, bottom:0 }}>
+              <XAxis type="number" domain={[0,100]} tick={{ fill:'rgba(255,255,255,0.4)', fontSize:10 }} axisLine={false} tickLine={false} tickFormatter={v => `${v}%`} />
+              <YAxis type="category" dataKey="name" tick={{ fill:'rgba(255,255,255,0.65)', fontSize:11 }} axisLine={false} tickLine={false} width={150} />
+              <Tooltip contentStyle={{ background:'#0f172a', border:'1px solid rgba(255,255,255,0.1)', borderRadius:8, color:'#fff', fontSize:12 }} formatter={(v,n,p) => [`${v}% (${p.payload.enrolled}/${p.payload.total} registered)`, 'Fill Rate']} cursor={{ fill:'rgba(255,255,255,0.04)' }} />
+              <Bar dataKey="fillRate" radius={[0,4,4,0]}>
+                {(evRep?.events||[]).map((ev, idx) => (
+                  <Cell key={idx} fill={ev.fillRate >= 80 ? '#34d399' : ev.fillRate >= 50 ? '#f59e0b' : '#818cf8'} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        ) : (
+          <div style={{ textAlign:'center', padding:'24px 0', color:'rgba(255,255,255,0.3)', fontSize:13 }}>No event data yet</div>
+        )}
       </div>
 
-      {/* Training enrollment */}
-      <div>
-        <div style={{ fontSize:13, fontWeight:800, color:'rgba(255,255,255,0.6)', textTransform:'uppercase', letterSpacing:'.6px', marginBottom:14 }}>
+      {/* Training enrollment BarChart */}
+      <div style={{ background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:16, padding:'22px 24px', marginBottom:22 }}>
+        <div style={{ fontSize:13, fontWeight:800, color:'rgba(255,255,255,0.6)', textTransform:'uppercase', letterSpacing:'.6px', marginBottom:16 }}>
           🎓 Training Enrollment
         </div>
-        <DataTable head={['Program','Org','Level','Enrolled','Fill Rate']}>
-          {(trRep?.trainings || []).map(t => (
-            <TR key={t.id}>
-              <TD><div style={{ fontWeight:700, color:'#fff' }}>{t.title}</div></TD>
-              <TD muted>{t.org}</TD>
-              <TD muted>{t.level}</TD>
-              <TD muted>{t.enrolled}/{t.total}</TD>
-              <TD>
-                <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-                  <div style={{ flex:1, height:6, background:'rgba(255,255,255,0.08)', borderRadius:3, overflow:'hidden', minWidth:80 }}>
-                    <div style={{ height:'100%', width:`${t.fillRate}%`, background:'linear-gradient(90deg,#be123c,#f43f5e)', borderRadius:3 }} />
-                  </div>
-                  <span style={{ fontSize:12, fontWeight:700, color:'#fca5a5', width:36, textAlign:'right' }}>{t.fillRate}%</span>
-                </div>
-              </TD>
-            </TR>
-          ))}
-          {!(trRep?.trainings?.length) && <EmptyTR cols={5} />}
-        </DataTable>
+        {trRep?.trainings?.length > 0 ? (
+          <ResponsiveContainer width="100%" height={Math.max(140, trRep.trainings.length * 36)}>
+            <BarChart data={trRep.trainings.map(t => ({ name: t.title.length > 25 ? t.title.slice(0,25)+'…' : t.title, fillRate: t.fillRate, enrolled: t.enrolled, total: t.total }))} layout="vertical" margin={{ left:10, right:30, top:0, bottom:0 }}>
+              <XAxis type="number" domain={[0,100]} tick={{ fill:'rgba(255,255,255,0.4)', fontSize:10 }} axisLine={false} tickLine={false} tickFormatter={v => `${v}%`} />
+              <YAxis type="category" dataKey="name" tick={{ fill:'rgba(255,255,255,0.65)', fontSize:11 }} axisLine={false} tickLine={false} width={150} />
+              <Tooltip contentStyle={{ background:'#0f172a', border:'1px solid rgba(255,255,255,0.1)', borderRadius:8, color:'#fff', fontSize:12 }} formatter={(v,n,p) => [`${v}% (${p.payload.enrolled}/${p.payload.total} enrolled)`, 'Fill Rate']} cursor={{ fill:'rgba(255,255,255,0.04)' }} />
+              <Bar dataKey="fillRate" radius={[0,4,4,0]}>
+                {(trRep?.trainings||[]).map((t, idx) => (
+                  <Cell key={idx} fill={t.fillRate >= 80 ? '#34d399' : t.fillRate >= 50 ? '#fbbf24' : '#f43f5e'} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        ) : (
+          <div style={{ textAlign:'center', padding:'24px 0', color:'rgba(255,255,255,0.3)', fontSize:13 }}>No training data yet</div>
+        )}
       </div>
+
+      {/* Unmatched queries log */}
+      {chatbot?.unmatchedQueries?.length > 0 && (
+        <div style={{ background:'rgba(239,68,68,0.05)', border:'1px solid rgba(239,68,68,0.2)', borderRadius:16, padding:'22px 24px' }}>
+          <div style={{ fontSize:13, fontWeight:800, color:'rgba(255,255,255,0.75)', textTransform:'uppercase', letterSpacing:'.6px', marginBottom:14, display:'flex', alignItems:'center', gap:8 }}>
+            <span>❓ Recent Unmatched Chatbot Queries</span>
+            <span style={{ background:'rgba(239,68,68,0.2)', color:'#fca5a5', fontSize:11, padding:'2px 8px', borderRadius:99, fontWeight:800 }}>{chatbot.unmatchedQueries.length}</span>
+            <span style={{ fontSize:11, fontWeight:400, color:'rgba(255,255,255,0.4)', textTransform:'none', letterSpacing:0, marginLeft:'auto' }}>Use these to expand Haribon's knowledge base</span>
+          </div>
+          <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+            {chatbot.unmatchedQueries.map((q, i) => (
+              <div key={i} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', background:'rgba(255,255,255,0.03)', borderRadius:8, padding:'9px 14px', border:'1px solid rgba(255,255,255,0.06)' }}>
+                <span style={{ fontSize:13, color:'rgba(255,255,255,0.85)', fontStyle:'italic' }}>"{q.message}"</span>
+                <span style={{ fontSize:11, color:'rgba(255,255,255,0.35)', flexShrink:0, marginLeft:12 }}>
+                  {new Date(q.time).toLocaleDateString('en-PH', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' })}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -2228,9 +2581,10 @@ function AdminCalendarTab({ showToast, setTab }) {
    MESSAGES
 ═══════════════════════════════════════════════════════════════════ */
 function MessagesTab({ showToast }) {
-  const [msgs, setMsgs]     = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [open, setOpen]     = useState(null);
+  const [msgs, setMsgs]         = useState([]);
+  const [loading, setLoading]   = useState(true);
+  const [open, setOpen]         = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
 
   useEffect(() => {
     api.contact.messages()
@@ -2247,6 +2601,25 @@ function MessagesTab({ showToast }) {
     } catch (_) {}
   }
 
+  async function markAllRead() {
+    try {
+      await api.contact.markAllRead();
+      setMsgs(p => p.map(m => ({ ...m, read: true })));
+      showToast('All messages marked as read', true);
+    } catch (e) { showToast(e.message, false); }
+  }
+
+  async function deleteMsg(msg) {
+    setDeletingId(msg.id);
+    try {
+      await api.contact.deleteMessage(msg.id);
+      setMsgs(p => p.filter(m => m.id !== msg.id));
+      if (open?.id === msg.id) setOpen(null);
+      showToast('Message deleted', true);
+    } catch (e) { showToast(e.message, false); }
+    finally { setDeletingId(null); }
+  }
+
   function openMsg(msg) { setOpen(msg); markRead(msg); }
 
   const unread = msgs.filter(m => !m.read).length;
@@ -2256,7 +2629,20 @@ function MessagesTab({ showToast }) {
       <PageHeader
         title="Contact Messages"
         desc={unread > 0 ? `${unread} unread message${unread > 1 ? 's' : ''}` : 'All messages from the contact form'}
+        action={
+          unread > 0 ? (
+            <button onClick={markAllRead} className="ap-btn ap-btn-ghost" style={{ fontSize:12.5, whiteSpace:'nowrap' }}>
+              ✓ Mark All Read
+            </button>
+          ) : null
+        }
       />
+
+      <SectionKPIs items={[
+        { label: 'Unread Inquiries', value: unread, icon: '📬', color: '#f87171' },
+        { label: 'Processed / Read', value: msgs.filter(m => m.read).length, icon: '✅', color: '#34d399' },
+        { label: 'Total Inquiries', value: msgs.length, icon: '📋', color: '#60a5fa' },
+      ]} />
       {open && (
         <Modal title="Message Details" onClose={() => setOpen(null)}>
           <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
@@ -2275,10 +2661,20 @@ function MessagesTab({ showToast }) {
               <div style={{ fontSize:11, fontWeight:700, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', marginBottom:8 }}>Message</div>
               <p style={{ color:'rgba(255,255,255,0.85)', fontSize:13.5, lineHeight:1.75, margin:0, whiteSpace:'pre-wrap' }}>{open.message}</p>
             </div>
-            <a href={`mailto:${open.email}?subject=Re: ${encodeURIComponent(open.subject)}`}
-              style={{ display:'block', textAlign:'center', background:'linear-gradient(90deg,#f97316,#e11d48)', color:'#fff', textDecoration:'none', borderRadius:10, padding:'11px', fontSize:13.5, fontWeight:800 }}>
-              ✉ Reply to {open.name}
-            </a>
+            <div style={{ display:'flex', gap:10, marginTop:4 }}>
+              <a href={`mailto:${open.email}?subject=Re: ${encodeURIComponent(open.subject)}`}
+                style={{ flex:3, display:'block', textAlign:'center', background:'linear-gradient(90deg,#f97316,#e11d48)', color:'#fff', textDecoration:'none', borderRadius:10, padding:'11px', fontSize:13.5, fontWeight:800 }}>
+                ✉ Reply to {open.name}
+              </a>
+              <button
+                onClick={() => deleteMsg(open)}
+                disabled={deletingId === open.id}
+                className="ap-btn ap-btn-red"
+                style={{ flex:1, padding:'11px', borderRadius:10 }}
+              >
+                {deletingId === open.id ? '…' : '🗑 Delete'}
+              </button>
+            </div>
           </div>
         </Modal>
       )}
@@ -2310,8 +2706,19 @@ function MessagesTab({ showToast }) {
                 <div style={{ fontWeight:700, color: m.read ? 'rgba(255,255,255,0.6)' : '#fff', fontSize:12.5, marginBottom:2 }}>{m.subject}</div>
                 <div style={{ color:'rgba(255,255,255,0.35)', fontSize:12, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{m.message}</div>
               </div>
-              <div style={{ fontSize:11.5, color:'rgba(255,255,255,0.3)', flexShrink:0 }}>
-                {new Date(m.created_at).toLocaleDateString('en-PH', { month:'short', day:'numeric' })}
+              <div style={{ display:'flex', alignItems:'center', gap:10, flexShrink:0 }}>
+                <div style={{ fontSize:11.5, color:'rgba(255,255,255,0.3)' }}>
+                  {new Date(m.created_at).toLocaleDateString('en-PH', { month:'short', day:'numeric' })}
+                </div>
+                <button
+                  onClick={e => { e.stopPropagation(); deleteMsg(m); }}
+                  disabled={deletingId === m.id}
+                  title="Delete message"
+                  className="ap-btn ap-btn-red"
+                  style={{ padding:'4px 8px', fontSize:11 }}
+                >
+                  {deletingId === m.id ? '…' : '🗑'}
+                </button>
               </div>
             </div>
           ))}

@@ -35,8 +35,8 @@ export const api = {
     myEnrollments: () => request('/auth/my-enrollments'),
     forgotPassword: (email) =>
       request('/auth/forgot-password', { method: 'POST', body: JSON.stringify({ email }) }),
-    resetPassword: (token, new_password) =>
-      request('/auth/reset-password', { method: 'POST', body: JSON.stringify({ token, new_password }) }),
+    resetPassword: (token, new_password, email) =>
+      request('/auth/reset-password', { method: 'POST', body: JSON.stringify({ token, new_password, email }) }),
   },
   events: {
     list: (params = {}) => {
@@ -87,7 +87,7 @@ export const api = {
     apply: (body) => request('/membership/apply', { method: 'POST', body: JSON.stringify(body) }),
     applications: () => request('/membership/applications'),
     approve: (id) => request(`/membership/applications/${id}/approve`, { method: 'PATCH' }),
-    reject: (id) => request(`/membership/applications/${id}/reject`, { method: 'PATCH' }),
+    reject: (id, reason) => request(`/membership/applications/${id}/reject`, { method: 'PATCH', body: JSON.stringify({ reason: reason || '' }) }),
   },
   policies: {
     list: (params = {}) => {
@@ -144,5 +144,7 @@ export const api = {
     send: (body) => request('/contact', { method: 'POST', body: JSON.stringify(body) }),
     messages: () => request('/contact/messages'),
     markRead: (id) => request(`/contact/messages/${id}/read`, { method: 'PATCH' }),
+    deleteMessage: (id) => request(`/contact/messages/${id}`, { method: 'DELETE' }),
+    markAllRead: () => request('/contact/messages/read-all', { method: 'PATCH' }),
   },
 };

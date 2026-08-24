@@ -71,9 +71,12 @@ router.patch('/applications/:id/approve', verifyToken, requireRole('ADMIN'), asy
 });
 
 router.patch('/applications/:id/reject', verifyToken, requireRole('ADMIN'), async (req, res) => {
-  const { error } = await supabase.from('membership_applications').update({ status: 'REJECTED' }).eq('id', req.params.id);
+  const { reason } = req.body;
+  const updates = { status: 'REJECTED' };
+  if (reason) updates.rejection_reason = reason;
+  const { error } = await supabase.from('membership_applications').update(updates).eq('id', req.params.id);
   if (error) return res.status(404).json({ error: 'Application not found' });
-  res.json({ message: 'Application rejected' });
+  res.json({ message: 'Application rejected', reason: reason || null });
 });
 
 module.exports = router;

@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import SunSeal from './SunSeal';
 import HaribonFace from './HaribonFace';
+import CommandPalette from './CommandPalette';
 
 const NAV_CSS = `
   @keyframes sealSpin   { from { transform: rotateY(0deg) rotateZ(0deg); } to { transform: rotateY(360deg) rotateZ(15deg); } }
@@ -78,16 +79,26 @@ export default function Nav() {
   }
   const logoRef     = useRef(null);
   const moreRef     = useRef(null);
+  const notifRef    = useRef(null);
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
   const [logoHover, setLogoHover] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [cmdOpen, setCmdOpen] = useState(false);
   const [logoutConfirm, setLogoutConfirm] = useState(false);
   const [welcome, setWelcome] = useState(null);   // {name, role} | null
   const welcomeTimer = useRef(null);
 
+  const notifications = [
+    { id: 1, title: 'Regional AI Summit 2026', msg: 'Registration slots are currently open.', time: '10m ago', unread: true, path: '/programs?tab=events' },
+    { id: 2, title: 'DOST SETUP Grant Opportunity', msg: 'Funding call open for Region VII HEIs.', time: '2h ago', unread: true, path: '/funding' },
+    { id: 3, title: 'Membership Status Active', msg: 'Consortium access verified for all 9 modules.', time: '1d ago', unread: false, path: '/membership' },
+  ];
+
   useEffect(() => {
     function handleClick(e) {
       if (moreRef.current && !moreRef.current.contains(e.target)) setMoreOpen(false);
+      if (notifRef.current && !notifRef.current.contains(e.target)) setNotifOpen(false);
     }
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
@@ -256,88 +267,60 @@ export default function Nav() {
           position: 'relative',
         }}>
 
-          {/* ── 3D Logo ── */}
+          {/* ── Official Consortium Logo ── */}
           <div
             ref={logoRef}
             onMouseEnter={() => setLogoHover(true)}
-            onMouseMove={onLogoMove}
-            onMouseLeave={onLogoLeave}
+            onMouseLeave={() => setLogoHover(false)}
             onClick={() => navigate('/')}
             style={{
               display: 'flex', alignItems: 'center', gap: 10,
               cursor: 'pointer', textDecoration: 'none',
-              perspective: '400px',
-              transition: logoHover ? 'none' : 'transform 0.5s ease',
+              transition: 'transform 0.2s ease',
+              transform: logoHover ? 'scale(1.03)' : 'scale(1)',
             }}
           >
-            <div style={{
-              display: 'flex', alignItems: 'center', gap: 10,
-              transform: `rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) ${logoHover ? 'scale(1.08)' : 'scale(1)'}`,
-              transition: logoHover ? 'transform 0.05s' : 'transform 0.5s ease',
-              transformStyle: 'preserve-3d',
-            }}>
-              {/* spinning sun seal with 3D depth rings */}
-              <div style={{ position: 'relative', width: 36, height: 36 }}>
-                {/* pulsing rings behind */}
-                <div style={{
-                  position:'absolute', inset:-4, borderRadius:'50%',
-                  border:'1.5px solid rgba(249,115,22,0.4)',
-                  animation:'ringPulse 2s ease-out infinite',
-                  pointerEvents:'none',
-                }} />
-                <div style={{
-                  position:'absolute', inset:-4, borderRadius:'50%',
-                  border:'1.5px solid rgba(249,115,22,0.3)',
-                  animation:'ringPulse 2s ease-out 0.7s infinite',
-                  pointerEvents:'none',
-                }} />
-                {/* spinning seal */}
-                <div style={{
-                  animation: 'sealSpin 8s linear infinite, sealGlow 3s ease-in-out infinite',
-                  transformStyle: 'preserve-3d',
-                  display: 'flex',
-                }}>
-                  <SunSeal size={36} />
-                </div>
-              </div>
-
-              {/* floating Haribon */}
+            {/* Spinning sun seal with subtle depth rings */}
+            <div style={{ position: 'relative', width: 34, height: 34 }}>
               <div style={{
-                animation: 'hariFloat 2.8s ease-in-out infinite, hariGlow 2.8s ease-in-out infinite',
-                transformStyle: 'preserve-3d',
+                position:'absolute', inset:-3, borderRadius:'50%',
+                border:'1.5px solid rgba(249,115,22,0.3)',
+                animation:'ringPulse 2.5s ease-out infinite',
+                pointerEvents:'none',
+              }} />
+              <div style={{
+                animation: 'sealSpin 12s linear infinite, sealGlow 3s ease-in-out infinite',
                 display: 'flex',
               }}>
-                <HaribonFace size={30} />
+                <SunSeal size={34} />
               </div>
+            </div>
 
-              {/* 3D text block */}
-              <div style={{ transformStyle: 'preserve-3d' }}>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: 0 }}>
-                  <span style={{
-                    fontWeight: 900, fontSize: 18, letterSpacing: '-0.3px',
-                    background: 'linear-gradient(90deg,#fff 0%,#f97316 40%,#fff 60%,#fff 100%)',
-                    backgroundSize: '200% auto',
-                    WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-                    animation: 'textShine 4s linear infinite',
-                    textShadow: 'none',
-                    transform: 'translateZ(6px)',
-                    display: 'inline-block',
-                  }}>DASIG</span>
-                  <span style={{
-                    color: 'rgba(255,255,255,0.38)', fontSize: 11, fontWeight: 400, marginLeft: 4,
-                    transform: 'translateZ(3px)',
-                    display: 'inline-block',
-                  }}>Portal</span>
-                </div>
-                {/* 3D shadow bar below text */}
-                <div style={{
-                  height: 2, borderRadius: 2, marginTop: 2,
-                  background: 'linear-gradient(90deg,#f97316,#e11d48)',
-                  transform: `scaleX(${logoHover ? 1 : 0.4}) translateZ(-2px)`,
-                  transition: 'transform 0.3s ease',
-                  boxShadow: '0 0 8px rgba(249,115,22,0.7)',
-                }} />
+            {/* Text block */}
+            <div>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
+                <span style={{
+                  fontWeight: 900, fontSize: 18, letterSpacing: '-0.3px',
+                  background: 'linear-gradient(90deg,#fff 0%,#f97316 50%,#fff 100%)',
+                  backgroundSize: '200% auto',
+                  WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+                  animation: 'textShine 4s linear infinite',
+                  display: 'inline-block',
+                }}>DASIG</span>
+                <span style={{
+                  color: 'rgba(255,255,255,0.4)', fontSize: 11.5, fontWeight: 500,
+                  display: 'inline-block',
+                }}>Portal</span>
               </div>
+              {/* Subtle underline */}
+              <div style={{
+                height: 2, borderRadius: 2, marginTop: 1,
+                background: 'linear-gradient(90deg,#f97316,#e11d48)',
+                transform: `scaleX(${logoHover ? 1 : 0.4})`,
+                transformOrigin: 'left',
+                transition: 'transform 0.25s ease',
+                boxShadow: '0 0 6px rgba(249,115,22,0.6)',
+              }} />
             </div>
           </div>
 
@@ -417,8 +400,92 @@ export default function Nav() {
             </div>
           </div>
 
-          {/* ── Auth area ── */}
+          {/* ── Actions & Auth area ── */}
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            {/* Quick Command Palette trigger */}
+            <button
+              onClick={() => setCmdOpen(true)}
+              style={{
+                background: 'rgba(255,255,255,0.06)',
+                border: '1px solid rgba(255,255,255,0.12)',
+                borderRadius: 9, padding: '5px 10px',
+                color: 'rgba(255,255,255,0.65)',
+                fontSize: 12.5, fontWeight: 600,
+                cursor: 'pointer', fontFamily: 'inherit',
+                display: 'flex', alignItems: 'center', gap: 6,
+                transition: 'all .15s',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = '#fff'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.color = 'rgba(255,255,255,0.65)'; }}
+              title="Search Portal (Ctrl + K)"
+            >
+              <span style={{ fontSize: 13 }}>🔍</span>
+              <span style={{ display: 'none', md: 'inline' }}>Search</span>
+              <span style={{ fontSize: 10, background: 'rgba(255,255,255,0.08)', borderRadius: 4, padding: '1px 5px', color: 'rgba(255,255,255,0.4)', fontWeight: 700 }}>⌘K</span>
+            </button>
+
+            {/* Notification Center */}
+            <div ref={notifRef} style={{ position: 'relative' }}>
+              <button
+                onClick={() => setNotifOpen(o => !o)}
+                style={{
+                  background: notifOpen ? 'rgba(249,115,22,0.18)' : 'rgba(255,255,255,0.06)',
+                  border: `1px solid ${notifOpen ? 'rgba(249,115,22,0.4)' : 'rgba(255,255,255,0.12)'}`,
+                  borderRadius: 9, width: 34, height: 34,
+                  color: notifOpen ? '#f97316' : 'rgba(255,255,255,0.7)',
+                  fontSize: 15, cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  position: 'relative', transition: 'all .15s',
+                }}
+                title="Notifications"
+              >
+                🔔
+                <span style={{
+                  position: 'absolute', top: -2, right: -2,
+                  width: 8, height: 8, borderRadius: '50%',
+                  background: '#f97316',
+                  boxShadow: '0 0 8px #f97316',
+                }} />
+              </button>
+
+              {notifOpen && (
+                <div style={{
+                  position: 'absolute', top: 'calc(100% + 10px)', right: 0,
+                  background: '#0d1424', border: '1px solid rgba(255,255,255,0.14)',
+                  borderRadius: 16, width: 300, padding: '12px 14px',
+                  boxShadow: '0 20px 60px rgba(0,0,0,0.85)',
+                  zIndex: 9999, animation: 'dropIn 0.18s ease',
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, paddingBottom: 6, borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                    <span style={{ fontSize: 12.5, fontWeight: 800, color: '#fff' }}>🔔 Notifications</span>
+                    <span style={{ fontSize: 10.5, color: '#f97316', fontWeight: 700 }}>2 new</span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {notifications.map(n => (
+                      <div
+                        key={n.id}
+                        onClick={() => { navigate(n.path); setNotifOpen(false); }}
+                        style={{
+                          background: n.unread ? 'rgba(249,115,22,0.08)' : 'rgba(255,255,255,0.03)',
+                          border: `1px solid ${n.unread ? 'rgba(249,115,22,0.2)' : 'rgba(255,255,255,0.05)'}`,
+                          borderRadius: 10, padding: '9px 10px',
+                          cursor: 'pointer', transition: 'background .12s',
+                        }}
+                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
+                        onMouseLeave={e => e.currentTarget.style.background = n.unread ? 'rgba(249,115,22,0.08)' : 'rgba(255,255,255,0.03)'}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 2 }}>
+                          <span style={{ fontSize: 12, fontWeight: 800, color: '#fff' }}>{n.title}</span>
+                          <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)' }}>{n.time}</span>
+                        </div>
+                        <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.5)', lineHeight: 1.4 }}>{n.msg}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
             {user ? (
               <>
                 {/* Role badge — only for GUEST and MEMBER, not ADMIN (admin has its own button) */}
@@ -441,7 +508,7 @@ export default function Nav() {
                   </div>
                 )}
 
-                {/* Name + avatar — clickable, opens profile page */}
+                {/* Name + avatar + institution — clickable, opens profile page */}
                 {user.role !== 'ADMIN' && (() => {
                   const initials = (user.name || 'U').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
                   return (
@@ -454,7 +521,7 @@ export default function Nav() {
                     }}
                     onMouseEnter={e => { e.currentTarget.style.color='#fff'; e.currentTarget.style.background='rgba(255,255,255,0.12)'; }}
                     onMouseLeave={e => { e.currentTarget.style.color='rgba(255,255,255,0.75)'; e.currentTarget.style.background='rgba(255,255,255,0.06)'; }}
-                    title="My Profile">
+                    title={`My Profile · ${user.institution || ''}`}>
                       {/* Mini avatar */}
                       <div style={{ width:28, height:28, borderRadius:8, overflow:'hidden', flexShrink:0 }}>
                         {user.avatar_url
@@ -462,7 +529,12 @@ export default function Nav() {
                           : <div style={{ width:'100%', height:'100%', background:'linear-gradient(135deg,#f97316,#e11d48)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:900, color:'#fff' }}>{initials}</div>
                         }
                       </div>
-                      <span style={{ maxWidth:100, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{user.name}</span>
+                      <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-start', textAlign:'left', lineHeight:1.15 }}>
+                        <span style={{ color:'#fff', fontWeight:700, fontSize:12.5, maxWidth:110, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{user.name}</span>
+                        {user.institution && (
+                          <span style={{ color:'rgba(249,115,22,0.85)', fontSize:10.5, fontWeight:600, maxWidth:110, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{user.institution}</span>
+                        )}
+                      </div>
                     </button>
                   );
                 })()}
@@ -480,12 +552,12 @@ export default function Nav() {
                   >My Card</button>
                 )}
 
-                {/* Admin — single combined button: avatar + name → profile | ADMIN pill → admin panel */}
+                {/* Admin — single combined button: avatar + name + institution → profile | ADMIN pill → admin panel */}
                 {user.role === 'ADMIN' && (() => {
                   const initials = (user.name || 'A').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
                   return (
                     <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-                      {/* Avatar + name → profile */}
+                      {/* Avatar + name + institution → profile */}
                       <button onClick={() => navigate('/profile')} style={{
                         display:'flex', alignItems:'center', gap:8,
                         background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.12)',
@@ -495,14 +567,17 @@ export default function Nav() {
                       }}
                       onMouseEnter={e => { e.currentTarget.style.color='#fff'; e.currentTarget.style.background='rgba(255,255,255,0.12)'; }}
                       onMouseLeave={e => { e.currentTarget.style.color='rgba(255,255,255,0.75)'; e.currentTarget.style.background='rgba(255,255,255,0.06)'; }}
-                      title="My Profile">
+                      title={`Administrator Profile · ${user.institution || 'Region VII Consortium'}`}>
                         <div style={{ width:28, height:28, borderRadius:8, overflow:'hidden', flexShrink:0 }}>
                           {user.avatar_url
                             ? <img src={user.avatar_url} alt="" style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }} />
                             : <div style={{ width:'100%', height:'100%', background:'linear-gradient(135deg,#e11d48,#9f1239)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:900, color:'#fff' }}>{initials}</div>
                           }
                         </div>
-                        <span style={{ maxWidth:100, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{user.name}</span>
+                        <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-start', textAlign:'left', lineHeight:1.15 }}>
+                          <span style={{ color:'#fff', fontWeight:700, fontSize:12.5, maxWidth:110, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{user.name}</span>
+                          <span style={{ color:'rgba(255,255,255,0.45)', fontSize:10.5, fontWeight:600, maxWidth:110, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{user.institution || 'Region VII'}</span>
+                        </div>
                       </button>
                       {/* ADMIN pill → admin panel */}
                       <button onClick={() => navigate('/admin')} style={{
@@ -520,18 +595,6 @@ export default function Nav() {
                     </div>
                   );
                 })()}
-                {/* Legacy admin panel button — REMOVED, replaced by ADMIN pill above */}
-                {false && user.role === 'ADMIN' && (
-                  <button onClick={() => navigate('/admin')} style={{
-                    display: 'flex', alignItems: 'center', gap: 8,
-                    color: '#fff', background: 'rgba(225,29,72,0.14)',
-                    border: '1px solid rgba(225,29,72,0.3)', borderRadius: 10,
-                    padding: '6px 14px', fontSize: 13, fontWeight: 700,
-                    cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.2s',
-                  }}>
-                    <span style={{ width:7, height:7, borderRadius:'50%', background:'#e11d48', display:'inline-block' }} />
-                  </button>
-                )}
 
                 <button onClick={handleLogout} style={{
                   color: 'rgba(255,255,255,0.55)', background: 'transparent',
@@ -569,6 +632,9 @@ export default function Nav() {
 
         </div>
       </nav>
+
+      {/* Global Command Palette modal */}
+      <CommandPalette isOpen={cmdOpen} onClose={() => setCmdOpen(false)} />
     </>
   );
 }

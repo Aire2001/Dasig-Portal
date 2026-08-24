@@ -105,30 +105,154 @@ const HOME_CSS = `
 `;
 
 const modules = [
-  { title: 'Membership',   desc: 'Tier-based institutional membership, renewals & status tracking.', icon: '👥', grad: 'linear-gradient(135deg,#1e3a8a,#3b82f6)', route: '/membership'   },
-  { title: 'Events',       desc: 'Workshop & summit discovery, registration and reporting.',          icon: '📅', grad: 'linear-gradient(135deg,#7c3aed,#a855f7)', route: '/events'       },
-  { title: 'News',         desc: 'Consortium announcements and publications archive.',                icon: '📰', grad: 'linear-gradient(135deg,#0f766e,#14b8a6)', route: '/news'         },
-  { title: 'Policies',     desc: 'Governance documents and official consortium guidelines.',          icon: '📋', grad: 'linear-gradient(135deg,#b45309,#f59e0b)', route: '/policies'     },
-  { title: 'Funding',      desc: 'Government grants and scholarship opportunities board.',            icon: '💰', grad: 'linear-gradient(135deg,#065f46,#10b981)', route: '/funding'      },
-  { title: 'Training',     desc: 'Technical & leadership training enrollment programs.',              icon: '🎓', grad: 'linear-gradient(135deg,#be123c,#f43f5e)', route: '/training'     },
-  { title: 'Partnerships', desc: 'Academic, government and industry partnership explorer.',           icon: '🤝', grad: 'linear-gradient(135deg,#0369a1,#0ea5e9)', route: '/partnerships' },
-  { title: 'Members',      desc: 'Browse all Region VII consortium member institutions.',             icon: '🏛', grad: 'linear-gradient(135deg,#4c1d95,#8b5cf6)', route: '/members'      },
-  { title: 'Ask Haribon', desc: 'NLP AI chatbot, 80%+ accuracy — scoped to DASIG knowledge.',      icon: '🦅', grad: 'linear-gradient(135deg,#1a3878,#3730a3)', route: '/chatbot'      },
+  {
+    title: 'Membership',
+    tag: 'Tiers 1–3',
+    desc: 'Institutional membership management, tier-based access, renewals & status tracking.',
+    icon: '👥',
+    color: '#3b82f6',
+    route: '/membership',
+  },
+  {
+    title: 'Events & Summits',
+    tag: 'Summits & Workshops',
+    desc: 'Regional workshop and summit discovery, attendee registration, and calendar sync.',
+    icon: '📅',
+    color: '#8b5cf6',
+    route: '/events',
+  },
+  {
+    title: 'News & Releases',
+    tag: 'Official Press',
+    desc: 'Consortium announcements, policy updates, and regional academic publications archive.',
+    icon: '📰',
+    color: '#10b981',
+    route: '/news',
+  },
+  {
+    title: 'Governance Policies',
+    tag: 'Official Charter',
+    desc: 'Consortium charters, governance frameworks, and regional compliance guidelines.',
+    icon: '📋',
+    color: '#f59e0b',
+    route: '/policies',
+  },
+  {
+    title: 'Funding & Grants',
+    tag: 'DOST & Research',
+    desc: 'Government research grants, scholarship programs, and institutional funding opportunities.',
+    icon: '💰',
+    color: '#10b981',
+    route: '/funding',
+  },
+  {
+    title: 'Training Programs',
+    tag: 'Professional Dev',
+    desc: 'Accredited technical bootcamps and executive leadership development programs.',
+    icon: '🎓',
+    color: '#ec4899',
+    route: '/training',
+  },
+  {
+    title: 'Partnerships',
+    tag: 'Academe & Industry',
+    desc: 'Regional academic, government, and industry cross-institutional collaboration explorer.',
+    icon: '🤝',
+    color: '#06b6d4',
+    route: '/partnerships',
+  },
+  {
+    title: 'Member Directory',
+    tag: 'Region VII',
+    desc: 'Browse all Region VII consortium state universities, agencies, and regional campuses.',
+    icon: '🏛️',
+    color: '#a855f7',
+    route: '/members',
+  },
+  {
+    title: 'Haribon AI Assistant',
+    tag: 'NLP 80%+ Accuracy',
+    desc: 'AI Assistant scoped to DASIG regional knowledge — ask about events, training & policies.',
+    icon: '🦅',
+    color: '#f97316',
+    route: '/chatbot',
+  },
 ];
 
 function ModuleCard({ mod }) {
   const navigate = useNavigate();
+  const [hovered, setHovered] = useState(false);
+
   return (
-    <div className="mod-card" style={{ background: mod.grad }} onClick={() => navigate(mod.route)}>
-      <div style={{ position: 'absolute', bottom: -16, right: -10, fontSize: 72, opacity: 0.1, lineHeight: 1 }}>{mod.icon}</div>
+    <div
+      onClick={() => navigate(mod.route)}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        background: 'rgba(8, 14, 28, 0.75)',
+        backdropFilter: 'blur(12px)',
+        border: `1px solid ${hovered ? mod.color : 'rgba(255, 255, 255, 0.08)'}`,
+        borderRadius: 18,
+        padding: '22px 24px',
+        cursor: 'pointer',
+        position: 'relative',
+        overflow: 'hidden',
+        boxShadow: hovered ? `0 16px 40px rgba(0,0,0,0.6), 0 0 20px ${mod.color}25` : '0 4px 16px rgba(0,0,0,0.3)',
+        transform: hovered ? 'translateY(-4px)' : 'none',
+        transition: 'all 0.18s cubic-bezier(.34,1.2,.64,1)',
+        display: 'flex',
+        flexDirection: 'column',
+      }}
+    >
+      {/* Ambient background glow */}
       <div style={{
-        width: 42, height: 42, borderRadius: 12, marginBottom: 14,
-        background: 'rgba(255,255,255,0.18)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20,
-      }}>{mod.icon}</div>
-      <div style={{ fontWeight: 800, fontSize: 15, color: '#fff', marginBottom: 6 }}>{mod.title}</div>
-      <div style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.68)', lineHeight: 1.65 }}>{mod.desc}</div>
-      <div style={{ marginTop: 12, fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: 700 }}>Open →</div>
+        position: 'absolute', top: -30, right: -30, width: 100, height: 100,
+        borderRadius: '50%', background: `radial-gradient(circle, ${mod.color}20, transparent 70%)`,
+        pointerEvents: 'none',
+      }} />
+
+      {/* Top row: Icon + Tag */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+        <div style={{
+          width: 44, height: 44, borderRadius: 12,
+          background: `${mod.color}15`,
+          border: `1px solid ${mod.color}35`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: 20, flexShrink: 0,
+        }}>
+          {mod.icon}
+        </div>
+        <span style={{
+          background: `${mod.color}12`,
+          color: mod.color,
+          border: `1px solid ${mod.color}30`,
+          borderRadius: 20, padding: '3px 10px',
+          fontSize: 10.5, fontWeight: 800, letterSpacing: '.4px',
+        }}>
+          {mod.tag}
+        </span>
+      </div>
+
+      {/* Title */}
+      <div style={{ fontWeight: 800, fontSize: 16, color: '#fff', marginBottom: 6 }}>
+        {mod.title}
+      </div>
+
+      {/* Description */}
+      <div style={{ fontSize: 13, color: 'rgba(255, 255, 255, 0.55)', lineHeight: 1.6, flex: 1, marginBottom: 14 }}>
+        {mod.desc}
+      </div>
+
+      {/* Footer Link */}
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 6,
+        fontSize: 12.5, fontWeight: 700,
+        color: hovered ? mod.color : 'rgba(255, 255, 255, 0.45)',
+        transition: 'color 0.15s ease',
+      }}>
+        <span>Explore module</span>
+        <span style={{ transform: hovered ? 'translateX(3px)' : 'none', transition: 'transform 0.15s ease' }}>→</span>
+      </div>
     </div>
   );
 }
@@ -159,108 +283,168 @@ const ADMIN_CSS = `
 `;
 
 function AdminHomePage({ navigate, user }) {
+  const [adminStats, setAdminStats] = useState({ users: 12, events: 7, training: 6, news: 8 });
+
+  useEffect(() => {
+    Promise.allSettled([
+      api.events.list({ limit: 1 }),
+      api.training.list({ limit: 1 }),
+      api.news.list({ limit: 1 }),
+    ]).then(([ev, tr, nw]) => {
+      setAdminStats(prev => ({
+        ...prev,
+        events: ev.status === 'fulfilled' ? (ev.value.total ?? 7) : 7,
+        training: tr.status === 'fulfilled' ? (tr.value.total ?? 6) : 6,
+        news: nw.status === 'fulfilled' ? (nw.value.total ?? 8) : 8,
+      }));
+    }).catch(() => {});
+  }, []);
+
   return (
-    <div style={{ background: 'linear-gradient(180deg,#0d0014 0%,#0a0010 300px,#0f172a 100%)', minHeight: '100vh', position: 'relative' }}>
+    <div style={{ background: 'linear-gradient(180deg,#000d30 0%,#020817 300px,#0f172a 100%)', minHeight: '100vh', position: 'relative' }}>
       <style>{ADMIN_CSS}</style>
-      <ParticleBackground density={40} />
+      <ParticleBackground density={45} />
       <div style={{ position: 'relative', zIndex: 1 }}>
 
-      {/* ── ADMIN HERO ── */}
+      {/* ── ADMIN HERO BANNER ── */}
       <section style={{
-        background: 'linear-gradient(135deg,#1a0008 0%,#200010 45%,#0f0a2e 100%)',
-        padding: '52px 24px 44px', position: 'relative', overflow: 'hidden',
-        borderBottom: '1px solid rgba(225,29,72,0.18)',
+        background: 'linear-gradient(135deg,#000d30 0%,#001845 50%,#0f2252 100%)',
+        padding: '52px 24px 46px', position: 'relative', overflow: 'hidden',
+        borderBottom: '1px solid rgba(255,255,255,0.08)',
       }}>
-        <div style={{ position: 'absolute', width: 500, height: 500, borderRadius: '50%', background: 'radial-gradient(rgba(225,29,72,0.1),transparent)', right: -120, top: -150, pointerEvents: 'none' }} />
-        <div style={{ position: 'absolute', width: 320, height: 320, borderRadius: '50%', background: 'radial-gradient(rgba(249,115,22,0.07),transparent)', left: -60, bottom: -80, pointerEvents: 'none' }} />
-        <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(rgba(225,29,72,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(225,29,72,0.03) 1px,transparent 1px)', backgroundSize: '40px 40px', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', width: 500, height: 500, borderRadius: '50%', background: 'radial-gradient(rgba(249,115,22,0.08),transparent)', right: -120, top: -150, pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(rgba(255,255,255,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.02) 1px,transparent 1px)', backgroundSize: '40px 40px', pointerEvents: 'none' }} />
 
-        <div style={{ maxWidth: 1120, margin: '0 auto', position: 'relative', zIndex: 1 }}>
-          {/* Admin badge */}
-          <div style={{
-            display: 'inline-flex', alignItems: 'center', gap: 9,
-            background: 'rgba(225,29,72,0.12)', border: '1px solid rgba(225,29,72,0.32)',
-            borderRadius: 24, padding: '6px 18px', marginBottom: 22,
-          }}>
-            <div className="admin-pulse" style={{ width: 8, height: 8, borderRadius: '50%', background: '#e11d48', flexShrink: 0 }} />
-            <span style={{ color: '#e11d48', fontSize: 13, fontWeight: 800, letterSpacing: '1.2px', textTransform: 'uppercase' }}>
-              ⚡ Admin Command Center · DASIG Portal
-            </span>
-          </div>
+        <div style={{ maxWidth: 1140, margin: '0 auto', position: 'relative', zIndex: 1 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 32, alignItems: 'center' }}>
+            <div>
+              {/* Admin badge */}
+              <div style={{
+                display: 'inline-flex', alignItems: 'center', gap: 8,
+                background: 'rgba(225,29,72,0.12)', border: '1px solid rgba(225,29,72,0.3)',
+                borderRadius: 24, padding: '5px 16px', marginBottom: 18,
+              }}>
+                <div className="admin-pulse" style={{ width: 7, height: 7, borderRadius: '50%', background: '#f43f5e', flexShrink: 0 }} />
+                <span style={{ color: '#f43f5e', fontSize: 12, fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase' }}>
+                  🛡️ Administrator Command Center · Region VII
+                </span>
+              </div>
 
-          <h1 style={{ color: '#fff', fontSize: 44, fontWeight: 900, lineHeight: 1.08, letterSpacing: '-1.5px', marginBottom: 14 }}>
-            Welcome back,{' '}
-            <span style={{ background: 'linear-gradient(90deg,#f97316,#e11d48)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-              {user?.name || 'Administrator'}
-            </span>
-          </h1>
-          <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: 14.5, lineHeight: 1.7, marginBottom: 28, maxWidth: 480 }}>
-            Manage all modules, users, and content from below or open the full dashboard.
-          </p>
+              <h1 style={{ color: '#fff', fontSize: 44, fontWeight: 900, lineHeight: 1.1, letterSpacing: '-1.5px', marginBottom: 12 }}>
+                Welcome back,{' '}
+                <span style={{ background: 'linear-gradient(90deg,#f97316,#e11d48)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+                  {user?.name || 'DASIG Admin'}
+                </span>
+              </h1>
+              <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 14.5, lineHeight: 1.7, marginBottom: 24, maxWidth: 520 }}>
+                Regional consortium administration, institutional tier management, event scheduling, and analytics overview.
+              </p>
 
-          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-            <button onClick={() => navigate('/admin?tab=dashboard')} style={{
-              background: 'linear-gradient(90deg,#e11d48,#f97316)', color: '#fff',
-              border: 'none', borderRadius: 10, padding: '12px 26px',
-              fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
-              boxShadow: '0 4px 24px rgba(225,29,72,0.45)', transition: 'all 0.2s',
-            }}
-            onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 32px rgba(225,29,72,0.6)'; }}
-            onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 24px rgba(225,29,72,0.45)'; }}
-            >⚡ Open Admin Panel →</button>
-            <button onClick={() => navigate('/members')} style={{
-              color: 'rgba(255,255,255,0.6)', background: 'rgba(255,255,255,0.05)',
-              border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, padding: '12px 20px',
-              fontSize: 14, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.2s',
-            }}
-            onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
-            onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
-            >View Portal</button>
+              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                <button onClick={() => navigate('/admin?tab=dashboard')} style={{
+                  background: 'linear-gradient(90deg,#f97316,#e11d48)', color: '#fff',
+                  border: 'none', borderRadius: 10, padding: '12px 24px',
+                  fontSize: 14, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit',
+                  boxShadow: '0 4px 18px rgba(249,115,22,0.4)', transition: 'all 0.18s',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 24px rgba(249,115,22,0.55)'; }}
+                onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 18px rgba(249,115,22,0.4)'; }}
+                >⚡ Open Admin Panel →</button>
+                <button onClick={() => navigate('/programs')} style={{
+                  color: 'rgba(255,255,255,0.75)', background: 'rgba(255,255,255,0.06)',
+                  border: '1px solid rgba(255,255,255,0.14)', borderRadius: 10, padding: '12px 20px',
+                  fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.18s',
+                }}
+                onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.12)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.06)'}
+                >Browse Public Portal</button>
+              </div>
+            </div>
+
+            {/* Quick KPI Overview Box */}
+            <div style={{
+              background: 'rgba(8, 14, 28, 0.75)',
+              backdropFilter: 'blur(12px)',
+              border: '1px solid rgba(255,255,255,0.09)',
+              borderRadius: 18, padding: '20px',
+              display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12,
+            }}>
+              {[
+                { label: 'Total Events', val: adminStats.events, icon: '📅', color: '#60a5fa' },
+                { label: 'Training Dev', val: adminStats.training, icon: '🎓', color: '#34d399' },
+                { label: 'News Archive', val: adminStats.news, icon: '📰', color: '#a78bfa' },
+                { label: 'AI Accuracy', val: '80%+', icon: '🦅', color: '#fb923c' },
+              ].map((kpi, idx) => (
+                <div key={idx} style={{
+                  background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)',
+                  borderRadius: 12, padding: '12px 14px',
+                }}>
+                  <div style={{ fontSize: 18, marginBottom: 4 }}>{kpi.icon}</div>
+                  <div style={{ fontSize: 20, fontWeight: 900, color: '#fff' }}>{kpi.val}</div>
+                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 2, fontWeight: 600 }}>{kpi.label}</div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
       {/* ── QUICK ACTIONS GRID ── */}
-      <section style={{ padding: '48px 24px 64px' }}>
-        <div style={{ maxWidth: 1120, margin: '0 auto' }}>
-          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 28 }}>
+      <section style={{ padding: '44px 24px 64px' }}>
+        <div style={{ maxWidth: 1140, margin: '0 auto' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 24 }}>
             <div>
-              <p style={{ fontSize: 12.5, fontWeight: 800, letterSpacing: '1.4px', textTransform: 'uppercase', color: '#e11d48', marginBottom: 7 }}>Quick Access</p>
-              <h2 style={{ fontSize: 30, fontWeight: 900, color: '#fff', letterSpacing: '-0.8px' }}>Manage all portal modules</h2>
+              <p style={{ fontSize: 12, fontWeight: 800, letterSpacing: '1.2px', textTransform: 'uppercase', color: '#f97316', marginBottom: 6 }}>Management Modules</p>
+              <h2 style={{ fontSize: 28, fontWeight: 900, color: '#fff', letterSpacing: '-0.6px' }}>Consortium Control Panel</h2>
             </div>
             <button onClick={() => navigate('/admin')} style={{
-              color: '#e11d48', background: 'rgba(225,29,72,0.1)',
-              border: '1px solid rgba(225,29,72,0.25)',
-              borderRadius: 9, padding: '9px 18px', fontSize: 13,
-              fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.18s',
+              color: '#f97316', background: 'rgba(249,115,22,0.1)',
+              border: '1px solid rgba(249,115,22,0.3)',
+              borderRadius: 9, padding: '8px 16px', fontSize: 13,
+              fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s',
             }}
-            onMouseEnter={e => e.currentTarget.style.background = 'rgba(225,29,72,0.2)'}
-            onMouseLeave={e => e.currentTarget.style.background = 'rgba(225,29,72,0.1)'}
-            >Open Dashboard →</button>
+            onMouseEnter={e => e.currentTarget.style.background = 'rgba(249,115,22,0.2)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'rgba(249,115,22,0.1)'}
+            >Open Dashboard Tab →</button>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 14 }}>
             {ADMIN_MODULES.map((m, idx) => (
-              <div key={m.tab} className="admin-card" onClick={() => navigate(`/admin?tab=${m.tab}`)} style={{
-                background: 'linear-gradient(180deg,rgba(255,255,255,0.05) 0%,rgba(255,255,255,0.02) 100%)',
-                border: '1px solid rgba(255,255,255,0.08)',
-                borderRadius: 16, padding: 22, cursor: 'pointer',
-                position: 'relative', overflow: 'hidden',
-                animation: `adminFadeUp 0.4s ease ${idx * 0.06}s both`,
-              }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = m.color + '55'; e.currentTarget.style.background = `linear-gradient(180deg,${m.color}12,${m.color}04)`; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; e.currentTarget.style.background = 'linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.02))'; }}
+              <div
+                key={m.tab}
+                className="admin-card"
+                onClick={() => navigate(`/admin?tab=${m.tab}`)}
+                style={{
+                  background: 'rgba(8, 14, 28, 0.75)',
+                  backdropFilter: 'blur(12px)',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  borderRadius: 16, padding: '20px 22px', cursor: 'pointer',
+                  position: 'relative', overflow: 'hidden',
+                  display: 'flex', flexDirection: 'column',
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.borderColor = m.color + '70';
+                  e.currentTarget.style.boxShadow = `0 12px 32px rgba(0,0,0,0.5), 0 0 16px ${m.color}20`;
+                  e.currentTarget.style.transform = 'translateY(-3px)';
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)';
+                  e.currentTarget.style.boxShadow = 'none';
+                  e.currentTarget.style.transform = 'none';
+                }}
               >
-                <div style={{ position: 'absolute', bottom: -10, right: -5, fontSize: 58, opacity: 0.06, lineHeight: 1 }}>{m.icon}</div>
                 <div style={{
-                  width: 40, height: 40, borderRadius: 11,
-                  background: m.color + '1a', border: `1px solid ${m.color}44`,
+                  width: 42, height: 42, borderRadius: 11,
+                  background: m.color + '15', border: `1px solid ${m.color}35`,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 19, marginBottom: 13,
+                  fontSize: 20, marginBottom: 14, flexShrink: 0,
                 }}>{m.icon}</div>
-                <div style={{ fontWeight: 800, fontSize: 14, color: '#fff', marginBottom: 7, lineHeight: 1.25 }}>{m.title}</div>
-                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', lineHeight: 1.6, marginBottom: 12 }}>{m.desc}</div>
-                <div style={{ fontSize: 12, color: m.color, fontWeight: 700 }}>Manage →</div>
+                <div style={{ fontWeight: 800, fontSize: 15, color: '#fff', marginBottom: 6 }}>{m.title}</div>
+                <div style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.5)', lineHeight: 1.6, marginBottom: 14, flex: 1 }}>{m.desc}</div>
+                <div style={{ fontSize: 12, color: m.color, fontWeight: 800, display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <span>Configure</span>
+                  <span>→</span>
+                </div>
               </div>
             ))}
           </div>
