@@ -497,6 +497,48 @@ export default function MembershipPage() {
               </div>
             ))}
           </div>
+
+          {/* Institutional Tier Privileges Matrix */}
+          <div style={{
+            marginTop: 24, background: 'rgba(255,255,255,0.03)',
+            border: '1px solid rgba(255,255,255,0.08)', borderRadius: 18, padding: '22px 24px',
+            backdropFilter: 'blur(10px)',
+          }}>
+            <div style={{ fontSize: 13, fontWeight: 800, color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: '.6px', marginBottom: 14 }}>
+              🏛️ Consortium Tier Privileges Matrix
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <div style={{
+                display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr',
+                padding: '8px 12px', borderRadius: 8, background: 'rgba(255,255,255,0.05)',
+                fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '.5px',
+              }}>
+                <span>Privilege</span>
+                <span style={{ textAlign: 'center', color: '#60a5fa' }}>Tier 1 (Full)</span>
+                <span style={{ textAlign: 'center', color: '#34d399' }}>Tier 2 (Assoc)</span>
+                <span style={{ textAlign: 'center', color: 'rgba(255,255,255,0.4)' }}>Tier 3 (Observer)</span>
+              </div>
+              {[
+                { feature: 'Event Registration & Schedule Conflict Alerts', t1: '✓ Full', t2: '✓ Full', t3: '✓ View Only' },
+                { feature: 'Training & Development Program Enrollments', t1: '✓ Priority', t2: '✓ Included', t3: '—' },
+                { feature: 'Government & Research Grant Submissions (DOST/DICT)', t1: '✓ Full Lead', t2: '✓ Co-Proponent', t3: '—' },
+                { feature: 'Consortium Policy Voting & Council Privileges', t1: '✓ 1 Vote / Agency', t2: '— (Observer)', t3: '—' },
+                { feature: 'Official Certificate of Membership & Accreditation', t1: '✓ Verified PDF', t2: '✓ Verified PDF', t3: '—' },
+              ].map((row, idx) => (
+                <div key={idx} style={{
+                  display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr',
+                  padding: '10px 12px', borderRadius: 8,
+                  background: idx % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'transparent',
+                  alignItems: 'center', fontSize: 12.5,
+                }}>
+                  <span style={{ color: 'rgba(255,255,255,0.85)', fontWeight: 600 }}>{row.feature}</span>
+                  <span style={{ color: '#60a5fa', fontWeight: 800, textAlign: 'center' }}>{row.t1}</span>
+                  <span style={{ color: '#34d399', fontWeight: 800, textAlign: 'center' }}>{row.t2}</span>
+                  <span style={{ color: 'rgba(255,255,255,0.4)', textAlign: 'center' }}>{row.t3}</span>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
       </div>
