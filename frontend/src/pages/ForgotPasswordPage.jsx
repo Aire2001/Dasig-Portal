@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { api } from '../api';
 import SunSeal from '../components/SunSeal';
-import HaribonFace from '../components/HaribonFace';
 import ParticleBackground from '../components/ParticleBackground';
 
 export default function ForgotPasswordPage() {
@@ -16,6 +15,7 @@ export default function ForgotPasswordPage() {
   const [tokenInput, setTokenInput] = useState(urlToken);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [fe, setFe] = useState({});
@@ -68,58 +68,67 @@ export default function ForgotPasswordPage() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'linear-gradient(135deg,#000d30 0%,#001d5c 50%,#1a3878 100%)',
+      background: 'linear-gradient(135deg,#000d30 0%,#001845 50%,#0f2252 100%)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       padding: '24px', position: 'relative', overflow: 'hidden',
     }}>
-      <ParticleBackground density={70} />
+      <ParticleBackground density={60} />
       <div style={{
         position: 'absolute', inset: 0,
-        backgroundImage: 'linear-gradient(rgba(255,255,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.025) 1px,transparent 1px)',
+        backgroundImage: 'linear-gradient(rgba(255,255,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.03) 1px,transparent 1px)',
         backgroundSize: '40px 40px', pointerEvents: 'none', zIndex: 0,
       }} />
 
       <div style={{
-        background: '#fff', borderRadius: 20, width: '100%', maxWidth: 420,
-        boxShadow: '0 24px 80px rgba(0,0,0,0.35)',
+        background: 'rgba(8, 14, 28, 0.90)',
+        backdropFilter: 'blur(16px)',
+        borderRadius: 22, width: '100%', maxWidth: 440,
+        boxShadow: '0 32px 100px rgba(0,0,0,0.85), 0 0 0 1px rgba(255,255,255,0.08)',
+        border: '1px solid rgba(255,255,255,0.1)',
         overflow: 'hidden', position: 'relative', zIndex: 1,
       }}>
         {/* Header */}
-        <div style={{ background: 'linear-gradient(135deg,#001d5c,#1a56db 55%,#4f46e5)', padding: '28px 32px 24px' }}>
+        <div style={{
+          background: 'linear-gradient(135deg,#001233 0%,#0f2d6b 60%,#1e40af 100%)',
+          padding: '28px 32px 24px', position: 'relative', borderBottom: '1px solid rgba(255,255,255,0.08)',
+        }}>
           <Link to="/login" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', marginBottom: 16 }}>
-            <SunSeal size={28} />
-            <HaribonFace size={24} />
-            <span style={{ color: '#fff', fontWeight: 800, fontSize: 16 }}>
-              DASIG <span style={{ fontWeight: 400, opacity: 0.6 }}>Portal</span>
+            <SunSeal size={30} />
+            <span style={{ color: '#fff', fontWeight: 900, fontSize: 17, letterSpacing: '-0.3px' }}>
+              DASIG <span style={{ fontWeight: 500, color: 'rgba(255,255,255,0.6)' }}>Portal</span>
             </span>
           </Link>
-          <div style={{ color: 'rgba(255,255,255,0.55)', fontSize: 12, fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase', marginBottom: 4 }}>
-            Account Recovery
+          <div style={{ color: 'rgba(249,115,22,0.9)', fontSize: 11.5, fontWeight: 800, letterSpacing: '0.8px', textTransform: 'uppercase', marginBottom: 4 }}>
+            Account Security &amp; Recovery
           </div>
-          <div style={{ color: '#fff', fontSize: 22, fontWeight: 900, letterSpacing: '-0.5px' }}>
-            {step === 'done' ? 'Password reset!' : 'Reset your password'}
+          <div style={{ color: '#fff', fontSize: 23, fontWeight: 900, letterSpacing: '-0.5px' }}>
+            {step === 'done' ? 'Password Updated!' : 'Reset Your Password'}
           </div>
         </div>
 
-        <div style={{ padding: '28px 32px 32px' }}>
+        <div style={{ padding: '26px 30px 32px' }}>
           {error && (
             <div style={{
-              background: '#fff1f2', border: '1px solid #fecdd3', borderRadius: 9,
-              padding: '10px 14px', marginBottom: 18, fontSize: 13, color: '#e11d48',
-            }}>{error}</div>
+              background: 'rgba(225,29,72,0.15)', border: '1px solid rgba(225,29,72,0.35)', borderRadius: 10,
+              padding: '11px 14px', marginBottom: 18, fontSize: 13, color: '#fca5a5',
+              display: 'flex', alignItems: 'center', gap: 8,
+            }}>
+              <span>⚠️</span>
+              <span>{error}</span>
+            </div>
           )}
 
           {step === 'email' && (
             <form onSubmit={handleRequestReset}>
-              <p style={{ fontSize: 13, color: '#64748b', marginBottom: 20, lineHeight: 1.6 }}>
-                Enter the email address associated with your account and we'll send you a password reset link.
+              <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', marginBottom: 20, lineHeight: 1.6 }}>
+                Enter the email address associated with your consortium account to receive an instant verification reset code.
               </p>
-              <FPField label="Email address" type="email" value={email}
+              <FPField label="Account Email Address" type="email" value={email}
                 onChange={e => { setEmail(e.target.value); if (fe.email) setFe(p => ({ ...p, email: undefined })); }}
-                placeholder="your@institution.ph" error={fe.email} />
-              <FPBtn loading={loading}>Send reset link →</FPBtn>
-              <div style={{ textAlign: 'center', marginTop: 16, fontSize: 12, color: '#94a3b8' }}>
-                <Link to="/login" style={{ color: '#1a56db', fontWeight: 600, textDecoration: 'none' }}>← Back to login</Link>
+                placeholder="your.email@institution.ph" error={fe.email} />
+              <FPBtn loading={loading}>Send Verification Code →</FPBtn>
+              <div style={{ textAlign: 'center', marginTop: 18, fontSize: 12.5 }}>
+                <Link to="/login" style={{ color: '#f97316', fontWeight: 700, textDecoration: 'none' }}>← Back to login</Link>
               </div>
             </form>
           )}
@@ -128,50 +137,71 @@ export default function ForgotPasswordPage() {
             <form onSubmit={handleResetPassword}>
               {token && (
                 <div style={{
-                  background: '#f0fdf4', border: '1px solid #86efac', borderRadius: 9,
+                  background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.3)', borderRadius: 10,
                   padding: '12px 14px', marginBottom: 16, fontSize: 12,
                 }}>
-                  <div style={{ fontWeight: 700, color: '#166534', marginBottom: 4 }}>
+                  <div style={{ fontWeight: 800, color: '#34d399', marginBottom: 4 }}>
                     Demo Mode — Verification Code:
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
-                    <code style={{ fontSize: 16, fontWeight: 900, color: '#15803d', letterSpacing: '2px', background: '#dcfce7', padding: '3px 8px', borderRadius: 6 }}>{token}</code>
-                    <span style={{ fontSize: 11, color: '#166534' }}>(Pre-filled automatically)</span>
-                  </div>
-                  <div style={{ color: '#166534', marginTop: 6, fontSize: 11 }}>
-                    You can also use demo code <strong style={{ color: '#15803d' }}>123456</strong>.
+                    <code style={{ fontSize: 16, fontWeight: 900, color: '#6ee7b7', letterSpacing: '2px', background: 'rgba(255,255,255,0.08)', padding: '3px 8px', borderRadius: 6 }}>{token}</code>
+                    <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)' }}>(Pre-filled automatically)</span>
                   </div>
                 </div>
               )}
-              <FPField label="Reset verification code / token" value={tokenInput}
+              <FPField label="Verification Code / Token" value={tokenInput}
                 onChange={e => { setTokenInput(e.target.value); if (fe.token) setFe(p => ({ ...p, token: undefined })); }}
                 placeholder="Enter 6-digit code or 123456" error={fe.token} />
-              <FPField label="New password" type="password" value={newPassword}
-                onChange={e => { setNewPassword(e.target.value); if (fe.newPassword) setFe(p => ({ ...p, newPassword: undefined })); }}
-                placeholder="Min. 8 characters" error={fe.newPassword} />
-              <FPField label="Confirm new password" type="password" value={confirmPassword}
+              
+              <div style={{ position: 'relative' }}>
+                <FPField label="New Password (min. 8 characters)" type={showPassword ? 'text' : 'password'} value={newPassword}
+                  onChange={e => { setNewPassword(e.target.value); if (fe.newPassword) setFe(p => ({ ...p, newPassword: undefined })); }}
+                  placeholder="Min. 8 characters" error={fe.newPassword} />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  style={{
+                    position: 'absolute', right: 12, top: 35,
+                    background: 'none', border: 'none', color: 'rgba(255,255,255,0.45)',
+                    fontSize: 14, cursor: 'pointer', padding: 4,
+                  }}
+                  title={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? '🙈' : '👁️'}
+                </button>
+              </div>
+
+              <FPField label="Confirm New Password" type={showPassword ? 'text' : 'password'} value={confirmPassword}
                 onChange={e => { setConfirmPassword(e.target.value); if (fe.confirmPassword) setFe(p => ({ ...p, confirmPassword: undefined })); }}
-                placeholder="Repeat new password" error={fe.confirmPassword} />
-              <FPBtn loading={loading}>Set new password →</FPBtn>
+                placeholder="Re-enter new password" error={fe.confirmPassword} />
+              
+              <FPBtn loading={loading}>Save New Password →</FPBtn>
+              <div style={{ textAlign: 'center', marginTop: 18, fontSize: 12.5 }}>
+                <Link to="/login" style={{ color: '#f97316', fontWeight: 700, textDecoration: 'none' }}>← Cancel and back to login</Link>
+              </div>
             </form>
           )}
 
           {step === 'done' && (
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 48, marginBottom: 12 }}>✅</div>
-              <p style={{ fontSize: 14, color: '#374151', marginBottom: 24, lineHeight: 1.6 }}>
-                Your password has been reset successfully. You can now log in with your new password.
+            <div style={{ textAlign: 'center', padding: '10px 0' }}>
+              <div style={{
+                width: 60, height: 60, borderRadius: '50%',
+                background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.3)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 28, margin: '0 auto 16px',
+              }}>✓</div>
+              <h3 style={{ fontSize: 18, fontWeight: 900, color: '#fff', marginBottom: 8 }}>Password Successfully Reset</h3>
+              <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', marginBottom: 24, lineHeight: 1.6 }}>
+                Your account password has been updated. You can now log in using your new credentials.
               </p>
-              <button
-                onClick={() => navigate('/login')}
-                style={{
-                  width: '100%', padding: '12px',
-                  background: 'linear-gradient(90deg,#f97316,#e11d48)',
-                  color: '#fff', border: 'none', borderRadius: 10,
-                  fontSize: 14.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
-                }}
-              >
-                Go to login →
+              <button onClick={() => navigate('/login')} style={{
+                width: '100%', background: 'linear-gradient(90deg,#f97316,#e11d48)',
+                color: '#fff', border: 'none', borderRadius: 11,
+                padding: '13px', fontSize: 14, fontWeight: 800,
+                cursor: 'pointer', fontFamily: 'inherit',
+                boxShadow: '0 4px 16px rgba(249,115,22,0.4)',
+              }}>
+                Proceed to Login →
               </button>
             </div>
           )}
@@ -183,22 +213,25 @@ export default function ForgotPasswordPage() {
 
 function FPField({ label, type = 'text', value, onChange, placeholder, error }) {
   return (
-    <div style={{ marginBottom: 16 }}>
-      <label style={{ display: 'block', fontSize: 12.5, fontWeight: 700, color: error ? '#e11d48' : '#374151', marginBottom: 6 }}>{label}</label>
+    <div style={{ marginBottom: 15 }}>
+      <label style={{ display: 'block', fontSize: 12, fontWeight: 800, color: error ? '#f87171' : 'rgba(255,255,255,0.65)', textTransform: 'uppercase', letterSpacing: '.4px', marginBottom: 6 }}>
+        {label}
+      </label>
       <input
         type={type} value={value} onChange={onChange} placeholder={placeholder}
         style={{
-          width: '100%', padding: '10px 13px', borderRadius: 9,
-          border: `1.5px solid ${error ? '#e11d48' : '#e2e8f0'}`,
+          width: '100%', padding: '11px 14px', borderRadius: 10,
+          border: `1.5px solid ${error ? '#e11d48' : 'rgba(255,255,255,0.14)'}`,
           fontSize: 13.5, fontFamily: 'inherit',
-          color: '#0f172a', outline: 'none', boxSizing: 'border-box',
-          background: error ? '#fff5f5' : '#fff',
+          color: '#fff', outline: 'none', boxSizing: 'border-box',
+          background: error ? 'rgba(225,29,72,0.1)' : 'rgba(255,255,255,0.06)',
+          transition: 'border-color .15s, background .15s',
         }}
-        onFocus={e => { e.target.style.borderColor = error ? '#e11d48' : '#1a56db'; }}
-        onBlur={e => { e.target.style.borderColor = error ? '#e11d48' : '#e2e8f0'; }}
+        onFocus={e => { e.target.style.borderColor = error ? '#e11d48' : '#f97316'; e.target.style.background = 'rgba(255,255,255,0.1)'; }}
+        onBlur={e => { e.target.style.borderColor = error ? '#e11d48' : 'rgba(255,255,255,0.14)'; e.target.style.background = error ? 'rgba(225,29,72,0.1)' : 'rgba(255,255,255,0.06)'; }}
       />
       {error && (
-        <div style={{ marginTop: 5, fontSize: 12, color: '#e11d48', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
+        <div style={{ marginTop: 5, fontSize: 12, color: '#fca5a5', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
           ⚠ {error}
         </div>
       )}
@@ -210,12 +243,15 @@ function FPBtn({ children, loading }) {
   return (
     <button type="submit" disabled={loading} style={{
       width: '100%', marginTop: 8,
-      background: loading ? '#94a3b8' : 'linear-gradient(90deg,#f97316,#e11d48)',
-      color: '#fff', border: 'none', borderRadius: 10,
-      padding: '12px', fontSize: 14.5, fontWeight: 700,
+      background: loading ? 'rgba(255,255,255,0.12)' : 'linear-gradient(90deg,#f97316,#e11d48)',
+      color: loading ? 'rgba(255,255,255,0.3)' : '#fff',
+      border: 'none', borderRadius: 11,
+      padding: '13px', fontSize: 14, fontWeight: 800,
       cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'inherit',
+      boxShadow: loading ? 'none' : '0 4px 16px rgba(249,115,22,0.4)',
+      transition: 'all .15s',
     }}>
-      {loading ? 'Please wait…' : children}
+      {loading ? 'Processing…' : children}
     </button>
   );
 }
