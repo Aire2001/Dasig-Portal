@@ -273,13 +273,14 @@ export default function ProfilePage() {
           </div>
 
           {/* ── Tab switcher ── */}
-          <div style={{ display:'flex', padding:'4px 8px 0', borderBottom:'1px solid rgba(255,255,255,0.07)', background:'rgba(0,0,0,0.2)' }}>
+          <div style={{ display:'flex', padding:'4px 8px 0', borderBottom:'1px solid rgba(255,255,255,0.07)', background:'rgba(0,0,0,0.2)', overflowX:'auto' }}>
             {[
-              { key:'profile',  label:'👤 Profile Info' },
-              { key:'security', label:'🔐 Change Password' },
-              { key:'status',   label:'📋 Account Status' },
+              { key:'profile',       label:'👤 Profile Info' },
+              { key:'registrations', label:'🎓 Registrations & Certificates' },
+              { key:'security',      label:'🔐 Change Password' },
+              { key:'status',        label:'📋 Account Status' },
             ].map(t => (
-              <button key={t.key} className={`pf-tab${tab === t.key ? ' active' : ''}`} onClick={() => setTab(t.key)}>
+              <button key={t.key} className={`pf-tab${tab === t.key ? ' active' : ''}`} onClick={() => setTab(t.key)} style={{ whiteSpace:'nowrap' }}>
                 {t.label}
               </button>
             ))}
@@ -287,9 +288,10 @@ export default function ProfilePage() {
 
           {/* ── Tab content ── */}
           <div style={{ padding:'28px 28px 24px' }}>
-            {tab === 'profile'  && <ProfileTab  user={user} showToast={showToast} onSaved={refreshUser} />}
-            {tab === 'security' && <SecurityTab user={user} showToast={showToast} />}
-            {tab === 'status'   && <StatusTab   user={user} navigate={navigate} />}
+            {tab === 'profile'       && <ProfileTab       user={user} showToast={showToast} onSaved={refreshUser} />}
+            {tab === 'registrations' && <RegistrationsTab user={user} showToast={showToast} navigate={navigate} />}
+            {tab === 'security'      && <SecurityTab      user={user} showToast={showToast} />}
+            {tab === 'status'        && <StatusTab        user={user} navigate={navigate} />}
           </div>
         </div>
       </div>
@@ -590,6 +592,240 @@ function StatusTab({ user, navigate }) {
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+/* ─── CERTIFICATE & CALENDAR HELPERS ──────────────────────────── */
+function downloadCertificate(user, ev) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 1600;
+  canvas.height = 1130;
+  const ctx = canvas.getContext('2d');
+
+  // Background gradient
+  const grad = ctx.createLinearGradient(0, 0, 1600, 1130);
+  grad.addColorStop(0, '#0a132c');
+  grad.addColorStop(1, '#020617');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, 1600, 1130);
+
+  // Outer Gold Border
+  ctx.strokeStyle = '#f59e0b';
+  ctx.lineWidth = 14;
+  ctx.strokeRect(40, 40, 1520, 1050);
+
+  // Inner Border
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+  ctx.lineWidth = 3;
+  ctx.strokeRect(60, 60, 1480, 1010);
+
+  // Corner Accents
+  ctx.fillStyle = '#f97316';
+  ctx.fillRect(35, 35, 40, 40);
+  ctx.fillRect(1525, 35, 40, 40);
+  ctx.fillRect(35, 1055, 40, 40);
+  ctx.fillRect(1525, 1055, 40, 40);
+
+  // Header Title
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#f97316';
+  ctx.font = 'bold 36px sans-serif';
+  ctx.fillText('DASIG CONSORTIUM REGION VII', 800, 180);
+
+  ctx.fillStyle = '#ffffff';
+  ctx.font = '900 64px sans-serif';
+  ctx.fillText('CERTIFICATE OF PARTICIPATION', 800, 260);
+
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+  ctx.font = '28px sans-serif';
+  ctx.fillText('This certificate is proudly awarded to', 800, 360);
+
+  // Attendee Name
+  ctx.fillStyle = '#60a5fa';
+  ctx.font = 'bold 54px sans-serif';
+  ctx.fillText((user.name || 'PARTICIPANT').toUpperCase(), 800, 460);
+
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+  ctx.font = '26px sans-serif';
+  ctx.fillText(user.institution || 'Region VII Consortium Member', 800, 520);
+
+  // Body
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+  ctx.font = '30px sans-serif';
+  ctx.fillText('for successfully attending and actively participating in', 800, 620);
+
+  ctx.fillStyle = '#fcd34d';
+  ctx.font = 'bold 42px sans-serif';
+  ctx.fillText(`"${ev.title}"`, 800, 700);
+
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+  ctx.font = '26px sans-serif';
+  ctx.fillText(`Conducted on ${ev.date || '2026'} · ${ev.venue || 'Region VII, Philippines'}`, 800, 770);
+
+  // Signature lines
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(350, 940);
+  ctx.lineTo(650, 940);
+  ctx.moveTo(950, 940);
+  ctx.lineTo(1250, 940);
+  ctx.stroke();
+
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 22px sans-serif';
+  ctx.fillText('DR. CONSORTIUM DIRECTOR', 500, 980);
+  ctx.fillText('DASIG EXECUTIVE BOARD', 1100, 980);
+
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+  ctx.font = '18px sans-serif';
+  ctx.fillText('Executive Lead, Region VII', 500, 1010);
+  ctx.fillText('Academic & Research Council', 1100, 1010);
+
+  // Trigger download
+  const a = document.createElement('a');
+  a.href = canvas.toDataURL('image/png');
+  a.download = `Certificate_${(user.name || 'User').replace(/[^a-z0-9]/gi, '_')}_${ev.title.replace(/[^a-z0-9]/gi, '_')}.png`;
+  a.click();
+}
+
+function getGoogleCalendarUrl(ev) {
+  const title = encodeURIComponent(ev.title);
+  const details = encodeURIComponent(ev.description || 'DASIG Consortium Event');
+  const location = encodeURIComponent(ev.venue || 'Region VII');
+  const dStr = (ev.date || '2026-06-18').replace(/-/g, '');
+  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&details=${details}&location=${location}&dates=${dStr}T090000/${dStr}T170000`;
+}
+
+function downloadIcs(ev) {
+  const dStr = (ev.date || '2026-06-18').replace(/-/g, '');
+  const ics = `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//DASIG Consortium//Portal//EN
+BEGIN:VEVENT
+SUMMARY:${ev.title}
+DESCRIPTION:${ev.description || 'DASIG Consortium Event'}
+LOCATION:${ev.venue || 'Region VII'}
+DTSTART:${dStr}T090000
+DTEND:${dStr}T170000
+STATUS:CONFIRMED
+END:VEVENT
+END:VCALENDAR`;
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([ics], { type: 'text/calendar' }));
+  a.download = `${ev.title.replace(/[^a-z0-9]/gi, '_')}.ics`;
+  a.click();
+}
+
+/* ─── REGISTRATIONS TAB ───────────────────────────────────────── */
+function RegistrationsTab({ user, showToast, navigate }) {
+  const [regs, setRegs] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    api.auth.myRegistrations()
+      .then(setRegs)
+      .catch(() => showToast('Failed to load registrations', false))
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return (
+      <div style={{ textAlign: 'center', padding: '40px 0', color: 'rgba(255,255,255,0.4)' }}>
+        <div style={{ fontSize: 32, marginBottom: 8 }}>⏳</div>Loading your registrations…
+      </div>
+    );
+  }
+
+  if (!regs.length) {
+    return (
+      <div style={{ textAlign: 'center', padding: '48px 0', color: 'rgba(255,255,255,0.4)' }}>
+        <div style={{ fontSize: 44, marginBottom: 12 }}>📅</div>
+        <div style={{ color: '#fff', fontSize: 16, fontWeight: 700, marginBottom: 6 }}>No registrations found</div>
+        <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, marginBottom: 20 }}>You have not registered for any upcoming consortium events or summits.</p>
+        <button onClick={() => navigate('/programs')} style={{ background: 'linear-gradient(90deg,#f97316,#e11d48)', color: '#fff', border: 'none', borderRadius: 10, padding: '10px 22px', fontSize: 13.5, fontWeight: 800, cursor: 'pointer' }}>
+          Explore Events & Programs →
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <div style={{ fontSize: 12.5, fontWeight: 700, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: 4 }}>
+        Your Registered Events & Programs ({regs.length})
+      </div>
+      {regs.map(r => {
+        const ev = r.events || { id: r.event_id, title: 'Consortium Event', date: '2026-06-18', venue: 'Region VII', category: 'Summit' };
+        const attended = r.attended ?? false;
+        return (
+          <div key={r.id || r.event_id} style={{
+            background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
+            borderRadius: 14, padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 14,
+          }}>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                <span style={{ fontWeight: 800, color: '#fff', fontSize: 15 }}>{ev.title}</span>
+                <span style={{
+                  background: attended ? 'rgba(16,185,129,0.18)' : 'rgba(59,130,246,0.18)',
+                  color: attended ? '#6ee7b7' : '#93c5fd',
+                  fontSize: 11, fontWeight: 800, borderRadius: 6, padding: '2px 8px',
+                }}>
+                  {attended ? '✓ Attended' : '● Confirmed'}
+                </span>
+              </div>
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)' }}>
+                📅 {ev.date} · 📍 {ev.venue} {ev.category ? `· 🏛 ${ev.category}` : ''}
+              </div>
+            </div>
+
+            {/* Action buttons */}
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              {attended ? (
+                <button
+                  onClick={() => downloadCertificate(user, ev)}
+                  style={{
+                    background: 'linear-gradient(90deg,#f59e0b,#f97316)',
+                    color: '#fff', border: 'none', borderRadius: 9, padding: '8px 16px',
+                    fontSize: 12.5, fontWeight: 800, cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', gap: 6,
+                    boxShadow: '0 4px 14px rgba(245,158,11,0.35)',
+                  }}
+                >
+                  🎓 Download Certificate
+                </button>
+              ) : (
+                <>
+                  <a
+                    href={getGoogleCalendarUrl(ev)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      background: 'rgba(255,255,255,0.08)', color: '#fff',
+                      border: '1px solid rgba(255,255,255,0.15)', borderRadius: 9,
+                      padding: '8px 14px', fontSize: 12.5, fontWeight: 700,
+                      textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6,
+                    }}
+                  >
+                    📅 Google Calendar
+                  </a>
+                  <button
+                    onClick={() => downloadIcs(ev)}
+                    style={{
+                      background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.7)',
+                      border: '1px solid rgba(255,255,255,0.12)', borderRadius: 9,
+                      padding: '8px 12px', fontSize: 12.5, fontWeight: 600, cursor: 'pointer',
+                    }}
+                  >
+                    📥 .ics
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }

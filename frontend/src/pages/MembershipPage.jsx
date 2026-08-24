@@ -108,6 +108,41 @@ function CertificateModal({ user, status, onClose }) {
   );
 }
 
+const INSTITUTION_OPTIONS = [
+  {
+    name: 'Cebu Institute of Technology - University',
+    campuses: ['Main Campus, N. Bacalso Ave, Cebu City'],
+  },
+  {
+    name: 'University of the Philippines Visayas',
+    campuses: ['Miagao Main Campus, Iloilo', 'Iloilo City Campus', 'Tacloban College'],
+  },
+  {
+    name: 'University of San Agustin',
+    campuses: ['Main Campus, Gen. Luna St, Iloilo City'],
+  },
+  {
+    name: 'Department of Science and Technology (DOST)',
+    campuses: ['DOST Region VII Regional Office, Sudlon, Lahug, Cebu City', 'DOST Bohol PSTO, Tagbilaran City', 'DOST Negros Oriental PSTO, Dumaguete City', 'DOST Siquijor PSTO'],
+  },
+  {
+    name: 'Department of Information and Communications Technology (DICT)',
+    campuses: ['DICT Region VII Office, Cebu City', 'DICT Bohol Provincial Office', 'DICT Negros Oriental Office'],
+  },
+  {
+    name: 'Department of Trade and Industry (DTI)',
+    campuses: ['DTI Region VII Regional Office, Cebu City', 'DTI Cebu Provincial Office', 'DTI Bohol Provincial Office'],
+  },
+  {
+    name: 'Department of Education (DepEd)',
+    campuses: ['DepEd Region VII Regional Office, Sudlon, Lahug, Cebu City'],
+  },
+  {
+    name: 'Other Higher Education Institution / Agency',
+    campuses: ['Other Campus / Custom City'],
+  },
+];
+
 const MEMBERSHIP_CSS = `
   .ms-input {
     width: 100%; box-sizing: border-box;
@@ -118,20 +153,54 @@ const MEMBERSHIP_CSS = `
   }
   .ms-input::placeholder { color: rgba(255,255,255,0.35); }
   .ms-input:focus { border-color: #f97316; background: rgba(255,255,255,0.12); }
-  .ms-input option { background: #1e3a8a; color: #fff; }
+  .ms-input option { background: #0f172a; color: #fff; }
 `;
 
 export default function MembershipPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [status, setStatus]       = useState(null);
-  const [loading, setLoading]     = useState(true);
-  const [applyForm, setApplyForm] = useState({ institution: '', campus: '', tier: 'Tier 2' });
-  const [applyMsg, setApplyMsg]     = useState('');
-  const [applyMsgOk, setApplyMsgOk] = useState(true);
+  const [status, setStatus]           = useState(null);
+  const [loading, setLoading]         = useState(true);
+  const [applyForm, setApplyForm]     = useState({ institution: '', campus: '', tier: 'Tier 2' });
+  const [selectedInst, setSelectedInst] = useState('');
+  const [selectedCampus, setSelectedCampus] = useState('');
+  const [customInst, setCustomInst]   = useState('');
+  const [customCampus, setCustomCampus] = useState('');
+  const [applyMsg, setApplyMsg]       = useState('');
+  const [applyMsgOk, setApplyMsgOk]   = useState(true);
   const [applyErrors, setApplyErrors] = useState({});
-  const [applying, setApplying]   = useState(false);
-  const [showCert, setShowCert]   = useState(false);
+  const [applying, setApplying]       = useState(false);
+  const [showCert, setShowCert]       = useState(false);
+
+  function handleInstitutionChange(instName) {
+    setSelectedInst(instName);
+    if (applyErrors.institution) setApplyErrors(p => ({ ...p, institution: undefined }));
+
+    const found = INSTITUTION_OPTIONS.find(i => i.name === instName);
+    if (found) {
+      if (instName === 'Other Higher Education Institution / Agency') {
+        setApplyForm(f => ({ ...f, institution: customInst, campus: customCampus }));
+        setSelectedCampus('Other Campus / Custom City');
+      } else {
+        const defaultCamp = found.campuses[0] || '';
+        setSelectedCampus(defaultCamp);
+        setApplyForm(f => ({ ...f, institution: instName, campus: defaultCamp }));
+      }
+    } else {
+      setSelectedCampus('');
+      setApplyForm(f => ({ ...f, institution: '', campus: '' }));
+    }
+  }
+
+  function handleCampusChange(campName) {
+    setSelectedCampus(campName);
+    if (applyErrors.campus) setApplyErrors(p => ({ ...p, campus: undefined }));
+    if (campName === 'Other Campus / Custom City') {
+      setApplyForm(f => ({ ...f, campus: customCampus }));
+    } else {
+      setApplyForm(f => ({ ...f, campus: campName }));
+    }
+  }
 
   useEffect(() => {
     if (!user) { setLoading(false); return; }
@@ -311,12 +380,80 @@ export default function MembershipPage() {
                 )}
 
                 <form onSubmit={handleApply}>
-                  <ApplyField label="Institution" value={applyForm.institution}
-                    onChange={e => { setApplyForm(f => ({ ...f, institution: e.target.value })); if (applyErrors.institution) setApplyErrors(p => ({ ...p, institution: undefined })); }}
-                    placeholder="University / Agency name" error={applyErrors.institution} />
-                  <ApplyField label="Campus / City" value={applyForm.campus}
-                    onChange={e => { setApplyForm(f => ({ ...f, campus: e.target.value })); if (applyErrors.campus) setApplyErrors(p => ({ ...p, campus: undefined })); }}
-                    placeholder="e.g. Cebu City" error={applyErrors.campus} />
+                  {/* Institution Select Dropdown */}
+                  <div style={{ marginBottom: 16 }}>
+                    <label style={{ display: 'block', fontSize: 11.5, fontWeight: 800, color: applyErrors.institution ? '#f87171' : 'rgba(255,255,255,0.5)', marginBottom: 7, letterSpacing: '0.5px', textTransform: 'uppercase' }}>
+                      Institution <span style={{ color: '#f43f5e' }}>*</span>
+                    </label>
+                    <select
+                      className="ms-input"
+                      value={selectedInst}
+                      onChange={e => handleInstitutionChange(e.target.value)}
+                      style={{ borderColor: applyErrors.institution ? '#e11d48' : undefined }}
+                    >
+                      <option value="">-- Choose an Institution / Agency --</option>
+                      {INSTITUTION_OPTIONS.map(inst => (
+                        <option key={inst.name} value={inst.name}>{inst.name}</option>
+                      ))}
+                    </select>
+                    {selectedInst === 'Other Higher Education Institution / Agency' && (
+                      <input
+                        className="ms-input"
+                        style={{ marginTop: 8 }}
+                        placeholder="Enter custom institution name..."
+                        value={customInst}
+                        onChange={e => {
+                          setCustomInst(e.target.value);
+                          setApplyForm(f => ({ ...f, institution: e.target.value }));
+                          if (applyErrors.institution) setApplyErrors(p => ({ ...p, institution: undefined }));
+                        }}
+                      />
+                    )}
+                    {applyErrors.institution && (
+                      <div style={{ marginTop: 5, fontSize: 12, color: '#f87171', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
+                        ⚠ {applyErrors.institution}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Campus / City Select Dropdown */}
+                  <div style={{ marginBottom: 16 }}>
+                    <label style={{ display: 'block', fontSize: 11.5, fontWeight: 800, color: applyErrors.campus ? '#f87171' : 'rgba(255,255,255,0.5)', marginBottom: 7, letterSpacing: '0.5px', textTransform: 'uppercase' }}>
+                      Campus / City <span style={{ color: '#f43f5e' }}>*</span>
+                    </label>
+                    <select
+                      className="ms-input"
+                      value={selectedCampus}
+                      onChange={e => handleCampusChange(e.target.value)}
+                      disabled={!selectedInst}
+                      style={{ borderColor: applyErrors.campus ? '#e11d48' : undefined, opacity: !selectedInst ? 0.5 : 1 }}
+                    >
+                      <option value="">{selectedInst ? '-- Choose Campus / Location --' : '-- Select Institution first --'}</option>
+                      {(INSTITUTION_OPTIONS.find(i => i.name === selectedInst)?.campuses || []).map(camp => (
+                        <option key={camp} value={camp}>{camp}</option>
+                      ))}
+                    </select>
+                    {(selectedCampus === 'Other Campus / Custom City' || selectedInst === 'Other Higher Education Institution / Agency') && (
+                      <input
+                        className="ms-input"
+                        style={{ marginTop: 8 }}
+                        placeholder="Enter your campus / city (e.g. Cebu City)..."
+                        value={customCampus}
+                        onChange={e => {
+                          setCustomCampus(e.target.value);
+                          setApplyForm(f => ({ ...f, campus: e.target.value }));
+                          if (applyErrors.campus) setApplyErrors(p => ({ ...p, campus: undefined }));
+                        }}
+                      />
+                    )}
+                    {applyErrors.campus && (
+                      <div style={{ marginTop: 5, fontSize: 12, color: '#f87171', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
+                        ⚠ {applyErrors.campus}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Membership Tier Dropdown */}
                   <div style={{ marginBottom: 20 }}>
                     <label style={{ display: 'block', fontSize: 11.5, fontWeight: 800, color: 'rgba(255,255,255,0.5)', marginBottom: 7, letterSpacing: '0.5px', textTransform: 'uppercase' }}>Membership Tier</label>
                     <select className="ms-input" value={applyForm.tier}

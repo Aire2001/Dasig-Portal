@@ -138,6 +138,14 @@ const CHAT_CSS = `
     from { transform: scale(0.92) translateY(12px); opacity: 0; }
     to   { transform: scale(1) translateY(0); opacity: 1; }
   }
+  @keyframes metaPulse {
+    0%, 100% {
+      box-shadow: 0 0 0 0 rgba(249,115,22,0.45), 0 0 16px rgba(59,130,246,0.3);
+    }
+    50% {
+      box-shadow: 0 0 0 7px rgba(249,115,22,0), 0 0 28px rgba(225,29,72,0.45);
+    }
+  }
   @keyframes blink {
     0%,80%,100% { opacity: 0; }
     40%          { opacity: 1; }
@@ -145,6 +153,10 @@ const CHAT_CSS = `
   @keyframes pulseGlow {
     0%,100% { box-shadow: 0 0 0 0 rgba(249,115,22,0.25); }
     50%     { box-shadow: 0 0 0 10px rgba(249,115,22,0); }
+  }
+  @keyframes micPulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.6); transform: scale(1); }
+    50%     { box-shadow: 0 0 0 12px rgba(239,68,68,0); transform: scale(1.05); }
   }
   .chat-msg { animation: msgIn 0.22s ease both; }
   .typing-dot { animation: blink 1.2s infinite; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #94a3b8; }
@@ -176,11 +188,51 @@ const CHAT_CSS = `
   ::-webkit-scrollbar { width: 5px; }
   ::-webkit-scrollbar-track { background: rgba(255,255,255,0.03); }
   ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 3px; }
+  .msg-wrapper:hover .msg-actions { opacity: 1; }
+  .msg-actions {
+    display: flex;
+    gap: 6px;
+    margin-top: 6px;
+    opacity: 0;
+    transition: opacity 0.18s;
+  }
+  .action-btn {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 7px;
+    padding: 3px 9px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    color: rgba(255,255,255,0.5);
+    font-family: inherit;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .action-btn:hover { background: rgba(249,115,22,0.15); border-color: rgba(249,115,22,0.3); color: #f97316; }
+  .action-btn.rated-up { background: rgba(16,185,129,0.15); border-color: rgba(16,185,129,0.3); color: #34d399; }
+  .action-btn.rated-down { background: rgba(225,29,72,0.15); border-color: rgba(225,29,72,0.3); color: #f87171; }
+  .action-btn.copied { background: rgba(16,185,129,0.15); border-color: rgba(16,185,129,0.3); color: #34d399; }
 `;
 
 function formatTime(d) {
   return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
+
+const NAV_CARD_INFO = {
+  '/events':       { icon: '📅', title: 'Events & Summits', desc: 'Browse scheduled summits, seminars, and seat capacities' },
+  '/programs':     { icon: '📅', title: 'Consortium Calendar', desc: 'Explore the full schedule and monthly calendar view' },
+  '/training':     { icon: '🎓', title: 'Training & Development', desc: 'Enroll in professional development tracks and workshops' },
+  '/membership':   { icon: '👥', title: 'Institutional Membership', desc: 'Learn about membership tiers and apply for institutional affiliation' },
+  '/policies':     { icon: '📜', title: 'Policies & Governance', desc: 'Review official consortium charters, rules and guidelines' },
+  '/funding':      { icon: '💰', title: 'Funding Opportunities', desc: 'Explore government and research grants from DOST & DICT' },
+  '/partnerships': { icon: '🤝', title: 'Strategic Partnerships', desc: 'Discover collaborative initiatives across Region VII' },
+  '/news':         { icon: '📰', title: 'Press & Announcements', desc: 'Read the latest consortium news, press releases, and updates' },
+  '/members':      { icon: '🏛️', title: 'Member Institutions', desc: 'Explore Region VII universities, campuses and government agencies' },
+  '/admin':        { icon: '🛡️', title: 'Admin Command Center', desc: 'Open executive portal administration and control modules' },
+};
 
 const ROLE_BADGE = {
   ADMIN:  { bg:'rgba(225,29,72,0.18)',   color:'#f43f5e', label:'Administrator' },
@@ -231,6 +283,10 @@ export default function ChatbotPage() {
     try { return !!sessionStorage.getItem('haribon_resume'); } catch { return false; }
   });
   const [atBottom, setAtBottom]       = useState(true);
+  const [ratings, setRatings]   = useState({});   // {[msgIndex]: 'up'|'down'}
+  const [copied,  setCopied]    = useState(null);  // message index recently copied
+  const [listening, setListening] = useState(false);
+  const recognitionRef = useRef(null);
   const msgsContainerRef              = useRef(null);
 
   // Reset chat when user changes (login/logout)
@@ -271,6 +327,7 @@ export default function ChatbotPage() {
         intent: res.intent,
         matched: res.matched,
         followups: res.followups || [],
+        suggestions: res.suggestions || [],
         navigate_to: res.navigate_to || null,
         time: new Date(),
       }]);
@@ -331,6 +388,71 @@ export default function ChatbotPage() {
   function jumpToBottom() {
     msgsContainerRef.current?.scrollTo({ top: msgsContainerRef.current.scrollHeight, behavior: 'smooth' });
     setAtBottom(true);
+  }
+
+  function rateMessage(idx, vote) {
+    setRatings(prev => ({ ...prev, [idx]: prev[idx] === vote ? null : vote }));
+  }
+
+  const [speakingIdx, setSpeakingIdx] = useState(null);
+
+  function speakMessage(idx, text) {
+    if (!window.speechSynthesis) return;
+    if (speakingIdx === idx) {
+      window.speechSynthesis.cancel();
+      setSpeakingIdx(null);
+      return;
+    }
+    window.speechSynthesis.cancel();
+    const cleanText = text.replace(/[•▸\d+\.]/g, '').trim();
+    const utter = new SpeechSynthesisUtterance(cleanText);
+    utter.rate = 1.05;
+    utter.pitch = 1.0;
+    utter.onend = () => setSpeakingIdx(null);
+    utter.onerror = () => setSpeakingIdx(null);
+    setSpeakingIdx(idx);
+    window.speechSynthesis.speak(utter);
+  }
+
+  async function copyMessage(idx, text) {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(idx);
+      setTimeout(() => setCopied(c => c === idx ? null : c), 2000);
+    } catch (_) {}
+  }
+
+  function toggleVoiceInput() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert('Speech recognition is not supported in this browser. Please use Chrome, Edge, or Safari.');
+      return;
+    }
+    if (listening) {
+      recognitionRef.current?.stop();
+      setListening(false);
+      return;
+    }
+    try {
+      const recognition = new SpeechRecognition();
+      recognition.lang = 'en-PH';
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+      recognition.onstart = () => setListening(true);
+      recognition.onend = () => setListening(false);
+      recognition.onerror = () => setListening(false);
+      recognition.onresult = (e) => {
+        const transcript = e.results[0][0].transcript;
+        if (transcript) {
+          setInput(prev => (prev ? `${prev} ${transcript}` : transcript));
+          setTimeout(() => inputRef.current?.focus(), 50);
+        }
+      };
+      recognitionRef.current = recognition;
+      recognition.start();
+    } catch (_) {
+      setListening(false);
+    }
   }
 
   return (
@@ -509,30 +631,38 @@ export default function ChatbotPage() {
                         <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.06)' }} />
                       </div>
                     )}
-                  <div className="chat-msg" style={{ display: 'flex', flexDirection: 'column', alignItems: msg.from === 'user' ? 'flex-end' : 'flex-start' }}>
+                  <div className="chat-msg msg-wrapper" style={{ display: 'flex', flexDirection: 'column', alignItems: msg.from === 'user' ? 'flex-end' : 'flex-start' }}>
 
-                    {/* Bot avatar row */}
+                    {/* Bot avatar row with Meta AI glowing halo */}
                     {msg.from === 'bot' && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 6 }}>
-                        <div style={{ width: 26, height: 26, borderRadius: 8, overflow: 'hidden', flexShrink: 0, border: '1.5px solid rgba(249,115,22,0.3)' }}>
-                          <HaribonFace size={26} />
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 6 }}>
+                        <div style={{ position: 'relative', width: 28, height: 28 }}>
+                          <div style={{
+                            position: 'absolute', inset: -2.5, borderRadius: '50%',
+                            background: 'linear-gradient(135deg,#f97316,#e11d48,#3b82f6)',
+                            animation: 'metaPulse 3s ease-in-out infinite',
+                          }} />
+                          <div style={{ position: 'relative', width: 28, height: 28, borderRadius: '50%', overflow: 'hidden', zIndex: 1 }}>
+                            <HaribonFace size={28} />
+                          </div>
                         </div>
-                        <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', fontWeight: 700, letterSpacing: '0.2px' }}>Haribon</span>
+                        <span style={{ fontSize: 12.5, color: '#fff', fontWeight: 800, letterSpacing: '0.2px' }}>Haribon AI</span>
+                        <span style={{ fontSize: 10, background: 'rgba(249,115,22,0.18)', color: '#fb923c', border: '1px solid rgba(249,115,22,0.3)', borderRadius: 5, padding: '1px 6px', fontWeight: 800 }}>NLP</span>
                         {!msg.matched && msg.matched !== undefined && (
-                          <span style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.3)', fontStyle: 'italic' }}>no exact match</span>
+                          <span style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.35)', fontStyle: 'italic' }}>fuzzy suggestion</span>
                         )}
                       </div>
                     )}
 
                     {/* Message bubble */}
                     <div style={{
-                      maxWidth: '80%', padding: msg.from === 'bot' ? '14px 18px' : '11px 16px',
+                      maxWidth: '82%', padding: msg.from === 'bot' ? '14px 18px' : '11px 16px',
                       borderRadius: 18, fontSize: 13.5,
                       ...(msg.from === 'bot' ? {
-                        background: 'rgba(20,30,50,0.96)',
+                        background: 'rgba(12,20,38,0.96)',
                         borderBottomLeftRadius: 5,
                         border: '1px solid rgba(255,255,255,0.09)',
-                        boxShadow: '0 4px 20px rgba(0,0,0,0.25)',
+                        boxShadow: '0 4px 20px rgba(0,0,0,0.35)',
                       } : {
                         background: 'linear-gradient(135deg,#1e3a8a,#1a56db)',
                         color: '#fff', borderBottomRightRadius: 5,
@@ -552,29 +682,108 @@ export default function ChatbotPage() {
                       </div>
                     )}
 
-                    {/* Follow-up suggestions + navigation CTA — only on last bot message */}
+                    {/* Meta AI Rating, Copy & Read Aloud actions — shown on hover via CSS */}
+                    {msg.from === 'bot' && i > 0 && (
+                      <div className="msg-actions">
+                        <button
+                          className={`action-btn${ratings[i] === 'up' ? ' rated-up' : ''}`}
+                          onClick={() => rateMessage(i, 'up')}
+                        >
+                          👍{ratings[i] === 'up' ? ' Helpful' : ''}
+                        </button>
+                        <button
+                          className={`action-btn${ratings[i] === 'down' ? ' rated-down' : ''}`}
+                          onClick={() => rateMessage(i, 'down')}
+                          title="Not helpful"
+                        >
+                          👎{ratings[i] === 'down' ? ' Not helpful' : ''}
+                        </button>
+                        <button
+                          className={`action-btn${copied === i ? ' copied' : ''}`}
+                          onClick={() => copyMessage(i, msg.text)}
+                          title="Copy response"
+                        >
+                          {copied === i ? '✓ Copied' : '⧉ Copy'}
+                        </button>
+                        <button
+                          className={`action-btn${speakingIdx === i ? ' rated-up' : ''}`}
+                          onClick={() => speakMessage(i, msg.text)}
+                          title="Read aloud"
+                        >
+                          {speakingIdx === i ? '⏹ Stop' : '🔊 Read'}
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Did you mean? suggestions when unmatched */}
+                    {msg.from === 'bot' && i === messages.length - 1 && !thinking && msg.matched === false && msg.suggestions?.length > 0 && (
+                      <div style={{ marginTop: 10, padding: '12px 16px', background: 'rgba(249,115,22,0.07)', border: '1px solid rgba(249,115,22,0.22)', borderRadius: 12, maxWidth: '84%' }}>
+                        <div style={{ fontSize: 11, fontWeight: 800, color: '#fb923c', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '.5px' }}>
+                          💡 Did you mean one of these?
+                        </div>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                          {msg.suggestions.map((s, si) => (
+                            <button
+                              key={si}
+                              className="chip-btn"
+                              onClick={() => send(s.sample)}
+                              style={{ fontSize: 12, padding: '6px 12px' }}
+                            >
+                              {s.sample}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Follow-up suggestions + In-Chat Direct Navigation Card — only on last bot message */}
                     {msg.from === 'bot' && i === messages.length - 1 && !thinking && (
                       <div style={{ marginTop: 10, maxWidth: '84%', display: 'flex', flexDirection: 'column', gap: 10 }}>
-                        {msg.navigate_to && (
-                          <button
-                            onClick={() => navigate(msg.navigate_to)}
-                            style={{
-                              alignSelf: 'flex-start',
-                              background: 'linear-gradient(90deg,rgba(249,115,22,0.18),rgba(225,29,72,0.14))',
-                              border: '1px solid rgba(249,115,22,0.4)',
-                              borderRadius: 10, padding: '9px 16px',
-                              color: '#fb923c', fontSize: 13, fontWeight: 800,
-                              cursor: 'pointer', fontFamily: 'inherit',
-                              display: 'flex', alignItems: 'center', gap: 7,
-                              transition: 'all .15s',
-                            }}
-                            onMouseEnter={e => { e.currentTarget.style.background = 'linear-gradient(90deg,rgba(249,115,22,0.28),rgba(225,29,72,0.22))'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
-                            onMouseLeave={e => { e.currentTarget.style.background = 'linear-gradient(90deg,rgba(249,115,22,0.18),rgba(225,29,72,0.14))'; e.currentTarget.style.transform = 'none'; }}
-                          >
-                            <span>↗</span>
-                            Open page
-                          </button>
-                        )}
+                        {msg.navigate_to && (() => {
+                          const card = NAV_CARD_INFO[msg.navigate_to] || { icon: '🚀', title: 'Open Portal Page', desc: 'Click to view related module details' };
+                          return (
+                            <div
+                              onClick={() => navigate(msg.navigate_to)}
+                              style={{
+                                background: 'rgba(8,14,28,0.85)',
+                                backdropFilter: 'blur(12px)',
+                                border: '1px solid rgba(249,115,22,0.35)',
+                                borderRadius: 14, padding: '14px 18px',
+                                cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 14,
+                                transition: 'all 0.18s ease',
+                                boxShadow: '0 8px 24px rgba(0,0,0,0.35), 0 0 16px rgba(249,115,22,0.1)',
+                              }}
+                              onMouseEnter={e => {
+                                e.currentTarget.style.borderColor = 'rgba(249,115,22,0.7)';
+                                e.currentTarget.style.transform = 'translateY(-2px)';
+                                e.currentTarget.style.boxShadow = '0 12px 30px rgba(0,0,0,0.5), 0 0 20px rgba(249,115,22,0.2)';
+                              }}
+                              onMouseLeave={e => {
+                                e.currentTarget.style.borderColor = 'rgba(249,115,22,0.35)';
+                                e.currentTarget.style.transform = 'none';
+                                e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.35), 0 0 16px rgba(249,115,22,0.1)';
+                              }}
+                            >
+                              <div style={{
+                                width: 40, height: 40, borderRadius: 11,
+                                background: 'rgba(249,115,22,0.15)', border: '1px solid rgba(249,115,22,0.35)',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                fontSize: 20, flexShrink: 0,
+                              }}>{card.icon}</div>
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ color: '#fff', fontWeight: 800, fontSize: 13.5, marginBottom: 2 }}>{card.title}</div>
+                                <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11.5 }}>{card.desc}</div>
+                              </div>
+                              <div style={{
+                                color: '#f97316', fontWeight: 800, fontSize: 12.5,
+                                display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0,
+                              }}>
+                                <span>Open</span>
+                                <span>→</span>
+                              </div>
+                            </div>
+                          );
+                        })()}
                         {msg.followups?.length > 0 && (
                           <>
                             <div style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.48)', fontWeight: 700, letterSpacing: '0.4px', textTransform: 'uppercase' }}>
@@ -670,6 +879,24 @@ export default function ChatbotPage() {
                       {input.length}/400
                     </div>
                   )}
+                  <button
+                    type="button"
+                    onClick={toggleVoiceInput}
+                    title={listening ? 'Listening... click to stop' : 'Speak to Haribon (Voice input)'}
+                    style={{
+                      background: listening ? 'linear-gradient(135deg,#ef4444,#dc2626)' : 'rgba(255,255,255,0.08)',
+                      color: listening ? '#fff' : 'rgba(255,255,255,0.7)',
+                      border: `1px solid ${listening ? '#ef4444' : 'rgba(255,255,255,0.12)'}`,
+                      borderRadius: 12, padding: '13px 15px',
+                      fontSize: 16, cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      animation: listening ? 'micPulse 1.4s infinite' : 'none',
+                      transition: 'all 0.15s',
+                      flexShrink: 0,
+                    }}
+                  >
+                    {listening ? '🔴' : '🎙️'}
+                  </button>
                   <button
                     onClick={() => send()}
                     disabled={thinking || !input.trim()}

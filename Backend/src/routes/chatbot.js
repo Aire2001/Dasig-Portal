@@ -345,6 +345,21 @@ function matchIntent(text) {
   return bestScore > 0 ? { reply: best.reply, intent: best.intent, score: bestScore } : null;
 }
 
+// Levenshtein distance for fuzzy typo tolerance
+function levenshtein(a, b) {
+  const m = a.length, n = b.length;
+  const dp = Array.from({ length: m + 1 }, (_, i) =>
+    Array(n + 1).fill(0).map((_, j) => (i === 0 ? j : j === 0 ? i : 0))
+  );
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      dp[i][j] = a[i - 1] === b[j - 1] ? dp[i - 1][j - 1]
+        : 1 + Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]);
+    }
+  }
+  return dp[m][n];
+}
+
 // POST /api/chatbot/message
 router.post('/message', async (req, res) => {
   const { message } = req.body;
@@ -353,7 +368,28 @@ router.post('/message', async (req, res) => {
   const trimmed = message.trim();
   // Strip leading emoji (e.g. from DEFAULT_FOLLOWUP chips like "📅 What events...") before NLP matching
   const normalized = trimmed.replace(/^[\p{Emoji_Presentation}\p{Extended_Pictographic}]+\s*/gu, '');
-  const match = matchIntent(normalized);
+  let match = matchIntent(normalized);
+  let bestScore = match ? match.score : 0;
+
+  // Fuzzy fallback: if no good keyword match, try word-level Levenshtein
+  if (!match || bestScore < 1) {
+    const inputWords = normalized.split(/\s+/).filter(w => w.length >= 3);
+    let fuzzyBest = null;
+    let fuzzyBestScore = 0;
+    for (const entry of KB) {
+      let fScore = 0;
+      for (const kw of entry.keywords) {
+        const kwWords = kw.toLowerCase().split(/\s+/);
+        for (const iw of inputWords) {
+          for (const kw2 of kwWords) {
+            if (kw2.length >= 3 && levenshtein(iw, kw2) <= 1) fScore += 1;
+          }
+        }
+      }
+      if (fScore > fuzzyBestScore) { fuzzyBestScore = fScore; fuzzyBest = entry; }
+    }
+    if (fuzzyBest && fuzzyBestScore >= 1) match = { reply: fuzzyBest.reply, intent: fuzzyBest.intent, score: fuzzyBestScore };
+  }
 
   // Log to DB for accuracy tracking (fire-and-forget)
   supabase.from('chatbot_logs').insert({
@@ -363,13 +399,25 @@ router.post('/message', async (req, res) => {
   }).then(() => {}).catch(() => {});
 
   if (!match) {
-    return res.json({
-      reply: `I couldn't find a specific answer for that. Try rephrasing, or pick a topic below — I'm happy to help!`,
-      matched: false,
-      intent: null,
-      score: 0,
-      followups: DEFAULT_FOLLOWUPS,
-    });
+    // Compute related suggestions for unmatched queries
+    const unmatchedInputWords = normalized.split(/\s+/).filter(w => w.length >= 3);
+    const relatedSuggestions = KB.map(entry => {
+      let s = 0;
+      for (const kw of entry.keywords) {
+        for (const iw of unmatchedInputWords) {
+          if (kw.includes(iw) || iw.includes(kw.split(' ')[0])) s += 1;
+        }
+      }
+      return { intent: entry.intent, sample: entry.keywords[0], score: s };
+    }).filter(e => e.score > 0).sort((a, b) => b.score - a.score).slice(0, 3);
+
+    const suggestions = relatedSuggestions.length > 0 ? relatedSuggestions : [
+      { intent: 'events', sample: 'What events are coming up?' },
+      { intent: 'membership', sample: 'How do I become a DASIG member?' },
+      { intent: 'training', sample: 'What training programs are available?' },
+    ];
+
+    return res.json({ reply: `I couldn't find a specific answer for that. Try rephrasing, or pick a topic below — I'm happy to help!`, matched: false, intent: null, score: 0, followups: DEFAULT_FOLLOWUPS, navigate_to: null, suggestions });
   }
 
   let reply = match.reply;

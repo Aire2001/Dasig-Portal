@@ -31,7 +31,9 @@ export default function ForgotPasswordPage() {
     setLoading(true);
     try {
       const data = await api.auth.forgotPassword(email);
-      setToken(data.reset_token || '');
+      const resetCode = data.reset_token || '123456';
+      setToken(resetCode);
+      setTokenInput(resetCode);
       setStep('reset');
     } catch (err) {
       setError(err.message);
@@ -44,7 +46,8 @@ export default function ForgotPasswordPage() {
     e.preventDefault();
     setError('');
     const errs = {};
-    if (!tokenInput && !token) errs.token = 'Reset token is required.';
+    const effectiveToken = tokenInput.trim() || token.trim();
+    if (!effectiveToken) errs.token = 'Reset code or token is required.';
     if (!newPassword) errs.newPassword = 'New password is required.';
     else if (newPassword.length < 8) errs.newPassword = 'Password must be at least 8 characters.';
     if (!confirmPassword) errs.confirmPassword = 'Please confirm your new password.';
@@ -53,7 +56,7 @@ export default function ForgotPasswordPage() {
     setFe({});
     setLoading(true);
     try {
-      await api.auth.resetPassword(tokenInput || token, newPassword);
+      await api.auth.resetPassword(effectiveToken, newPassword, email);
       setStep('done');
     } catch (err) {
       setError(err.message);
@@ -129,17 +132,20 @@ export default function ForgotPasswordPage() {
                   padding: '12px 14px', marginBottom: 16, fontSize: 12,
                 }}>
                   <div style={{ fontWeight: 700, color: '#166534', marginBottom: 4 }}>
-                    Demo mode — Reset token:
+                    Demo Mode — Verification Code:
                   </div>
-                  <code style={{ wordBreak: 'break-all', color: '#15803d', fontSize: 11 }}>{token}</code>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
+                    <code style={{ fontSize: 16, fontWeight: 900, color: '#15803d', letterSpacing: '2px', background: '#dcfce7', padding: '3px 8px', borderRadius: 6 }}>{token}</code>
+                    <span style={{ fontSize: 11, color: '#166534' }}>(Pre-filled automatically)</span>
+                  </div>
                   <div style={{ color: '#166534', marginTop: 6, fontSize: 11 }}>
-                    In production this would be emailed to you. It has been pre-filled below.
+                    You can also use demo code <strong style={{ color: '#15803d' }}>123456</strong>.
                   </div>
                 </div>
               )}
-              <FPField label="Reset token" value={tokenInput || token}
+              <FPField label="Reset verification code / token" value={tokenInput}
                 onChange={e => { setTokenInput(e.target.value); if (fe.token) setFe(p => ({ ...p, token: undefined })); }}
-                placeholder="Paste your reset token" error={fe.token} />
+                placeholder="Enter 6-digit code or 123456" error={fe.token} />
               <FPField label="New password" type="password" value={newPassword}
                 onChange={e => { setNewPassword(e.target.value); if (fe.newPassword) setFe(p => ({ ...p, newPassword: undefined })); }}
                 placeholder="Min. 8 characters" error={fe.newPassword} />

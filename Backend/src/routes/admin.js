@@ -203,12 +203,20 @@ router.get('/reports/training', async (req, res) => {
 
 // GET /api/admin/reports/chatbot — chatbot intent accuracy metrics
 router.get('/reports/chatbot', async (req, res) => {
-  const { data, error } = await supabase.from('chatbot_logs')
-    .select('matched, intent, created_at')
-    .order('created_at', { ascending: false });
+  const [logsResult, unmatchedResult] = await Promise.all([
+    supabase.from('chatbot_logs')
+      .select('matched, intent, created_at')
+      .order('created_at', { ascending: false }),
+    supabase.from('chatbot_logs')
+      .select('message, created_at')
+      .eq('matched', false)
+      .order('created_at', { ascending: false })
+      .limit(20),
+  ]);
 
-  if (error) return res.status(500).json({ error: error.message });
+  if (logsResult.error) return res.status(500).json({ error: logsResult.error.message });
 
+  const data = logsResult.data || [];
   const total = data.length;
   const matched = data.filter(l => l.matched).length;
   const accuracy = total > 0 ? Math.round((matched / total) * 100) : 0;
@@ -227,6 +235,10 @@ router.get('/reports/chatbot', async (req, res) => {
       .sort((a, b) => b[1] - a[1])
       .slice(0, 10)
       .map(([intent, count]) => ({ intent, count })),
+    unmatchedQueries: (unmatchedResult.data || []).map(q => ({
+      message: q.message,
+      time: q.created_at,
+    })),
   });
 });
 

@@ -119,4 +119,18 @@ router.patch('/messages/:id/read', verifyToken, requireRole('ADMIN'), async (req
   res.json({ message: 'Marked as read' });
 });
 
+// PATCH /api/contact/messages/read-all — mark all messages as read
+router.patch('/messages/read-all', verifyToken, requireRole('ADMIN'), async (req, res) => {
+  const { error } = await supabase.from('contact_messages').update({ read: true }).eq('read', false);
+  if (error) return res.status(500).json({ error: error.message });
+  res.json({ message: 'All messages marked as read' });
+});
+
+// DELETE /api/contact/messages/:id — delete a contact message
+router.delete('/messages/:id', verifyToken, requireRole('ADMIN'), async (req, res) => {
+  const { error } = await supabase.from('contact_messages').delete().eq('id', req.params.id);
+  if (error) return res.status(404).json({ error: 'Message not found' });
+  res.json({ message: 'Message deleted' });
+});
+
 module.exports = router;
