@@ -22,7 +22,12 @@ const KB = [
   },
   {
     intent: 'events',
-    keywords: ['event', 'summit', 'seminar', 'conference', 'workshop', 'upcoming event', 'schedule', 'activity', 'forum'],
+    keywords: [
+      'event', 'summit', 'seminar', 'conference', 'workshop', 'upcoming event', 'schedule', 'activity', 'forum',
+      'august', 'september', 'october', 'november', 'december', 'january', 'february', 'march', 'april', 'may', 'june', 'july',
+      'aug', 'sep', 'sept', 'oct', 'nov', 'dec', 'jan', 'feb', 'mar', 'apr', 'jun', 'jul',
+      'this month', 'next month', 'calendar schedule', 'what is in august', 'events in august', 'events in september', 'events in october', 'events in november', 'events in december'
+    ],
     reply: 'DASIG regularly holds summits, seminars, workshops, and forums for member institutions. Visit the Events module to see all upcoming activities, register, and manage your event attendance.',
   },
   {
@@ -442,11 +447,36 @@ router.post('/message', async (req, res) => {
 
   try {
     if (match.intent === 'events' || match.intent === 'summit') {
-      const { data } = await supabase.from('events').select('title, date, venue').order('id', { ascending: true }).limit(6);
+      const { data } = await supabase.from('events').select('title, date, venue, category').order('id', { ascending: true }).limit(10);
       if (data && data.length > 0) {
-        const items = uniq(data, 'title').slice(0, 3);
-        const list = items.map(e => `• ${e.title} — ${e.date || 'TBA'}${e.venue ? ' @ ' + e.venue : ''}`).join('\n');
-        reply = `${match.reply}\n\n📅 Upcoming events:\n${list}\n\nRegister early — slots are limited!`;
+        const lowerInput = normalized.toLowerCase().trim();
+        
+        // Month detection
+        const MONTHS = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
+        const MONTH_MAP = {
+          january: 'Jan', february: 'Feb', march: 'Mar', april: 'Apr', may: 'May', june: 'Jun',
+          july: 'Jul', august: 'Aug', september: 'Sep', october: 'Oct', november: 'Nov', december: 'Dec'
+        };
+        
+        const matchedMonth = MONTHS.find(m => lowerInput.includes(m) || lowerInput.split(/\s+/).includes(m.slice(0, 3)));
+        
+        if (matchedMonth) {
+          const abbr = MONTH_MAP[matchedMonth];
+          const monthEvents = data.filter(e => e.date && e.date.toLowerCase().includes(abbr.toLowerCase()));
+          const capMonth = matchedMonth.charAt(0).toUpperCase() + matchedMonth.slice(1);
+          
+          if (monthEvents.length > 0) {
+            const list = monthEvents.map(e => `• ${e.title} — ${e.date}${e.venue ? ' @ ' + e.venue : ''}`).join('\n');
+            reply = `📅 Here are the scheduled DASIG events for ${capMonth} 2026:\n\n${list}\n\nRegister early in the Programs module — slots are limited!`;
+          } else {
+            const upcoming = data.slice(0, 3).map(e => `• ${e.title} — ${e.date}${e.venue ? ' @ ' + e.venue : ''}`).join('\n');
+            reply = `There are currently no major events scheduled for ${capMonth} 2026. The upcoming consortium calendar starts in September!\n\n📅 Soonest upcoming activities:\n${upcoming}\n\nVisit the Calendar in the Programs module for full details.`;
+          }
+        } else {
+          const items = uniq(data, 'title').slice(0, 3);
+          const list = items.map(e => `• ${e.title} — ${e.date || 'TBA'}${e.venue ? ' @ ' + e.venue : ''}`).join('\n');
+          reply = `${match.reply}\n\n📅 Upcoming events:\n${list}\n\nRegister early — slots are limited!`;
+        }
       }
     } else if (match.intent === 'training') {
       const { data } = await supabase.from('trainings').select('title, category, level').limit(6);
