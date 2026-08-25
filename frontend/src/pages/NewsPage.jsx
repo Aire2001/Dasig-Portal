@@ -527,10 +527,10 @@ function ArticleReader({ article: a, allArticles = [], isBookmarked, onToggleBoo
       onClick={onClose}
       style={{
         position:'fixed', inset:0,
-        background:'rgba(0,0,0,0.85)', zIndex:9100,
-        display:'flex', alignItems:'center', justifyContent:'center',
-        padding: isFullscreen ? 0 : 16,
-        overflowY:'auto', backdropFilter:'blur(8px)',
+        background:'rgba(0,0,0,0.88)', zIndex:999999,
+        display:'flex', alignItems: isFullscreen ? 'stretch' : 'center', justifyContent:'center',
+        padding: isFullscreen ? 0 : '72px 20px 36px',
+        overflowY:'auto', backdropFilter:'blur(12px)',
       }}
     >
       <div
@@ -538,28 +538,31 @@ function ArticleReader({ article: a, allArticles = [], isBookmarked, onToggleBoo
         style={{
           background:'#070d1c',
           borderRadius: isFullscreen ? 0 : 20,
-          maxWidth: isFullscreen ? '100vw' : 'min(760px, calc(100vw - 32px))',
+          maxWidth: isFullscreen ? '100vw' : 'min(780px, calc(100vw - 32px))',
           width: isFullscreen ? '100vw' : '100%',
           height: isFullscreen ? '100vh' : 'auto',
-          maxHeight: isFullscreen ? '100vh' : '92vh',
-          boxShadow: isFullscreen ? 'none' : '0 32px 80px rgba(0,0,0,0.9), 0 0 0 1px rgba(255,255,255,0.08)',
+          maxHeight: isFullscreen ? '100vh' : 'calc(100vh - 90px)',
+          boxShadow: isFullscreen ? 'none' : '0 32px 90px rgba(0,0,0,0.95), 0 0 0 1px rgba(255,255,255,0.1)',
           margin:'auto',
           display:'flex', flexDirection:'column',
           position:'relative', overflow:'hidden',
         }}
       >
 
-        {/* ── Window Control Bar (Bookmark, Print, Share, Minimize, Fullscreen, Close) ── */}
+        {/* ── Window Control Bar (Bookmark, Share, Print, Minimize, Fullscreen, Close) ── */}
         <div style={{
-          position:'absolute', top:14, right:14, zIndex:30,
+          position:'absolute', top:16, right:16, zIndex:40,
           display:'flex', alignItems:'center', gap:6,
+          background:'rgba(6,12,26,0.88)', backdropFilter:'blur(14px)',
+          border:'1px solid rgba(255,255,255,0.18)', borderRadius:12, padding:'5px 8px',
+          boxShadow:'0 8px 24px rgba(0,0,0,0.7)',
         }}>
           {/* Bookmark Button */}
           <button
             onClick={onToggleBookmark}
             title={isBookmarked ? 'Remove Bookmark' : 'Bookmark Press Release'}
             className="action-btn-pill"
-            style={{ color: isBookmarked ? '#f59e0b' : '#fff' }}
+            style={{ color: isBookmarked ? '#f59e0b' : '#fff', padding:'5px 10px', fontSize:11.5 }}
           >
             {isBookmarked ? '★ Saved' : '☆ Save'}
           </button>
@@ -569,6 +572,7 @@ function ArticleReader({ article: a, allArticles = [], isBookmarked, onToggleBoo
             onClick={handleCopyLink}
             title="Copy article link"
             className="action-btn-pill"
+            style={{ padding:'5px 10px', fontSize:11.5 }}
           >
             {copied ? '✓ Copied' : '🔗 Share'}
           </button>
@@ -578,19 +582,25 @@ function ArticleReader({ article: a, allArticles = [], isBookmarked, onToggleBoo
             onClick={handlePrintArticle}
             title="Print or Save PDF"
             className="action-btn-pill"
+            style={{ padding:'5px 10px', fontSize:11.5 }}
           >
             🖨️ PDF
           </button>
+
+          <div style={{ width:1, height:18, background:'rgba(255,255,255,0.15)', margin:'0 2px' }} />
 
           {/* Minimize button */}
           <button
             onClick={onMinimize}
             title="Minimize to dock"
             style={{
-              background:'rgba(0,0,0,0.65)', border:'1px solid rgba(255,255,255,0.2)',
-              borderRadius:'50%', width:34, height:34, color:'rgba(255,255,255,0.8)', fontSize:14, fontWeight:700,
+              background:'rgba(255,255,255,0.08)', border:'1px solid rgba(255,255,255,0.15)',
+              borderRadius:8, width:30, height:28, color:'rgba(255,255,255,0.85)', fontSize:13, fontWeight:800,
               cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center',
+              transition:'all .12s',
             }}
+            onMouseEnter={e => { e.currentTarget.style.background='rgba(255,255,255,0.2)'; e.currentTarget.style.color='#fff'; }}
+            onMouseLeave={e => { e.currentTarget.style.background='rgba(255,255,255,0.08)'; e.currentTarget.style.color='rgba(255,255,255,0.85)'; }}
           >
             —
           </button>
@@ -600,12 +610,16 @@ function ArticleReader({ article: a, allArticles = [], isBookmarked, onToggleBoo
             onClick={() => setIsFullscreen(f => !f)}
             title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen view'}
             style={{
-              background:'rgba(0,0,0,0.65)', border:'1px solid rgba(255,255,255,0.2)',
-              borderRadius:'50%', width:34, height:34, color:'#fff', fontSize:13, fontWeight:700,
+              background: isFullscreen ? 'rgba(249,115,22,0.25)' : 'rgba(255,255,255,0.08)',
+              border: `1px solid ${isFullscreen ? 'rgba(249,115,22,0.45)' : 'rgba(255,255,255,0.15)'}`,
+              borderRadius:8, width:30, height:28, color: isFullscreen ? '#fb923c' : '#fff', fontSize:13, fontWeight:800,
               cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center',
+              transition:'all .12s',
             }}
+            onMouseEnter={e => { e.currentTarget.style.background='rgba(255,255,255,0.2)'; e.currentTarget.style.color='#fff'; }}
+            onMouseLeave={e => { e.currentTarget.style.background=isFullscreen ? 'rgba(249,115,22,0.25)' : 'rgba(255,255,255,0.08)'; e.currentTarget.style.color=isFullscreen ? '#fb923c' : '#fff'; }}
           >
-            {isFullscreen ? '❐' : '⤢'}
+            {isFullscreen ? '🗗' : '⛶'}
           </button>
 
           {/* Close button */}
@@ -613,10 +627,13 @@ function ArticleReader({ article: a, allArticles = [], isBookmarked, onToggleBoo
             onClick={onClose}
             title="Close press release"
             style={{
-              background:'rgba(0,0,0,0.65)', border:'1px solid rgba(255,255,255,0.2)',
-              borderRadius:'50%', width:34, height:34, color:'#fff', fontSize:14, fontWeight:700,
+              background:'rgba(225,29,72,0.2)', border:'1px solid rgba(225,29,72,0.35)',
+              borderRadius:8, width:30, height:28, color:'#fca5a5', fontSize:13, fontWeight:900,
               cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center',
+              transition:'all .12s',
             }}
+            onMouseEnter={e => { e.currentTarget.style.background='rgba(225,29,72,0.4)'; e.currentTarget.style.color='#fff'; }}
+            onMouseLeave={e => { e.currentTarget.style.background='rgba(225,29,72,0.2)'; e.currentTarget.style.color='#fca5a5'; }}
           >
             ✕
           </button>
