@@ -21,6 +21,41 @@ const KB = [
     reply: 'The DASIG Consortium includes six Region VII member institutions: University of the Philippines (UP Visayas), University of San Agustin (Iloilo City), DOST Region VII, DICT Region VII, DTI Region VII, and DepEd Region VII.',
   },
   {
+    intent: 'dost_info',
+    keywords: ['dost', 'dost 7', 'dost region 7', 'dost vii', 'department of science and technology', 'science and technology agency', 'dost role'],
+    reply: '🔬 **Department of Science & Technology (DOST Region VII):**\nDOST is the primary government agency for scientific development in Central Visayas. Within DASIG, DOST provides research funding, facilitates the SETUP MSME innovation program, organizes the *Research Methods for STEM Educators* training, and coordinates DOST SEI scholarships.',
+  },
+  {
+    intent: 'dict_info',
+    keywords: ['dict', 'dict 7', 'dict region 7', 'dict vii', 'department of information and communications', 'ict agency', 'dict role'],
+    reply: '💻 **Department of Information & Communications Technology (DICT Region VII):**\nDICT leads digital transformation across Central Visayas. Within DASIG, DICT conducts hands-on technical capacity bootcamps (such as the *Full-Stack Web Dev Bootcamp*), manages e-governance systems, and co-hosts regional cybersecurity and ICT innovation forums.',
+  },
+  {
+    intent: 'dti_info',
+    keywords: ['dti', 'dti 7', 'dti region 7', 'dti vii', 'department of trade and industry', 'trade agency', 'dti role'],
+    reply: '💼 **Department of Trade and Industry (DTI Region VII):**\nDTI champions business development and trade facilitation in Central Visayas. In the DASIG consortium, DTI facilitates the *Strategic Leadership in Public Service* training program and connects academic research to commercial MSME applications.',
+  },
+  {
+    intent: 'deped_info',
+    keywords: ['deped', 'deped 7', 'deped region 7', 'deped vii', 'department of education', 'education agency', 'deped role'],
+    reply: '📚 **Department of Education (DepEd Region VII):**\nDepEd oversees basic education across Central Visayas public schools. Within DASIG, DepEd co-facilitates the *Digital Governance & Policy* training program and leads regional K-12 educational technology alignment.',
+  },
+  {
+    intent: 'citu_info',
+    keywords: ['cit-u', 'cit university', 'cebu institute of technology', 'cit', 'citu'],
+    reply: '🏛️ **Cebu Institute of Technology – University (CIT-U):**\nCIT-U is a premier technological institution in Cebu City and the home of DASIG Portal software engineering (Team 40, IT411/IT332 Capstone). CIT-U provides technological leadership, hosting the ICT Innovation Forum and advanced engineering research.',
+  },
+  {
+    intent: 'upv_info',
+    keywords: ['up visayas', 'upv', 'university of the philippines visayas', 'up iloilo'],
+    reply: '🎓 **University of the Philippines Visayas (UPV):**\nUP Visayas is a premier national research university in Miagao & Iloilo City. In DASIG, UPV leads marine and aquatic science research, co-authors published IEEE predictive analytics studies, and hosts the annual Region VII Research Symposium.',
+  },
+  {
+    intent: 'usa_info',
+    keywords: ['university of san agustin', 'usa iloilo', 'san agustin', 'san agustin university'],
+    reply: '✝️ **University of San Agustin (USA Iloilo):**\nEstablished in 1904, University of San Agustin is one of Western Visayas\' oldest and most respected universities. Within DASIG, USA leads inter-institutional cooperation in governance, community extension, and hosts the regional *Governance & Innovation in ASEAN* seminar.',
+  },
+  {
     intent: 'events',
     keywords: [
       'event', 'summit', 'seminar', 'conference', 'workshop', 'upcoming event', 'schedule', 'activity', 'forum',
@@ -290,8 +325,16 @@ const KB = [
 const FOLLOWUPS = {
   greeting:             ['What events are coming up?', 'How do I become a DASIG member?', 'What training programs are offered?'],
   about_dasig:          ['Who are the six consortium members?', 'What modules does the portal offer?', 'How do I join DASIG?'],
-  member_institutions:  ['How do I apply for DASIG membership?', 'What are the membership tier differences?', 'Tell me about DASIG partnerships'],
-  events:               ['How do I register for an event?', 'What is the DASIG Annual Summit?', 'What if the event I want is full?'],
+  member_institutions:  ['Tell me about DOST Region VII', 'Tell me about UP Visayas', 'How do I apply for membership?'],
+  dost_info:            ['What funding opportunities are open?', 'What training programs are offered?', 'Who are the other members?'],
+  dict_info:            ['What training programs are offered?', 'What events are coming up?', 'Tell me about DOST Region VII'],
+  dti_info:             ['What training programs are offered?', 'Tell me about DASIG partnerships', 'How do I become a member?'],
+  deped_info:           ['What training programs are offered?', 'What policies are available?', 'Who are the other members?'],
+  citu_info:            ['Who built this portal?', 'How does the AI work?', 'What events are coming up?'],
+  upv_info:             ['What events are coming up?', 'Tell me about DASIG partnerships', 'What funding opportunities exist?'],
+  usa_info:             ['What events are coming up?', 'What governance policies are available?', 'Who are the other members?'],
+  event_venues:         ['What events are coming up?', 'How do I register for an event?', 'Can I export to Google Calendar?'],
+  events:               ['Where are the events held?', 'How do I register for an event?', 'What is the DASIG Annual Summit?'],
   event_register:       ['How do I check my event registrations?', 'How is event attendance tracked?', 'Can I cancel my registration?'],
   training:             ['How do I apply for DASIG membership?', 'Will I earn a certificate after finishing?', 'What are the membership fees?'],
   membership:           ['What are the two membership tiers?', 'How much does membership cost?', 'What is my current membership status?'],
@@ -351,7 +394,7 @@ const DEFAULT_FOLLOWUPS = [
   '🤝 Tell me about partnerships',
 ];
 
-// Improved NLP: score-based matching — picks the entry with the most keyword hits
+// Advanced Scored NLP: specificity weighting + word-boundary tokenization + exact match bonus
 function matchIntent(text) {
   const lower = text.toLowerCase().trim();
   let best = null;
@@ -361,11 +404,17 @@ function matchIntent(text) {
     let score = 0;
     for (const kw of entry.keywords) {
       const escaped = kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      // word-boundary match scores 2, substring match scores 1
-      if (new RegExp(`\\b${escaped}\\b`).test(lower)) score += 2;
-      else if (lower.includes(kw)) score += 1;
+      if (lower === kw) {
+        score += 5; // Exact full phrase match
+      } else if (new RegExp(`\\b${escaped}\\b`).test(lower)) {
+        // Word boundary match + specificity bonus based on keyword token length
+        const tokens = kw.split(/\s+/).length;
+        score += 2 + (tokens * 0.8);
+      } else if (lower.includes(kw) && kw.length >= 4) {
+        score += 1;
+      }
     }
-    if (score >= bestScore) { bestScore = score; best = entry; }
+    if (score > bestScore) { bestScore = score; best = entry; }
   }
 
   return bestScore > 0 ? { reply: best.reply, intent: best.intent, score: bestScore } : null;
