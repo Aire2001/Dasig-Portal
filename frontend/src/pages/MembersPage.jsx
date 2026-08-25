@@ -113,12 +113,13 @@ const MEMBERS_CSS = `
     cursor: pointer;
     position: relative;
     overflow: hidden;
-    transition: transform 0.22s cubic-bezier(.34,1.56,.64,1), box-shadow 0.22s;
+    transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
     border: 1px solid rgba(255,255,255,0.1);
   }
   .member-card:hover {
-    transform: translateY(-6px) scale(1.025);
-    box-shadow: 0 20px 48px rgba(0,0,0,0.4);
+    transform: translateY(-3px);
+    border-color: rgba(249,115,22,0.4);
+    box-shadow: 0 16px 40px rgba(0,0,0,0.5);
   }
   .member-card::after {
     content: '';
