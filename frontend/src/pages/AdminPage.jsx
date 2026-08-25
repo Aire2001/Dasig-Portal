@@ -7,12 +7,6 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pi
 
 /* ─── CSS ───────────────────────────────────────────────────────── */
 const CSS = `
-  @keyframes modalIn  { from{transform:scale(.94) translateY(12px);opacity:0} to{transform:scale(1) translateY(0);opacity:1} }
-  @keyframes fadeIn   { from{opacity:0} to{opacity:1} }
-  @keyframes statPop  { from{transform:translateY(14px);opacity:0} to{transform:translateY(0);opacity:1} }
-  @keyframes toastIn  { from{transform:translateX(70px) scale(0.9);opacity:0} to{transform:translateX(0) scale(1);opacity:1} }
-  @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
-
   * { box-sizing: border-box; }
 
   .ap-sidebar-link {
@@ -1223,29 +1217,29 @@ function EventsTab({ showToast }) {
       )}
 
       {modal && (
-        <Modal title={modal === 'create' ? 'Create Event' : 'Edit Event'} onClose={() => setModal(null)} wide>
+        <Modal title={modal === 'create' ? 'Create Consortium Event' : 'Edit Consortium Event'} onClose={() => setModal(null)} wide>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
-            <DInput label="Title *" name="title" value={form.title} onChange={fc} required span="1/-1" />
-            <DInput label="Date *" name="date" value={form.date} onChange={fc} type="date" required />
+            <DInput label="Event Title" name="title" value={form.title} onChange={fc} required span="1/-1" />
+            <DInput label="Event Date" name="date" value={form.date} onChange={fc} type="date" required />
             <DInput label="Registration Deadline" name="registration_deadline" value={form.registration_deadline} onChange={fc} type="date" />
             {/* Start / End Time */}
             <div>
-              <label style={{ display:'block', fontSize:11, fontWeight:700, color:'rgba(255,255,255,0.6)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:5 }}>Start Time</label>
+              <label style={{ display:'block', fontSize:11.5, fontWeight:800, color:'rgba(255,255,255,0.65)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:6 }}>Start Time</label>
               <input type="time" name="start_time" value={form.start_time || ''} onChange={fc} className="ap-input" style={{ cursor:'pointer' }} />
             </div>
             <div>
-              <label style={{ display:'block', fontSize:11, fontWeight:700, color:'rgba(255,255,255,0.6)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:5 }}>End Time</label>
+              <label style={{ display:'block', fontSize:11.5, fontWeight:800, color:'rgba(255,255,255,0.65)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:6 }}>End Time</label>
               <input type="time" name="end_time" value={form.end_time || ''} onChange={fc} className="ap-input" style={{ cursor:'pointer' }} />
             </div>
-            <DInput label="Venue *" name="venue" value={form.venue} onChange={fc} required />
-            <DInput label="Organizer *" name="organizer" value={form.organizer} onChange={fc} required />
+            <DInput label="Venue & Location" name="venue" value={form.venue} onChange={fc} required />
+            <DInput label="Host Organizer" name="organizer" value={form.organizer} onChange={fc} required />
             {/* Custom Category Dropdown */}
             <div>
-              <label style={{ display:'block', fontSize:11, fontWeight:700, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:5 }}>Category</label>
+              <label style={{ display:'block', fontSize:11.5, fontWeight:800, color:'rgba(255,255,255,0.65)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:6 }}>Category</label>
               <CategoryDropdown value={form.category} onChange={val => setForm(p => ({ ...p, category: val }))} options={EV_CAT_OPTIONS} />
             </div>
-            <DInput label="Capacity" name="total" value={form.total} onChange={fc} type="number" />
-            <DInput label="Description" name="description" value={form.description} onChange={fc} as="textarea" span="1/-1" />
+            <DInput label="Total Capacity" name="total" value={form.total} onChange={fc} type="number" />
+            <DInput label="Event Overview & Agenda" name="description" value={form.description} onChange={fc} as="textarea" span="1/-1" />
           </div>
           <FormActions onCancel={() => setModal(null)} onSave={save} saving={saving} saveLabel={modal === 'create' ? 'Create Event' : 'Save Changes'} />
         </Modal>
@@ -1713,30 +1707,30 @@ function TrainingTab({ showToast }) {
       )}
 
       {modal && (
-        <Modal title={modal === 'create' ? 'Create Program' : 'Edit Program'} onClose={() => setModal(null)} wide>
+        <Modal title={modal === 'create' ? 'Create Training Program' : 'Edit Training Program'} onClose={() => setModal(null)} wide>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
-            <DInput label="Title *" name="title" value={form.title} onChange={fc} required span="1/-1" />
-            <DInput label="Organization *" name="org" value={form.org} onChange={fc} required />
-            <DInput label="Duration *" name="duration" value={form.duration} onChange={fc} as="select" opts={TR_DURATIONS} required />
+            <DInput label="Program Title" name="title" value={form.title} onChange={fc} required span="1/-1" />
+            <DInput label="Host Institution" name="org" value={form.org} onChange={fc} required />
+            <DInput label="Program Duration" name="duration" value={form.duration} onChange={fc} as="select" opts={TR_DURATIONS} required />
             {/* Custom Category Dropdown */}
             <div>
-              <label style={{ display:'block', fontSize:11, fontWeight:700, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:5 }}>Category</label>
+              <label style={{ display:'block', fontSize:11.5, fontWeight:800, color:'rgba(255,255,255,0.65)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:6 }}>Category</label>
               <CategoryDropdown value={form.category} onChange={val => setForm(p => ({ ...p, category: val }))} options={TR_CAT_OPTIONS} />
             </div>
-            <DInput label="Level" name="level" value={form.level} onChange={fc} as="select" opts={['Beginner','Intermediate','Advanced']} />
-            <DInput label="Capacity" name="total" value={form.total} onChange={fc} type="number" />
-            <DInput label="Schedule (Start Date)" name="schedule" value={form.schedule} onChange={fc} type="date" />
+            <DInput label="Skill Level" name="level" value={form.level} onChange={fc} as="select" opts={['Beginner','Intermediate','Advanced']} />
+            <DInput label="Enrollment Capacity" name="total" value={form.total} onChange={fc} type="number" />
+            <DInput label="Start Date" name="schedule" value={form.schedule} onChange={fc} type="date" />
             <div />
             {/* Session Times */}
             <div>
-              <label style={{ display:'block', fontSize:11, fontWeight:700, color:'rgba(255,255,255,0.6)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:5 }}>Session Start Time</label>
+              <label style={{ display:'block', fontSize:11.5, fontWeight:800, color:'rgba(255,255,255,0.65)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:6 }}>Session Start Time</label>
               <input type="time" name="session_start_time" value={form.session_start_time || ''} onChange={fc} className="ap-input" style={{ cursor:'pointer' }} />
             </div>
             <div>
-              <label style={{ display:'block', fontSize:11, fontWeight:700, color:'rgba(255,255,255,0.6)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:5 }}>Session End Time</label>
+              <label style={{ display:'block', fontSize:11.5, fontWeight:800, color:'rgba(255,255,255,0.65)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:6 }}>Session End Time</label>
               <input type="time" name="session_end_time" value={form.session_end_time || ''} onChange={fc} className="ap-input" style={{ cursor:'pointer' }} />
             </div>
-            <DInput label="Description" name="description" value={form.description} onChange={fc} as="textarea" span="1/-1" />
+            <DInput label="Course Syllabus & Objectives" name="description" value={form.description} onChange={fc} as="textarea" span="1/-1" />
           </div>
           <FormActions onCancel={() => setModal(null)} onSave={save} saving={saving} saveLabel={modal === 'create' ? 'Create Program' : 'Save Changes'} />
         </Modal>
@@ -1830,13 +1824,13 @@ function PoliciesTab({ showToast }) {
       <PageHeader title="Policies & Guidelines" desc="Manage governance documents" action={<AddBtn onClick={() => { setForm(PL_BLANK); setModal('create'); }} />} />
       {confirm && <ConfirmModal msg={`Delete "${confirm.title}"?`} onConfirm={() => del(confirm.id, confirm.title)} onCancel={() => setConfirm(null)} />}
       {modal && (
-        <Modal title={modal === 'create' ? 'Create Policy' : 'Edit Policy'} onClose={() => setModal(null)} wide>
+        <Modal title={modal === 'create' ? 'Create Governance Policy' : 'Edit Governance Policy'} onClose={() => setModal(null)} wide>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
-            <DInput label="Title *" name="title" value={form.title} onChange={fc} required span="1/-1" />
-            <DInput label="Category" name="category" value={form.category} onChange={fc} as="select" opts={['Membership','Governance','Events','Research']} />
-            <DInput label="Effective Date *" name="effective_date" value={form.effective_date} onChange={fc} type="date" required />
-            <DInput label="Members Only" name="members_only" value={form.members_only} onChange={fc} as="checkbox" />
-            <DInput label="Content *" name="content" value={form.content} onChange={fc} as="textarea" span="1/-1" />
+            <DInput label="Policy Title" name="title" value={form.title} onChange={fc} required span="1/-1" />
+            <DInput label="Policy Category" name="category" value={form.category} onChange={fc} as="select" opts={['Membership','Governance','Events','Research']} />
+            <DInput label="Effective Date" name="effective_date" value={form.effective_date} onChange={fc} type="date" required />
+            <DInput label="Restricted to Members" name="members_only" value={form.members_only} onChange={fc} as="checkbox" />
+            <DInput label="Policy Content & Articles" name="content" value={form.content} onChange={fc} as="textarea" span="1/-1" />
           </div>
           <FormActions onCancel={() => setModal(null)} onSave={save} saving={saving} saveLabel={modal === 'create' ? 'Create Policy' : 'Save Changes'} />
         </Modal>
@@ -1919,16 +1913,16 @@ function FundingTab({ showToast }) {
       <PageHeader title="Funding Opportunities" desc="Post grants, scholarships and government funds" action={<AddBtn onClick={() => { setForm(FU_BLANK); setModal('create'); }} />} />
       {confirm && <ConfirmModal msg={`Delete "${confirm.title}"?`} onConfirm={() => del(confirm.id, confirm.title)} onCancel={() => setConfirm(null)} />}
       {modal && (
-        <Modal title={modal === 'create' ? 'Create Funding' : 'Edit Funding'} onClose={() => setModal(null)} wide>
+        <Modal title={modal === 'create' ? 'Create Funding Call' : 'Edit Funding Call'} onClose={() => setModal(null)} wide>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
-            <DInput label="Title *" name="title" value={form.title} onChange={fc} required span="1/-1" />
-            <DInput label="Category" name="category" value={form.category} onChange={fc} as="select" opts={['Scholarship','Grant','Government Fund','Research Grant']} />
-            <DInput label="Status" name="status" value={form.status} onChange={fc} as="select" opts={['Open','Upcoming','Closed']} />
-            <DInput label="Provider *" name="provider" value={form.provider} onChange={fc} required />
-            <DInput label="Amount" name="amount" value={form.amount} onChange={fc} />
-            <DInput label="Deadline *" name="deadline" value={form.deadline} onChange={fc} type="date" required />
-            <DInput label="Description" name="description" value={form.description} onChange={fc} as="textarea" span="1/-1" />
-            <DInput label="Eligibility" name="eligibility" value={form.eligibility} onChange={fc} as="textarea" span="1/-1" />
+            <DInput label="Grant / Call Title" name="title" value={form.title} onChange={fc} required span="1/-1" />
+            <DInput label="Funding Category" name="category" value={form.category} onChange={fc} as="select" opts={['Scholarship','Grant','Government Fund','Research Grant']} />
+            <DInput label="Application Status" name="status" value={form.status} onChange={fc} as="select" opts={['Open','Upcoming','Closed']} />
+            <DInput label="Funding Agency / Provider" name="provider" value={form.provider} onChange={fc} required />
+            <DInput label="Grant Amount / Ceiling" name="amount" value={form.amount} onChange={fc} />
+            <DInput label="Application Deadline" name="deadline" value={form.deadline} onChange={fc} type="date" required />
+            <DInput label="Opportunity Description" name="description" value={form.description} onChange={fc} as="textarea" span="1/-1" />
+            <DInput label="Eligibility Criteria" name="eligibility" value={form.eligibility} onChange={fc} as="textarea" span="1/-1" />
           </div>
           <FormActions onCancel={() => setModal(null)} onSave={save} saving={saving} saveLabel={modal === 'create' ? 'Create Funding' : 'Save Changes'} />
         </Modal>
@@ -2009,16 +2003,16 @@ function PartnershipsTab({ showToast }) {
       <PageHeader title="Partnerships" desc="Manage strategic consortium partnerships" action={<AddBtn onClick={() => { setForm(PA_BLANK); setModal('create'); }} />} />
       {confirm && <ConfirmModal msg={`Delete "${confirm.partner_name}"?`} onConfirm={() => del(confirm.id, confirm.partner_name)} onCancel={() => setConfirm(null)} />}
       {modal && (
-        <Modal title={modal === 'create' ? 'Create Partnership' : 'Edit Partnership'} onClose={() => setModal(null)} wide>
+        <Modal title={modal === 'create' ? 'Create Partnership Record' : 'Edit Partnership Record'} onClose={() => setModal(null)} wide>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
-            <DInput label="Partner Name *" name="partner_name" value={form.partner_name} onChange={fc} required span="1/-1" />
-            <DInput label="Type" name="type" value={form.type} onChange={fc} as="select" opts={['Academic Partnership','Research Collaboration','Technology Partnership','Funding Partnership']} />
-            <DInput label="Status" name="status" value={form.status} onChange={fc} as="select" opts={['Active','Pending','Expired']} />
-            <DInput label="Start Date *" name="start_date" value={form.start_date} onChange={fc} type="date" required />
-            <DInput label="End Date" name="end_date" value={form.end_date} onChange={fc} type="date" />
-            <DInput label="Contact Person" name="contact_person" value={form.contact_person} onChange={fc} />
-            <DInput label="Contact Email" name="contact_email" value={form.contact_email} onChange={fc} type="email" />
-            <DInput label="Description" name="description" value={form.description} onChange={fc} as="textarea" span="1/-1" />
+            <DInput label="Partner Institution / Company" name="partner_name" value={form.partner_name} onChange={fc} required span="1/-1" />
+            <DInput label="Alliance Type" name="type" value={form.type} onChange={fc} as="select" opts={['Academic Partnership','Research Collaboration','Technology Partnership','Funding Partnership']} />
+            <DInput label="Agreement Status" name="status" value={form.status} onChange={fc} as="select" opts={['Active','Pending','Expired']} />
+            <DInput label="Effective Start Date" name="start_date" value={form.start_date} onChange={fc} type="date" required />
+            <DInput label="Agreement End Date" name="end_date" value={form.end_date} onChange={fc} type="date" />
+            <DInput label="Focal Contact Person" name="contact_person" value={form.contact_person} onChange={fc} />
+            <DInput label="Official Contact Email" name="contact_email" value={form.contact_email} onChange={fc} type="email" />
+            <DInput label="Scope & Collaboration Description" name="description" value={form.description} onChange={fc} as="textarea" span="1/-1" />
           </div>
           <FormActions onCancel={() => setModal(null)} onSave={save} saving={saving} saveLabel={modal === 'create' ? 'Create Partnership' : 'Save Changes'} />
         </Modal>
