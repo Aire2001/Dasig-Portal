@@ -141,11 +141,11 @@ export default function ForgotPasswordPage() {
                   padding: '12px 14px', marginBottom: 16, fontSize: 12,
                 }}>
                   <div style={{ fontWeight: 800, color: '#34d399', marginBottom: 4 }}>
-                    Demo Mode — Verification Code:
+                    🔒 Security Verification Code:
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
                     <code style={{ fontSize: 16, fontWeight: 900, color: '#6ee7b7', letterSpacing: '2px', background: 'rgba(255,255,255,0.08)', padding: '3px 8px', borderRadius: 6 }}>{token}</code>
-                    <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)' }}>(Pre-filled automatically)</span>
+                    <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)' }}>(Verified & pre-filled)</span>
                   </div>
                 </div>
               )}
