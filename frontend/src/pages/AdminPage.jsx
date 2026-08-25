@@ -145,24 +145,31 @@ function Modal({ title, onClose, children, wide }) {
   if (isMin) {
     return (
       <div style={{
-        position: 'fixed', bottom: 24, right: 24, zIndex: 99999,
-        background: '#0d1424', border: '1.5px solid rgba(249,115,22,0.4)',
+        position: 'fixed', bottom: 24, right: 24, zIndex: 999999,
+        background: 'rgba(13, 20, 36, 0.95)',
+        backdropFilter: 'blur(20px)',
+        border: '1.5px solid rgba(249,115,22,0.5)',
         borderRadius: 14, padding: '10px 16px',
-        boxShadow: '0 12px 36px rgba(0,0,0,0.85), 0 0 20px rgba(249,115,22,0.2)',
+        boxShadow: '0 16px 40px rgba(0,0,0,0.9), 0 0 20px rgba(249,115,22,0.25)',
         display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer',
       }}
       onClick={() => setIsMin(false)}
       >
-        <span style={{ fontSize: 14 }}>📝</span>
-        <span style={{ color: '#fff', fontWeight: 800, fontSize: 13 }}>{title}</span>
-        <span style={{ fontSize: 11, background: 'rgba(249,115,22,0.2)', color: '#fb923c', padding: '2px 8px', borderRadius: 99, fontWeight: 800 }}>
-          Minimized · Click to open
-        </span>
+        <span style={{ fontSize: 16 }}>📋</span>
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <span style={{ color: '#fff', fontWeight: 900, fontSize: 13 }}>{title}</span>
+          <span style={{ fontSize: 10.5, color: '#fb923c', fontWeight: 700 }}>Minimized draft · Click to restore</span>
+        </div>
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); onClose(); }}
-          style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: 14, cursor: 'pointer', padding: '0 4px' }}
-          title="Close dialog"
+          style={{
+            background: 'rgba(255,255,255,0.08)', border: 'none',
+            color: 'rgba(255,255,255,0.6)', width: 26, height: 26, borderRadius: 6,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 13, cursor: 'pointer', marginLeft: 6,
+          }}
+          title="Discard & Close"
         >
           ✕
         </button>
@@ -172,51 +179,65 @@ function Modal({ title, onClose, children, wide }) {
 
   return (
     <div onClick={onClose} style={{
-      position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 99999,
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      padding: isFull ? '12px' : '32px 20px', overflowY: 'auto',
+      position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)',
+      backdropFilter: 'blur(10px)', zIndex: 999999,
+      display: 'flex', alignItems: isFull ? 'stretch' : 'center', justifyContent: 'center',
+      padding: isFull ? 0 : '64px 20px 32px', overflowY: 'auto',
     }}>
       <div onClick={e => e.stopPropagation()} style={{
-        background: '#0d1424', border: '1px solid rgba(255,255,255,0.14)',
-        borderRadius: isFull ? 12 : 20, width: '100%',
-        maxWidth: isFull ? '98vw' : wide ? 680 : 520,
-        boxShadow: '0 30px 90px rgba(0,0,0,0.9), 0 0 0 1px rgba(255,255,255,0.06)',
-        maxHeight: isFull ? '98vh' : '88vh',
-        height: isFull ? '98vh' : 'auto',
+        background: '#0d1424', border: isFull ? 'none' : '1px solid rgba(255,255,255,0.14)',
+        borderRadius: isFull ? 0 : 20, width: isFull ? '100vw' : '100%',
+        maxWidth: isFull ? '100vw' : wide ? 700 : 540,
+        boxShadow: isFull ? 'none' : '0 30px 90px rgba(0,0,0,0.9), 0 0 0 1px rgba(255,255,255,0.06)',
+        maxHeight: isFull ? '100vh' : 'calc(100vh - 90px)',
+        height: isFull ? '100vh' : 'auto',
         display: 'flex', flexDirection: 'column',
         overflow: 'hidden', margin: 'auto',
-        transition: 'all 0.14s ease',
       }}>
-        {/* Modal Window Titlebar */}
+        {/* Titlebar */}
         <div style={{
-          padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.08)',
+          padding: '14px 20px', borderBottom: '1px solid rgba(255,255,255,0.08)',
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-          position: 'sticky', top: 0, background: '#0d1424', zIndex: 10, flexShrink: 0,
+          position: 'sticky', top: 0, background: '#090e1c', zIndex: 10, flexShrink: 0,
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontSize: 15 }}>📋</span>
+            <span style={{ width: 26, height: 26, borderRadius: 7, background: 'rgba(249,115,22,0.18)', border: '1px solid rgba(249,115,22,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13 }}>📋</span>
             <h3 style={{ color: '#fff', fontWeight: 900, fontSize: 15, margin: 0, letterSpacing: '-0.3px' }}>{title}</h3>
           </div>
           
-          {/* Top-Right Window Controls (Minimize, Full-Screen, Close) */}
+          {/* Top-Right Window Controls */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             {/* Minimize */}
             <button
               type="button"
               onClick={() => setIsMin(true)}
-              className="ap-btn ap-btn-ghost"
-              style={{ width: 30, height: 30, padding: 0, borderRadius: 7, fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              style={{
+                background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)',
+                color: 'rgba(255,255,255,0.7)', width: 32, height: 30, borderRadius: 7,
+                fontSize: 14, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                transition: 'all 0.12s',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.14)'; e.currentTarget.style.color = '#fff'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.color = 'rgba(255,255,255,0.7)'; }}
               title="Minimize window"
             >
-              🗕
+              —
             </button>
-            {/* Maximize / Restore */}
+            {/* Fullscreen / Restore */}
             <button
               type="button"
               onClick={() => setIsFull(f => !f)}
-              className="ap-btn ap-btn-ghost"
-              style={{ width: 30, height: 30, padding: 0, borderRadius: 7, fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-              title={isFull ? 'Restore size' : 'Full screen'}
+              style={{
+                background: isFull ? 'rgba(249,115,22,0.2)' : 'rgba(255,255,255,0.06)',
+                border: `1px solid ${isFull ? 'rgba(249,115,22,0.4)' : 'rgba(255,255,255,0.12)'}`,
+                color: isFull ? '#fb923c' : 'rgba(255,255,255,0.7)',
+                width: 32, height: 30, borderRadius: 7,
+                fontSize: 13, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                transition: 'all 0.12s',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.14)'; e.currentTarget.style.color = '#fff'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = isFull ? 'rgba(249,115,22,0.2)' : 'rgba(255,255,255,0.06)'; e.currentTarget.style.color = isFull ? '#fb923c' : 'rgba(255,255,255,0.7)'; }}
+              title={isFull ? 'Exit full screen (Restore)' : 'Full screen'}
             >
               {isFull ? '🗗' : '⛶'}
             </button>
@@ -224,9 +245,15 @@ function Modal({ title, onClose, children, wide }) {
             <button
               type="button"
               onClick={onClose}
-              className="ap-btn ap-btn-ghost"
-              style={{ width: 30, height: 30, padding: 0, borderRadius: 7, fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#f87171' }}
-              title="Close window"
+              style={{
+                background: 'rgba(225,29,72,0.15)', border: '1px solid rgba(225,29,72,0.3)',
+                color: '#f87171', width: 32, height: 30, borderRadius: 7,
+                fontSize: 13, fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                transition: 'all 0.12s',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(225,29,72,0.3)'; e.currentTarget.style.color = '#fff'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(225,29,72,0.15)'; e.currentTarget.style.color = '#f87171'; }}
+              title="Close dialog"
             >
               ✕
             </button>
@@ -234,7 +261,7 @@ function Modal({ title, onClose, children, wide }) {
         </div>
 
         {/* Modal Body */}
-        <div style={{ padding: isFull ? '26px 32px' : '22px 24px 26px', overflowY: 'auto', flex: 1 }}>
+        <div style={{ padding: isFull ? '28px 36px' : '20px 24px 24px', overflowY: 'auto', flex: 1 }}>
           {children}
         </div>
       </div>
