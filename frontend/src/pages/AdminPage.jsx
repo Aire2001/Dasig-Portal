@@ -950,7 +950,7 @@ function EventsTab({ showToast }) {
   const [attnList, setAttnList]   = useState([]);
   const [attnLoading, setAttnLoading] = useState(false);
 
-  const load = useCallback(() => { setLoading(true); api.events.list({ limit: 1000 }).then(r => setItems(r.data || [])).catch(() => showToast('Failed', false)).finally(() => setLoading(false)); }, []);
+  const load = useCallback(() => { setLoading(true); api.events.list({ limit: 1000 }).then(r => setItems(Array.isArray(r) ? r : (r?.data || []))).catch(() => showToast('Failed', false)).finally(() => setLoading(false)); }, []);
   useEffect(load, [load]);
   const fc = e => setForm(p => ({ ...p, [e.target.name]: e.target.type === 'checkbox' ? e.target.checked : e.target.value }));
 
@@ -1254,7 +1254,7 @@ function NewsTab({ showToast }) {
     const params = { limit: 1000 };
     if (badgeF && badgeF !== 'All') params.badge = badgeF;
     if (search && search.trim()) params.search = search.trim();
-    api.news.list(params).then(r => setItems(r.data || [])).catch(() => showToast('Failed', false)).finally(() => setLoading(false));
+    api.news.list(params).then(r => setItems(Array.isArray(r) ? r : (r?.data || []))).catch(() => showToast('Failed', false)).finally(() => setLoading(false));
   }, [badgeF, search]);
 
   useEffect(() => {
@@ -1457,7 +1457,7 @@ function TrainingTab({ showToast }) {
   const [enrolList, setEnrolList]   = useState([]);
   const [enrolLoading, setEnrolLoading] = useState(false);
 
-  const load = useCallback(() => { setLoading(true); api.training.list({ limit: 1000 }).then(r => setItems(r.data || [])).catch(() => showToast('Failed', false)).finally(() => setLoading(false)); }, []);
+  const load = useCallback(() => { setLoading(true); api.training.list({ limit: 1000 }).then(r => setItems(Array.isArray(r) ? r : (r?.data || []))).catch(() => showToast('Failed', false)).finally(() => setLoading(false)); }, []);
   useEffect(load, [load]);
   const fc = e => setForm(p => ({ ...p, [e.target.name]: e.target.value }));
 
@@ -1634,7 +1634,7 @@ function PoliciesTab({ showToast }) {
   const [saving, setSaving]   = useState(false);
   const [confirm, setConfirm] = useState(null);
 
-  const load = useCallback(() => { setLoading(true); api.policies.list({ limit: 1000 }).then(r => setItems(r.data || [])).catch(() => showToast('Failed', false)).finally(() => setLoading(false)); }, []);
+  const load = useCallback(() => { setLoading(true); api.policies.list({ limit: 1000 }).then(r => setItems(Array.isArray(r) ? r : (r?.data || []))).catch(() => showToast('Failed', false)).finally(() => setLoading(false)); }, []);
   useEffect(load, [load]);
   const fc = e => setForm(p => ({ ...p, [e.target.name]: e.target.type === 'checkbox' ? e.target.checked : e.target.value }));
 
@@ -1727,7 +1727,7 @@ function FundingTab({ showToast }) {
   const [saving, setSaving]   = useState(false);
   const [confirm, setConfirm] = useState(null);
 
-  const load = useCallback(() => { setLoading(true); api.funding.list({ limit: 1000 }).then(r => setItems(r.data || [])).catch(() => showToast('Failed', false)).finally(() => setLoading(false)); }, []);
+  const load = useCallback(() => { setLoading(true); api.funding.list({ limit: 1000 }).then(r => setItems(Array.isArray(r) ? r : (r?.data || []))).catch(() => showToast('Failed', false)).finally(() => setLoading(false)); }, []);
   useEffect(load, [load]);
   const fc = e => setForm(p => ({ ...p, [e.target.name]: e.target.value }));
 
@@ -1817,7 +1817,7 @@ function PartnershipsTab({ showToast }) {
   const [saving, setSaving]   = useState(false);
   const [confirm, setConfirm] = useState(null);
 
-  const load = useCallback(() => { setLoading(true); api.partnerships.list({ limit: 1000 }).then(r => setItems(r.data || [])).catch(() => showToast('Failed', false)).finally(() => setLoading(false)); }, []);
+  const load = useCallback(() => { setLoading(true); api.partnerships.list({ limit: 1000 }).then(r => setItems(Array.isArray(r) ? r : (r?.data || []))).catch(() => showToast('Failed', false)).finally(() => setLoading(false)); }, []);
   useEffect(load, [load]);
   const fc = e => setForm(p => ({ ...p, [e.target.name]: e.target.value }));
 
@@ -2150,8 +2150,8 @@ function AdminCalendarTab({ showToast, setTab }) {
       api.events.list({ limit:1000 }),
       api.training.list({ limit:1000 }),
     ]).then(([ev, tr]) => {
-      setEvents(ev.data || []);
-      setTrainings(tr.data || []);
+      setEvents(Array.isArray(ev) ? ev : (ev?.data || []));
+      setTrainings(Array.isArray(tr) ? tr : (tr?.data || []));
     }).catch(() => showToast('Failed to load calendar data', false))
       .finally(() => setLoading(false));
   }, []);
