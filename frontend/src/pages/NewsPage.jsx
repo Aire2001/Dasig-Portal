@@ -3,7 +3,7 @@ import PageHeader from '../components/PageHeader';
 import ParticleBackground from '../components/ParticleBackground';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 const BADGE_FILTERS = ['All', 'Announcement', 'Policy', 'Funding', 'Training', 'Research'];
 
@@ -89,6 +89,7 @@ const CSS = `
 export default function NewsPage() {
   const { user }   = useAuth();
   const navigate   = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [articles, setArticles] = useState([]);
   const [loading, setLoading]   = useState(true);
   const [filter, setFilter]     = useState('All');
@@ -112,7 +113,22 @@ export default function NewsPage() {
     const params = {};
     if (f && f !== 'All' && f !== 'Bookmarks') params.badge = f;
     if (s && s.trim()) params.search = s.trim();
-    api.news.list(params).then(r => setArticles(r.data || [])).catch(() => {}).finally(() => setLoading(false));
+    api.news.list(params).then(res => {
+      const list = Array.isArray(res) ? res : (res?.data || []);
+      setArticles(list);
+      
+      // Auto-open specific article if linked via URL query param (?id=... or ?title=...)
+      const targetId = searchParams.get('id');
+      const targetTitle = searchParams.get('title');
+      if (targetId) {
+        const found = list.find(x => String(x.id) === String(targetId));
+        if (found) { setSelected(found); setMinimized(false); }
+      } else if (targetTitle) {
+        const decoded = decodeURIComponent(targetTitle).toLowerCase();
+        const found = list.find(x => x.title?.toLowerCase() === decoded || x.title?.toLowerCase().includes(decoded));
+        if (found) { setSelected(found); setMinimized(false); }
+      }
+    }).catch(() => {}).finally(() => setLoading(false));
   }
 
   useEffect(() => {
@@ -124,6 +140,7 @@ export default function NewsPage() {
     if (a.locked) { navigate(user ? '/membership' : '/login'); return; }
     setSelected(a);
     setMinimized(false);
+    setSearchParams({ id: a.id }, { replace: true });
   }
 
   const displayedArticles = filter === 'Bookmarks'
@@ -156,8 +173,8 @@ export default function NewsPage() {
             allArticles={articles}
             isBookmarked={bookmarks.includes(selected.id)}
             onToggleBookmark={() => toggleBookmark(selected.id)}
-            onSelectArticle={a => { setSelected(a); setMinimized(false); }}
-            onClose={() => { setSelected(null); setMinimized(false); }}
+            onSelectArticle={a => { setSelected(a); setMinimized(false); setSearchParams({ id: a.id }, { replace: true }); }}
+            onClose={() => { setSelected(null); setMinimized(false); setSearchParams({}, { replace: true }); }}
             onMinimize={() => setMinimized(true)}
           />
         )}
@@ -424,7 +441,8 @@ function ArticleReader({ article: a, allArticles = [], isBookmarked, onToggleBoo
 
   // Copy link
   function handleCopyLink() {
-    navigator.clipboard.writeText(window.location.href);
+    const shareUrl = `${window.location.origin}/news?id=${a.id}`;
+    navigator.clipboard.writeText(shareUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }

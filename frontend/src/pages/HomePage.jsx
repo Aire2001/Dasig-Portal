@@ -755,7 +755,7 @@ export default function HomePage() {
 
           <div style={{ display: 'grid', gridTemplateColumns: '1.75fr 1fr', gap: 16 }}>
             {/* Feature card */}
-            <div onClick={() => navigate('/news')} style={{
+            <div onClick={() => navigate('/news?title=' + encodeURIComponent('DASIG Annual Summit 2026 Registration Now Open'))} style={{
               borderRadius: 20, overflow: 'hidden',
               border: '1px solid rgba(255,255,255,0.08)',
               cursor: 'pointer', transition: 'all 0.22s',
@@ -787,7 +787,7 @@ export default function HomePage() {
                 <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 14, lineHeight: 1.75, marginBottom: 16 }}>
                   The annual summit gathers all six Region VII consortium institutions for a three-day innovation forum, research showcase, and networking event in Cebu City.
                 </p>
-                <button onClick={e => { e.stopPropagation(); navigate('/news'); }} style={{
+                <button onClick={e => { e.stopPropagation(); navigate('/news?title=' + encodeURIComponent('DASIG Annual Summit 2026 Registration Now Open')); }} style={{
                   background: 'linear-gradient(90deg,#f97316,#e11d48)', color: '#fff',
                   border: 'none', borderRadius: 10, padding: '8px 18px',
                   fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
@@ -803,7 +803,7 @@ export default function HomePage() {
                 { icon: '💰', grad: 'linear-gradient(135deg,#064e3b,#059669)', badge: 'Funding', date: 'May 8, 2026',
                   title: 'DOST Region VII Scholarship Window Now Open', excerpt: 'Apply via the Funding portal before June 15.' },
               ].map((n, i) => (
-                <div key={i} className="news-mini" onClick={() => navigate('/news')} style={{
+                <div key={i} className="news-mini" onClick={() => navigate('/news?title=' + encodeURIComponent(n.title))} style={{
                   background: n.grad, borderRadius: 18, padding: 18,
                   cursor: 'pointer', border: '1px solid rgba(255,255,255,0.08)',
                   position: 'relative', overflow: 'hidden', flex: 1,
