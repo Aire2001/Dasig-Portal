@@ -564,7 +564,7 @@ export default function HomePage() {
                 display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12,
               }}>🏛</div>
               <span style={{ color: 'rgba(255,255,255,0.75)', fontSize: 13, fontWeight: 600, letterSpacing: '0.5px' }}>
-                CENTRAL VISAYAS CONSORTIUM · REGION VII · 6 INSTITUTIONS
+                CENTRAL VISAYAS CONSORTIUM · REGION VII · 7 INSTITUTIONS &amp; AGENCIES
               </span>
             </div>
             <h1 style={{ color: '#fff', fontSize: 50, fontWeight: 900, lineHeight: 1.07, letterSpacing: '-2px', marginBottom: 18 }}>
@@ -575,7 +575,7 @@ export default function HomePage() {
               }}>Run Your Consortium</span>
             </h1>
             <p style={{ color: 'rgba(255,255,255,0.62)', fontSize: 15.5, lineHeight: 1.75, marginBottom: 32, maxWidth: 500 }}>
-              DASIG unifies membership, events, funding, training, and governance for UP, USan Agustin, DOST, DICT, DTI, and DepEd Region VII — all in one secure, role-based platform.
+              DASIG unifies membership, events, funding, training, and governance for CIT-U, UP Visayas, University of San Agustin, DOST, DICT, DTI, and DepEd Region VII — all in one secure, role-based platform.
             </p>
             <div style={{ display: 'flex', gap: 12, marginBottom: 40 }}>
               <button onClick={() => navigate('/membership')} style={{
@@ -637,7 +637,7 @@ export default function HomePage() {
           </span>
           <div style={{ width: 1, height: 14, background: 'rgba(255,255,255,0.1)', flexShrink: 0 }} />
           <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap' }}>
-            {['University of the Philippines', 'University of San Agustin', 'DOST Region VII', 'DICT Region VII', 'DTI Region VII', 'DepEd Region VII'].map(m => (
+            {['CIT-University', 'University of the Philippines Visayas', 'University of San Agustin', 'DOST Region VII', 'DICT Region VII', 'DTI Region VII', 'DepEd Region VII'].map(m => (
               <div key={m} style={{
                 background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)',
                 borderRadius: 6, padding: '4px 12px', fontSize: 13,

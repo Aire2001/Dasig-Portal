@@ -66,6 +66,7 @@ const MODULE_LINKS = [
 ];
 
 const MEMBER_LINKS = [
+  { label: 'CIT-University',   url: 'https://cit.edu'            },
   { label: 'UP Visayas',       url: 'https://www.upv.edu.ph'     },
   { label: 'Univ. San Agustin',url: 'https://www.usa.edu.ph'     },
   { label: 'DOST Region VII',  url: 'https://region7.dost.gov.ph'},
