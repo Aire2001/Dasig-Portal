@@ -80,10 +80,12 @@ export default function Nav() {
   const logoRef     = useRef(null);
   const moreRef     = useRef(null);
   const notifRef    = useRef(null);
+  const userMenuRef = useRef(null);
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
   const [logoHover, setLogoHover] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [cmdOpen, setCmdOpen] = useState(false);
   const [logoutConfirm, setLogoutConfirm] = useState(false);
   const [welcome, setWelcome] = useState(null);   // {name, role} | null
@@ -99,6 +101,7 @@ export default function Nav() {
     function handleClick(e) {
       if (moreRef.current && !moreRef.current.contains(e.target)) setMoreOpen(false);
       if (notifRef.current && !notifRef.current.contains(e.target)) setNotifOpen(false);
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target)) setUserMenuOpen(false);
     }
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
@@ -509,125 +512,148 @@ export default function Nav() {
             </div>
 
             {user ? (
-              <>
-                {/* Role badge — only for GUEST and MEMBER, not ADMIN (admin has its own button) */}
-                {user.role !== 'ADMIN' && (
-                  <div style={{
-                    background: roleColors[user.role]?.bg,
-                    border: `1px solid ${roleColors[user.role]?.color}40`,
-                    borderRadius: 20, padding: '3px 10px',
-                    display: 'flex', alignItems: 'center', gap: 6,
-                  }}>
-                    <span style={{
-                      width: 6, height: 6, borderRadius: '50%',
-                      background: roleColors[user.role]?.color,
-                      display: 'inline-block',
-                      boxShadow: `0 0 6px ${roleColors[user.role]?.color}`,
-                    }} />
-                    <span style={{ color: roleColors[user.role]?.color, fontSize: 11, fontWeight: 700 }}>
-                      {roleColors[user.role]?.text}
+              <div ref={userMenuRef} style={{ position: 'relative' }}>
+                {/* Unified Executive User Pill */}
+                <button
+                  onClick={() => setUserMenuOpen(o => !o)}
+                  style={{
+                    color: '#fff', background: userMenuOpen ? 'rgba(249,115,22,0.18)' : 'rgba(255,255,255,0.06)',
+                    border: `1px solid ${userMenuOpen ? 'rgba(249,115,22,0.45)' : 'rgba(255,255,255,0.12)'}`,
+                    borderRadius: 12, padding: '4px 10px 4px 5px',
+                    fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+                    display: 'flex', alignItems: 'center', gap: 8,
+                    transition: 'all .15s',
+                    boxShadow: userMenuOpen ? '0 0 16px rgba(249,115,22,0.25)' : 'none',
+                  }}
+                >
+                  {/* Avatar with gradient background */}
+                  <div style={{ width: 28, height: 28, borderRadius: 8, overflow: 'hidden', flexShrink: 0 }}>
+                    {user.avatar_url ? (
+                      <img src={user.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                    ) : (
+                      <div style={{
+                        width: '100%', height: '100%',
+                        background: user.role === 'ADMIN' ? 'linear-gradient(135deg,#e11d48,#9f1239)' : 'linear-gradient(135deg,#f97316,#e11d48)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: 11, fontWeight: 900, color: '#fff',
+                      }}>
+                        {(user.name || 'U').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Name & Role */}
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', textAlign: 'left', lineHeight: 1.15 }}>
+                    <span style={{ color: '#fff', fontWeight: 800, fontSize: 12.5, maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {user.name}
+                    </span>
+                    <span style={{ color: roleColors[user.role]?.color || '#f97316', fontSize: 10, fontWeight: 700, letterSpacing: '.3px' }}>
+                      {user.role === 'ADMIN' ? '⚙ Admin' : user.role === 'MEMBER' ? '● Member' : 'Guest'}
                     </span>
                   </div>
-                )}
 
-                {/* Name + avatar + institution — clickable, opens profile page */}
-                {user.role !== 'ADMIN' && (() => {
-                  const initials = (user.name || 'U').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
-                  return (
-                    <button onClick={() => navigate('/profile')} style={{
-                      color: 'rgba(255,255,255,0.75)', background: 'rgba(255,255,255,0.06)',
-                      border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10,
-                      padding: '4px 10px 4px 4px', fontSize: 13, fontWeight: 600,
-                      cursor: 'pointer', fontFamily: 'inherit', transition: 'all .15s',
-                      display: 'flex', alignItems: 'center', gap: 8,
-                    }}
-                    onMouseEnter={e => { e.currentTarget.style.color='#fff'; e.currentTarget.style.background='rgba(255,255,255,0.12)'; }}
-                    onMouseLeave={e => { e.currentTarget.style.color='rgba(255,255,255,0.75)'; e.currentTarget.style.background='rgba(255,255,255,0.06)'; }}
-                    title={`My Profile · ${user.institution || ''}`}>
-                      {/* Mini avatar */}
-                      <div style={{ width:28, height:28, borderRadius:8, overflow:'hidden', flexShrink:0 }}>
-                        {user.avatar_url
-                          ? <img src={user.avatar_url} alt="" style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }} />
-                          : <div style={{ width:'100%', height:'100%', background:'linear-gradient(135deg,#f97316,#e11d48)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:900, color:'#fff' }}>{initials}</div>
-                        }
-                      </div>
-                      <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-start', textAlign:'left', lineHeight:1.15 }}>
-                        <span style={{ color:'#fff', fontWeight:700, fontSize:12.5, maxWidth:110, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{user.name}</span>
-                        {user.institution && (
-                          <span style={{ color:'rgba(249,115,22,0.85)', fontSize:10.5, fontWeight:600, maxWidth:110, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{user.institution}</span>
-                        )}
-                      </div>
-                    </button>
-                  );
-                })()}
+                  {/* Chevron arrow */}
+                  <span style={{
+                    fontSize: 9, color: 'rgba(255,255,255,0.45)',
+                    transform: userMenuOpen ? 'rotate(180deg)' : 'rotate(0)',
+                    transition: 'transform 0.18s', marginLeft: 2,
+                  }}>▼</span>
+                </button>
 
-                {/* My Card — members only */}
-                {user.role === 'MEMBER' && (
-                  <button onClick={() => navigate('/membership')} style={{
-                    color: 'rgba(255,255,255,0.65)', background: 'transparent',
-                    border: '1px solid rgba(255,255,255,0.2)', borderRadius: 8,
-                    padding: '5px 13px', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit',
-                    transition: 'all 0.2s',
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.color='#fff'; e.currentTarget.style.borderColor='rgba(255,255,255,0.5)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.color='rgba(255,255,255,0.65)'; e.currentTarget.style.borderColor='rgba(255,255,255,0.2)'; }}
-                  >My Card</button>
-                )}
-
-                {/* Admin — single combined button: avatar + name + institution → profile | ADMIN pill → admin panel */}
-                {user.role === 'ADMIN' && (() => {
-                  const initials = (user.name || 'A').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
-                  return (
-                    <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-                      {/* Avatar + name + institution → profile */}
-                      <button onClick={() => navigate('/profile')} style={{
-                        display:'flex', alignItems:'center', gap:8,
-                        background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.12)',
-                        borderRadius:10, padding:'4px 10px 4px 4px',
-                        color:'rgba(255,255,255,0.75)', fontSize:13, fontWeight:600,
-                        cursor:'pointer', fontFamily:'inherit', transition:'all .15s',
-                      }}
-                      onMouseEnter={e => { e.currentTarget.style.color='#fff'; e.currentTarget.style.background='rgba(255,255,255,0.12)'; }}
-                      onMouseLeave={e => { e.currentTarget.style.color='rgba(255,255,255,0.75)'; e.currentTarget.style.background='rgba(255,255,255,0.06)'; }}
-                      title={`Administrator Profile · ${user.institution || 'Region VII Consortium'}`}>
-                        <div style={{ width:28, height:28, borderRadius:8, overflow:'hidden', flexShrink:0 }}>
-                          {user.avatar_url
-                            ? <img src={user.avatar_url} alt="" style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }} />
-                            : <div style={{ width:'100%', height:'100%', background:'linear-gradient(135deg,#e11d48,#9f1239)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:900, color:'#fff' }}>{initials}</div>
-                          }
+                {/* Glassmorphic Dropdown Menu */}
+                {userMenuOpen && (
+                  <div style={{
+                    position: 'absolute', top: 'calc(100% + 10px)', right: 0,
+                    background: 'rgba(10, 16, 32, 0.96)',
+                    backdropFilter: 'blur(20px)',
+                    border: '1px solid rgba(255,255,255,0.12)',
+                    borderRadius: 18, width: 260, padding: '8px',
+                    boxShadow: '0 24px 60px rgba(0,0,0,0.85), 0 0 0 1px rgba(249,115,22,0.1)',
+                    zIndex: 9999, animation: 'dropIn 0.18s ease',
+                  }}>
+                    {/* Header */}
+                    <div style={{
+                      padding: '12px 12px 10px', marginBottom: 6,
+                      background: 'rgba(255,255,255,0.03)', borderRadius: 12,
+                      border: '1px solid rgba(255,255,255,0.06)',
+                    }}>
+                      <div style={{ fontWeight: 800, fontSize: 13, color: '#fff', marginBottom: 2 }}>{user.name}</div>
+                      <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.email}</div>
+                      {user.institution && (
+                        <div style={{ marginTop: 6, display: 'inline-block', background: 'rgba(249,115,22,0.12)', border: '1px solid rgba(249,115,22,0.3)', borderRadius: 6, padding: '2px 8px', fontSize: 10.5, color: '#fb923c', fontWeight: 700 }}>
+                          🏛️ {user.institution}
                         </div>
-                        <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-start', textAlign:'left', lineHeight:1.15 }}>
-                          <span style={{ color:'#fff', fontWeight:700, fontSize:12.5, maxWidth:110, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{user.name}</span>
-                          <span style={{ color:'rgba(255,255,255,0.45)', fontSize:10.5, fontWeight:600, maxWidth:110, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{user.institution || 'Region VII'}</span>
-                        </div>
-                      </button>
-                      {/* ADMIN pill → admin panel */}
-                      <button onClick={() => navigate('/admin')} style={{
-                        background:'rgba(225,29,72,0.18)', color:'#f43f5e',
-                        border:'1px solid rgba(225,29,72,0.35)', borderRadius:8,
-                        padding:'5px 12px', fontSize:11.5, fontWeight:900,
-                        cursor:'pointer', fontFamily:'inherit', letterSpacing:'.4px',
-                        transition:'all .15s',
-                      }}
-                      onMouseEnter={e => e.currentTarget.style.background='rgba(225,29,72,0.3)'}
-                      onMouseLeave={e => e.currentTarget.style.background='rgba(225,29,72,0.18)'}
-                      title="Admin Panel">
-                        ⚙ ADMIN
-                      </button>
+                      )}
                     </div>
-                  );
-                })()}
 
-                <button onClick={handleLogout} style={{
-                  color: 'rgba(255,255,255,0.55)', background: 'transparent',
-                  border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8,
-                  padding: '6px 13px', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit',
-                  transition: 'all 0.2s',
-                }}
-                onMouseEnter={e => { e.currentTarget.style.color='#fff'; e.currentTarget.style.borderColor='rgba(255,255,255,0.4)'; }}
-                onMouseLeave={e => { e.currentTarget.style.color='rgba(255,255,255,0.55)'; e.currentTarget.style.borderColor='rgba(255,255,255,0.12)'; }}
-                >Log out</button>
-              </>
+                    {/* Menu Items */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                      <button onClick={() => { navigate('/profile'); setUserMenuOpen(false); }} style={{
+                        display: 'flex', alignItems: 'center', gap: 10,
+                        width: '100%', padding: '9px 12px', background: 'transparent',
+                        border: 'none', borderRadius: 10, color: 'rgba(255,255,255,0.8)',
+                        fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
+                        transition: 'background .12s', textAlign: 'left',
+                      }}
+                      onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; e.currentTarget.style.color = '#fff'; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(255,255,255,0.8)'; }}
+                      >
+                        <span>👤</span>
+                        <span>My Profile &amp; Settings</span>
+                      </button>
+
+                      {user.role === 'MEMBER' && (
+                        <button onClick={() => { navigate('/membership'); setUserMenuOpen(false); }} style={{
+                          display: 'flex', alignItems: 'center', gap: 10,
+                          width: '100%', padding: '9px 12px', background: 'transparent',
+                          border: 'none', borderRadius: 10, color: 'rgba(255,255,255,0.8)',
+                          fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
+                          transition: 'background .12s', textAlign: 'left',
+                        }}
+                        onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; e.currentTarget.style.color = '#fff'; }}
+                        onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(255,255,255,0.8)'; }}
+                        >
+                          <span>🪪</span>
+                          <span>Digital Membership ID</span>
+                        </button>
+                      )}
+
+                      {user.role === 'ADMIN' && (
+                        <button onClick={() => { navigate('/admin'); setUserMenuOpen(false); }} style={{
+                          display: 'flex', alignItems: 'center', gap: 10,
+                          width: '100%', padding: '9px 12px', background: 'rgba(225,29,72,0.12)',
+                          border: '1px solid rgba(225,29,72,0.25)', borderRadius: 10, color: '#fca5a5',
+                          fontSize: 13, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit',
+                          transition: 'all .12s', textAlign: 'left',
+                        }}
+                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(225,29,72,0.22)'}
+                        onMouseLeave={e => e.currentTarget.style.background = 'rgba(225,29,72,0.12)'}
+                        >
+                          <span>⚙️</span>
+                          <span>Admin Command Center</span>
+                        </button>
+                      )}
+                    </div>
+
+                    <div style={{ height: 1, background: 'rgba(255,255,255,0.08)', margin: '6px 4px' }} />
+
+                    {/* Logout button */}
+                    <button onClick={() => { setUserMenuOpen(false); handleLogout(); }} style={{
+                      display: 'flex', alignItems: 'center', gap: 10,
+                      width: '100%', padding: '9px 12px', background: 'transparent',
+                      border: 'none', borderRadius: 10, color: '#f87171',
+                      fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+                      transition: 'background .12s', textAlign: 'left',
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(225,29,72,0.15)'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                    >
+                      <span>🚪</span>
+                      <span>Sign Out</span>
+                    </button>
+                  </div>
+                )}
+              </div>
             ) : (
               <>
                 <button onClick={() => navigate('/login')} style={{
