@@ -31,6 +31,15 @@ const KB = [
     reply: 'DASIG regularly holds summits, seminars, workshops, and forums for member institutions. Visit the Events module to see all upcoming activities, register, and manage your event attendance.',
   },
   {
+    intent: 'event_venues',
+    keywords: [
+      'where are the events', 'where is the event', 'where the events', 'where is event', 'where events', 'where are events held', 'where will the event be', 'event venue', 'event location',
+      'where is the summit', 'where is the summit held', 'venue', 'venues', 'where held', 'what location', 'which campus', 'event place', 'event places',
+      'is it online or in person', 'where to attend', 'cebu convention center', 'in cebu', 'in iloilo', 'where is the workshop', 'where are workshops held'
+    ],
+    reply: 'DASIG events take place across premier host institutions and partner convention centers in Region VII (Central & Western Visayas), as well as online via Zoom/hybrid platforms.',
+  },
+  {
     intent: 'event_register',
     keywords: ['register event', 'event registration', 'sign up event', 'join event', 'attend event', 'how to register', 'how do i register', 'register for an event', 'sign up for', 'how to join an event', 'event sign up'],
     reply: 'To register for an event: go to the Events module, click on the event you want to join, and click "Register." You must be logged in. Events have limited capacity — register early!',
@@ -472,11 +481,16 @@ router.post('/message', async (req, res) => {
             const upcoming = data.slice(0, 3).map(e => `• ${e.title} — ${e.date}${e.venue ? ' @ ' + e.venue : ''}`).join('\n');
             reply = `There are currently no major events scheduled for ${capMonth} 2026. The upcoming consortium calendar starts in September!\n\n📅 Soonest upcoming activities:\n${upcoming}\n\nVisit the Calendar in the Programs module for full details.`;
           }
-        } else {
           const items = uniq(data, 'title').slice(0, 3);
           const list = items.map(e => `• ${e.title} — ${e.date || 'TBA'}${e.venue ? ' @ ' + e.venue : ''}`).join('\n');
           reply = `${match.reply}\n\n📅 Upcoming events:\n${list}\n\nRegister early — slots are limited!`;
         }
+      }
+    } else if (match.intent === 'event_venues') {
+      const { data } = await supabase.from('events').select('title, date, venue, category').order('id', { ascending: true }).limit(8);
+      if (data && data.length > 0) {
+        const list = data.map(e => `• **${e.title}**\n  📍 **Venue:** ${e.venue || 'TBA'}\n  📅 **Date:** ${e.date || 'TBA'}`).join('\n\n');
+        reply = `🏛️ **DASIG Event Locations & Venues:**\n\n${list}\n\n💡 Physical events take place at member campus auditoriums and convention centers in Region VII (Cebu City and Iloilo City), with technical workshops accessible online via Zoom. Check each event in the Programs module for full venue details!`;
       }
     } else if (match.intent === 'training') {
       const { data } = await supabase.from('trainings').select('title, category, level').limit(6);
