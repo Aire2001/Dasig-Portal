@@ -33,10 +33,10 @@ async function seed() {
     console.log(`  SKIP  (${evCount} events already exist)`);
   } else {
     const events = [
-      { title: 'DASIG Annual Summit 2026',             date: 'Jun 18-20, 2026', venue: 'Cebu City Convention Center', organizer: 'DASIG Consortium', category: 'Summit',   enrolled: 134, total: 180, description: 'The annual summit gathers all six Region VII consortium institutions for a three-day innovation forum.' },
-      { title: 'Advanced Data Analytics Workshop',     date: 'Jun 5, 2026',     venue: 'Online Zoom',                 organizer: 'DICT VII',         category: 'Workshop', enrolled: 38,  total: 40,  description: 'Hands-on training in data analytics tools and techniques for public sector professionals.' },
-      { title: 'Governance & Innovation in ASEAN',     date: 'May 30, 2026',    venue: 'University of San Agustin',   organizer: 'USan Agustin',     category: 'Seminar',  enrolled: 22,  total: 60,  description: 'Regional seminar on governance innovation and ASEAN best practices.' },
-      { title: 'DOST SEI Scholarship Information Day', date: 'May 27, 2026',    venue: 'UP Visayas',                  organizer: 'DOST Region VII',  category: 'Funding',  enrolled: 67,  total: 100, description: 'Information session on DOST SEI scholarship programs for DASIG member institution nominees.' },
+      { title: 'DASIG Annual Summit 2026',             date: 'Sep 18–20, 2026', venue: 'Cebu City Convention Center', organizer: 'DASIG Consortium', category: 'Summit',   enrolled: 134, total: 180, description: 'The annual summit gathers all six Region VII consortium institutions for a three-day innovation forum.' },
+      { title: 'Advanced Data Analytics Workshop',     date: 'Sep 28, 2026',    venue: 'Online Zoom',                 organizer: 'DICT VII',         category: 'Workshop', enrolled: 38,  total: 40,  description: 'Hands-on training in data analytics tools and techniques for public sector professionals.' },
+      { title: 'Governance & Innovation in ASEAN',     date: 'Nov 28, 2026',    venue: 'University of San Agustin',   organizer: 'USan Agustin',     category: 'Seminar',  enrolled: 22,  total: 60,  description: 'Regional seminar on governance innovation and ASEAN best practices.' },
+      { title: 'DOST SEI Scholarship Information Day', date: 'Dec 8, 2026',     venue: 'UP Visayas',                  organizer: 'DOST Region VII',  category: 'Funding',  enrolled: 67,  total: 100, description: 'Information session on DOST SEI scholarship programs for DASIG member institution nominees.' },
     ];
     const { error } = await supabase.from('events').insert(events);
     console.log(error ? `  ERROR: ${error.message}` : `  OK    (${events.length} events inserted)`);

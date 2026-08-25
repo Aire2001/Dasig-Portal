@@ -21,9 +21,58 @@ const KB = [
     reply: 'The DASIG Consortium includes six Region VII member institutions: University of the Philippines (UP Visayas), University of San Agustin (Iloilo City), DOST Region VII, DICT Region VII, DTI Region VII, and DepEd Region VII.',
   },
   {
+    intent: 'dost_info',
+    keywords: ['dost', 'dost 7', 'dost region 7', 'dost vii', 'department of science and technology', 'science and technology agency', 'dost role'],
+    reply: '🔬 **Department of Science & Technology (DOST Region VII):**\nDOST is the primary government agency for scientific development in Central Visayas. Within DASIG, DOST provides research funding, facilitates the SETUP MSME innovation program, organizes the *Research Methods for STEM Educators* training, and coordinates DOST SEI scholarships.',
+  },
+  {
+    intent: 'dict_info',
+    keywords: ['dict', 'dict 7', 'dict region 7', 'dict vii', 'department of information and communications', 'ict agency', 'dict role'],
+    reply: '💻 **Department of Information & Communications Technology (DICT Region VII):**\nDICT leads digital transformation across Central Visayas. Within DASIG, DICT conducts hands-on technical capacity bootcamps (such as the *Full-Stack Web Dev Bootcamp*), manages e-governance systems, and co-hosts regional cybersecurity and ICT innovation forums.',
+  },
+  {
+    intent: 'dti_info',
+    keywords: ['dti', 'dti 7', 'dti region 7', 'dti vii', 'department of trade and industry', 'trade agency', 'dti role'],
+    reply: '💼 **Department of Trade and Industry (DTI Region VII):**\nDTI champions business development and trade facilitation in Central Visayas. In the DASIG consortium, DTI facilitates the *Strategic Leadership in Public Service* training program and connects academic research to commercial MSME applications.',
+  },
+  {
+    intent: 'deped_info',
+    keywords: ['deped', 'deped 7', 'deped region 7', 'deped vii', 'department of education', 'education agency', 'deped role'],
+    reply: '📚 **Department of Education (DepEd Region VII):**\nDepEd oversees basic education across Central Visayas public schools. Within DASIG, DepEd co-facilitates the *Digital Governance & Policy* training program and leads regional K-12 educational technology alignment.',
+  },
+  {
+    intent: 'citu_info',
+    keywords: ['cit-u', 'cit university', 'cebu institute of technology', 'cit', 'citu'],
+    reply: '🏛️ **Cebu Institute of Technology – University (CIT-U):**\nCIT-U is a premier technological institution in Cebu City and the home of DASIG Portal software engineering (Team 40, IT411/IT332 Capstone). CIT-U provides technological leadership, hosting the ICT Innovation Forum and advanced engineering research.',
+  },
+  {
+    intent: 'upv_info',
+    keywords: ['up visayas', 'upv', 'university of the philippines visayas', 'up iloilo'],
+    reply: '🎓 **University of the Philippines Visayas (UPV):**\nUP Visayas is a premier national research university in Miagao & Iloilo City. In DASIG, UPV leads marine and aquatic science research, co-authors published IEEE predictive analytics studies, and hosts the annual Region VII Research Symposium.',
+  },
+  {
+    intent: 'usa_info',
+    keywords: ['university of san agustin', 'usa iloilo', 'san agustin', 'san agustin university'],
+    reply: '✝️ **University of San Agustin (USA Iloilo):**\nEstablished in 1904, University of San Agustin is one of Western Visayas\' oldest and most respected universities. Within DASIG, USA leads inter-institutional cooperation in governance, community extension, and hosts the regional *Governance & Innovation in ASEAN* seminar.',
+  },
+  {
     intent: 'events',
-    keywords: ['event', 'summit', 'seminar', 'conference', 'workshop', 'upcoming event', 'schedule', 'activity', 'forum'],
+    keywords: [
+      'event', 'summit', 'seminar', 'conference', 'workshop', 'upcoming event', 'schedule', 'activity', 'forum',
+      'august', 'september', 'october', 'november', 'december', 'january', 'february', 'march', 'april', 'may', 'june', 'july',
+      'aug', 'sep', 'sept', 'oct', 'nov', 'dec', 'jan', 'feb', 'mar', 'apr', 'jun', 'jul',
+      'this month', 'next month', 'calendar schedule', 'what is in august', 'events in august', 'events in september', 'events in october', 'events in november', 'events in december'
+    ],
     reply: 'DASIG regularly holds summits, seminars, workshops, and forums for member institutions. Visit the Events module to see all upcoming activities, register, and manage your event attendance.',
+  },
+  {
+    intent: 'event_venues',
+    keywords: [
+      'where are the events', 'where is the event', 'where the events', 'where is event', 'where events', 'where are events held', 'where will the event be', 'event venue', 'event location',
+      'where is the summit', 'where is the summit held', 'venue', 'venues', 'where held', 'what location', 'which campus', 'event place', 'event places',
+      'is it online or in person', 'where to attend', 'cebu convention center', 'in cebu', 'in iloilo', 'where is the workshop', 'where are workshops held'
+    ],
+    reply: 'DASIG events take place across premier host institutions and partner convention centers in Region VII (Central & Western Visayas), as well as online via Zoom/hybrid platforms.',
   },
   {
     intent: 'event_register',
@@ -127,13 +176,23 @@ const KB = [
   },
   {
     intent: 'it332',
-    keywords: ['it332', 'capstone', 'team 40', 'cit-u', 'cebu institute', 'school project', 'who made this', 'who built this', 'who created this', 'who developed this', 'who made the portal', 'who built the portal', 'who created the portal', 'who built', 'who made', 'who created', 'project creator', 'developer'],
-    reply: 'The DASIG Portal is the IT332 Capstone Project of Team 40 at CIT-U (Cebu Institute of Technology — University). It demonstrates enterprise-grade software engineering: NLP chatbot, role-based access control, Supabase backend, React frontend, and RESTful API design.',
+    keywords: ['it332', 'it411', 'it412', 'capstone', 'capstone project', 'team 40', 'cit-u', 'cebu institute', 'school project', 'who made this', 'who built this', 'who created this', 'who developed this', 'who made the portal', 'who built the portal', 'who created the portal', 'who built', 'who made', 'who created', 'project creator', 'developer', 'authors', 'thesis'],
+    reply: 'The DASIG Portal is developed by Team 40 at Cebu Institute of Technology – University (CIT-U) for IT411/IT332 Capstone Research. It features an end-to-end enterprise architecture: Haribon NLP engine, role-based access control (RBAC), Supabase PostgreSQL backend, React 19 SPA frontend, and full RESTful API design.',
+  },
+  {
+    intent: 'nlp_algorithm',
+    keywords: ['nlp algorithm', 'how does the ai work', 'ai model', 'nlp model', 'how does haribon work', 'machine learning', 'natural language processing', 'accuracy rate', 'intent recognition', 'levenshtein'],
+    reply: 'Haribon AI utilizes a Multi-Keyword Scored NLP Classification Algorithm with Word-Boundary Regex Tokenization and Levenshtein Distance Typo Tolerance. It dynamically queries live Supabase tables for real-time events, funding, and training records, targeting 80%+ intent recognition accuracy.',
+  },
+  {
+    intent: 'calendar_sync',
+    keywords: ['calendar', 'export calendar', 'ics', 'google calendar', 'apple calendar', 'conflict', 'schedule conflict', 'calendar sync', 'add to calendar'],
+    reply: 'The DASIG Portal includes FullCalendar integration and automatic schedule conflict detection. When registering for events, the system warns you of overlapping schedules and allows you to download .ICS calendar event files directly to Google Calendar or Apple Calendar.',
   },
   {
     intent: 'summit',
     keywords: ['summit', 'annual summit', 'dasig summit', '2026 summit', 'consortium summit'],
-    reply: 'The DASIG Annual Summit 2026 registration is now open! The summit gathers all six Region VII institutions for a three-day innovation forum, research showcase, and networking event in Cebu City. Register through the Events module.',
+    reply: 'The DASIG Annual Summit 2026 registration is now open! The summit gathers all Region VII institutions for a three-day innovation forum, research showcase, and networking event in Cebu City. Register through the Events module.',
   },
   {
     intent: 'logout',
@@ -266,8 +325,16 @@ const KB = [
 const FOLLOWUPS = {
   greeting:             ['What events are coming up?', 'How do I become a DASIG member?', 'What training programs are offered?'],
   about_dasig:          ['Who are the six consortium members?', 'What modules does the portal offer?', 'How do I join DASIG?'],
-  member_institutions:  ['How do I apply for DASIG membership?', 'What are the membership tier differences?', 'Tell me about DASIG partnerships'],
-  events:               ['How do I register for an event?', 'What is the DASIG Annual Summit?', 'What if the event I want is full?'],
+  member_institutions:  ['Tell me about DOST Region VII', 'Tell me about UP Visayas', 'How do I apply for membership?'],
+  dost_info:            ['What funding opportunities are open?', 'What training programs are offered?', 'Who are the other members?'],
+  dict_info:            ['What training programs are offered?', 'What events are coming up?', 'Tell me about DOST Region VII'],
+  dti_info:             ['What training programs are offered?', 'Tell me about DASIG partnerships', 'How do I become a member?'],
+  deped_info:           ['What training programs are offered?', 'What policies are available?', 'Who are the other members?'],
+  citu_info:            ['Who built this portal?', 'How does the AI work?', 'What events are coming up?'],
+  upv_info:             ['What events are coming up?', 'Tell me about DASIG partnerships', 'What funding opportunities exist?'],
+  usa_info:             ['What events are coming up?', 'What governance policies are available?', 'Who are the other members?'],
+  event_venues:         ['What events are coming up?', 'How do I register for an event?', 'Can I export to Google Calendar?'],
+  events:               ['Where are the events held?', 'How do I register for an event?', 'What is the DASIG Annual Summit?'],
   event_register:       ['How do I check my event registrations?', 'How is event attendance tracked?', 'Can I cancel my registration?'],
   training:             ['How do I apply for DASIG membership?', 'Will I earn a certificate after finishing?', 'What are the membership fees?'],
   membership:           ['What are the two membership tiers?', 'How much does membership cost?', 'What is my current membership status?'],
@@ -297,7 +364,9 @@ const FOLLOWUPS = {
   consortium_history:   ['Who are the six consortium members?', 'What is in the DASIG portal?', 'How do I join DASIG?'],
   region_7:             ['Who are the six consortium members?', 'What events are coming up?', 'Tell me about DASIG partnerships'],
   admin_panel:          ['How do I become a DASIG member?', 'What are the two membership tiers?', 'What can DASIG admins manage?'],
-  it332:                ['What is in the DASIG portal?', 'What topics can Haribon answer?', 'What events are coming up?'],
+  it332:                ['How does the AI work?', 'What is in the DASIG portal?', 'What events are coming up?'],
+  nlp_algorithm:        ['Who built the portal?', 'What is the accuracy rate of the AI?', 'What events are coming up?'],
+  calendar_sync:        ['How do I register for an event?', 'What events are coming up?', 'Can I cancel my registration?'],
   logout:               ['How do I sign in to my account?', 'What can guest users access?', 'How do I become a DASIG member?'],
   change_password:      ['How do I sign in to my account?', 'How do I update my profile information?', 'How do I contact the DASIG admin?'],
   update_profile:       ['What is my current membership status?', 'How do I change my password?', 'How do I contact the DASIG admin?'],
@@ -325,7 +394,7 @@ const DEFAULT_FOLLOWUPS = [
   '🤝 Tell me about partnerships',
 ];
 
-// Improved NLP: score-based matching — picks the entry with the most keyword hits
+// Advanced Scored NLP: specificity weighting + word-boundary tokenization + exact match bonus
 function matchIntent(text) {
   const lower = text.toLowerCase().trim();
   let best = null;
@@ -335,11 +404,17 @@ function matchIntent(text) {
     let score = 0;
     for (const kw of entry.keywords) {
       const escaped = kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      // word-boundary match scores 2, substring match scores 1
-      if (new RegExp(`\\b${escaped}\\b`).test(lower)) score += 2;
-      else if (lower.includes(kw)) score += 1;
+      if (lower === kw) {
+        score += 5; // Exact full phrase match
+      } else if (new RegExp(`\\b${escaped}\\b`).test(lower)) {
+        // Word boundary match + specificity bonus based on keyword token length
+        const tokens = kw.split(/\s+/).length;
+        score += 2 + (tokens * 0.8);
+      } else if (lower.includes(kw) && kw.length >= 4) {
+        score += 1;
+      }
     }
-    if (score >= bestScore) { bestScore = score; best = entry; }
+    if (score > bestScore) { bestScore = score; best = entry; }
   }
 
   return bestScore > 0 ? { reply: best.reply, intent: best.intent, score: bestScore } : null;
@@ -430,11 +505,41 @@ router.post('/message', async (req, res) => {
 
   try {
     if (match.intent === 'events' || match.intent === 'summit') {
-      const { data } = await supabase.from('events').select('title, date, venue').order('id', { ascending: true }).limit(6);
+      const { data } = await supabase.from('events').select('title, date, venue, category').order('id', { ascending: true }).limit(10);
       if (data && data.length > 0) {
-        const items = uniq(data, 'title').slice(0, 3);
-        const list = items.map(e => `• ${e.title} — ${e.date || 'TBA'}${e.venue ? ' @ ' + e.venue : ''}`).join('\n');
-        reply = `${match.reply}\n\n📅 Upcoming events:\n${list}\n\nRegister early — slots are limited!`;
+        const lowerInput = normalized.toLowerCase().trim();
+        
+        // Month detection
+        const MONTHS = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
+        const MONTH_MAP = {
+          january: 'Jan', february: 'Feb', march: 'Mar', april: 'Apr', may: 'May', june: 'Jun',
+          july: 'Jul', august: 'Aug', september: 'Sep', october: 'Oct', november: 'Nov', december: 'Dec'
+        };
+        
+        const matchedMonth = MONTHS.find(m => lowerInput.includes(m) || lowerInput.split(/\s+/).includes(m.slice(0, 3)));
+        
+        if (matchedMonth) {
+          const abbr = MONTH_MAP[matchedMonth];
+          const monthEvents = data.filter(e => e.date && e.date.toLowerCase().includes(abbr.toLowerCase()));
+          const capMonth = matchedMonth.charAt(0).toUpperCase() + matchedMonth.slice(1);
+          
+          if (monthEvents.length > 0) {
+            const list = monthEvents.map(e => `• ${e.title} — ${e.date}${e.venue ? ' @ ' + e.venue : ''}`).join('\n');
+            reply = `📅 Here are the scheduled DASIG events for ${capMonth} 2026:\n\n${list}\n\nRegister early in the Programs module — slots are limited!`;
+          } else {
+            const upcoming = data.slice(0, 3).map(e => `• ${e.title} — ${e.date}${e.venue ? ' @ ' + e.venue : ''}`).join('\n');
+            reply = `There are currently no major events scheduled for ${capMonth} 2026. The upcoming consortium calendar starts in September!\n\n📅 Soonest upcoming activities:\n${upcoming}\n\nVisit the Calendar in the Programs module for full details.`;
+          }
+          const items = uniq(data, 'title').slice(0, 3);
+          const list = items.map(e => `• ${e.title} — ${e.date || 'TBA'}${e.venue ? ' @ ' + e.venue : ''}`).join('\n');
+          reply = `${match.reply}\n\n📅 Upcoming events:\n${list}\n\nRegister early — slots are limited!`;
+        }
+      }
+    } else if (match.intent === 'event_venues') {
+      const { data } = await supabase.from('events').select('title, date, venue, category').order('id', { ascending: true }).limit(8);
+      if (data && data.length > 0) {
+        const list = data.map(e => `• **${e.title}**\n  📍 **Venue:** ${e.venue || 'TBA'}\n  📅 **Date:** ${e.date || 'TBA'}`).join('\n\n');
+        reply = `🏛️ **DASIG Event Locations & Venues:**\n\n${list}\n\n💡 Physical events take place at member campus auditoriums and convention centers in Region VII (Cebu City and Iloilo City), with technical workshops accessible online via Zoom. Check each event in the Programs module for full venue details!`;
       }
     } else if (match.intent === 'training') {
       const { data } = await supabase.from('trainings').select('title, category, level').limit(6);

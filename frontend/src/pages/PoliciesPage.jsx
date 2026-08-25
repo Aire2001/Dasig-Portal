@@ -16,30 +16,32 @@ const catConfig = {
 
 const POLICIES_CSS = `
   @keyframes cardIn {
-    from { transform: translateY(18px); opacity: 0; }
+    from { transform: translateY(12px); opacity: 0; }
     to   { transform: translateY(0);    opacity: 1; }
   }
   .policy-card {
     border-radius: 18px; padding: 22px;
     cursor: pointer; position: relative; overflow: hidden;
-    transition: transform 0.22s cubic-bezier(.34,1.56,.64,1), box-shadow 0.22s;
+    transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
     border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(15,23,42,0.75);
+    backdrop-filter: blur(12px);
   }
   .policy-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 18px 44px rgba(0,0,0,0.4);
+    transform: translateY(-3px);
+    border-color: rgba(249,115,22,0.45);
+    box-shadow: 0 16px 38px rgba(0,0,0,0.55);
   }
   .policy-card::after {
     content: ''; position: absolute; inset: 0;
-    background: linear-gradient(135deg, rgba(255,255,255,0.09) 0%, transparent 55%);
+    background: linear-gradient(135deg, rgba(255,255,255,0.06) 0%, transparent 55%);
     pointer-events: none;
   }
   .filter-btn {
-    border-radius: 20px; padding: 7px 18px; font-size: 13px; font-weight: 700;
-    cursor: pointer; font-family: inherit; transition: all 0.18s;
-    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 9px; padding: 7px 16px; font-size: 12.5px; font-weight: 700;
+    cursor: pointer; font-family: inherit; transition: all 0.15s ease;
+    border: 1px solid rgba(255,255,255,0.12);
   }
-  .filter-btn:hover { transform: translateY(-1px); }
 `;
 
 export default function PoliciesPage() {
@@ -124,6 +126,32 @@ export default function PoliciesPage() {
               </span>
             </div>
           )}
+
+          {/* Stats */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 14, marginBottom: 28 }}>
+            {[
+              { label: 'Public Policies',   value: policies.filter(p => !p.members_only).length, color: '#34d399', icon: '📜' },
+              { label: 'Members-Only Acts', value: policies.filter(p => p.members_only).length,  color: '#60a5fa', icon: '🔒' },
+              { label: 'Total Charters',    value: policies.length,                              color: '#f97316', icon: '🏛️' },
+            ].map(s => (
+              <div key={s.label} style={{
+                background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)',
+                borderRadius: 16, padding: '18px 20px',
+                display: 'flex', alignItems: 'center', gap: 14,
+                backdropFilter: 'blur(8px)',
+              }}>
+                <div style={{
+                  width: 44, height: 44, borderRadius: 12,
+                  background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20,
+                }}>{s.icon}</div>
+                <div>
+                  <div style={{ fontSize: 24, fontWeight: 900, color: s.color, letterSpacing: '-0.5px' }}>{s.value}</div>
+                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.4px', marginTop: 2 }}>{s.label}</div>
+                </div>
+              </div>
+            ))}
+          </div>
 
           {/* Search + Filter */}
           <div style={{ display: 'flex', gap: 12, marginBottom: 20, flexWrap: 'wrap', alignItems: 'center' }}>

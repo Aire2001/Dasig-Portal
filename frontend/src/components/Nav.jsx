@@ -246,6 +246,28 @@ export default function Nav() {
         </div>
       )}
 
+      {/* ── Official GovPH / Regional Consortium Top Bar ── */}
+      <div style={{
+        background: 'rgba(2, 6, 23, 0.95)',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
+        fontSize: '11px', color: 'rgba(255, 255, 255, 0.55)',
+        padding: '4px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        position: 'relative', zIndex: 1000,
+      }}>
+        <div style={{ maxWidth: 1120, margin: '0 auto', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 6 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontWeight: 800, color: 'rgba(255,255,255,0.85)', letterSpacing: '.5px' }}>🇵🇭 GOVPH</span>
+            <span style={{ color: 'rgba(255,255,255,0.2)' }}>|</span>
+            <span style={{ color: 'rgba(255,255,255,0.65)' }}>Region VII Academic &amp; Government Consortium</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <span style={{ color: 'rgba(255,255,255,0.5)' }}>Central Visayas Network</span>
+            <span style={{ color: 'rgba(255,255,255,0.2)' }}>•</span>
+            <span style={{ color: '#fb923c', fontWeight: 700 }}>DOST · DICT · DTI · DepEd · UPV · USA · CIT-U</span>
+          </div>
+        </div>
+      </div>
+
       <nav style={{
         background: 'linear-gradient(90deg,rgba(0,10,40,0.97) 0%,rgba(0,20,70,0.97) 50%,rgba(0,10,40,0.97) 100%)',
         backdropFilter: 'blur(20px)',
@@ -289,7 +311,7 @@ export default function Nav() {
                 pointerEvents:'none',
               }} />
               <div style={{
-                animation: 'sealSpin 12s linear infinite, sealGlow 3s ease-in-out infinite',
+                animation: 'sealGlow 3s ease-in-out infinite',
                 display: 'flex',
               }}>
                 <SunSeal size={34} />

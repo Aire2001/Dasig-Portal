@@ -13,8 +13,8 @@ const STYLES = {
 };
 
 const MODAL_CSS = `
-  @keyframes modalIn  { from{transform:scale(0.84) translateY(20px);opacity:0} to{transform:scale(1) translateY(0);opacity:1} }
-  @keyframes checkPop { 0%{transform:scale(0)}60%{transform:scale(1.3)}100%{transform:scale(1)} }
+  @keyframes modalIn  { from{transform:translateY(12px);opacity:0} to{transform:translateY(0);opacity:1} }
+  @keyframes checkPop { from{opacity:0;transform:scale(0.85)} to{opacity:1;transform:scale(1)} }
   .tr-input {
     width:100%; box-sizing:border-box;
     border:1.5px solid rgba(255,255,255,0.15); border-radius:10px;
@@ -226,7 +226,7 @@ export default function TrainingPage() {
             background:'#0f172a', borderRadius:24, maxWidth:'min(520px,calc(100vw - 32px))', width:'100%',
             boxShadow:'0 40px 120px rgba(0,0,0,0.8)', position:'relative',
             border:'1px solid rgba(255,255,255,0.1)',
-            animation:'modalIn 0.28s cubic-bezier(.34,1.56,.64,1)',
+            animation:'modalIn 0.2s ease',
           }}>
             {/* Header */}
             <div style={{ background: s(okModal.training).accent, padding:'36px 32px 60px', textAlign:'center', position:'relative' }}>
