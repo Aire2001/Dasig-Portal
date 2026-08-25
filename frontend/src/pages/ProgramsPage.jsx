@@ -2212,19 +2212,19 @@ function CalendarTab({ user }) {
           </div>
 
           {/* Quick Month Shortcuts bar */}
-          <div style={{ display:'flex', alignItems:'center', gap:8, flexWrap:'wrap', marginTop: 10, marginBottom: 14 }}>
-            <span style={{ fontSize:12, color:'rgba(255,255,255,0.45)', fontWeight:700 }}>Quick Jump:</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginTop: 10, marginBottom: 14 }}>
+            <span style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.45)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.6px' }}>Quick Jump:</span>
             <button
               onClick={() => jumpToMonthYear(2026, 8)}
               style={{
                 background: pickerMonth === 8 && pickerYear === 2026 ? 'linear-gradient(90deg,#f97316,#e11d48)' : 'rgba(255,255,255,0.06)',
                 color: pickerMonth === 8 && pickerYear === 2026 ? '#fff' : 'rgba(255,255,255,0.85)',
                 border: `1px solid ${pickerMonth === 8 && pickerYear === 2026 ? 'transparent' : 'rgba(255,255,255,0.12)'}`,
-                borderRadius: 8, padding: '5px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+                borderRadius: 9, padding: '5px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
                 transition: 'all .14s',
               }}
             >
-              🗓️ September 2026 (Annual Summit Month · 3 events)
+              🗓️ Sep 2026 · Summit
             </button>
             <button
               onClick={() => jumpToMonthYear(2026, 9)}
@@ -2232,11 +2232,11 @@ function CalendarTab({ user }) {
                 background: pickerMonth === 9 && pickerYear === 2026 ? 'linear-gradient(90deg,#f97316,#e11d48)' : 'rgba(255,255,255,0.06)',
                 color: pickerMonth === 9 && pickerYear === 2026 ? '#fff' : 'rgba(255,255,255,0.85)',
                 border: `1px solid ${pickerMonth === 9 && pickerYear === 2026 ? 'transparent' : 'rgba(255,255,255,0.12)'}`,
-                borderRadius: 8, padding: '5px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+                borderRadius: 9, padding: '5px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
                 transition: 'all .14s',
               }}
             >
-              🗓️ October 2026 (Research Symposium)
+              🗓️ Oct 2026 · Symposium
             </button>
             <button
               onClick={() => jumpToMonthYear(2026, 10)}
@@ -2244,11 +2244,23 @@ function CalendarTab({ user }) {
                 background: pickerMonth === 10 && pickerYear === 2026 ? 'linear-gradient(90deg,#f97316,#e11d48)' : 'rgba(255,255,255,0.06)',
                 color: pickerMonth === 10 && pickerYear === 2026 ? '#fff' : 'rgba(255,255,255,0.85)',
                 border: `1px solid ${pickerMonth === 10 && pickerYear === 2026 ? 'transparent' : 'rgba(255,255,255,0.12)'}`,
-                borderRadius: 8, padding: '5px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+                borderRadius: 9, padding: '5px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
                 transition: 'all .14s',
               }}
             >
-              🗓️ November 2026 (ICT Forum)
+              🗓️ Nov 2026 · ICT Forum
+            </button>
+            <button
+              onClick={() => jumpToMonthYear(2026, 11)}
+              style={{
+                background: pickerMonth === 11 && pickerYear === 2026 ? 'linear-gradient(90deg,#f97316,#e11d48)' : 'rgba(255,255,255,0.06)',
+                color: pickerMonth === 11 && pickerYear === 2026 ? '#fff' : 'rgba(255,255,255,0.85)',
+                border: `1px solid ${pickerMonth === 11 && pickerYear === 2026 ? 'transparent' : 'rgba(255,255,255,0.12)'}`,
+                borderRadius: 9, padding: '5px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+                transition: 'all .14s',
+              }}
+            >
+              🗓️ Dec 2026 · Grants
             </button>
             <button
               onClick={jumpToToday}
@@ -2256,11 +2268,11 @@ function CalendarTab({ user }) {
                 background: pickerMonth === new Date().getMonth() && pickerYear === new Date().getFullYear() ? 'linear-gradient(90deg,#10b981,#059669)' : 'rgba(255,255,255,0.06)',
                 color: pickerMonth === new Date().getMonth() && pickerYear === new Date().getFullYear() ? '#fff' : 'rgba(255,255,255,0.7)',
                 border: '1px solid rgba(255,255,255,0.12)',
-                borderRadius: 8, padding: '5px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+                borderRadius: 9, padding: '5px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
                 transition: 'all .14s',
               }}
             >
-              📍 Today ({MONTH_NAMES[new Date().getMonth()].slice(0,3)} {new Date().getFullYear()})
+              📍 Today
             </button>
           </div>
 
@@ -2402,41 +2414,83 @@ function CalendarTab({ user }) {
         )}
 
         {/* ── Scheduled Consortium Agenda (Below Calendar) ── */}
-        <div style={{ marginTop: 24, paddingTop: 20, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom: 14 }}>
-            <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', display:'flex', alignItems:'center', gap:7 }}>
-              <span>📋</span> Scheduled Consortium Agenda
+        <div style={{ marginTop: 28, paddingTop: 22, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <div style={{ fontSize: 15, fontWeight: 900, color: '#fff', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: 18 }}>📋</span>
+              <span>Scheduled Consortium Agenda</span>
             </div>
-            <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)' }}>{calItems.length} total scheduled items</span>
+            <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: 600 }}>
+              {calItems.length} active scheduled items
+            </span>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 12 }}>
-            {calItems.slice(0, 6).map(it => (
-              <div
-                key={it.id}
-                onClick={() => setDetail(it)}
-                style={{
-                  background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)',
-                  borderRadius: 12, padding: '12px 14px', cursor: 'pointer',
-                  display: 'flex', alignItems: 'center', gap: 12,
-                  transition: 'all 0.15s ease',
-                }}
-                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.borderColor = 'rgba(249,115,22,0.4)'; }}
-                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)'; }}
-              >
-                <div style={{ width: 38, height: 38, borderRadius: 10, background: 'rgba(249,115,22,0.15)', border:'1px solid rgba(249,115,22,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}>
-                  {it._type === 'event' ? '📅' : '🎓'}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(330px, 1fr))', gap: 14 }}>
+            {calItems.slice(0, 6).map(it => {
+              const isEvent = it._type === 'event';
+              const catTheme = {
+                Summit:   { bg: 'rgba(59,130,246,0.12)', border: 'rgba(59,130,246,0.3)', color: '#60a5fa', icon: '🏛️' },
+                Workshop: { bg: 'rgba(16,185,129,0.12)', border: 'rgba(16,185,129,0.3)', color: '#34d399', icon: '🔬' },
+                Seminar:  { bg: 'rgba(168,85,247,0.12)', border: 'rgba(168,85,247,0.3)', color: '#c084fc', icon: '📢' },
+                Funding:  { bg: 'rgba(245,158,11,0.12)', border: 'rgba(245,158,11,0.3)', color: '#fbbf24', icon: '💰' },
+              }[it.category] || { bg: 'rgba(249,115,22,0.12)', border: 'rgba(249,115,22,0.3)', color: '#fb923c', icon: isEvent ? '📅' : '🎓' };
+
+              return (
+                <div
+                  key={it.id}
+                  onClick={() => setDetail(it)}
+                  style={{
+                    background: 'rgba(15,23,42,0.7)',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    borderRadius: 16, padding: '16px 18px', cursor: 'pointer',
+                    display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+                    gap: 12, backdropFilter: 'blur(10px)',
+                    transition: 'all 0.18s ease',
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.transform = 'translateY(-3px)';
+                    e.currentTarget.style.borderColor = 'rgba(249,115,22,0.45)';
+                    e.currentTarget.style.boxShadow = '0 12px 28px rgba(0,0,0,0.5)';
+                    e.currentTarget.style.background = 'rgba(15,23,42,0.92)';
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)';
+                    e.currentTarget.style.boxShadow = 'none';
+                    e.currentTarget.style.background = 'rgba(15,23,42,0.7)';
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                    <span style={{
+                      background: catTheme.bg, border: `1px solid ${catTheme.border}`,
+                      color: catTheme.color, borderRadius: 6, padding: '2px 8px',
+                      fontSize: 11, fontWeight: 800, letterSpacing: '.3px',
+                      display: 'inline-flex', alignItems: 'center', gap: 4,
+                    }}>
+                      <span>{catTheme.icon}</span>
+                      <span>{it.category || 'General'}</span>
+                    </span>
+                    <span style={{ fontSize: 11.5, color: '#f97316', fontWeight: 700 }}>
+                      {it.date || it.schedule}
+                    </span>
+                  </div>
+
+                  <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', lineHeight: 1.35 }}>
+                    {it.title}
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 10, marginTop: 2 }}>
+                    <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.5)', display: 'flex', alignItems: 'center', gap: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '70%' }}>
+                      <span>📍</span>
+                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{it.venue || it.org || 'Region VII'}</span>
+                    </div>
+                    <span style={{ fontSize: 11.5, fontWeight: 800, color: '#f97316', display: 'flex', alignItems: 'center', gap: 3 }}>
+                      Details →
+                    </span>
+                  </div>
                 </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 11, color: '#f97316', fontWeight: 800 }}>{it.category} · {it.date || it.schedule}</div>
-                  <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{it.title}</div>
-                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>📍 {it.venue || it.org}</div>
-                </div>
-                <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.6)', background: 'rgba(255,255,255,0.06)', borderRadius: 6, padding: '3px 8px' }}>
-                  Details →
-                </span>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
