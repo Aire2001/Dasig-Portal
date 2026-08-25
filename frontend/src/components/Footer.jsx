@@ -149,12 +149,18 @@ export default function Footer() {
           </div>
 
           {/* Bottom bar */}
-          <div style={{ borderTop:'1px solid rgba(255,255,255,0.06)', paddingTop:18, display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap:8 }}>
-            <span style={{ color:'rgba(255,255,255,0.27)', fontSize:11.5 }}>
-              © 2026 DASIG Consortium · Region VII, Central Visayas, Philippines
-            </span>
-            <span style={{ color:'rgba(255,255,255,0.27)', fontSize:11.5 }}>
-              Team 40 · CIT-U IT332 Capstone &amp; Research 1
+          <div style={{ borderTop:'1px solid rgba(255,255,255,0.06)', paddingTop:18, display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap:10 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+              <span style={{ color:'rgba(255,255,255,0.38)', fontSize:11.5, fontWeight: 600 }}>
+                © 2026 Region VII Academic &amp; Government Consortium (DASIG) · Republic of the Philippines
+              </span>
+              <span style={{ color:'rgba(255,255,255,0.2)', fontSize:11 }}>•</span>
+              <span style={{ color:'rgba(255,255,255,0.3)', fontSize:11 }}>
+                NPC RA 10173 Compliant
+              </span>
+            </div>
+            <span style={{ color:'rgba(255,255,255,0.35)', fontSize:11.5, fontWeight: 500 }}>
+              Cebu Institute of Technology - University · Region VII Central Visayas
             </span>
           </div>
         </div>

@@ -89,19 +89,21 @@ const HOME_CSS = `
   .mod-card {
     border-radius: 18px; padding: 22px;
     cursor: pointer; position: relative; overflow: hidden;
-    transition: transform 0.22s cubic-bezier(.34,1.56,.64,1), box-shadow 0.22s;
+    transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+    border: 1px solid rgba(255,255,255,0.08);
   }
   .mod-card:hover {
-    transform: translateY(-6px) scale(1.025);
-    box-shadow: 0 20px 48px rgba(0,0,0,0.4);
+    transform: translateY(-3px);
+    box-shadow: 0 16px 36px rgba(0,0,0,0.5);
+    border-color: rgba(249,115,22,0.4);
   }
   .mod-card::after {
     content: ''; position: absolute; inset: 0;
-    background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 55%);
+    background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 55%);
     pointer-events: none;
   }
-  .news-mini:hover { transform: translateY(-3px); box-shadow: 0 10px 32px rgba(0,0,0,0.35); }
-  .news-mini { transition: transform 0.2s, box-shadow 0.2s; }
+  .news-mini:hover { transform: translateY(-3px); box-shadow: 0 10px 32px rgba(0,0,0,0.35); border-color: rgba(249,115,22,0.35); }
+  .news-mini { transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease; }
 `;
 
 const modules = [

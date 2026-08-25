@@ -289,7 +289,7 @@ export default function Nav() {
                 pointerEvents:'none',
               }} />
               <div style={{
-                animation: 'sealSpin 12s linear infinite, sealGlow 3s ease-in-out infinite',
+                animation: 'sealGlow 3s ease-in-out infinite',
                 display: 'flex',
               }}>
                 <SunSeal size={34} />
