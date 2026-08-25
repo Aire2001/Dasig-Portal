@@ -55,6 +55,13 @@ const INSTITUTION_ABOUT = {
     email: 'ro7@deped.gov.ph',
     role: 'Government Agency — Basic Education',
   },
+  CIT: {
+    about: 'Cebu Institute of Technology – University (CIT-U) is a premier autonomous higher education institution in Cebu City recognized for engineering excellence, computing, and technological innovation. CIT-U serves as a foundational academic cornerstone for regional research commercialization, software development, and industry-aligned capstone initiatives.',
+    founded: '1946',
+    website: 'cit.edu',
+    email: 'info@cit.edu',
+    role: 'Autonomous Private University — Engineering & Computing Excellence',
+  },
 };
 
 // Institution logos — local SVG files in /public/logos/ (always work, no internet needed)
@@ -95,18 +102,15 @@ const MEMBER_ASSETS = {
     bg: 'linear-gradient(135deg,#0b2d6c 0%,#1546b4 60%,#0d3892 100%)',
     accent: '#fbbf24', emoji: '📚',
   },
+  CIT: {
+    logo:  '/logos/cit.svg',
+    logo2: null,
+    bg: 'linear-gradient(135deg,#78350f 0%,#b45309 60%,#92400e 100%)',
+    accent: '#fbbf24', emoji: '🦁',
+  },
 };
 
 const MEMBERS_CSS = `
-  @keyframes cardUp {
-    from { transform: translateY(20px); opacity: 0; }
-    to   { transform: translateY(0);    opacity: 1; }
-  }
-  @keyframes modalIn {
-    from { transform: scale(0.88) translateY(20px); opacity: 0; }
-    to   { transform: scale(1) translateY(0); opacity: 1; }
-  }
-  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
   .member-card {
     border-radius: 20px;
     padding: 26px 22px;
