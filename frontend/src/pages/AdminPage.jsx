@@ -453,93 +453,247 @@ export default function AdminPage() {
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   DASHBOARD
+   DASHBOARD (Executive Command Center)
 ═══════════════════════════════════════════════════════════════════ */
 function DashboardTab({ showToast, setTab }) {
   const [stats, setStats]       = useState(null);
   const [renewals, setRenewals] = useState([]);
+  const [events, setEvents]     = useState([]);
 
   useEffect(() => {
     api.admin.stats().then(setStats).catch(() => showToast('Failed to load stats', false));
     api.admin.renewals().then(r => setRenewals(r.data || [])).catch(() => {});
+    api.events.list({ limit: 6 }).then(r => setEvents(Array.isArray(r) ? r : (r?.data || []))).catch(() => {});
   }, []);
 
   if (!stats) return <Loading />;
 
   const CARDS = [
-    { label:'Total Users',       value:stats.users.total,          sub:`${stats.users.member} members`,       icon:'👥', color:'#3b82f6', tab:'users'        },
-    { label:'Pending Apps',      value:stats.applications.pending, sub:`awaiting review`,                     icon:'⏳', color:'#f59e0b', tab:'applications'  },
-    { label:'Events',            value:stats.events.total,         sub:`${stats.events.totalEnrolled} joined`,icon:'📅', color:'#a855f7', tab:'events'        },
-    { label:'Training Programs', value:stats.trainings.total,      sub:`${stats.trainings.totalEnrolled} enrolled`, icon:'🎓', color:'#f43f5e', tab:'training'     },
-    { label:'News Articles',     value:stats.news.total,           sub:'published',                           icon:'📰', color:'#14b8a6', tab:'news'          },
-    { label:'Partnerships',      value:stats.partnerships.active,  sub:`of ${stats.partnerships.total} total`,icon:'🤝', color:'#8b5cf6', tab:'partnerships'  },
-    { label:'Open Funding',      value:stats.funding.open,         sub:`of ${stats.funding.total} listed`,    icon:'💰', color:'#10b981', tab:'funding'       },
-    { label:'Active Policies',   value:stats.policies.active,      sub:`${stats.policies.archived} archived`, icon:'📜', color:'#0ea5e9', tab:'policies'      },
+    { label:'Total Users',       value:stats.users.total,          sub:`${stats.users.member} verified members`, icon:'👥', color:'#3b82f6', tab:'users'        },
+    { label:'Pending Apps',      value:stats.applications.pending, sub:stats.applications.pending > 0 ? 'Action required' : 'All reviewed', icon:'⏳', color:'#f59e0b', tab:'applications'  },
+    { label:'Consortium Events', value:stats.events.total,         sub:`${stats.events.totalEnrolled} participants`, icon:'📅', color:'#a855f7', tab:'events'        },
+    { label:'Training Courses',  value:stats.trainings.total,      sub:`${stats.trainings.totalEnrolled} enrolled`, icon:'🎓', color:'#f43f5e', tab:'training'     },
+    { label:'News & Press',      value:stats.news.total,           sub:'published articles',                 icon:'📰', color:'#14b8a6', tab:'news'          },
+    { label:'Partnerships',      value:stats.partnerships.active,  sub:`${stats.partnerships.total} total MOUs`,   icon:'🤝', color:'#8b5cf6', tab:'partnerships'  },
+    { label:'Funding & Grants',  value:stats.funding.open,         sub:`${stats.funding.total} listed calls`,      icon:'💰', color:'#10b981', tab:'funding'       },
+    { label:'Governance Policies',value:stats.policies.active,     sub:`${stats.policies.archived} archived`,      icon:'📜', color:'#0ea5e9', tab:'policies'      },
   ];
 
   const evFill    = stats.events.totalCapacity   > 0 ? Math.round(stats.events.totalEnrolled   / stats.events.totalCapacity   * 100) : 0;
   const trFill    = (stats.trainings.total * 20) > 0 ? Math.round(stats.trainings.totalEnrolled / (stats.trainings.total * 20) * 100) : 0;
   const memberPct = stats.users.total            > 0 ? Math.round(stats.users.member            / stats.users.total            * 100) : 0;
 
+  const roleChartData = [
+    { name: 'Members', value: stats.users.member, color: '#34d399' },
+    { name: 'Guests',  value: stats.users.guest,  color: '#60a5fa' },
+    { name: 'Admins',  value: stats.users.admin,  color: '#f87171' },
+  ].filter(d => d.value > 0);
+
   return (
     <div>
-      <PageHeader title="Dashboard" desc="Live snapshot of all portal activity" />
+      {/* ── Executive Header Banner ── */}
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        flexWrap: 'wrap', gap: 16, marginBottom: 22,
+        background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)',
+        borderRadius: 18, padding: '16px 20px',
+      }}>
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+            <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#10b981', boxShadow: '0 0 8px #10b981', display: 'inline-block' }} />
+            <span style={{ fontSize: 11, fontWeight: 800, color: '#34d399', textTransform: 'uppercase', letterSpacing: '.8px' }}>
+              Region VII Central Node · Live
+            </span>
+          </div>
+          <h2 style={{ color: '#fff', fontSize: 24, fontWeight: 900, letterSpacing: '-0.5px', margin: 0 }}>
+            Executive Command Dashboard
+          </h2>
+        </div>
 
-      {/* Stat cards */}
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:14, marginBottom:24 }}>
+        {/* Quick Action Buttons */}
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <button
+            onClick={() => setTab('events')}
+            className="ap-btn ap-btn-primary"
+            style={{ padding: '8px 14px', fontSize: 12.5 }}
+          >
+            + New Event
+          </button>
+          <button
+            onClick={() => setTab('news')}
+            className="ap-btn ap-btn-ghost"
+            style={{ padding: '8px 14px', fontSize: 12.5 }}
+          >
+            + News Release
+          </button>
+          <button
+            onClick={() => setTab('applications')}
+            className="ap-btn"
+            style={{
+              padding: '8px 14px', fontSize: 12.5, fontWeight: 800,
+              background: stats.applications.pending > 0 ? 'rgba(245,158,11,0.2)' : 'rgba(255,255,255,0.06)',
+              color: stats.applications.pending > 0 ? '#fbbf24' : 'rgba(255,255,255,0.8)',
+              border: `1px solid ${stats.applications.pending > 0 ? 'rgba(245,158,11,0.4)' : 'rgba(255,255,255,0.1)'}`,
+            }}
+          >
+            📋 Review Apps ({stats.applications.pending})
+          </button>
+        </div>
+      </div>
+
+      {/* ── 8 KPI Summary Cards ── */}
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(220px, 1fr))', gap:12, marginBottom:22 }}>
         {CARDS.map((c, i) => (
           <div key={c.label} onClick={() => setTab(c.tab)} style={{
-            background:`linear-gradient(140deg,${c.color}18,${c.color}08)`,
-            border:`1px solid ${c.color}30`,
-            borderRadius:14, padding:'18px 16px', cursor:'pointer',
-            transition:'transform .2s, box-shadow .2s',
-            animation:`statPop .35s ease ${i * .06}s both`,
+            background: 'rgba(15,23,42,0.7)',
+            backdropFilter: 'blur(12px)',
+            border: `1px solid ${c.color}33`,
+            borderRadius: 16, padding: '16px', cursor: 'pointer',
+            transition: 'all .18s ease',
+            animation: `statPop .35s ease ${i * .04}s both`,
           }}
-          onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = `0 12px 32px ${c.color}20`; }}
-          onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
+          onMouseEnter={e => {
+            e.currentTarget.style.transform = 'translateY(-3px)';
+            e.currentTarget.style.boxShadow = `0 12px 28px ${c.color}25`;
+            e.currentTarget.style.borderColor = `${c.color}88`;
+            e.currentTarget.style.background = 'rgba(15,23,42,0.92)';
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = 'none';
+            e.currentTarget.style.borderColor = `${c.color}33`;
+            e.currentTarget.style.background = 'rgba(15,23,42,0.7)';
+          }}
           >
             <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:8 }}>
-              <div style={{ fontSize:28, fontWeight:900, color:'#fff', letterSpacing:'-1px' }}>{c.value}</div>
+              <div style={{ fontSize:26, fontWeight:900, color:'#fff', letterSpacing:'-0.5px' }}>{c.value}</div>
               <div style={{ width:34, height:34, borderRadius:9, background:`${c.color}22`, border:`1px solid ${c.color}44`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:15 }}>{c.icon}</div>
             </div>
-            <div style={{ fontSize:12.5, fontWeight:700, color:'rgba(255,255,255,0.75)', marginBottom:2 }}>{c.label}</div>
-            <div style={{ fontSize:12.5, color:'rgba(255,255,255,0.55)' }}>{c.sub}</div>
+            <div style={{ fontSize:13, fontWeight:800, color:'rgba(255,255,255,0.85)', marginBottom:2 }}>{c.label}</div>
+            <div style={{ fontSize:11.5, color:'rgba(255,255,255,0.45)', fontWeight:600 }}>{c.sub}</div>
           </div>
         ))}
       </div>
 
-      {/* Progress bars */}
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:14, marginBottom:24 }}>
-        {[
-          { label:'Event Fill Rate',   pct:evFill,    color:'#a855f7' },
-          { label:'Training Fill Rate',pct:trFill,    color:'#f43f5e' },
-          { label:'Member Conversion', pct:memberPct, color:'#3b82f6' },
-        ].map(b => (
-          <div key={b.label} style={{ background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:12, padding:'16px 18px' }}>
-            <div style={{ display:'flex', justifyContent:'space-between', marginBottom:10 }}>
-              <span style={{ fontSize:12.5, color:'rgba(255,255,255,0.6)', fontWeight:700 }}>{b.label}</span>
-              <span style={{ fontSize:13, fontWeight:900, color:'#fff' }}>{Math.min(b.pct, 100)}%</span>
+      {/* ── Visual Analytics Grid (Donut & Fill Rate Progress) ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: 16, marginBottom: 22 }}>
+        {/* User Distribution Donut */}
+        <div style={{
+          background: 'rgba(15,23,42,0.7)', border: '1px solid rgba(255,255,255,0.08)',
+          borderRadius: 18, padding: '20px', backdropFilter: 'blur(12px)',
+        }}>
+          <div style={{ fontSize: 12, fontWeight: 800, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '.6px', marginBottom: 14 }}>
+            👥 User &amp; Institutional Role Mix
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '160px 1fr', alignItems: 'center', gap: 16 }}>
+            <div style={{ width: 160, height: 160 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie data={roleChartData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={42} outerRadius={68} paddingAngle={4}>
+                    {roleChartData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip contentStyle={{ background: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#fff', fontSize: 12 }} />
+                </PieChart>
+              </ResponsiveContainer>
             </div>
-            <div style={{ height:7, background:'rgba(255,255,255,0.08)', borderRadius:4, overflow:'hidden' }}>
-              <div style={{ height:'100%', width:`${Math.min(b.pct, 100)}%`, background:`linear-gradient(90deg,${b.color},${b.color}aa)`, borderRadius:4, transition:'width .8s ease' }} />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {roleChartData.map(r => (
+                <div key={r.name} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{ width: 10, height: 10, borderRadius: '50%', background: r.color, flexShrink: 0 }} />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
+                      <span style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.75)', fontWeight: 600 }}>{r.name}</span>
+                      <span style={{ fontSize: 12.5, fontWeight: 800, color: '#fff' }}>{r.value} <span style={{ color: 'rgba(255,255,255,0.4)', fontWeight: 400 }}>({Math.round((r.value / stats.users.total) * 100)}%)</span></span>
+                    </div>
+                    <div style={{ height: 5, background: 'rgba(255,255,255,0.08)', borderRadius: 3, overflow: 'hidden' }}>
+                      <div style={{ height: '100%', width: `${Math.round((r.value / stats.users.total) * 100)}%`, background: r.color, borderRadius: 3 }} />
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
-        ))}
+        </div>
+
+        {/* Progress Fill Rates */}
+        <div style={{
+          background: 'rgba(15,23,42,0.7)', border: '1px solid rgba(255,255,255,0.08)',
+          borderRadius: 18, padding: '20px', backdropFilter: 'blur(12px)',
+          display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+        }}>
+          <div style={{ fontSize: 12, fontWeight: 800, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '.6px', marginBottom: 14 }}>
+            📊 Consortium Capacity &amp; Engagement
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            {[
+              { label:'Event Seat Utilization',   pct:evFill,    color:'#a855f7', count: `${stats.events.totalEnrolled} / ${stats.events.totalCapacity}` },
+              { label:'Training Program Enrolled',pct:trFill,    color:'#f43f5e', count: `${stats.trainings.totalEnrolled} students` },
+              { label:'Member Verification Ratio',pct:memberPct, color:'#3b82f6', count: `${stats.users.member} of ${stats.users.total}` },
+            ].map(b => (
+              <div key={b.label} style={{ background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:12, padding:'12px 14px' }}>
+                <div style={{ display:'flex', justifyContent:'space-between', marginBottom:6 }}>
+                  <span style={{ fontSize:12, color:'rgba(255,255,255,0.7)', fontWeight:600 }}>{b.label}</span>
+                  <span style={{ fontSize:12.5, fontWeight:900, color:'#fff' }}>{Math.min(b.pct, 100)}% <span style={{ color:'rgba(255,255,255,0.4)', fontWeight:400, fontSize:11 }}>({b.count})</span></span>
+                </div>
+                <div style={{ height:6, background:'rgba(255,255,255,0.08)', borderRadius:3, overflow:'hidden' }}>
+                  <div style={{ height:'100%', width:`${Math.min(b.pct, 100)}%`, background:`linear-gradient(90deg,${b.color},${b.color}aa)`, borderRadius:3, transition:'width .8s ease' }} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
-      {/* Renewals */}
+      {/* ── Upcoming Events Live Queue ── */}
+      {events.length > 0 && (
+        <div style={{
+          background: 'rgba(15,23,42,0.7)', border: '1px solid rgba(255,255,255,0.08)',
+          borderRadius: 18, padding: '20px', backdropFilter: 'blur(12px)', marginBottom: 22,
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+            <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', display: 'flex', alignItems: 'center', gap: 7 }}>
+              <span>📅</span> Upcoming Consortium Events Queue
+            </div>
+            <button onClick={() => setTab('events')} style={{ background: 'none', border: 'none', color: '#f97316', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+              Manage all events →
+            </button>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 10 }}>
+            {events.slice(0, 3).map(ev => (
+              <div key={ev.id} style={{
+                background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)',
+                borderRadius: 12, padding: '12px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+              }}>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 3 }}>{ev.title}</div>
+                  <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.5)' }}>📍 {ev.venue} · {ev.date}</div>
+                </div>
+                <span className="ap-badge" style={{ background: 'rgba(168,85,247,0.18)', color: '#c084fc', flexShrink: 0 }}>
+                  {ev.enrolled}/{ev.total}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Expiring Memberships Alert ── */}
       {renewals.length > 0 && (
-        <div style={{ background:'rgba(245,158,11,0.07)', border:'1px solid rgba(245,158,11,0.22)', borderRadius:14, padding:'18px 20px' }}>
-          <div style={{ fontSize:12, fontWeight:800, color:'#fbbf24', marginBottom:14, display:'flex', alignItems:'center', gap:8 }}>
-            ⚠ Memberships Expiring Soon
-            <span style={{ background:'rgba(245,158,11,0.2)', borderRadius:99, padding:'1px 8px', fontSize:12.5 }}>{renewals.length}</span>
+        <div style={{ background:'rgba(245,158,11,0.07)', border:'1px solid rgba(245,158,11,0.22)', borderRadius:16, padding:'18px 20px' }}>
+          <div style={{ fontSize:12.5, fontWeight:800, color:'#fbbf24', marginBottom:12, display:'flex', alignItems:'center', gap:8 }}>
+            <span>⚠️</span> Memberships Expiring Soon
+            <span style={{ background:'rgba(245,158,11,0.2)', borderRadius:99, padding:'1px 8px', fontSize:11.5 }}>{renewals.length}</span>
           </div>
-          {renewals.map(r => (
-            <div key={r.id} style={{ display:'flex', justifyContent:'space-between', fontSize:13, color:'rgba(255,255,255,0.65)', padding:'6px 0', borderBottom:'1px solid rgba(255,255,255,0.05)' }}>
-              <span>{r.name} {r.institution ? `— ${r.institution}` : ''}</span>
-              <span style={{ color:'#fcd34d', fontWeight:700 }}>Due {r.renewal_due}</span>
-            </div>
-          ))}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {renewals.map(r => (
+              <div key={r.id} style={{ display:'flex', justifyContent:'space-between', fontSize:13, color:'rgba(255,255,255,0.7)', padding:'6px 0', borderBottom:'1px solid rgba(255,255,255,0.05)' }}>
+                <span>{r.name} {r.institution ? `— ${r.institution}` : ''}</span>
+                <span style={{ color:'#fcd34d', fontWeight:700 }}>Due {r.renewal_due}</span>
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>
