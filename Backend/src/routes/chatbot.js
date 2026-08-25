@@ -127,13 +127,23 @@ const KB = [
   },
   {
     intent: 'it332',
-    keywords: ['it332', 'capstone', 'team 40', 'cit-u', 'cebu institute', 'school project', 'who made this', 'who built this', 'who created this', 'who developed this', 'who made the portal', 'who built the portal', 'who created the portal', 'who built', 'who made', 'who created', 'project creator', 'developer'],
-    reply: 'The DASIG Portal is the IT332 Capstone Project of Team 40 at CIT-U (Cebu Institute of Technology — University). It demonstrates enterprise-grade software engineering: NLP chatbot, role-based access control, Supabase backend, React frontend, and RESTful API design.',
+    keywords: ['it332', 'it411', 'it412', 'capstone', 'capstone project', 'team 40', 'cit-u', 'cebu institute', 'school project', 'who made this', 'who built this', 'who created this', 'who developed this', 'who made the portal', 'who built the portal', 'who created the portal', 'who built', 'who made', 'who created', 'project creator', 'developer', 'authors', 'thesis'],
+    reply: 'The DASIG Portal is developed by Team 40 at Cebu Institute of Technology – University (CIT-U) for IT411/IT332 Capstone Research. It features an end-to-end enterprise architecture: Haribon NLP engine, role-based access control (RBAC), Supabase PostgreSQL backend, React 19 SPA frontend, and full RESTful API design.',
+  },
+  {
+    intent: 'nlp_algorithm',
+    keywords: ['nlp algorithm', 'how does the ai work', 'ai model', 'nlp model', 'how does haribon work', 'machine learning', 'natural language processing', 'accuracy rate', 'intent recognition', 'levenshtein'],
+    reply: 'Haribon AI utilizes a Multi-Keyword Scored NLP Classification Algorithm with Word-Boundary Regex Tokenization and Levenshtein Distance Typo Tolerance. It dynamically queries live Supabase tables for real-time events, funding, and training records, targeting 80%+ intent recognition accuracy.',
+  },
+  {
+    intent: 'calendar_sync',
+    keywords: ['calendar', 'export calendar', 'ics', 'google calendar', 'apple calendar', 'conflict', 'schedule conflict', 'calendar sync', 'add to calendar'],
+    reply: 'The DASIG Portal includes FullCalendar integration and automatic schedule conflict detection. When registering for events, the system warns you of overlapping schedules and allows you to download .ICS calendar event files directly to Google Calendar or Apple Calendar.',
   },
   {
     intent: 'summit',
     keywords: ['summit', 'annual summit', 'dasig summit', '2026 summit', 'consortium summit'],
-    reply: 'The DASIG Annual Summit 2026 registration is now open! The summit gathers all six Region VII institutions for a three-day innovation forum, research showcase, and networking event in Cebu City. Register through the Events module.',
+    reply: 'The DASIG Annual Summit 2026 registration is now open! The summit gathers all Region VII institutions for a three-day innovation forum, research showcase, and networking event in Cebu City. Register through the Events module.',
   },
   {
     intent: 'logout',
@@ -297,7 +307,9 @@ const FOLLOWUPS = {
   consortium_history:   ['Who are the six consortium members?', 'What is in the DASIG portal?', 'How do I join DASIG?'],
   region_7:             ['Who are the six consortium members?', 'What events are coming up?', 'Tell me about DASIG partnerships'],
   admin_panel:          ['How do I become a DASIG member?', 'What are the two membership tiers?', 'What can DASIG admins manage?'],
-  it332:                ['What is in the DASIG portal?', 'What topics can Haribon answer?', 'What events are coming up?'],
+  it332:                ['How does the AI work?', 'What is in the DASIG portal?', 'What events are coming up?'],
+  nlp_algorithm:        ['Who built the portal?', 'What is the accuracy rate of the AI?', 'What events are coming up?'],
+  calendar_sync:        ['How do I register for an event?', 'What events are coming up?', 'Can I cancel my registration?'],
   logout:               ['How do I sign in to my account?', 'What can guest users access?', 'How do I become a DASIG member?'],
   change_password:      ['How do I sign in to my account?', 'How do I update my profile information?', 'How do I contact the DASIG admin?'],
   update_profile:       ['What is my current membership status?', 'How do I change my password?', 'How do I contact the DASIG admin?'],
