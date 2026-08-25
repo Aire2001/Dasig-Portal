@@ -117,11 +117,12 @@ const NAV_GROUPS = [
 
 /* ─── Shared micro-components ────────────────────────────────────── */
 function DInput({ label, name, value, onChange, type='text', as, opts, required, span }) {
+  const cleanLabel = (label || '').replace(/\s*\*\s*$/, '');
   return (
     <div style={span ? { gridColumn: span } : {}}>
       {as !== 'checkbox' && (
-        <label style={{ display:'block', fontSize:12.5, fontWeight:700, color:'rgba(255,255,255,0.6)', textTransform:'uppercase', letterSpacing:'.4px', marginBottom:5 }}>
-          {label}{required && <span style={{ color:'#f97316' }}> *</span>}
+        <label style={{ display:'block', fontSize:11.5, fontWeight:800, color:'rgba(255,255,255,0.65)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:6 }}>
+          {cleanLabel}{required && <span style={{ color:'#f97316' }}> *</span>}
         </label>
       )}
       {as === 'select' ? (
@@ -131,10 +132,10 @@ function DInput({ label, name, value, onChange, type='text', as, opts, required,
       ) : as === 'textarea' ? (
         <textarea name={name} value={value} onChange={onChange} rows={3} className="ap-input" style={{ resize:'vertical' }} />
       ) : as === 'checkbox' ? (
-        <label style={{ display:'flex', alignItems:'center', gap:8, cursor:'pointer', paddingTop:4 }}>
+        <label style={{ display:'flex', alignItems:'center', gap:8, cursor:'pointer', paddingTop:6 }}>
           <input type="checkbox" name={name} checked={value} onChange={onChange}
             style={{ width:16, height:16, accentColor:'#f97316', cursor:'pointer' }} />
-          <span style={{ fontSize:13, color:'rgba(255,255,255,0.65)', fontWeight:600 }}>{label}</span>
+          <span style={{ fontSize:13, color:'rgba(255,255,255,0.75)', fontWeight:700 }}>{cleanLabel}</span>
         </label>
       ) : (
         <input type={type} name={name} value={value} onChange={onChange} className="ap-input" />
@@ -146,24 +147,23 @@ function DInput({ label, name, value, onChange, type='text', as, opts, required,
 function Modal({ title, onClose, children, wide }) {
   return (
     <div onClick={onClose} style={{
-      position:'fixed', inset:0, background:'rgba(0,0,0,0.72)', zIndex:9100,
+      position:'fixed', inset:0, background:'rgba(0,0,0,0.85)', zIndex:99999,
       display:'flex', alignItems:'center', justifyContent:'center',
-      padding:24, animation:'fadeIn .16s ease', overflowY:'auto',
+      padding:'32px 20px', overflowY:'auto',
     }}>
       <div onClick={e => e.stopPropagation()} style={{
-        background:'#0f1629', border:'1px solid rgba(255,255,255,0.1)',
+        background:'#0d1424', border:'1px solid rgba(255,255,255,0.14)',
         borderRadius:20, width:'100%', maxWidth: wide ? 680 : 500,
-        boxShadow:'0 40px 100px rgba(0,0,0,0.8)',
-        animation:'modalIn .22s cubic-bezier(.34,1.3,.64,1)',
-        maxHeight:'92vh', overflowY:'auto', margin:'auto',
+        boxShadow:'0 30px 90px rgba(0,0,0,0.9), 0 0 0 1px rgba(255,255,255,0.06)',
+        maxHeight:'88vh', overflowY:'auto', margin:'auto',
       }}>
         <div style={{
-          padding:'20px 24px 18px', borderBottom:'1px solid rgba(255,255,255,0.08)',
+          padding:'18px 24px', borderBottom:'1px solid rgba(255,255,255,0.08)',
           display:'flex', justifyContent:'space-between', alignItems:'center',
-          position:'sticky', top:0, background:'#0f1629', zIndex:1,
+          position:'sticky', top:0, background:'#0d1424', zIndex:10,
         }}>
-          <h3 style={{ color:'#fff', fontWeight:800, fontSize:16, margin:0 }}>{title}</h3>
-          <button onClick={onClose} className="ap-btn ap-btn-ghost" style={{ width:32, height:32, padding:0, borderRadius:8, fontSize:14 }}>✕</button>
+          <h3 style={{ color:'#fff', fontWeight:900, fontSize:16, margin:0, letterSpacing:'-0.3px' }}>{title}</h3>
+          <button onClick={onClose} className="ap-btn ap-btn-ghost" style={{ width:32, height:32, padding:0, borderRadius:8, fontSize:14, cursor:'pointer' }}>✕</button>
         </div>
         <div style={{ padding:'22px 24px 26px' }}>{children}</div>
       </div>
@@ -1484,25 +1484,37 @@ function NewsTab({ showToast }) {
       />
       {confirm && <ConfirmModal msg={`Delete "${confirm.title}"?`} onConfirm={() => del(confirm.id, confirm.title)} onCancel={() => setConfirm(null)} />}
       {modal && (
-        <Modal title={modal === 'create' ? 'Publish Article' : 'Edit Article'} onClose={() => setModal(null)} wide>
+        <Modal title={modal === 'create' ? 'Publish News Article' : 'Edit News Article'} onClose={() => setModal(null)} wide>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
-            <DInput label="Title *" name="title" value={form.title} onChange={fc} required span="1/-1" />
+            <DInput label="Title" name="title" value={form.title} onChange={fc} required span="1/-1" />
+            
             {/* Custom Badge Dropdown */}
             <div>
-              <label style={{ display:'block', fontSize:11, fontWeight:700, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:5 }}>Badge</label>
-              <BadgeDropdown value={form.badge} onChange={val => setForm(p => ({ ...p, badge: val }))} />
+              <label style={{ display:'block', fontSize:11.5, fontWeight:800, color:'rgba(255,255,255,0.65)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:6 }}>
+                Category / Badge <span style={{ color:'#f97316' }}>*</span>
+              </label>
+              <BadgeDropdown value={form.badge} onChange={val => {
+                const bObj = BADGE_OPTIONS.find(b => b.value === val);
+                setForm(p => ({ ...p, badge: val, icon: bObj?.icon || p.icon }));
+              }} />
             </div>
-            <DInput label="Date *" name="date" value={form.date} onChange={fc} type="date" required />
-            <DInput label="Icon (emoji)" name="icon" value={form.icon} onChange={fc} />
-            <DInput label="Members Only" name="members_only" value={form.members_only} onChange={fc} as="checkbox" />
+
+            <DInput label="Publish Date" name="date" value={form.date} onChange={fc} type="date" required />
+
+            <div style={{ gridColumn:'1/-1', background:'rgba(255,255,255,0.025)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:12, padding:'10px 14px' }}>
+              <DInput label="Restricted Access" name="members_only" value={form.members_only} onChange={fc} as="checkbox" />
+              <div style={{ fontSize:11.5, color:'rgba(255,255,255,0.4)', marginTop:2, marginLeft:24 }}>
+                Only verified Consortium HEI members can access this article content.
+              </div>
+            </div>
 
             {/* ── Article cover image ── */}
             <div style={{ gridColumn:'1/-1' }}>
-              <label style={{ display:'block', fontSize:12.5, fontWeight:700, color:'rgba(255,255,255,0.6)', textTransform:'uppercase', letterSpacing:'.4px', marginBottom:8 }}>
-                Cover Image <span style={{ color:'rgba(255,255,255,0.25)', fontWeight:400, textTransform:'none' }}>(recommended: 1200×630px)</span>
+              <label style={{ display:'block', fontSize:11.5, fontWeight:800, color:'rgba(255,255,255,0.65)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:6 }}>
+                Cover Image <span style={{ color:'rgba(255,255,255,0.3)', fontWeight:400, textTransform:'none' }}>(recommended: 1200×630px)</span>
               </label>
               {form.image_url ? (
-                <div style={{ position:'relative', borderRadius:10, overflow:'hidden', marginBottom:8 }}>
+                <div style={{ position:'relative', borderRadius:12, overflow:'hidden', marginBottom:8, border:'1px solid rgba(255,255,255,0.1)' }}>
                   <img src={form.image_url} alt="cover" style={{ width:'100%', height:180, objectFit:'cover', display:'block' }} />
                   <div style={{ position:'absolute', inset:0, background:'linear-gradient(to bottom, rgba(0,0,0,0) 50%, rgba(0,0,0,0.7) 100%)' }} />
                   <div style={{ position:'absolute', bottom:10, right:10, display:'flex', gap:8 }}>
@@ -1517,26 +1529,26 @@ function NewsTab({ showToast }) {
               ) : (
                 <label htmlFor="news-img-upload" style={{
                   display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center',
-                  gap:8, height:140, borderRadius:10, cursor:'pointer',
-                  border:'2px dashed rgba(255,255,255,0.15)', background:'rgba(255,255,255,0.03)',
+                  gap:8, height:130, borderRadius:12, cursor:'pointer',
+                  border:'2px dashed rgba(255,255,255,0.15)', background:'rgba(255,255,255,0.02)',
                   transition:'all .15s',
                 }}
                 onMouseEnter={e => { e.currentTarget.style.borderColor='rgba(249,115,22,0.5)'; e.currentTarget.style.background='rgba(249,115,22,0.04)'; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor='rgba(255,255,255,0.15)'; e.currentTarget.style.background='rgba(255,255,255,0.03)'; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor='rgba(255,255,255,0.15)'; e.currentTarget.style.background='rgba(255,255,255,0.02)'; }}
                 >
-                  <span style={{ fontSize:32 }}>{imgUploading ? '⏳' : '🖼'}</span>
-                  <span style={{ fontSize:13, fontWeight:700, color:'rgba(255,255,255,0.55)' }}>
+                  <span style={{ fontSize:28 }}>{imgUploading ? '⏳' : '🖼'}</span>
+                  <span style={{ fontSize:13, fontWeight:700, color:'rgba(255,255,255,0.65)' }}>
                     {imgUploading ? 'Processing image…' : 'Click to upload cover photo'}
                   </span>
-                  <span style={{ fontSize:13, color:'rgba(255,255,255,0.3)' }}>JPG, PNG, WebP — max 10 MB</span>
+                  <span style={{ fontSize:12, color:'rgba(255,255,255,0.35)' }}>JPG, PNG, WebP — max 10 MB</span>
                 </label>
               )}
               <input id="news-img-upload" type="file" accept="image/*" onChange={handleImageUpload} style={{ display:'none' }} />
               <input id="news-img-replace" type="file" accept="image/*" onChange={handleImageUpload} style={{ display:'none' }} />
             </div>
 
-            <DInput label="Excerpt" name="excerpt" value={form.excerpt} onChange={fc} as="textarea" span="1/-1" />
-            <DInput label="Full Content" name="content" value={form.content} onChange={fc} as="textarea" span="1/-1" />
+            <DInput label="Excerpt Summary" name="excerpt" value={form.excerpt} onChange={fc} as="textarea" span="1/-1" />
+            <DInput label="Full Article Content" name="content" value={form.content} onChange={fc} as="textarea" span="1/-1" />
           </div>
           <FormActions onCancel={() => setModal(null)} onSave={save} saving={saving} saveLabel={modal === 'create' ? 'Publish Article' : 'Save Changes'} />
         </Modal>
