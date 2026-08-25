@@ -91,11 +91,49 @@ export default function Nav() {
   const [welcome, setWelcome] = useState(null);   // {name, role} | null
   const welcomeTimer = useRef(null);
 
-  const notifications = [
-    { id: 1, title: 'Regional AI Summit 2026', msg: 'Registration slots are currently open.', time: '10m ago', unread: true, path: '/programs?tab=events' },
-    { id: 2, title: 'DOST SETUP Grant Opportunity', msg: 'Funding call open for Region VII HEIs.', time: '2h ago', unread: true, path: '/funding' },
-    { id: 3, title: 'Membership Status Active', msg: 'Consortium access verified for all 9 modules.', time: '1d ago', unread: false, path: '/membership' },
+  const DEFAULT_NOTIFS = [
+    { id: 1, title: 'Regional AI Summit 2026', msg: 'Registration slots are currently open.', time: '10m ago', unread: true, path: '/programs?tab=events', category: 'Summit' },
+    { id: 2, title: 'DOST SETUP Grant Opportunity', msg: 'Funding call open for Region VII HEIs.', time: '2h ago', unread: true, path: '/funding', category: 'Grant' },
+    { id: 3, title: 'Membership Status Active', msg: 'Consortium access verified for all 9 modules.', time: '1d ago', unread: false, path: '/membership', category: 'Member' },
+    { id: 4, title: 'CIT-U Research Innovation Forum', msg: 'Call for papers submitted for review.', time: '2d ago', unread: false, path: '/programs?tab=events', category: 'Research' },
   ];
+
+  const [notifList, setNotifList] = useState(() => {
+    try {
+      const saved = localStorage.getItem('dasig_notifications');
+      return saved ? JSON.parse(saved) : DEFAULT_NOTIFS;
+    } catch {
+      return DEFAULT_NOTIFS;
+    }
+  });
+  const [notifFilter, setNotifFilter] = useState('all'); // 'all' | 'unread'
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('dasig_notifications', JSON.stringify(notifList));
+    } catch {}
+  }, [notifList]);
+
+  const unreadCount = notifList.filter(n => n.unread).length;
+
+  function markAllRead() {
+    setNotifList(prev => prev.map(n => ({ ...n, unread: false })));
+  }
+
+  function markAllUnread() {
+    setNotifList(prev => prev.map(n => ({ ...n, unread: true })));
+  }
+
+  function toggleNotif(id, e) {
+    e.stopPropagation();
+    setNotifList(prev => prev.map(n => n.id === id ? { ...n, unread: !n.unread } : n));
+  }
+
+  function handleNotifClick(n) {
+    setNotifList(prev => prev.map(item => item.id === n.id ? { ...item, unread: false } : item));
+    navigate(n.path);
+    setNotifOpen(false);
+  }
 
   useEffect(() => {
     function handleClick(e) {
@@ -465,47 +503,155 @@ export default function Nav() {
                 title="Notifications"
               >
                 🔔
-                <span style={{
-                  position: 'absolute', top: -2, right: -2,
-                  width: 8, height: 8, borderRadius: '50%',
-                  background: '#f97316',
-                  boxShadow: '0 0 8px #f97316',
-                }} />
+                {unreadCount > 0 && (
+                  <span style={{
+                    position: 'absolute', top: -2, right: -2,
+                    width: 8, height: 8, borderRadius: '50%',
+                    background: '#f97316',
+                    boxShadow: '0 0 8px #f97316',
+                  }} />
+                )}
               </button>
 
               {notifOpen && (
                 <div style={{
                   position: 'absolute', top: 'calc(100% + 10px)', right: 0,
-                  background: '#0d1424', border: '1px solid rgba(255,255,255,0.14)',
-                  borderRadius: 16, width: 300, padding: '12px 14px',
-                  boxShadow: '0 20px 60px rgba(0,0,0,0.85)',
+                  background: 'rgba(10, 16, 32, 0.96)',
+                  backdropFilter: 'blur(24px)',
+                  border: '1px solid rgba(255,255,255,0.14)',
+                  borderRadius: 18, width: 330, padding: '14px',
+                  boxShadow: '0 24px 60px rgba(0,0,0,0.85), 0 0 0 1px rgba(249,115,22,0.1)',
                   zIndex: 9999, animation: 'dropIn 0.18s ease',
                 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, paddingBottom: 6, borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                    <span style={{ fontSize: 12.5, fontWeight: 800, color: '#fff' }}>🔔 Notifications</span>
-                    <span style={{ fontSize: 10.5, color: '#f97316', fontWeight: 700 }}>2 new</span>
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    {notifications.map(n => (
-                      <div
-                        key={n.id}
-                        onClick={() => { navigate(n.path); setNotifOpen(false); }}
+                  {/* Header */}
+                  <div style={{
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                    marginBottom: 10, paddingBottom: 8, borderBottom: '1px solid rgba(255,255,255,0.08)',
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span style={{ fontSize: 13, fontWeight: 900, color: '#fff' }}>🔔 Notifications</span>
+                      <span style={{
+                        fontSize: 10.5, fontWeight: 800,
+                        background: unreadCount > 0 ? 'rgba(249,115,22,0.2)' : 'rgba(255,255,255,0.06)',
+                        color: unreadCount > 0 ? '#fb923c' : 'rgba(255,255,255,0.4)',
+                        padding: '1px 7px', borderRadius: 99,
+                      }}>
+                        {unreadCount > 0 ? `${unreadCount} new` : 'Caught up'}
+                      </span>
+                    </div>
+                    {unreadCount > 0 ? (
+                      <button
+                        onClick={markAllRead}
                         style={{
-                          background: n.unread ? 'rgba(249,115,22,0.08)' : 'rgba(255,255,255,0.03)',
-                          border: `1px solid ${n.unread ? 'rgba(249,115,22,0.2)' : 'rgba(255,255,255,0.05)'}`,
-                          borderRadius: 10, padding: '9px 10px',
-                          cursor: 'pointer', transition: 'background .12s',
+                          background: 'none', border: 'none', color: '#f97316',
+                          fontSize: 11.5, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit',
+                          padding: '2px 6px', borderRadius: 6, transition: 'all .14s',
                         }}
-                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
-                        onMouseLeave={e => e.currentTarget.style.background = n.unread ? 'rgba(249,115,22,0.08)' : 'rgba(255,255,255,0.03)'}
+                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(249,115,22,0.15)'}
+                        onMouseLeave={e => e.currentTarget.style.background = 'none'}
                       >
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 2 }}>
-                          <span style={{ fontSize: 12, fontWeight: 800, color: '#fff' }}>{n.title}</span>
-                          <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)' }}>{n.time}</span>
-                        </div>
-                        <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.5)', lineHeight: 1.4 }}>{n.msg}</div>
-                      </div>
+                        Mark all read ✓
+                      </button>
+                    ) : (
+                      <button
+                        onClick={markAllUnread}
+                        style={{
+                          background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)',
+                          fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+                          padding: '2px 6px', borderRadius: 6, transition: 'all .14s',
+                        }}
+                        onMouseEnter={e => e.currentTarget.style.color = '#fff'}
+                        onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.5)'}
+                      >
+                        Mark all unread ↺
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Filter Pills */}
+                  <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
+                    {[
+                      { key: 'all', label: `All (${notifList.length})` },
+                      { key: 'unread', label: `Unread (${unreadCount})` },
+                    ].map(f => (
+                      <button
+                        key={f.key}
+                        onClick={() => setNotifFilter(f.key)}
+                        style={{
+                          background: notifFilter === f.key ? 'rgba(249,115,22,0.18)' : 'rgba(255,255,255,0.04)',
+                          border: `1px solid ${notifFilter === f.key ? 'rgba(249,115,22,0.4)' : 'rgba(255,255,255,0.08)'}`,
+                          color: notifFilter === f.key ? '#f97316' : 'rgba(255,255,255,0.6)',
+                          borderRadius: 8, padding: '3px 10px', fontSize: 11, fontWeight: 700,
+                          cursor: 'pointer', fontFamily: 'inherit', transition: 'all .12s',
+                        }}
+                      >
+                        {f.label}
+                      </button>
                     ))}
+                  </div>
+
+                  {/* List */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 320, overflowY: 'auto' }}>
+                    {notifList
+                      .filter(n => notifFilter === 'all' || n.unread)
+                      .map(n => (
+                        <div
+                          key={n.id}
+                          onClick={() => handleNotifClick(n)}
+                          style={{
+                            background: n.unread ? 'rgba(249,115,22,0.08)' : 'rgba(255,255,255,0.025)',
+                            border: `1px solid ${n.unread ? 'rgba(249,115,22,0.22)' : 'rgba(255,255,255,0.05)'}`,
+                            borderRadius: 12, padding: '10px 12px',
+                            cursor: 'pointer', transition: 'all .14s',
+                            position: 'relative',
+                          }}
+                          onMouseEnter={e => {
+                            e.currentTarget.style.background = 'rgba(255,255,255,0.07)';
+                            e.currentTarget.style.borderColor = 'rgba(249,115,22,0.4)';
+                          }}
+                          onMouseLeave={e => {
+                            e.currentTarget.style.background = n.unread ? 'rgba(249,115,22,0.08)' : 'rgba(255,255,255,0.025)';
+                            e.currentTarget.style.borderColor = n.unread ? 'rgba(249,115,22,0.22)' : 'rgba(255,255,255,0.05)';
+                          }}
+                        >
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 3 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                              {n.unread && (
+                                <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#f97316', boxShadow: '0 0 6px #f97316', flexShrink: 0 }} />
+                              )}
+                              <span style={{ fontSize: 12.5, fontWeight: n.unread ? 800 : 700, color: n.unread ? '#fff' : 'rgba(255,255,255,0.75)' }}>
+                                {n.title}
+                              </span>
+                            </div>
+                            <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', flexShrink: 0 }}>{n.time}</span>
+                          </div>
+                          <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.5)', lineHeight: 1.45, marginBottom: 4 }}>
+                            {n.msg}
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid rgba(255,255,255,0.04)', paddingTop: 4, marginTop: 4 }}>
+                            <span style={{ fontSize: 10, color: 'rgba(249,115,22,0.8)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.4px' }}>
+                              {n.category || 'Update'}
+                            </span>
+                            <button
+                              onClick={(e) => toggleNotif(n.id, e)}
+                              style={{
+                                background: 'none', border: 'none',
+                                color: 'rgba(255,255,255,0.4)', fontSize: 10.5, fontWeight: 700,
+                                cursor: 'pointer', fontFamily: 'inherit', padding: '1px 4px',
+                              }}
+                              onMouseEnter={e => e.currentTarget.style.color = '#f97316'}
+                              onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.4)'}
+                            >
+                              {n.unread ? 'Mark read' : 'Mark unread'}
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    {notifList.filter(n => notifFilter === 'all' || n.unread).length === 0 && (
+                      <div style={{ textAlign: 'center', padding: '24px 0', color: 'rgba(255,255,255,0.4)', fontSize: 12.5 }}>
+                        ✨ No unread notifications
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
