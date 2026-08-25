@@ -17,7 +17,14 @@ const contactRoutes     = require('./routes/contact');
 
 const app = express();
 
-app.use(cors({ origin: /^http:\/\/localhost(:\d+)?$/, credentials: true }));
+// Production-ready permissive CORS allowing localhost, Vercel, Netlify, Render, and custom client domains
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow server-to-server, mobile, curl, or any browser origin
+    callback(null, true);
+  },
+  credentials: true,
+}));
 app.use(express.json());
 
 app.use('/api/auth',         authRoutes);
