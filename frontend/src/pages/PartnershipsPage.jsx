@@ -63,7 +63,7 @@ export default function PartnershipsPage() {
   useEffect(() => {
     if (!isMember) { setLoading(false); return; }
     api.partnerships.list({ type: activeType })
-      .then(r => setPartnerships(r.data || []))
+      .then(r => setPartnerships(Array.isArray(r) ? r : (r?.data || [])))
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [isMember, activeType]);

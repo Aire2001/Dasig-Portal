@@ -64,7 +64,7 @@ export default function FundingPage() {
   useEffect(() => {
     if (!isMember) { setLoading(false); return; }
     api.funding.list({ category, status })
-      .then(r => setItems(r.data || []))
+      .then(r => setItems(Array.isArray(r) ? r : (r?.data || [])))
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [isMember, category, status]);

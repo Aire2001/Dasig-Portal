@@ -58,7 +58,7 @@ export default function PoliciesPage() {
   useEffect(() => {
     if (!user) { setLoading(false); return; }
     api.policies.list({ category: active, search })
-      .then(r => setPolicies(r.data || []))
+      .then(r => setPolicies(Array.isArray(r) ? r : (r?.data || [])))
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [user, active, search]);
