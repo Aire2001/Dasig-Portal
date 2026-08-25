@@ -945,8 +945,8 @@ function EventsTab({ user }) {
 
       {/* Registration form */}
       {formModal && (
-        <div onClick={() => !submitting && setFormModal(null)} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.65)', zIndex:9200, display:'flex', alignItems:'center', justifyContent:'center', padding:20, overflowY:'auto' }}>
-          <div onClick={e => e.stopPropagation()} style={{ background:'linear-gradient(180deg,#0f172a,#020817)', borderRadius:22, maxWidth:'min(480px,calc(100vw - 32px))', width:'100%', position:'relative', border:'1px solid rgba(255,255,255,0.1)', animation:'modalIn .24s cubic-bezier(.34,1.56,.64,1)', margin:'auto' }}>
+        <div onClick={() => !submitting && setFormModal(null)} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.85)', zIndex:999999, display:'flex', alignItems:'center', justifyContent:'center', padding:'72px 20px 36px', overflowY:'auto', backdropFilter:'blur(10px)' }}>
+          <div onClick={e => e.stopPropagation()} style={{ background:'linear-gradient(180deg,#0f172a,#020817)', borderRadius:22, maxWidth:'min(480px,calc(100vw - 32px))', width:'100%', position:'relative', border:'1px solid rgba(255,255,255,0.1)', maxHeight:'calc(100vh - 90px)', margin:'auto' }}>
             <div style={{ background: grad(formModal), padding:'22px 24px 18px', position:'relative' }}>
               <button onClick={() => setFormModal(null)} style={{ position:'absolute', top:14, right:14, background:'rgba(0,0,0,0.70)', border:'2px solid rgba(255,255,255,0.5)', backdropFilter:'blur(10px)', borderRadius:'50%', width:36, height:36, color:'#fff', fontSize:16, fontWeight:700, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', backdropFilter:'blur(6px)', boxShadow:'0 2px 8px rgba(0,0,0,0.4)' }}>✕</button>
               <div style={{ color:'rgba(255,255,255,0.65)', fontSize:10.5, fontWeight:700, letterSpacing:1, marginBottom:4 }}>EVENT REGISTRATION</div>
@@ -1418,8 +1418,8 @@ function TrainingTab({ user }) {
 
       {/* Enrollment form */}
       {formModal && (
-        <div onClick={() => !submitting && setFormModal(null)} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.65)', zIndex:9200, display:'flex', alignItems:'center', justifyContent:'center', padding:20, overflowY:'auto' }}>
-          <div onClick={e => e.stopPropagation()} style={{ background:'linear-gradient(180deg,#0f172a,#020817)', borderRadius:22, maxWidth:'min(480px,calc(100vw - 32px))', width:'100%', position:'relative', border:'1px solid rgba(255,255,255,0.1)', animation:'modalIn .24s cubic-bezier(.34,1.56,.64,1)', margin:'auto' }}>
+        <div onClick={() => !submitting && setFormModal(null)} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.85)', zIndex:999999, display:'flex', alignItems:'center', justifyContent:'center', padding:'72px 20px 36px', overflowY:'auto', backdropFilter:'blur(10px)' }}>
+          <div onClick={e => e.stopPropagation()} style={{ background:'linear-gradient(180deg,#0f172a,#020817)', borderRadius:22, maxWidth:'min(480px,calc(100vw - 32px))', width:'100%', position:'relative', border:'1px solid rgba(255,255,255,0.1)', maxHeight:'calc(100vh - 90px)', margin:'auto' }}>
             <div style={{ background: ts(formModal).accent, padding:'22px 24px 18px', position:'relative' }}>
               <button onClick={() => setFormModal(null)} style={{ position:'absolute', top:14, right:14, background:'rgba(0,0,0,0.70)', border:'2px solid rgba(255,255,255,0.5)', backdropFilter:'blur(10px)', borderRadius:'50%', width:36, height:36, color:'#fff', fontSize:16, fontWeight:700, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', backdropFilter:'blur(6px)', boxShadow:'0 2px 8px rgba(0,0,0,0.4)' }}>✕</button>
               <div style={{ color:'rgba(255,255,255,0.65)', fontSize:10.5, fontWeight:700, letterSpacing:1, marginBottom:4 }}>PROGRAM REGISTRATION</div>

@@ -175,16 +175,15 @@ export default function MembersPage() {
           const website = selected.website || info?.website;
           return (
             <div onClick={() => setSelected(null)} style={{
-              position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.72)', zIndex: 9100,
-              display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20,
-              animation: 'fadeIn 0.18s ease', backdropFilter: 'blur(4px)', overflowY: 'auto',
+              position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 999999,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '72px 20px 36px',
+              backdropFilter: 'blur(10px)', overflowY: 'auto',
             }}>
               <div onClick={e => e.stopPropagation()} style={{
                 background: '#0d1424', borderRadius: 24, maxWidth: 'min(580px,calc(100vw - 32px))', width: '100%',
-                boxShadow: '0 40px 120px rgba(0,0,0,0.85)',
+                boxShadow: '0 40px 120px rgba(0,0,0,0.95), 0 0 0 1px rgba(255,255,255,0.08)',
                 border: '1px solid rgba(255,255,255,0.1)',
-                animation: 'modalIn 0.26s cubic-bezier(.34,1.3,.64,1)',
-                maxHeight: '92vh', display: 'flex', flexDirection: 'column', margin: 'auto',
+                maxHeight: 'calc(100vh - 90px)', display: 'flex', flexDirection: 'column', margin: 'auto',
                 position: 'relative',
               }}>
                 {/* ── ✕ always-visible close button — outside overflow:hidden ── */}
