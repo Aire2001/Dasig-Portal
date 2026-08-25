@@ -2166,26 +2166,40 @@ function CalendarTab({ user }) {
           <div style={{ display:'flex', alignItems:'center', gap:8, flexWrap:'wrap', marginTop: 10, marginBottom: 14 }}>
             <span style={{ fontSize:12, color:'rgba(255,255,255,0.45)', fontWeight:700 }}>Quick Jump:</span>
             <button
-              onClick={() => jumpToMonthYear(2026, 5)}
+              onClick={() => jumpToMonthYear(2026, 8)}
               style={{
-                background: pickerMonth === 5 && pickerYear === 2026 ? 'linear-gradient(90deg,#f97316,#e11d48)' : 'rgba(255,255,255,0.06)',
-                color: pickerMonth === 5 && pickerYear === 2026 ? '#fff' : 'rgba(255,255,255,0.8)',
-                border: `1px solid ${pickerMonth === 5 && pickerYear === 2026 ? 'transparent' : 'rgba(255,255,255,0.12)'}`,
-                borderRadius: 8, padding: '5px 11px', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+                background: pickerMonth === 8 && pickerYear === 2026 ? 'linear-gradient(90deg,#f97316,#e11d48)' : 'rgba(255,255,255,0.06)',
+                color: pickerMonth === 8 && pickerYear === 2026 ? '#fff' : 'rgba(255,255,255,0.85)',
+                border: `1px solid ${pickerMonth === 8 && pickerYear === 2026 ? 'transparent' : 'rgba(255,255,255,0.12)'}`,
+                borderRadius: 8, padding: '5px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+                transition: 'all .14s',
               }}
             >
-              📅 June 2026 (Summit Month · 5 events)
+              🗓️ September 2026 (Annual Summit Month · 3 events)
             </button>
             <button
-              onClick={() => jumpToMonthYear(2026, 4)}
+              onClick={() => jumpToMonthYear(2026, 9)}
               style={{
-                background: pickerMonth === 4 && pickerYear === 2026 ? 'linear-gradient(90deg,#f97316,#e11d48)' : 'rgba(255,255,255,0.06)',
-                color: pickerMonth === 4 && pickerYear === 2026 ? '#fff' : 'rgba(255,255,255,0.8)',
-                border: `1px solid ${pickerMonth === 4 && pickerYear === 2026 ? 'transparent' : 'rgba(255,255,255,0.12)'}`,
-                borderRadius: 8, padding: '5px 11px', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+                background: pickerMonth === 9 && pickerYear === 2026 ? 'linear-gradient(90deg,#f97316,#e11d48)' : 'rgba(255,255,255,0.06)',
+                color: pickerMonth === 9 && pickerYear === 2026 ? '#fff' : 'rgba(255,255,255,0.85)',
+                border: `1px solid ${pickerMonth === 9 && pickerYear === 2026 ? 'transparent' : 'rgba(255,255,255,0.12)'}`,
+                borderRadius: 8, padding: '5px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+                transition: 'all .14s',
               }}
             >
-              📅 May 2026 (2 events)
+              🗓️ October 2026 (Research Symposium)
+            </button>
+            <button
+              onClick={() => jumpToMonthYear(2026, 10)}
+              style={{
+                background: pickerMonth === 10 && pickerYear === 2026 ? 'linear-gradient(90deg,#f97316,#e11d48)' : 'rgba(255,255,255,0.06)',
+                color: pickerMonth === 10 && pickerYear === 2026 ? '#fff' : 'rgba(255,255,255,0.85)',
+                border: `1px solid ${pickerMonth === 10 && pickerYear === 2026 ? 'transparent' : 'rgba(255,255,255,0.12)'}`,
+                borderRadius: 8, padding: '5px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+                transition: 'all .14s',
+              }}
+            >
+              🗓️ November 2026 (ICT Forum)
             </button>
             <button
               onClick={jumpToToday}
@@ -2193,7 +2207,8 @@ function CalendarTab({ user }) {
                 background: pickerMonth === new Date().getMonth() && pickerYear === new Date().getFullYear() ? 'linear-gradient(90deg,#10b981,#059669)' : 'rgba(255,255,255,0.06)',
                 color: pickerMonth === new Date().getMonth() && pickerYear === new Date().getFullYear() ? '#fff' : 'rgba(255,255,255,0.7)',
                 border: '1px solid rgba(255,255,255,0.12)',
-                borderRadius: 8, padding: '5px 11px', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+                borderRadius: 8, padding: '5px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+                transition: 'all .14s',
               }}
             >
               📍 Today ({MONTH_NAMES[new Date().getMonth()].slice(0,3)} {new Date().getFullYear()})
