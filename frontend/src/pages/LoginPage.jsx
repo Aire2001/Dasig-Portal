@@ -47,19 +47,36 @@ export default function LoginPage() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'linear-gradient(135deg,#000d30 0%,#001845 50%,#0f2252 100%)',
+      background: '#030712',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
-      padding: '24px',
+      padding: '32px 24px',
       position: 'relative', overflow: 'hidden',
     }}>
-      {/* Live particle background */}
-      <ParticleBackground density={50} />
+      {/* Dynamic Ambient Aurora Glows */}
+      <div style={{
+        position: 'absolute', top: '-15%', left: '-10%', width: '55vw', height: '55vw',
+        background: 'radial-gradient(circle, rgba(249,115,22,0.14) 0%, rgba(225,29,72,0.06) 45%, transparent 70%)',
+        filter: 'blur(80px)', pointerEvents: 'none', zIndex: 0,
+      }} />
+      <div style={{
+        position: 'absolute', bottom: '-20%', right: '-10%', width: '60vw', height: '60vw',
+        background: 'radial-gradient(circle, rgba(59,130,246,0.18) 0%, rgba(79,70,229,0.08) 50%, transparent 75%)',
+        filter: 'blur(90px)', pointerEvents: 'none', zIndex: 0,
+      }} />
+      <div style={{
+        position: 'absolute', top: '35%', right: '30%', width: '35vw', height: '35vw',
+        background: 'radial-gradient(circle, rgba(16,185,129,0.08) 0%, transparent 70%)',
+        filter: 'blur(100px)', pointerEvents: 'none', zIndex: 0,
+      }} />
 
-      {/* Grid overlay */}
+      {/* Live subtle particle canvas */}
+      <ParticleBackground density={45} />
+
+      {/* Subtle modern mesh overlay */}
       <div style={{
         position: 'absolute', inset: 0,
-        backgroundImage: 'linear-gradient(rgba(255,255,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.03) 1px,transparent 1px)',
-        backgroundSize: '40px 40px', pointerEvents: 'none', zIndex: 0,
+        backgroundImage: 'radial-gradient(rgba(255,255,255,0.06) 1px, transparent 1px)',
+        backgroundSize: '32px 32px', pointerEvents: 'none', zIndex: 0, opacity: 0.6,
       }} />
 
       {/* ── Dual-Panel Enterprise Gateway Container ── */}
