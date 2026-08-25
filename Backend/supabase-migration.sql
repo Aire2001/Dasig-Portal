@@ -328,7 +328,7 @@ INSERT INTO events (title, date, venue, organizer, category, enrolled, total, de
 VALUES
   (
     'DASIG Annual Summit 2026',
-    'Jun 18–20, 2026',
+    'Sep 18–20, 2026',
     'Cebu City Convention Center',
     'DASIG Consortium', 'Summit', 0, 180,
     'The annual summit gathers all six Region VII consortium institutions for a three-day innovation forum, research showcase, and networking event in Cebu City.',
@@ -336,7 +336,7 @@ VALUES
   ),
   (
     'Advanced Data Analytics Workshop',
-    'Jun 5, 2026',
+    'Sep 28, 2026',
     'Online Zoom',
     'DICT VII', 'Workshop', 0, 40,
     'Hands-on training in data analytics tools and techniques for public sector professionals.',
@@ -344,7 +344,7 @@ VALUES
   ),
   (
     'Governance & Innovation in ASEAN',
-    'May 30, 2026',
+    'Nov 28, 2026',
     'University of San Agustin',
     'USan Agustin', 'Seminar', 0, 60,
     'Regional seminar on governance innovation and ASEAN best practices.',
@@ -352,7 +352,7 @@ VALUES
   ),
   (
     'DOST SEI Scholarship Information Day',
-    'May 27, 2026',
+    'Dec 8, 2026',
     'UP Visayas',
     'DOST Region VII', 'Funding', 0, 100,
     'Information session on DOST SEI scholarship programs for DASIG member institution nominees.',
@@ -362,19 +362,19 @@ VALUES
   -- Register for DASIG Summit first, then try to register for this to see the conflict modal
   (
     'Region VII Research Symposium 2026',
-    'Jun 19–20, 2026',
+    'Sep 19–20, 2026',
     'UP Visayas, Iloilo City',
     'UP Visayas', 'Seminar', 0, 80,
-    'Annual research symposium showcasing faculty and student research outputs across all DASIG member institutions. CONFLICTS with DASIG Annual Summit 2026 (Jun 18-20).',
+    'Annual research symposium showcasing faculty and student research outputs across all DASIG member institutions. CONFLICTS with DASIG Annual Summit 2026 (Sep 18-20).',
     '10:00', '18:00'
   ),
   -- ⚠️ TEST CONFLICT 2 — exact same day + time as Advanced Data Analytics Workshop
   (
     'ICT Innovation Forum 2026',
-    'Jun 5, 2026',
+    'Sep 28, 2026',
     'Cebu Institute of Technology',
     'DICT VII', 'Workshop', 0, 50,
-    'Forum on ICT innovation and digital transformation for public sector organizations. CONFLICTS with Advanced Data Analytics Workshop (Jun 5, 08:00-12:00).',
+    'Forum on ICT innovation and digital transformation for public sector organizations. CONFLICTS with Advanced Data Analytics Workshop (Sep 28, 08:00-12:00).',
     '09:00', '14:00'
   )
 ON CONFLICT (title) DO NOTHING;
