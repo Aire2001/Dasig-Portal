@@ -700,7 +700,7 @@ function EventsTab({ user }) {
   const loadEvents = useCallback((showSpinner = false) => {
     if (showSpinner) setLoading(true);
     api.events.list({ limit: 1000 })
-      .then(r => { setEvents(r.data || []); setLastUp(new Date()); })
+      .then(r => { setEvents(Array.isArray(r) ? r : (r?.data || [])); setLastUp(new Date()); })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
@@ -1677,8 +1677,8 @@ function CalendarTab({ user }) {
       api.events.list({ limit: 1000 }),
       api.training.list({ limit: 1000 }),
     ]).then(([ev, tr]) => {
-      setEvents(ev.data || []);
-      setTrain(tr.data || []);
+      setEvents(Array.isArray(ev) ? ev : (ev?.data || []));
+      setTrain(Array.isArray(tr) ? tr : (tr?.data || []));
     }).catch(() => {}).finally(() => { setLoading(false); setRefreshing(false); });
   }
 
