@@ -467,11 +467,13 @@ router.post('/message', async (req, res) => {
   }
 
   // Log to DB for accuracy tracking (fire-and-forget)
-  supabase.from('chatbot_logs').insert({
-    message: normalized,
-    matched: !!match,
-    intent: match ? match.intent : null,
-  }).then(() => {}).catch(() => {});
+  Promise.resolve(
+    supabase.from('chatbot_logs').insert({
+      message: normalized,
+      matched: !!match,
+      intent: match ? match.intent : null,
+    })
+  ).catch(err => console.warn('[chatbot] Log error:', err.message));
 
   if (!match) {
     // Compute related suggestions for unmatched queries

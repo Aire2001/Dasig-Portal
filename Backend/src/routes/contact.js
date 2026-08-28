@@ -27,7 +27,11 @@ router.post('/', async (req, res) => {
   }
 
   // Always save to DB first (guaranteed delivery)
-  await supabase.from('contact_messages').insert({ name, email, subject, category: category || 'General Inquiry', message }).catch(() => {});
+  try {
+    await supabase.from('contact_messages').insert({ name, email, subject, category: category || 'General Inquiry', message });
+  } catch (err) {
+    console.error('[contact] DB insert error:', err.message);
+  }
 
   // Send non-blocking background emails if SMTP is configured
   if (process.env.SMTP_USER && process.env.SMTP_PASS) {
