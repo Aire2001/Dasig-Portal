@@ -1,14 +1,12 @@
 const express = require('express');
 const supabase = require('../lib/supabase');
-const { verifyToken, requireRole } = require('../middleware/auth');
+const { verifyToken, optionalAuth, requireRole } = require('../middleware/auth');
 
 const router = express.Router();
 
-// GET /api/partnerships — list (MEMBER+ only)
-router.get('/', verifyToken, async (req, res) => {
+// GET /api/partnerships — list (public overview, authenticated members get full details)
+router.get('/', optionalAuth, async (req, res) => {
   const { type, search, page = 1, limit = 100 } = req.query;
-  const isMember = req.user.role === 'MEMBER' || req.user.role === 'ADMIN';
-  if (!isMember) return res.status(403).json({ error: 'Members only' });
 
   let query = supabase.from('partnerships').select('*', { count: 'exact' });
 

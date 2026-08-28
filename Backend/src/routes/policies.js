@@ -1,13 +1,13 @@
 const express = require('express');
 const supabase = require('../lib/supabase');
-const { verifyToken, requireRole } = require('../middleware/auth');
+const { verifyToken, optionalAuth, requireRole } = require('../middleware/auth');
 
 const router = express.Router();
 
 // GET /api/policies — list policies (MEMBER+ full, GUEST sees public only)
-router.get('/', verifyToken, async (req, res) => {
+router.get('/', optionalAuth, async (req, res) => {
   const { category, search, page = 1, limit = 100 } = req.query;
-  const isMember = req.user.role === 'MEMBER' || req.user.role === 'ADMIN';
+  const isMember = req.user && (req.user.role === 'MEMBER' || req.user.role === 'ADMIN');
 
   let query = supabase.from('policies').select('*', { count: 'exact' });
 
