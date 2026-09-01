@@ -470,6 +470,28 @@ export default function ChatbotPage() {
     setTimeout(() => inputRef.current?.focus(), 50);
   }
 
+  function exportTranscript() {
+    if (!messages || messages.length === 0) return;
+    const formatted = messages.map(m => {
+      const speaker = m.from === 'user' ? '👤 User' : '🦅 Haribon AI';
+      const time = m.time ? new Date(m.time).toLocaleString() : '';
+      return `### ${speaker} (${time})\n\n${m.text}\n\n---\n`;
+    }).join('\n');
+
+    const header = `# 🦅 Haribon AI — Conversation Transcript\n**DASIG Regional Academic Consortium (Region VII)**\n*Exported: ${new Date().toLocaleString()}*\n\n---\n\n`;
+    const fullDoc = header + formatted;
+
+    const blob = new Blob([fullDoc], { type: 'text/markdown;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `haribon_transcript_${Date.now()}.md`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
+
   function handleInputChange(e) {
     setInput(e.target.value);
     e.target.style.height = 'auto';
@@ -645,6 +667,11 @@ export default function ChatbotPage() {
                   color: '#fff', cursor: 'pointer', fontFamily: 'inherit',
                   boxShadow: '0 2px 8px rgba(249,115,22,0.35)',
                 }}>＋ New Chat</button>
+                <button onClick={exportTranscript} style={{
+                  background: 'rgba(59,130,246,0.12)', border: '1px solid rgba(59,130,246,0.3)',
+                  borderRadius: 8, padding: '5px 12px', fontSize: 11.5, fontWeight: 700,
+                  color: '#60a5fa', cursor: 'pointer', fontFamily: 'inherit',
+                }} title="Download conversation as Markdown for thesis or validation">📥 Export</button>
                 <button onClick={() => setShowEndConfirm(true)} style={{
                   background: 'rgba(225,29,72,0.08)', border: '1px solid rgba(225,29,72,0.22)',
                   borderRadius: 8, padding: '5px 12px', fontSize: 11.5, fontWeight: 700,
