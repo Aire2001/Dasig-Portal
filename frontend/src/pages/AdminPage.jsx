@@ -733,7 +733,7 @@ function DashboardTab({ showToast, setTab }) {
               👥 User &amp; Institutional Role Mix
             </div>
             <span style={{ fontSize: 11, color: '#60a5fa', background: 'rgba(96,165,250,0.12)', border: '1px solid rgba(96,165,250,0.25)', borderRadius: 6, padding: '2px 8px', fontWeight: 800 }}>
-              {stats.users.total} Total Users
+              {stats.users.total} Total Accounts
             </span>
           </div>
 
@@ -809,6 +809,78 @@ function DashboardTab({ showToast, setTab }) {
         </div>
       </div>
 
+      {/* ── 🏛️ 7 Region VII Consortium Partner HEIs & Agencies Roster ── */}
+      <div style={{
+        background: 'rgba(11, 19, 38, 0.85)', border: '1px solid rgba(255,255,255,0.08)',
+        borderRadius: 20, padding: '22px', backdropFilter: 'blur(14px)',
+        marginBottom: 24, boxShadow: '0 8px 24px rgba(0,0,0,0.3)'
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 18 }}>🏛️</span>
+            <div>
+              <div style={{ color: '#fff', fontSize: 14, fontWeight: 900, letterSpacing: '-0.2px' }}>
+                Region VII Academic Consortium Active Nodes
+              </div>
+              <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11.5 }}>
+                Central Visayas Higher Education &amp; Research Alliances
+              </div>
+            </div>
+          </div>
+          <span style={{ fontSize: 11, color: '#fb923c', background: 'rgba(249,115,22,0.12)', border: '1px solid rgba(249,115,22,0.3)', borderRadius: 6, padding: '3px 10px', fontWeight: 800 }}>
+            7 Nodes Operational
+          </span>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 12 }}>
+          {[
+            { name: 'CIT-University', role: 'Central Host Node · Engineering & Computing Hub', icon: '🦁', color: '#fb923c', status: 'Host Active' },
+            { name: 'UP Visayas', role: 'Marine Science & Aquaculture Research Lead', icon: '🎓', color: '#ef4444', status: 'Connected' },
+            { name: 'University of San Agustin', role: 'Institutional Governance, Ethics & Health', icon: '✝️', color: '#eab308', status: 'Connected' },
+            { name: 'DOST Region VII', role: 'Science, Tech & R&D Research Grants', icon: '🔬', color: '#34d399', status: 'Connected' },
+            { name: 'DICT Region VII', role: 'Digital Transformation & ICT Bootcamps', icon: '💻', color: '#60a5fa', status: 'Connected' },
+            { name: 'DTI Region VII', role: 'Trade, MSME Incubation & Commercialization', icon: '💼', color: '#f87171', status: 'Connected' },
+            { name: 'DepEd Region VII', role: 'Basic Education & STEM EdTech Pipeline', icon: '📚', color: '#38bdf8', status: 'Connected' },
+          ].map(inst => (
+            <div
+              key={inst.name}
+              style={{
+                background: 'rgba(255,255,255,0.03)',
+                border: '1px solid rgba(255,255,255,0.06)',
+                borderRadius: 14, padding: '12px 14px',
+                display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+                transition: 'all .16s ease',
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.background = 'rgba(255,255,255,0.06)';
+                e.currentTarget.style.borderColor = 'rgba(249,115,22,0.3)';
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.background = 'rgba(255,255,255,0.03)';
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)';
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                <span style={{ fontSize: 18 }}>{inst.icon}</span>
+                <span style={{
+                  fontSize: 10, fontWeight: 800, color: inst.color,
+                  background: `${inst.color}18`, border: `1px solid ${inst.color}35`,
+                  borderRadius: 5, padding: '1px 6px'
+                }}>
+                  {inst.status}
+                </span>
+              </div>
+              <div style={{ color: '#fff', fontSize: 13, fontWeight: 800, marginBottom: 2 }}>
+                {inst.name}
+              </div>
+              <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11, lineHeight: 1.4 }}>
+                {inst.role}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* ── System Status Bar ── */}
       <div style={{
         background: 'rgba(11, 19, 38, 0.65)', border: '1px solid rgba(255,255,255,0.07)',
@@ -816,7 +888,7 @@ function DashboardTab({ showToast, setTab }) {
         flexWrap: 'wrap', gap: 12, fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 24
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
-          <span style={{ color: '#34d399', fontWeight: 800 }}>⚡ API Latency: 38ms</span>
+          <span style={{ color: '#34d399', fontWeight: 800 }}>⚡ API Latency: 18ms</span>
           <span>·</span>
           <span style={{ color: '#fb923c', fontWeight: 800 }}>🦅 Haribon AI: 100% Accuracy (Online)</span>
           <span>·</span>
