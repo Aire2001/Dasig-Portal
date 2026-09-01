@@ -1201,6 +1201,8 @@ function EventsTab({ showToast }) {
   const [attnEvent, setAttnEvent] = useState(null);   // event object for attendees modal
   const [attnList, setAttnList]   = useState([]);
   const [attnLoading, setAttnLoading] = useState(false);
+  const [attnFilter, setAttnFilter] = useState('all');
+  const [attnSearch, setAttnSearch] = useState('');
 
   const load = useCallback(() => { setLoading(true); api.events.list({ limit: 1000 }).then(r => setItems(Array.isArray(r) ? r : (r?.data || []))).catch(() => showToast('Failed', false)).finally(() => setLoading(false)); }, []);
   useEffect(load, [load]);
@@ -1210,6 +1212,8 @@ function EventsTab({ showToast }) {
     setAttnEvent(ev);
     setAttnLoading(true);
     setAttnList([]);
+    setAttnFilter('all');
+    setAttnSearch('');
     try {
       const data = await api.events.registrations(ev.id);
       setAttnList(data);
@@ -1249,6 +1253,26 @@ function EventsTab({ showToast }) {
 
   const CAT = { Summit:'#a855f7', Workshop:'#3b82f6', Seminar:'#14b8a6', Funding:'#10b981' };
 
+  // Filtered attendees list
+  const filteredAttn = attnList.filter(r => {
+    const role = (r.users?.role || 'GUEST').toUpperCase();
+    if (attnFilter === 'MEMBER' && role !== 'MEMBER') return false;
+    if (attnFilter === 'GUEST' && role !== 'GUEST') return false;
+    if (attnFilter === 'attended' && !r.attended) return false;
+    if (attnFilter === 'absent' && r.attended) return false;
+    if (attnSearch.trim()) {
+      const q = attnSearch.toLowerCase();
+      const name = (r.users?.name || '').toLowerCase();
+      const email = (r.users?.email || '').toLowerCase();
+      const inst = (r.users?.institution || '').toLowerCase();
+      if (!name.includes(q) && !email.includes(q) && !inst.includes(q)) return false;
+    }
+    return true;
+  });
+
+  const memberCount = attnList.filter(r => (r.users?.role || 'GUEST').toUpperCase() === 'MEMBER').length;
+  const guestCount = attnList.filter(r => (r.users?.role || 'GUEST').toUpperCase() === 'GUEST').length;
+
   return (
     <div>
       <PageHeader title="Events" desc="Create and manage consortium events" action={<AddBtn onClick={() => { setForm(EV_BLANK); setModal('create'); }} />} />
@@ -1257,22 +1281,31 @@ function EventsTab({ showToast }) {
       {/* ── Attendees Modal ── */}
       {attnEvent && (
         <Modal title={`Attendance — ${attnEvent.title}`} onClose={() => { setAttnEvent(null); load(); }} wide>
-          <div style={{ marginBottom:14, display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap:8 }}>
+          {/* Header Summary & Actions */}
+          <div style={{ marginBottom:14, display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap:10 }}>
             <div>
-              <span style={{ fontSize:13, fontWeight:700, color:'#fff' }}>
-                {attnList.filter(r => r.attended).length} attended
-              </span>
-              <span style={{ fontSize:12.5, color:'rgba(255,255,255,0.45)', marginLeft:6 }}>
-                / {attnList.length} registered
-              </span>
+              <div style={{ display:'flex', alignItems:'center', gap:8, flexWrap:'wrap' }}>
+                <span style={{ fontSize:14, fontWeight:800, color:'#fff' }}>
+                  {attnList.filter(r => r.attended).length} Attended
+                </span>
+                <span style={{ fontSize:13, color:'rgba(255,255,255,0.45)' }}>
+                  / {attnList.length} Total Registered
+                </span>
+                <span style={{ fontSize:11, background:'rgba(16,185,129,0.15)', color:'#34d399', border:'1px solid rgba(16,185,129,0.3)', borderRadius:6, padding:'2px 8px', fontWeight:800 }}>
+                  👤 {memberCount} Members
+                </span>
+                <span style={{ fontSize:11, background:'rgba(255,255,255,0.08)', color:'rgba(255,255,255,0.6)', border:'1px solid rgba(255,255,255,0.15)', borderRadius:6, padding:'2px 8px', fontWeight:800 }}>
+                  🌐 {guestCount} Guests
+                </span>
+              </div>
             </div>
             <div style={{ display:'flex', gap:8 }}>
               <button onClick={() => {
                 if (!attnList.length) return;
                 const rows = [
-                  ['Name','Email','Institution','Attended','Registered At'],
+                  ['Name','Email','Role','Institution','Attended','Registered At'],
                   ...attnList.map(r => [
-                    r.users?.name || '', r.users?.email || '', r.users?.institution || '',
+                    r.users?.name || '', r.users?.email || '', (r.users?.role || 'GUEST').toUpperCase(), r.users?.institution || '',
                     r.attended ? 'Yes' : 'No',
                     r.created_at ? new Date(r.created_at).toLocaleDateString('en-PH') : '',
                   ])
@@ -1286,32 +1319,96 @@ function EventsTab({ showToast }) {
               <button onClick={() => reloadAttendees(attnEvent)} className="ap-btn ap-btn-ghost" style={{ fontSize:12.5 }}>↻ Refresh</button>
             </div>
           </div>
-          {attnLoading ? <Loading /> : attnList.length === 0 ? (
-            <div style={{ textAlign:'center', padding:'28px 0', color:'rgba(255,255,255,0.5)', fontSize:13 }}>No registrations yet</div>
-          ) : (
-            <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-              {attnList.map(reg => (
-                <div key={reg.user_id} style={{
-                  display:'flex', alignItems:'center', justifyContent:'space-between',
-                  background:'rgba(255,255,255,0.04)', borderRadius:10,
-                  padding:'10px 14px', border:'1px solid rgba(255,255,255,0.07)',
-                }}>
-                  <div>
-                    <div style={{ fontWeight:700, color:'#fff', fontSize:13 }}>{reg.users?.name}</div>
-                    <div style={{ fontSize:13, color:'rgba(255,255,255,0.4)' }}>{reg.users?.email} · {reg.users?.institution}</div>
-                  </div>
-                  <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-                    {reg.attended
-                      ? <span className="ap-badge" style={{ background:'rgba(16,185,129,0.18)', color:'#6ee7b7' }}>✓ Attended</span>
-                      : <span className="ap-badge" style={{ background:'rgba(255,255,255,0.07)', color:'rgba(255,255,255,0.45)' }}>Absent</span>
-                    }
-                    <button
-                      onClick={() => toggleAttendance(reg, !reg.attended)}
-                      className={`ap-btn ${reg.attended ? 'ap-btn-amber' : 'ap-btn-green'}`}
-                    >{reg.attended ? 'Mark Absent' : 'Mark Attended'}</button>
-                  </div>
-                </div>
+
+          {/* Search & Filter Toolbar */}
+          <div style={{ display:'flex', gap:10, marginBottom:14, flexWrap:'wrap' }}>
+            <input
+              type="text"
+              placeholder="🔍 Search attendee by name, email, institution..."
+              value={attnSearch}
+              onChange={e => setAttnSearch(e.target.value)}
+              className="ap-input"
+              style={{ flex:1, minWidth:200, fontSize:12.5 }}
+            />
+            <div style={{ display:'flex', gap:5, flexWrap:'wrap' }}>
+              {[
+                { id:'all', label:`All (${attnList.length})` },
+                { id:'MEMBER', label:`Members (${memberCount})` },
+                { id:'GUEST', label:`Guests (${guestCount})` },
+                { id:'attended', label:`Attended (${attnList.filter(r => r.attended).length})` },
+                { id:'absent', label:`Absent (${attnList.filter(r => !r.attended).length})` },
+              ].map(f => (
+                <button
+                  key={f.id}
+                  onClick={() => setAttnFilter(f.id)}
+                  style={{
+                    background: attnFilter === f.id ? 'rgba(249,115,22,0.2)' : 'rgba(255,255,255,0.05)',
+                    border: `1px solid ${attnFilter === f.id ? 'rgba(249,115,22,0.45)' : 'rgba(255,255,255,0.1)'}`,
+                    color: attnFilter === f.id ? '#fb923c' : 'rgba(255,255,255,0.7)',
+                    borderRadius:8, padding:'5px 10px', fontSize:11.5, fontWeight:700,
+                    cursor:'pointer', transition:'all .15s'
+                  }}
+                >{f.label}</button>
               ))}
+            </div>
+          </div>
+
+          {attnLoading ? <Loading /> : filteredAttn.length === 0 ? (
+            <div style={{ textAlign:'center', padding:'28px 0', color:'rgba(255,255,255,0.5)', fontSize:13 }}>
+              {attnList.length === 0 ? 'No registrations yet' : 'No attendees match the selected filter'}
+            </div>
+          ) : (
+            <div style={{ display:'flex', flexDirection:'column', gap:8, maxHeight:380, overflowY:'auto', paddingRight:4 }}>
+              {filteredAttn.map(reg => {
+                const userRole = (reg.users?.role || 'GUEST').toUpperCase();
+                const isMember = userRole === 'MEMBER';
+                const isAdmin = userRole === 'ADMIN';
+                return (
+                  <div key={reg.user_id} style={{
+                    display:'flex', alignItems:'center', justifyContent:'space-between',
+                    background:'rgba(255,255,255,0.04)', borderRadius:12,
+                    padding:'10px 14px', border:'1px solid rgba(255,255,255,0.07)',
+                    gap:12
+                  }}>
+                    <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+                      <div style={{
+                        width:34, height:34, borderRadius:10,
+                        background: isMember ? 'linear-gradient(135deg,#059669,#10b981)' : isAdmin ? 'linear-gradient(135deg,#e11d48,#f43f5e)' : 'linear-gradient(135deg,#475569,#64748b)',
+                        display:'flex', alignItems:'center', justifyContent:'center',
+                        fontSize:11.5, fontWeight:900, color:'#fff', flexShrink:0
+                      }}>
+                        {(reg.users?.name || 'U').split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase()}
+                      </div>
+                      <div>
+                        <div style={{ display:'flex', alignItems:'center', gap:7 }}>
+                          <span style={{ fontWeight:700, color:'#fff', fontSize:13.5 }}>{reg.users?.name || 'Unknown User'}</span>
+                          {isMember ? (
+                            <span style={{ background:'rgba(16,185,129,0.18)', color:'#34d399', border:'1px solid rgba(16,185,129,0.3)', borderRadius:5, padding:'1px 6px', fontSize:10, fontWeight:800 }}>👤 Member</span>
+                          ) : isAdmin ? (
+                            <span style={{ background:'rgba(225,29,72,0.18)', color:'#f43f5e', border:'1px solid rgba(225,29,72,0.3)', borderRadius:5, padding:'1px 6px', fontSize:10, fontWeight:800 }}>🛡️ Admin</span>
+                          ) : (
+                            <span style={{ background:'rgba(255,255,255,0.08)', color:'rgba(255,255,255,0.6)', border:'1px solid rgba(255,255,255,0.15)', borderRadius:5, padding:'1px 6px', fontSize:10, fontWeight:800 }}>🌐 Guest</span>
+                          )}
+                        </div>
+                        <div style={{ fontSize:12, color:'rgba(255,255,255,0.45)', marginTop:2 }}>
+                          {reg.users?.email} {reg.users?.institution ? `· ${reg.users?.institution}` : ''}
+                        </div>
+                      </div>
+                    </div>
+                    <div style={{ display:'flex', alignItems:'center', gap:8, flexShrink:0 }}>
+                      {reg.attended
+                        ? <span className="ap-badge" style={{ background:'rgba(16,185,129,0.18)', color:'#6ee7b7' }}>✓ Attended</span>
+                        : <span className="ap-badge" style={{ background:'rgba(255,255,255,0.07)', color:'rgba(255,255,255,0.45)' }}>Absent</span>
+                      }
+                      <button
+                        onClick={() => toggleAttendance(reg, !reg.attended)}
+                        className={`ap-btn ${reg.attended ? 'ap-btn-amber' : 'ap-btn-green'}`}
+                        style={{ fontSize:12, padding:'5px 12px' }}
+                      >{reg.attended ? 'Mark Absent' : 'Mark Attended'}</button>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           )}
           <div style={{ marginTop:16, textAlign:'right' }}>
@@ -1720,6 +1817,8 @@ function TrainingTab({ showToast }) {
   const [enrolEvent, setEnrolEvent] = useState(null);
   const [enrolList, setEnrolList]   = useState([]);
   const [enrolLoading, setEnrolLoading] = useState(false);
+  const [enrolFilter, setEnrolFilter] = useState('all');
+  const [enrolSearch, setEnrolSearch] = useState('');
 
   const load = useCallback(() => { setLoading(true); api.training.list({ limit: 1000 }).then(r => setItems(Array.isArray(r) ? r : (r?.data || []))).catch(() => showToast('Failed', false)).finally(() => setLoading(false)); }, []);
   useEffect(load, [load]);
@@ -1729,6 +1828,8 @@ function TrainingTab({ showToast }) {
     setEnrolEvent(t);
     setEnrolLoading(true);
     setEnrolList([]);
+    setEnrolFilter('all');
+    setEnrolSearch('');
     try { setEnrolList(await api.training.enrollments(t.id)); }
     catch (e) { showToast(e.message, false); }
     finally { setEnrolLoading(false); }
@@ -1753,6 +1854,24 @@ function TrainingTab({ showToast }) {
   const CC = { Technology:'#60a5fa', Research:'#6ee7b7', Leadership:'#fcd34d', Governance:'#c4b5fd' };
   const LC = { Beginner:'#6ee7b7', Intermediate:'#fcd34d', Advanced:'#fca5a5' };
 
+  // Filtered enrollees
+  const filteredEnrollees = enrolList.filter(en => {
+    const role = (en.users?.role || 'GUEST').toUpperCase();
+    if (enrolFilter === 'MEMBER' && role !== 'MEMBER') return false;
+    if (enrolFilter === 'GUEST' && role !== 'GUEST') return false;
+    if (enrolSearch.trim()) {
+      const q = enrolSearch.toLowerCase();
+      const name = (en.users?.name || '').toLowerCase();
+      const email = (en.users?.email || '').toLowerCase();
+      const inst = (en.users?.institution || '').toLowerCase();
+      if (!name.includes(q) && !email.includes(q) && !inst.includes(q)) return false;
+    }
+    return true;
+  });
+
+  const trMemberCount = enrolList.filter(e => (e.users?.role || 'GUEST').toUpperCase() === 'MEMBER').length;
+  const trGuestCount = enrolList.filter(e => (e.users?.role || 'GUEST').toUpperCase() === 'GUEST').length;
+
   return (
     <div>
       <PageHeader title="Training Programs" desc="Manage professional development programs" action={<AddBtn onClick={() => { setForm(TR_BLANK); setModal('create'); }} />} />
@@ -1761,18 +1880,27 @@ function TrainingTab({ showToast }) {
       {/* Enrollments Modal */}
       {enrolEvent && (
         <Modal title={`Enrollments — ${enrolEvent.title}`} onClose={() => { setEnrolEvent(null); load(); }} wide>
-          <div style={{ marginBottom:14, display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap:8 }}>
+          {/* Header Summary & Actions */}
+          <div style={{ marginBottom:14, display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap:10 }}>
             <div>
-              <span style={{ fontSize:13, fontWeight:700, color:'#fff' }}>{enrolList.length} enrolled</span>
-              <span style={{ fontSize:12.5, color:'rgba(255,255,255,0.45)', marginLeft:6 }}>/ {enrolEvent.total} capacity</span>
+              <div style={{ display:'flex', alignItems:'center', gap:8, flexWrap:'wrap' }}>
+                <span style={{ fontSize:14, fontWeight:800, color:'#fff' }}>{enrolList.length} Total Enrolled</span>
+                <span style={{ fontSize:13, color:'rgba(255,255,255,0.45)' }}>/ {enrolEvent.total} Capacity</span>
+                <span style={{ fontSize:11, background:'rgba(16,185,129,0.15)', color:'#34d399', border:'1px solid rgba(16,185,129,0.3)', borderRadius:6, padding:'2px 8px', fontWeight:800 }}>
+                  👤 {trMemberCount} Members
+                </span>
+                <span style={{ fontSize:11, background:'rgba(255,255,255,0.08)', color:'rgba(255,255,255,0.6)', border:'1px solid rgba(255,255,255,0.15)', borderRadius:6, padding:'2px 8px', fontWeight:800 }}>
+                  🌐 {trGuestCount} Guests
+                </span>
+              </div>
             </div>
             <div style={{ display:'flex', gap:8 }}>
               <button onClick={() => {
                 if (!enrolList.length) return;
                 const rows = [
-                  ['Name','Email','Institution','Enrolled At'],
+                  ['Name','Email','Role','Institution','Enrolled At'],
                   ...enrolList.map(en => [
-                    en.users?.name || '', en.users?.email || '', en.users?.institution || '',
+                    en.users?.name || '', en.users?.email || '', (en.users?.role || 'GUEST').toUpperCase(), en.users?.institution || '',
                     en.created_at ? new Date(en.created_at).toLocaleDateString('en-PH') : '',
                   ])
                 ];
@@ -1785,23 +1913,86 @@ function TrainingTab({ showToast }) {
               <button onClick={() => { setEnrolLoading(true); api.training.enrollments(enrolEvent.id).then(setEnrolList).catch(() => {}).finally(() => setEnrolLoading(false)); }} className="ap-btn ap-btn-ghost" style={{ fontSize:12.5 }}>↻ Refresh</button>
             </div>
           </div>
-          {enrolLoading ? <Loading /> : enrolList.length === 0 ? (
-            <div style={{ textAlign:'center', padding:'28px 0', color:'rgba(255,255,255,0.5)', fontSize:13 }}>No enrollments yet</div>
-          ) : (
-            <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-              {enrolList.map(en => (
-                <div key={en.id} style={{
-                  display:'flex', alignItems:'center', justifyContent:'space-between',
-                  background:'rgba(255,255,255,0.04)', borderRadius:10,
-                  padding:'10px 14px', border:'1px solid rgba(255,255,255,0.07)',
-                }}>
-                  <div>
-                    <div style={{ fontWeight:700, color:'#fff', fontSize:13 }}>{en.users?.name}</div>
-                    <div style={{ fontSize:13, color:'rgba(255,255,255,0.4)' }}>{en.users?.email} · {en.users?.institution}</div>
-                  </div>
-                  <span style={{ fontSize:12.5, color:'rgba(255,255,255,0.5)' }}>{new Date(en.created_at).toLocaleDateString()}</span>
-                </div>
+
+          {/* Search & Filter Toolbar */}
+          <div style={{ display:'flex', gap:10, marginBottom:14, flexWrap:'wrap' }}>
+            <input
+              type="text"
+              placeholder="🔍 Search enrolled student by name, email, institution..."
+              value={enrolSearch}
+              onChange={e => setEnrolSearch(e.target.value)}
+              className="ap-input"
+              style={{ flex:1, minWidth:200, fontSize:12.5 }}
+            />
+            <div style={{ display:'flex', gap:5, flexWrap:'wrap' }}>
+              {[
+                { id:'all', label:`All (${enrolList.length})` },
+                { id:'MEMBER', label:`Members (${trMemberCount})` },
+                { id:'GUEST', label:`Guests (${trGuestCount})` },
+              ].map(f => (
+                <button
+                  key={f.id}
+                  onClick={() => setEnrolFilter(f.id)}
+                  style={{
+                    background: enrolFilter === f.id ? 'rgba(249,115,22,0.2)' : 'rgba(255,255,255,0.05)',
+                    border: `1px solid ${enrolFilter === f.id ? 'rgba(249,115,22,0.45)' : 'rgba(255,255,255,0.1)'}`,
+                    color: enrolFilter === f.id ? '#fb923c' : 'rgba(255,255,255,0.7)',
+                    borderRadius:8, padding:'5px 10px', fontSize:11.5, fontWeight:700,
+                    cursor:'pointer', transition:'all .15s'
+                  }}
+                >{f.label}</button>
               ))}
+            </div>
+          </div>
+
+          {enrolLoading ? <Loading /> : filteredEnrollees.length === 0 ? (
+            <div style={{ textAlign:'center', padding:'28px 0', color:'rgba(255,255,255,0.5)', fontSize:13 }}>
+              {enrolList.length === 0 ? 'No enrollments yet' : 'No enrollees match the selected filter'}
+            </div>
+          ) : (
+            <div style={{ display:'flex', flexDirection:'column', gap:8, maxHeight:380, overflowY:'auto', paddingRight:4 }}>
+              {filteredEnrollees.map(en => {
+                const userRole = (en.users?.role || 'GUEST').toUpperCase();
+                const isMember = userRole === 'MEMBER';
+                const isAdmin = userRole === 'ADMIN';
+                return (
+                  <div key={en.id} style={{
+                    display:'flex', alignItems:'center', justifyContent:'space-between',
+                    background:'rgba(255,255,255,0.04)', borderRadius:12,
+                    padding:'10px 14px', border:'1px solid rgba(255,255,255,0.07)',
+                    gap:12
+                  }}>
+                    <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+                      <div style={{
+                        width:34, height:34, borderRadius:10,
+                        background: isMember ? 'linear-gradient(135deg,#059669,#10b981)' : isAdmin ? 'linear-gradient(135deg,#e11d48,#f43f5e)' : 'linear-gradient(135deg,#475569,#64748b)',
+                        display:'flex', alignItems:'center', justifyContent:'center',
+                        fontSize:11.5, fontWeight:900, color:'#fff', flexShrink:0
+                      }}>
+                        {(en.users?.name || 'U').split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase()}
+                      </div>
+                      <div>
+                        <div style={{ display:'flex', alignItems:'center', gap:7 }}>
+                          <span style={{ fontWeight:700, color:'#fff', fontSize:13.5 }}>{en.users?.name || 'Unknown User'}</span>
+                          {isMember ? (
+                            <span style={{ background:'rgba(16,185,129,0.18)', color:'#34d399', border:'1px solid rgba(16,185,129,0.3)', borderRadius:5, padding:'1px 6px', fontSize:10, fontWeight:800 }}>👤 Member</span>
+                          ) : isAdmin ? (
+                            <span style={{ background:'rgba(225,29,72,0.18)', color:'#f43f5e', border:'1px solid rgba(225,29,72,0.3)', borderRadius:5, padding:'1px 6px', fontSize:10, fontWeight:800 }}>🛡️ Admin</span>
+                          ) : (
+                            <span style={{ background:'rgba(255,255,255,0.08)', color:'rgba(255,255,255,0.6)', border:'1px solid rgba(255,255,255,0.15)', borderRadius:5, padding:'1px 6px', fontSize:10, fontWeight:800 }}>🌐 Guest</span>
+                          )}
+                        </div>
+                        <div style={{ fontSize:12, color:'rgba(255,255,255,0.45)', marginTop:2 }}>
+                          {en.users?.email} {en.users?.institution ? `· ${en.users?.institution}` : ''}
+                        </div>
+                      </div>
+                    </div>
+                    <span style={{ fontSize:12, color:'rgba(255,255,255,0.5)', whiteSpace:'nowrap', flexShrink:0 }}>
+                      📅 {en.created_at ? new Date(en.created_at).toLocaleDateString('en-PH') : 'N/A'}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           )}
           <div style={{ marginTop:16, textAlign:'right' }}>

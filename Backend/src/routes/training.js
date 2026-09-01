@@ -140,7 +140,7 @@ router.delete('/:id/enroll', verifyToken, async (req, res) => {
 router.get('/:id/enrollments', verifyToken, requireRole('ADMIN'), async (req, res) => {
   const trainingId = Number(req.params.id);
   const { data, error } = await supabase.from('training_enrollments')
-    .select('id, created_at, user_id, users(name, email, institution)')
+    .select('id, created_at, user_id, users(name, email, institution, role, avatar_url)')
     .eq('training_id', trainingId)
     .order('created_at', { ascending: false });
   if (error) return res.status(500).json({ error: error.message });

@@ -137,7 +137,7 @@ router.delete('/:id/register', verifyToken, async (req, res) => {
 router.get('/:id/registrations', verifyToken, requireRole('ADMIN'), async (req, res) => {
   const eventId = Number(req.params.id);
   const { data, error } = await supabase.from('event_registrations')
-    .select('id, created_at, attended, user_id, users(name, email, institution)')
+    .select('id, created_at, attended, user_id, users(name, email, institution, role, avatar_url)')
     .eq('event_id', eventId)
     .order('created_at', { ascending: false });
   if (error) return res.status(500).json({ error: error.message });
