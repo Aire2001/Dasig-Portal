@@ -114,6 +114,46 @@ const QUICK_CHIPS_BY_ROLE = {
   ],
 };
 
+const CATEGORIZED_CHIPS = {
+  ALL: [
+    { label: '📅 September 2026 Schedule', q: 'What events and trainings are scheduled in September 2026?' },
+    { label: '🏛 CIT-U Host Node Role',   q: 'What is CIT-University\'s role as the Central Host Node?' },
+    { label: '💰 DOST-7 Grants & Funding', q: 'How can academic researchers apply for DOST-7 Grants-In-Aid?' },
+    { label: '🎓 Faculty GenAI Bootcamps',  q: 'What training bootcamps are available for faculty development?' },
+    { label: '👥 Join Consortium',         q: 'How does an institution apply for DASIG membership?' },
+    { label: '🇵🇭 (Bisaya) Mga Events',     q: 'Maayong adlaw! Unsay mga umaabot nga events sa DASIG?' },
+  ],
+  EVENTS: [
+    { label: '📅 September 2026 Schedule', q: 'What events are scheduled in September 2026?' },
+    { label: '🤖 Regional AI Summit 2026', q: 'Tell me about the Regional AI Research & Innovation Summit 2026' },
+    { label: '📝 How to Register',        q: 'How do I register for an upcoming consortium event?' },
+    { label: '📊 Check Seat Capacities',  q: 'How many events are active and what are their capacities?' },
+  ],
+  TRAINING: [
+    { label: '🎓 Faculty Development',     q: 'What faculty training bootcamps are available?' },
+    { label: '🤖 Applied GenAI Course',    q: 'Tell me about the Applied Generative AI & LLM Systems bootcamp' },
+    { label: '📜 Digital Certificates',    q: 'How are Certificates of Completion issued and verified?' },
+    { label: '💻 DICT-7 Technical Tracks', q: 'What ICT and cybersecurity tracks are offered with DICT-7?' },
+  ],
+  GRANTS: [
+    { label: '💰 DOST-7 Grants-In-Aid',   q: 'What are the eligibility requirements for DOST GIA funding?' },
+    { label: '🏢 SETUP Enterprise Grants', q: 'How does the DOST SETUP program assist MSMEs and innovators?' },
+    { label: '🤝 Joint HEI Proposals',    q: 'How do partner universities co-author collaborative research grants?' },
+  ],
+  MEMBERS: [
+    { label: '🏛 CIT-University',          q: 'Tell me about Cebu Institute of Technology – University in DASIG' },
+    { label: '🌊 UP Visayas',              q: 'What is UP Visayas\' specialization in marine science research?' },
+    { label: '🏛 University of San Agustin', q: 'What is University of San Agustin\'s role in consortium governance?' },
+    { label: '📋 Membership Tiers',        q: 'What is the difference between Tier 1 and Tier 2 membership?' },
+  ],
+  DIALECTS: [
+    { label: '🇵🇭 (Bisaya) Mga Kalihokan', q: 'Maayong adlaw! Unsay mga umaabot nga kalihokan sa DASIG karon?' },
+    { label: '🇵🇭 (Bisaya) Unsaon Pag-apil', q: 'Unsaon pag-apil sa DASIG isip bag-ong miyembro?' },
+    { label: '🇵🇭 (Tagalog) Mga Kaganapan', q: 'Magandang araw! May mga paparating bang event sa konsorsyum?' },
+    { label: '🇵🇭 (Tagalog) Pondo ng DOST', q: 'Paano mag-aplay sa DOST research grants para sa unibersidad?' },
+  ],
+};
+
 // Role-based greeting
 function makeInitMsg(user) {
   if (!user) {
@@ -332,6 +372,7 @@ export default function ChatbotPage() {
   const [copied,  setCopied]    = useState(null);  // message index recently copied
   const [listening, setListening] = useState(false);
   const [autoVoicemail, setAutoVoicemail] = useState(false);
+  const [activeCat, setActiveCat] = useState('ALL');
   const recognitionRef = useRef(null);
   const msgsContainerRef              = useRef(null);
 
@@ -1273,14 +1314,37 @@ export default function ChatbotPage() {
                 )}
               </div>
 
-              {/* Quick chips — show until first bot reply arrives */}
+              {/* Quick chips & Category Navigator — show until first bot reply arrives */}
               {!ended && !hasReplied && (
                 <div style={{ padding: '0 24px 14px' }}>
-                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', fontWeight: 700, marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                    Quick questions
+                  {/* Category Pills Bar */}
+                  <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 8, marginBottom: 8 }}>
+                    {[
+                      { id: 'ALL', label: '✨ All Questions' },
+                      { id: 'EVENTS', label: '📅 Events & Dates' },
+                      { id: 'TRAINING', label: '🎓 Bootcamps' },
+                      { id: 'GRANTS', label: '💰 DOST Grants' },
+                      { id: 'MEMBERS', label: '🏛 Partner HEIs' },
+                      { id: 'DIALECTS', label: '🇵🇭 Bisaya / Tagalog' },
+                    ].map(cat => (
+                      <button
+                        key={cat.id}
+                        onClick={() => setActiveCat(cat.id)}
+                        style={{
+                          background: activeCat === cat.id ? 'rgba(249,115,22,0.22)' : 'rgba(255,255,255,0.05)',
+                          border: `1px solid ${activeCat === cat.id ? 'rgba(249,115,22,0.5)' : 'rgba(255,255,255,0.1)'}`,
+                          borderRadius: 20, padding: '4px 12px', fontSize: 11.5, fontWeight: 700,
+                          color: activeCat === cat.id ? '#fb923c' : 'rgba(255,255,255,0.65)',
+                          cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap',
+                          transition: 'all .14s',
+                        }}
+                      >
+                        {cat.label}
+                      </button>
+                    ))}
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px,1fr))', gap: 10 }}>
-                    {quickChips.map(({ label, q }) => (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px,1fr))', gap: 9 }}>
+                    {(CATEGORIZED_CHIPS[activeCat] || CATEGORIZED_CHIPS.ALL).map(({ label, q }) => (
                       <button key={label} className="chip-btn" onClick={() => send(q)} disabled={thinking}>{label}</button>
                     ))}
                   </div>
