@@ -451,6 +451,14 @@ export default function AdminPage() {
     setSearchParams({ tab: t }, { replace: true });
   }
 
+  // React to search param changes (e.g. clicking /admin?tab=events from Home or Command Palette)
+  useEffect(() => {
+    const urlTab = searchParams.get('tab');
+    if (urlTab && VALID_TABS.includes(urlTab)) {
+      setTabState(urlTab);
+    }
+  }, [searchParams]);
+
   useEffect(() => {
     if (!user) { navigate('/login'); return; }
     if (user.role !== 'ADMIN') navigate('/');
