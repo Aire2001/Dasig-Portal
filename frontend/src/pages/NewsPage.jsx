@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import PageHeader from '../components/PageHeader';
 import ParticleBackground from '../components/ParticleBackground';
 import { api } from '../api';
@@ -45,24 +45,30 @@ function readTime(text) {
 // Clean, enterprise styling without exaggerated bouncy animations
 const CSS = `
   .news-card-hover {
-    transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.2s ease, box-shadow 0.2s ease;
   }
   .news-card-hover:hover {
-    transform: translateY(-3px);
-    border-color: rgba(249,115,22,0.45) !important;
-    box-shadow: 0 14px 36px rgba(0,0,0,0.55);
+    transform: translateY(-4px);
+    border-color: rgba(249,115,22,0.5) !important;
+    box-shadow: 0 16px 40px rgba(0,0,0,0.65), 0 0 20px rgba(249,115,22,0.15);
+  }
+  .news-card-hover img {
+    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .news-card-hover:hover img {
+    transform: scale(1.05);
   }
   .filter-pill {
-    border-radius: 9px;
-    padding: 7px 14px;
+    border-radius: 10px;
+    padding: 7px 15px;
     font-size: 12.5px;
     font-weight: 700;
     cursor: pointer;
     font-family: inherit;
-    transition: all 0.12s ease;
+    transition: all 0.15s ease;
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 7px;
   }
   .action-btn-pill {
     display: inline-flex;
@@ -77,12 +83,25 @@ const CSS = `
     color: rgba(255,255,255,0.85);
     cursor: pointer;
     font-family: inherit;
-    transition: all 0.12s ease;
+    transition: all 0.15s ease;
   }
   .action-btn-pill:hover {
     background: rgba(249,115,22,0.2);
     border-color: rgba(249,115,22,0.4);
     color: #f97316;
+  }
+  @keyframes audioWave {
+    0%, 100% { height: 3px; }
+    50%      { height: 14px; }
+  }
+  .news-audio-bar {
+    width: 2.5px;
+    background: #f97316;
+    border-radius: 2px;
+    height: 4px;
+  }
+  .news-audio-bar.active {
+    animation: audioWave 0.7s ease-in-out infinite alternate;
   }
 `;
 
@@ -96,6 +115,8 @@ export default function NewsPage() {
   const [search, setSearch]     = useState('');
   const [selected, setSelected] = useState(null);
   const [minimized, setMinimized] = useState(false);
+  const [readingAudioId, setReadingAudioId] = useState(null);
+  const audioPlayerRef = useRef(null);
   const [bookmarks, setBookmarks] = useState(() => {
     try { return JSON.parse(localStorage.getItem('dasig_bookmarked_news') || '[]'); } catch { return []; }
   });
@@ -106,6 +127,85 @@ export default function NewsPage() {
       localStorage.setItem('dasig_bookmarked_news', JSON.stringify(next));
       return next;
     });
+  }
+
+  function cleanSpeechText(text) {
+    if (!text) return '';
+    return text
+      .replace(/https?:\/\/\S+/gi, '')
+      .replace(/[\*\_\~`#]/g, '')
+      .replace(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '')
+      .replace(/^[•▸\-\*\d+\.]\s*/gm, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  function getBestVoice() {
+    if (!window.speechSynthesis) return null;
+    const voices = window.speechSynthesis.getVoices() || [];
+    const natural = voices.find(v => /natural|neural|online/i.test(v.name) && (/english|en[-_]/i.test(v.lang)));
+    if (natural) return natural;
+    const google = voices.find(v => /google/i.test(v.name) && /en[-_]/i.test(v.lang));
+    if (google) return google;
+    const apple = voices.find(v => /enhanced|premium|samantha|ava|alex/i.test(v.name) && /en[-_]/i.test(v.lang));
+    if (apple) return apple;
+    return voices.find(v => v.lang?.startsWith('en')) || voices[0];
+  }
+
+  async function togglePlayArticleAudio(a) {
+    if (readingAudioId === a.id) {
+      if (audioPlayerRef.current) {
+        audioPlayerRef.current.pause();
+        audioPlayerRef.current = null;
+      }
+      if (window.speechSynthesis) window.speechSynthesis.cancel();
+      setReadingAudioId(null);
+      return;
+    }
+
+    if (audioPlayerRef.current) {
+      audioPlayerRef.current.pause();
+      audioPlayerRef.current = null;
+    }
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
+
+    const fullText = `${a.title}. ${a.excerpt || ''}. ${(a.content || '').slice(0, 800)}`;
+    const clean = cleanSpeechText(fullText);
+    if (!clean) return;
+
+    setReadingAudioId(a.id);
+
+    try {
+      const res = await api.chatbot.tts(clean, 'Adam');
+      const contentType = res.headers?.get('content-type') || '';
+      if (res.ok && contentType.includes('audio/mpeg')) {
+        const blob = await res.blob();
+        const audio = new Audio(URL.createObjectURL(blob));
+        audio.onended = () => { setReadingAudioId(null); audioPlayerRef.current = null; };
+        audio.onerror = () => { fallbackSpeak(a.id, clean); };
+        audioPlayerRef.current = audio;
+        await audio.play();
+        return;
+      }
+    } catch (_) {}
+
+    fallbackSpeak(a.id, clean);
+  }
+
+  function fallbackSpeak(id, clean) {
+    if (!window.speechSynthesis) {
+      setReadingAudioId(null);
+      return;
+    }
+    const utter = new SpeechSynthesisUtterance(clean);
+    const bestVoice = getBestVoice();
+    if (bestVoice) utter.voice = bestVoice;
+    utter.rate = 0.96;
+    utter.pitch = 1.0;
+    utter.onend = () => setReadingAudioId(null);
+    utter.onerror = () => setReadingAudioId(null);
+    setReadingAudioId(id);
+    window.speechSynthesis.speak(utter);
   }
 
   function load(f = filter, s = search) {
@@ -172,7 +272,9 @@ export default function NewsPage() {
             article={selected}
             allArticles={articles}
             isBookmarked={bookmarks.includes(selected.id)}
+            isPlayingAudio={readingAudioId === selected.id}
             onToggleBookmark={() => toggleBookmark(selected.id)}
+            onTogglePlayAudio={() => togglePlayArticleAudio(selected)}
             onSelectArticle={a => { setSelected(a); setMinimized(false); setSearchParams({ id: a.id }, { replace: true }); }}
             onClose={() => { setSelected(null); setMinimized(false); setSearchParams({}, { replace: true }); }}
             onMinimize={() => setMinimized(true)}
@@ -294,13 +396,28 @@ export default function NewsPage() {
               <>
                 {/* ── Featured hero card ── */}
                 {featured && filter === 'All' && (
-                  <FeaturedCard article={featured} isBookmarked={bookmarks.includes(featured.id)} onToggleBookmark={() => toggleBookmark(featured.id)} onOpen={() => openArticle(featured)} />
+                  <FeaturedCard
+                    article={featured}
+                    isBookmarked={bookmarks.includes(featured.id)}
+                    isPlayingAudio={readingAudioId === featured.id}
+                    onToggleBookmark={() => toggleBookmark(featured.id)}
+                    onTogglePlayAudio={() => togglePlayArticleAudio(featured)}
+                    onOpen={() => openArticle(featured)}
+                  />
                 )}
 
                 {/* ── Article grid ── */}
                 <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(320px,1fr))', gap:20, marginTop: filter === 'All' && featured ? 20 : 0 }}>
                   {(filter === 'All' ? rest : displayedArticles).map((a, i) => (
-                    <NewsCard key={a.id} article={a} isBookmarked={bookmarks.includes(a.id)} onToggleBookmark={() => toggleBookmark(a.id)} onOpen={() => openArticle(a)} />
+                    <NewsCard
+                      key={a.id}
+                      article={a}
+                      isBookmarked={bookmarks.includes(a.id)}
+                      isPlayingAudio={readingAudioId === a.id}
+                      onToggleBookmark={() => toggleBookmark(a.id)}
+                      onTogglePlayAudio={() => togglePlayArticleAudio(a)}
+                      onOpen={() => openArticle(a)}
+                    />
                   ))}
                 </div>
               </>
@@ -314,7 +431,7 @@ export default function NewsPage() {
 }
 
 /* ── Featured hero card ── */
-function FeaturedCard({ article: a, isBookmarked, onToggleBookmark, onOpen }) {
+function FeaturedCard({ article: a, isBookmarked, isPlayingAudio, onToggleBookmark, onTogglePlayAudio, onOpen }) {
   const [imgOk, setImgOk] = useState(true);
   const bs = BADGE[a.badge] || B0;
 
@@ -323,48 +440,75 @@ function FeaturedCard({ article: a, isBookmarked, onToggleBookmark, onOpen }) {
       style={{
         borderRadius:18, overflow:'hidden', cursor:'pointer', position:'relative',
         background: '#070d1c',
-        border: '1px solid rgba(255,255,255,0.08)',
-        boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
-        height:340,
+        border: '1px solid rgba(255,255,255,0.12)',
+        boxShadow: '0 12px 36px rgba(0,0,0,0.5)',
+        minHeight:360,
       }}>
       {imgOk
         ? <img src={coverUrl(a)} alt={a.title} onError={() => setImgOk(false)}
-            style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }} />
-        : <div style={{ width:'100%', height:'100%', background: bs.accent }} />
+            style={{ width:'100%', height:'100%', objectFit:'cover', display:'block', position:'absolute', inset:0 }} />
+        : <div style={{ position:'absolute', inset:0, background: bs.accent }} />
       }
-      <div style={{ position:'absolute', inset:0, background:'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.3) 40%, rgba(4,7,18,0.97) 100%)' }} />
+      <div style={{ position:'absolute', inset:0, background:'linear-gradient(to right, rgba(4,7,18,0.95) 0%, rgba(4,7,18,0.85) 45%, rgba(4,7,18,0.35) 100%)' }} />
 
-      {/* FEATURED badge & bookmark */}
-      <div style={{ position:'absolute', top:16, left:18, right:18, display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-        <span style={{ background:'linear-gradient(90deg,#f97316,#e11d48)', color:'#fff', borderRadius:6, padding:'4px 12px', fontSize:11, fontWeight:900, letterSpacing:'0.8px', textTransform:'uppercase' }}>★ Featured Publication</span>
-        <button
-          onClick={(e) => { e.stopPropagation(); onToggleBookmark(); }}
-          title={isBookmarked ? 'Remove bookmark' : 'Bookmark article'}
-          style={{ background:'rgba(0,0,0,0.6)', border:'1px solid rgba(255,255,255,0.2)', borderRadius:'50%', width:34, height:34, color: isBookmarked ? '#f59e0b' : '#fff', fontSize:14, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}
-        >
-          {isBookmarked ? '★' : '☆'}
-        </button>
+      {/* Top Header Tags */}
+      <div style={{ position:'relative', zIndex:2, padding:'20px 24px 0', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+        <span style={{ background:'linear-gradient(90deg,#f97316,#e11d48)', color:'#fff', borderRadius:7, padding:'5px 14px', fontSize:11, fontWeight:900, letterSpacing:'0.8px', textTransform:'uppercase', boxShadow:'0 2px 10px rgba(249,115,22,0.4)' }}>
+          ★ Top Story & Featured
+        </span>
+        <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+          <button
+            onClick={(e) => { e.stopPropagation(); onTogglePlayAudio(); }}
+            title={isPlayingAudio ? 'Pause AI Voice' : 'Listen with Haribon AI Voice'}
+            style={{
+              background: isPlayingAudio ? 'rgba(225,29,72,0.3)' : 'rgba(0,0,0,0.6)',
+              border: `1px solid ${isPlayingAudio ? 'rgba(225,29,72,0.5)' : 'rgba(255,255,255,0.2)'}`,
+              borderRadius: 20, padding: '5px 12px',
+              color: isPlayingAudio ? '#fca5a5' : '#fff',
+              fontSize: 11.5, fontWeight: 800, cursor: 'pointer',
+              display: 'flex', alignItems: 'center', gap: 6, backdropFilter: 'blur(8px)',
+            }}
+          >
+            <span>{isPlayingAudio ? '⏸' : '🎧'}</span>
+            <span>{isPlayingAudio ? 'Playing Audio' : 'Listen (AI Voice)'}</span>
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); onToggleBookmark(); }}
+            title={isBookmarked ? 'Remove bookmark' : 'Bookmark article'}
+            style={{ background:'rgba(0,0,0,0.6)', border:'1px solid rgba(255,255,255,0.2)', borderRadius:'50%', width:34, height:34, color: isBookmarked ? '#f59e0b' : '#fff', fontSize:14, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', backdropFilter:'blur(8px)' }}
+          >
+            {isBookmarked ? '★' : '☆'}
+          </button>
+        </div>
       </div>
 
-      {/* Content bottom */}
-      <div style={{ position:'absolute', bottom:0, left:0, right:0, padding:'20px 24px' }}>
-        <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:10 }}>
+      {/* Content Body */}
+      <div style={{ position:'relative', zIndex:2, padding:'32px 24px 24px', maxWidth: 720 }}>
+        <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:12, flexWrap:'wrap' }}>
           <span style={{ background: bs.bg, color: bs.color, border:`1px solid ${bs.border}`, borderRadius:6, padding:'3px 10px', fontSize:11.5, fontWeight:800 }}>{bs.icon} {a.badge}</span>
-          <span style={{ color:'rgba(255,255,255,0.6)', fontSize:12, fontWeight:600 }}>{fmtDate(a.date)}</span>
-          <span style={{ color:'rgba(255,255,255,0.35)', fontSize:11.5 }}>· {readTime(a.content)}</span>
+          <span style={{ color:'rgba(255,255,255,0.7)', fontSize:12, fontWeight:600 }}>📅 {fmtDate(a.date)}</span>
+          <span style={{ color:'rgba(255,255,255,0.4)', fontSize:12 }}>· ⏱ {readTime(a.content)}</span>
         </div>
-        <h2 style={{ color:'#fff', fontSize:21, fontWeight:900, lineHeight:1.35, margin:'0 0 8px', maxWidth:680 }}>{a.title}</h2>
-        {a.excerpt && <p style={{ color:'rgba(255,255,255,0.65)', fontSize:13, lineHeight:1.6, margin:'0 0 10px', maxWidth:600, display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden' }}>{a.excerpt}</p>}
-        <span style={{ color:'#f97316', fontSize:13, fontWeight:700, display:'flex', alignItems:'center', gap:4 }}>
-          Read full press release <span style={{ fontSize:15 }}>→</span>
-        </span>
+        <h2 style={{ color:'#fff', fontSize:23, fontWeight:900, lineHeight:1.35, margin:'0 0 10px', textShadow:'0 2px 10px rgba(0,0,0,0.6)' }}>
+          {a.title}
+        </h2>
+        {a.excerpt && (
+          <p style={{ color:'rgba(255,255,255,0.75)', fontSize:13.5, lineHeight:1.65, margin:'0 0 16px', display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden' }}>
+            {a.excerpt}
+          </p>
+        )}
+        <div style={{ display:'flex', alignItems:'center', gap:14 }}>
+          <span style={{ color:'#f97316', fontSize:13.5, fontWeight:800, display:'flex', alignItems:'center', gap:5 }}>
+            Read full press release <span style={{ fontSize:16 }}>→</span>
+          </span>
+        </div>
       </div>
     </div>
   );
 }
 
 /* ── Regular news card ── */
-function NewsCard({ article: a, isBookmarked, onToggleBookmark, onOpen }) {
+function NewsCard({ article: a, isBookmarked, isPlayingAudio, onToggleBookmark, onTogglePlayAudio, onOpen }) {
   const [imgOk, setImgOk] = useState(true);
   const bs = BADGE[a.badge] || B0;
 
@@ -392,14 +536,23 @@ function NewsCard({ article: a, isBookmarked, onToggleBookmark, onOpen }) {
           <span style={{ background: bs.bg, color: bs.color, border:`1px solid ${bs.border}`, borderRadius:6, padding:'2.5px 9px', fontSize:11, fontWeight:800 }}>{bs.icon} {a.badge}</span>
         </div>
 
-        {/* Bookmark toggle top-right */}
-        <button
-          onClick={(e) => { e.stopPropagation(); onToggleBookmark(); }}
-          title={isBookmarked ? 'Remove bookmark' : 'Bookmark article'}
-          style={{ position:'absolute', top:10, right:10, background:'rgba(0,0,0,0.6)', border:'1px solid rgba(255,255,255,0.2)', borderRadius:'50%', width:30, height:30, color: isBookmarked ? '#f59e0b' : '#fff', fontSize:13, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}
-        >
-          {isBookmarked ? '★' : '☆'}
-        </button>
+        {/* Action icons top-right */}
+        <div style={{ position:'absolute', top:10, right:10, display:'flex', gap:6 }}>
+          <button
+            onClick={(e) => { e.stopPropagation(); onTogglePlayAudio(); }}
+            title={isPlayingAudio ? 'Stop Audio' : 'Listen with Haribon AI Voice'}
+            style={{ background: isPlayingAudio ? 'rgba(225,29,72,0.85)' : 'rgba(0,0,0,0.6)', border:'1px solid rgba(255,255,255,0.2)', borderRadius:'50%', width:30, height:30, color: '#fff', fontSize:12, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', backdropFilter:'blur(6px)' }}
+          >
+            {isPlayingAudio ? '⏸' : '🎧'}
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); onToggleBookmark(); }}
+            title={isBookmarked ? 'Remove bookmark' : 'Bookmark article'}
+            style={{ background:'rgba(0,0,0,0.6)', border:'1px solid rgba(255,255,255,0.2)', borderRadius:'50%', width:30, height:30, color: isBookmarked ? '#f59e0b' : '#fff', fontSize:13, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', backdropFilter:'blur(6px)' }}
+          >
+            {isBookmarked ? '★' : '☆'}
+          </button>
+        </div>
       </div>
 
       {/* Card body */}
@@ -421,7 +574,7 @@ function NewsCard({ article: a, isBookmarked, onToggleBookmark, onOpen }) {
 }
 
 /* ── Article reader modal ── */
-function ArticleReader({ article: a, allArticles = [], isBookmarked, onToggleBookmark, onSelectArticle, onClose, onMinimize }) {
+function ArticleReader({ article: a, allArticles = [], isBookmarked, isPlayingAudio, onToggleBookmark, onTogglePlayAudio, onSelectArticle, onClose, onMinimize }) {
   const [imgOk, setImgOk] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -671,6 +824,54 @@ function ArticleReader({ article: a, allArticles = [], isBookmarked, onToggleBoo
                 <div style={{ color:'rgba(255,255,255,0.4)', fontSize:11.5 }}>Official Press Release · Region VII, Central Visayas, Philippines</div>
               </div>
               <div style={{ marginLeft:'auto', background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:8, padding:'5px 11px', fontSize:11.5, color:'rgba(255,255,255,0.5)', fontWeight:600 }}>📖 {readTime(a.content)}</div>
+            </div>
+
+            {/* Studio Neural Audio Player Bar */}
+            <div style={{
+              background: isPlayingAudio ? 'linear-gradient(135deg, rgba(225,29,72,0.18) 0%, rgba(249,115,22,0.14) 100%)' : 'linear-gradient(135deg, rgba(249,115,22,0.10) 0%, rgba(30,58,138,0.12) 100%)',
+              border: `1px solid ${isPlayingAudio ? 'rgba(225,29,72,0.45)' : 'rgba(249,115,22,0.25)'}`,
+              borderRadius: 14, padding: '12px 18px', marginBottom: 20,
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 14,
+              boxShadow: '0 4px 16px rgba(0,0,0,0.3)',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <button
+                  onClick={onTogglePlayAudio}
+                  style={{
+                    width: 36, height: 36, borderRadius: '50%',
+                    background: isPlayingAudio ? 'linear-gradient(135deg, #e11d48, #f43f5e)' : 'linear-gradient(135deg, #f97316, #ea580c)',
+                    border: 'none', color: '#fff', fontSize: 13,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    cursor: 'pointer', flexShrink: 0,
+                    boxShadow: isPlayingAudio ? '0 0 0 4px rgba(225,29,72,0.25)' : '0 2px 10px rgba(249,115,22,0.45)',
+                  }}
+                >
+                  {isPlayingAudio ? '⏸' : '▶'}
+                </button>
+                <div>
+                  <div style={{ color: '#fff', fontSize: 13, fontWeight: 800, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span>🎙️ Haribon Neural Audio Narration</span>
+                    <span style={{ fontSize: 9.5, background: 'rgba(249,115,22,0.2)', color: '#fb923c', padding: '1px 6px', borderRadius: 5, fontWeight: 800 }}>ElevenLabs AI</span>
+                  </div>
+                  <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11.5 }}>
+                    {isPlayingAudio ? 'Speaking press release in studio voice…' : 'Click to listen to full press release read aloud'}
+                  </div>
+                </div>
+              </div>
+
+              {/* Audio Visualizer Waves */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+                {[6, 12, 18, 10, 15, 20, 8, 14, 19, 11, 16, 22, 13, 8, 17].map((h, bi) => (
+                  <div
+                    key={bi}
+                    className={`news-audio-bar${isPlayingAudio ? ' active' : ''}`}
+                    style={{
+                      height: isPlayingAudio ? undefined : `${Math.max(3, h * 0.45)}px`,
+                      animationDelay: `${bi * 0.06}s`
+                    }}
+                  />
+                ))}
+              </div>
             </div>
 
             {/* Excerpt / lead */}
