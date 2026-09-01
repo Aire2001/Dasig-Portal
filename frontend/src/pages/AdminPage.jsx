@@ -1992,7 +1992,10 @@ function NewsTab({ showToast }) {
     const params = { limit: 1000 };
     if (badgeF && badgeF !== 'All') params.badge = badgeF;
     if (search && search.trim()) params.search = search.trim();
-    api.news.list(params).then(r => setItems(Array.isArray(r) ? r : (r?.data || []))).catch(() => showToast('Failed', false)).finally(() => setLoading(false));
+    api.news.list(params)
+      .then(r => setItems(Array.isArray(r) ? r : (r?.data || [])))
+      .catch(() => showToast('Failed to load news articles', false))
+      .finally(() => setLoading(false));
   }, [badgeF, search]);
 
   useEffect(() => {
@@ -2017,7 +2020,7 @@ function NewsTab({ showToast }) {
   }
 
   async function save() {
-    if (!form.title || !form.date) { showToast('Fill required fields', false); return; }
+    if (!form.title || !form.date) { showToast('Please fill all required fields', false); return; }
     setSaving(true);
     try {
       if (modal === 'create') { await api.news.create(form); showToast('Article published successfully!', true, form.title); }
@@ -2026,6 +2029,7 @@ function NewsTab({ showToast }) {
       load();
     } catch (e) { showToast(e.message, false); } finally { setSaving(false); }
   }
+
   async function toggleArchive(n) {
     try {
       await api.news.archive(n.id, !n.archived);
@@ -2033,40 +2037,71 @@ function NewsTab({ showToast }) {
       load();
     } catch (e) { showToast(e.message, false); }
   }
+
   async function del(id, title) {
     try { await api.news.delete(id); showToast('Article deleted successfully!', true, title); setConfirm(null); load(); }
     catch (e) { showToast(e.message, false); }
   }
 
-  const BC = { Announcement:'#60a5fa', Policy:'#fcd34d', Funding:'#6ee7b7', Training:'#fca5a5', Research:'#c4b5fd' };
+  function exportNewsCSV() {
+    if (!items.length) return;
+    const headers = ['Title', 'Category', 'Date', 'Access', 'Status', 'Excerpt'];
+    const rows = items.map(n => [
+      n.title || '', n.badge || '', n.date ? String(n.date).slice(0,10) : '', n.members_only ? 'Members Only' : 'Public', n.archived ? 'Archived' : 'Active', n.excerpt || ''
+    ]);
+    const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+    a.download = 'dasig_news_export.csv';
+    a.click();
+  }
+
+  const BC = {
+    Announcement: { color:'#60a5fa', bg:'rgba(96,165,250,0.18)',  border:'rgba(96,165,250,0.35)',  icon:'📣' },
+    Policy:       { color:'#fcd34d', bg:'rgba(252,211,77,0.18)',  border:'rgba(252,211,77,0.35)',  icon:'📋' },
+    Funding:      { color:'#6ee7b7', bg:'rgba(110,231,183,0.18)', border:'rgba(110,231,183,0.35)', icon:'💰' },
+    Training:     { color:'#fca5a5', bg:'rgba(252,165,165,0.18)', border:'rgba(252,165,165,0.35)', icon:'🎓' },
+    Research:     { color:'#c4b5fd', bg:'rgba(196,181,253,0.18)', border:'rgba(196,181,253,0.35)', icon:'🔬' },
+  };
 
   return (
     <div>
       <PageHeader
         title="News & Announcements"
-        desc="Publish consortium news and updates"
+        desc="Publish, edit, and archive consortium bulletins, policy updates, and press releases"
         action={
-          <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+          <div style={{ display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
+            <button onClick={exportNewsCSV} className="ap-btn ap-btn-ghost" style={{ fontSize:12.5, whiteSpace:'nowrap' }}>⬇ Export CSV</button>
             <input
               className="ap-input"
-              placeholder="Search title…"
+              placeholder="Search title, excerpt…"
               value={search}
               onChange={e => setSearch(e.target.value)}
-              style={{ width:160 }}
+              style={{ width:180 }}
             />
             <select
               className="ap-input"
               value={badgeF}
               onChange={e => setBadgeF(e.target.value)}
-              style={{ width:130, cursor:'pointer' }}
+              style={{ width:140, cursor:'pointer' }}
             >
-              {['All','Announcement','Policy','Funding','Training','Research'].map(b => <option key={b} value={b} style={{ background:'#0f172a' }}>{b}</option>)}
+              {['All','Announcement','Policy','Funding','Training','Research'].map(b => (
+                <option key={b} value={b} style={{ background:'#0f172a' }}>{b}</option>
+              ))}
             </select>
-            <AddBtn onClick={() => { setForm(NW_BLANK); setModal('create'); }} />
+            <button
+              onClick={() => { setForm(NW_BLANK); setModal('create'); }}
+              className="ap-btn ap-btn-primary"
+              style={{ padding:'8px 16px', fontSize:13, fontWeight:800, whiteSpace:'nowrap' }}
+            >
+              + Publish News
+            </button>
           </div>
         }
       />
-      {confirm && <ConfirmModal msg={`Delete "${confirm.title}"?`} onConfirm={() => del(confirm.id, confirm.title)} onCancel={() => setConfirm(null)} />}
+
+      {confirm && <ConfirmModal msg={`Are you sure you want to delete article "${confirm.title}"?`} onConfirm={() => del(confirm.id, confirm.title)} onCancel={() => setConfirm(null)} />}
+
       {modal && (
         <Modal title={modal === 'create' ? 'Publish News Article' : 'Edit News Article'} onClose={() => setModal(null)} wide>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
@@ -2148,37 +2183,51 @@ function NewsTab({ showToast }) {
       {loading ? <Loading /> : (
         <DataTable head={['Cover','Title','Badge','Date','Access','Status','Actions']}>
           {items.length === 0 ? <EmptyTR cols={7} /> : items.map(n => {
-            const c = BC[n.badge] || '#60a5fa';
+            const badgeInfo = BC[n.badge] || { color:'#60a5fa', bg:'rgba(96,165,250,0.18)', border:'rgba(96,165,250,0.35)', icon:'📰' };
             return (
               <TR key={n.id}>
                 {/* Cover thumbnail */}
-                <TD w={60}>
+                <TD w={70}>
                   {n.image_url
-                    ? <img src={n.image_url} alt="" style={{ width:52, height:34, objectFit:'cover', borderRadius:6, display:'block' }} />
-                    : <div style={{ width:52, height:34, borderRadius:6, background:'rgba(255,255,255,0.06)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:16 }}>{n.icon || '📰'}</div>
+                    ? <img src={n.image_url} alt="" style={{ width:54, height:36, objectFit:'cover', borderRadius:8, display:'block', border:'1px solid rgba(255,255,255,0.15)', boxShadow:'0 2px 8px rgba(0,0,0,0.3)' }} />
+                    : <div style={{ width:54, height:36, borderRadius:8, background:badgeInfo.bg, border:`1px solid ${badgeInfo.border}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:17 }}>{badgeInfo.icon}</div>
                   }
                 </TD>
                 <TD>
-                  <div style={{ fontWeight:700, color: n.archived ? 'rgba(255,255,255,0.38)' : '#fff', maxWidth:240, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{n.title}</div>
-                  <div style={{ fontSize:13, color:'rgba(255,255,255,0.55)', marginTop:2, maxWidth:240, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{n.excerpt}</div>
+                  <div style={{ fontWeight:800, color: n.archived ? 'rgba(255,255,255,0.38)' : '#fff', fontSize:13.5, maxWidth:260, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+                    {n.title}
+                  </div>
+                  <div style={{ fontSize:12, color:'rgba(255,255,255,0.5)', marginTop:2, maxWidth:260, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+                    {n.excerpt || 'No summary excerpt provided'}
+                  </div>
                 </TD>
-                <TD><span className="ap-badge" style={{ background:`${c}1a`, color:c }}>{n.badge}</span></TD>
-                <TD muted>{String(n.date).slice(0,10)}</TD>
                 <TD>
-                  <span style={{ fontSize:12, color: n.members_only ? '#fcd34d' : 'rgba(255,255,255,0.38)' }}>
+                  <span className="ap-badge" style={{ background:badgeInfo.bg, color:badgeInfo.color, border:`1px solid ${badgeInfo.border}`, padding:'4px 10px', borderRadius:8, fontWeight:800, fontSize:11.5 }}>
+                    {badgeInfo.icon} {n.badge}
+                  </span>
+                </TD>
+                <TD muted>{n.date ? `📅 ${String(n.date).slice(0,10)}` : '—'}</TD>
+                <TD>
+                  <span style={{ fontSize:12, fontWeight:700, color: n.members_only ? '#fcd34d' : 'rgba(255,255,255,0.5)' }}>
                     {n.members_only ? '🔒 Members' : '🌐 Public'}
                   </span>
                 </TD>
                 <TD>
-                  <span className="ap-pill" style={{ background: n.archived ? 'rgba(255,255,255,0.06)' : 'rgba(16,185,129,0.15)', color: n.archived ? 'rgba(255,255,255,0.35)' : '#6ee7b7' }}>
+                  <span className="ap-pill" style={{ background: n.archived ? 'rgba(255,255,255,0.06)' : 'rgba(16,185,129,0.15)', color: n.archived ? 'rgba(255,255,255,0.35)' : '#6ee7b7', border:`1px solid ${n.archived ? 'rgba(255,255,255,0.1)' : 'rgba(16,185,129,0.3)'}` }}>
                     {n.archived ? 'Archived' : '● Active'}
                   </span>
                 </TD>
                 <TD>
-                  <div style={{ display:'flex', gap:5 }}>
-                    <button onClick={() => { setForm({ ...n }); setModal(n); }} className="ap-btn ap-btn-blue">Edit</button>
-                    <button onClick={() => toggleArchive(n)} className="ap-btn ap-btn-amber">{n.archived ? 'Restore' : 'Archive'}</button>
-                    <button onClick={() => setConfirm(n)} className="ap-btn ap-btn-red">Del</button>
+                  <div style={{ display:'flex', gap:6 }}>
+                    <button onClick={() => { setForm({ ...n }); setModal(n); }} className="ap-btn ap-btn-blue" style={{ padding:'6px 10px', fontSize:12, borderRadius:8 }}>
+                      ✏️ Edit
+                    </button>
+                    <button onClick={() => toggleArchive(n)} className="ap-btn ap-btn-amber" style={{ padding:'6px 10px', fontSize:12, borderRadius:8 }}>
+                      {n.archived ? 'Restore' : 'Archive'}
+                    </button>
+                    <button onClick={() => setConfirm(n)} className="ap-btn ap-btn-red" style={{ padding:'6px 10px', fontSize:12, borderRadius:8 }}>
+                      🗑
+                    </button>
                   </div>
                 </TD>
               </TR>
@@ -2203,13 +2252,22 @@ function TrainingTab({ showToast }) {
   const [form, setForm]             = useState(TR_BLANK);
   const [saving, setSaving]         = useState(false);
   const [confirm, setConfirm]       = useState(null);
+  const [search, setSearch]         = useState('');
+  const [catFilter, setCatFilter]   = useState('All');
   const [enrolEvent, setEnrolEvent] = useState(null);
   const [enrolList, setEnrolList]   = useState([]);
   const [enrolLoading, setEnrolLoading] = useState(false);
   const [enrolFilter, setEnrolFilter] = useState('all');
   const [enrolSearch, setEnrolSearch] = useState('');
 
-  const load = useCallback(() => { setLoading(true); api.training.list({ limit: 1000 }).then(r => setItems(Array.isArray(r) ? r : (r?.data || []))).catch(() => showToast('Failed', false)).finally(() => setLoading(false)); }, []);
+  const load = useCallback(() => {
+    setLoading(true);
+    api.training.list({ limit: 1000 })
+      .then(r => setItems(Array.isArray(r) ? r : (r?.data || [])))
+      .catch(() => showToast('Failed to load training programs', false))
+      .finally(() => setLoading(false));
+  }, []);
+
   useEffect(load, [load]);
   const fc = e => setForm(p => ({ ...p, [e.target.name]: e.target.value }));
 
@@ -2225,7 +2283,7 @@ function TrainingTab({ showToast }) {
   }
 
   async function save() {
-    if (!form.title || !form.org || !form.duration) { showToast('Fill required fields', false); return; }
+    if (!form.title || !form.org || !form.duration) { showToast('Please fill all required fields', false); return; }
     setSaving(true);
     try {
       const body = { ...form, total: Number(form.total) || 20 };
@@ -2235,13 +2293,52 @@ function TrainingTab({ showToast }) {
       load();
     } catch (e) { showToast(e.message, false); } finally { setSaving(false); }
   }
+
   async function del(id, title) {
     try { await api.training.delete(id); setItems(p => p.filter(x => x.id !== id)); showToast('Training program deleted successfully!', true, title); setConfirm(null); }
     catch (e) { showToast(e.message, false); }
   }
 
-  const CC = { Technology:'#60a5fa', Research:'#6ee7b7', Leadership:'#fcd34d', Governance:'#c4b5fd' };
-  const LC = { Beginner:'#6ee7b7', Intermediate:'#fcd34d', Advanced:'#fca5a5' };
+  function exportTrainingCSV() {
+    if (!items.length) return;
+    const headers = ['Title', 'Category', 'Host Institution', 'Duration', 'Level', 'Enrolled', 'Total Capacity', 'Schedule'];
+    const rows = items.map(t => [
+      t.title || '', t.category || '', t.org || '', t.duration || '', t.level || '', t.enrolled || 0, t.total || 0, t.schedule || ''
+    ]);
+    const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+    a.download = 'dasig_training_export.csv';
+    a.click();
+  }
+
+  const CC = {
+    Technology: { color:'#60a5fa', bg:'rgba(96,165,250,0.18)',  border:'rgba(96,165,250,0.35)',  icon:'💻' },
+    Research:   { color:'#6ee7b7', bg:'rgba(110,231,183,0.18)', border:'rgba(110,231,183,0.35)', icon:'🔬' },
+    Leadership: { color:'#fcd34d', bg:'rgba(252,211,77,0.18)',  border:'rgba(252,211,77,0.35)',  icon:'🎯' },
+    Governance: { color:'#c4b5fd', bg:'rgba(196,181,253,0.18)', border:'rgba(196,181,253,0.35)', icon:'📋' },
+  };
+
+  const LC = {
+    Beginner:     { color:'#6ee7b7', bg:'rgba(110,231,183,0.15)', border:'rgba(110,231,183,0.3)' },
+    Intermediate: { color:'#fcd34d', bg:'rgba(252,211,77,0.15)',  border:'rgba(252,211,77,0.3)' },
+    Advanced:     { color:'#fca5a5', bg:'rgba(252,165,165,0.15)', border:'rgba(252,165,165,0.3)' },
+  };
+
+  const filteredItems = items.filter(t => {
+    if (catFilter !== 'All' && t.category !== catFilter) return false;
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      const title = (t.title || '').toLowerCase();
+      const org = (t.org || '').toLowerCase();
+      if (!title.includes(q) && !org.includes(q)) return false;
+    }
+    return true;
+  });
+
+  const totalEnrolled = items.reduce((sum, t) => sum + (t.enrolled || 0), 0);
+  const totalCapacity = items.reduce((sum, t) => sum + (Number(t.total) || 0), 0);
+  const avgFillRate = items.length ? Math.round(items.reduce((sum, t) => sum + (t.total > 0 ? (t.enrolled / t.total) * 100 : 0), 0) / items.length) : 0;
 
   // Filtered enrollees
   const filteredEnrollees = enrolList.filter(en => {
@@ -2263,12 +2360,45 @@ function TrainingTab({ showToast }) {
 
   return (
     <div>
-      <PageHeader title="Training Programs" desc="Manage professional development programs" action={<AddBtn onClick={() => { setForm(TR_BLANK); setModal('create'); }} />} />
-      {confirm && <ConfirmModal msg={`Delete "${confirm.title}"?`} onConfirm={() => del(confirm.id, confirm.title)} onCancel={() => setConfirm(null)} />}
+      <PageHeader
+        title="Training Programs"
+        desc="Offer, organize, and track consortium certifications and skill programs"
+        action={
+          <div style={{ display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
+            <button onClick={exportTrainingCSV} className="ap-btn ap-btn-ghost" style={{ fontSize:12.5, whiteSpace:'nowrap' }}>⬇ Export CSV</button>
+            <input
+              className="ap-input"
+              placeholder="Search program, host…"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              style={{ width:190 }}
+            />
+            <select
+              className="ap-input"
+              value={catFilter}
+              onChange={e => setCatFilter(e.target.value)}
+              style={{ width:140, cursor:'pointer' }}
+            >
+              {['All','Technology','Research','Leadership','Governance'].map(c => (
+                <option key={c} value={c} style={{ background:'#0f172a' }}>{c}</option>
+              ))}
+            </select>
+            <button
+              onClick={() => { setForm(TR_BLANK); setModal('create'); }}
+              className="ap-btn ap-btn-primary"
+              style={{ padding:'8px 16px', fontSize:13, fontWeight:800, whiteSpace:'nowrap' }}
+            >
+              + Create Program
+            </button>
+          </div>
+        }
+      />
+
+      {confirm && <ConfirmModal msg={`Are you sure you want to delete training program "${confirm.title}"?`} onConfirm={() => del(confirm.id, confirm.title)} onCancel={() => setConfirm(null)} />}
 
       {/* Enrollments Modal */}
       {enrolEvent && (
-        <Modal title={`Enrollments — ${enrolEvent.title}`} onClose={() => { setEnrolEvent(null); load(); }} wide>
+        <Modal title={`Enrollments & Roster — ${enrolEvent.title}`} onClose={() => { setEnrolEvent(null); load(); }} wide>
           {/* Header Summary & Actions */}
           <div style={{ marginBottom:14, display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap:10 }}>
             <div>
@@ -2353,16 +2483,20 @@ function TrainingTab({ showToast }) {
                   }}>
                     <div style={{ display:'flex', alignItems:'center', gap:10 }}>
                       <div style={{
-                        width:34, height:34, borderRadius:10,
+                        width:36, height:36, borderRadius:10, overflow:'hidden',
                         background: isMember ? 'linear-gradient(135deg,#059669,#10b981)' : isAdmin ? 'linear-gradient(135deg,#e11d48,#f43f5e)' : 'linear-gradient(135deg,#475569,#64748b)',
                         display:'flex', alignItems:'center', justifyContent:'center',
-                        fontSize:11.5, fontWeight:900, color:'#fff', flexShrink:0
+                        fontSize:12, fontWeight:900, color:'#fff', flexShrink:0
                       }}>
-                        {(en.users?.name || 'U').split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase()}
+                        {en.users?.avatar_url ? (
+                          <img src={en.users.avatar_url} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }} />
+                        ) : (
+                          (en.users?.name || en.users?.email || 'U').split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase()
+                        )}
                       </div>
                       <div>
                         <div style={{ display:'flex', alignItems:'center', gap:7 }}>
-                          <span style={{ fontWeight:700, color:'#fff', fontSize:13.5 }}>{en.users?.name || 'Unknown User'}</span>
+                          <span style={{ fontWeight:700, color:'#fff', fontSize:13.5 }}>{en.users?.name || en.users?.email || 'Unknown User'}</span>
                           {isMember ? (
                             <span style={{ background:'rgba(16,185,129,0.18)', color:'#34d399', border:'1px solid rgba(16,185,129,0.3)', borderRadius:5, padding:'1px 6px', fontSize:10, fontWeight:800 }}>👤 Member</span>
                           ) : isAdmin ? (
@@ -2422,38 +2556,90 @@ function TrainingTab({ showToast }) {
 
       <SectionKPIs items={[
         { label: 'Active Programs', value: items.length, icon: '🎓', color: '#f43f5e' },
-        { label: 'Total Enrollees', value: items.reduce((sum, t) => sum + (t.enrolled || 0), 0), icon: '👥', color: '#34d399' },
-        { label: 'Total Capacity', value: items.reduce((sum, t) => sum + (t.total || 0), 0), icon: '💺', color: '#60a5fa' },
-        { label: 'Tech & Research', value: items.filter(t => t.category === 'Technology' || t.category === 'Research').length, icon: '💻', color: '#fbbf24' },
+        { label: 'Total Enrollees', value: totalEnrolled, icon: '👥', color: '#34d399' },
+        { label: 'Total Capacity', value: totalCapacity, icon: '💺', color: '#60a5fa' },
+        { label: 'Avg Fill Rate', value: `${avgFillRate}%`, icon: '📊', color: '#fbbf24' },
       ]} />
 
       {loading ? <Loading /> : (
         <DataTable head={['Program','Category','Level','Fill Rate','Actions']}>
-          {items.length === 0 ? <EmptyTR cols={5} /> : items.map(t => {
+          {filteredItems.length === 0 ? <EmptyTR cols={5} /> : filteredItems.map(t => {
             const fill = t.total > 0 ? Math.round((t.enrolled || 0) / t.total * 100) : 0;
-            const cc = CC[t.category] || '#60a5fa';
-            const lc = LC[t.level] || '#6ee7b7';
+            const cc = CC[t.category] || { color:'#60a5fa', bg:'rgba(96,165,250,0.18)', border:'rgba(96,165,250,0.35)', icon:'💻' };
+            const lc = LC[t.level] || { color:'#6ee7b7', bg:'rgba(110,231,183,0.15)', border:'rgba(110,231,183,0.3)' };
+            const isFull = fill >= 90;
+            const isMid = fill >= 50 && fill < 90;
+            const barGradient = isFull ? 'linear-gradient(90deg,#f43f5e,#fb7185)' : isMid ? 'linear-gradient(90deg,#f59e0b,#fbbf24)' : 'linear-gradient(90deg,#10b981,#34d399)';
+
             return (
               <TR key={t.id}>
                 <TD>
-                  <div style={{ fontWeight:700, color:'#fff' }}>{t.title}</div>
-                  <div style={{ fontSize:13, color:'rgba(255,255,255,0.55)', marginTop:2 }}>{t.org} · {t.duration}{t.schedule ? ` · ${t.schedule}` : ''}</div>
-                </TD>
-                <TD><span className="ap-badge" style={{ background:`${cc}1a`, color:cc }}>{t.category}</span></TD>
-                <TD><span className="ap-badge" style={{ background:`${lc}1a`, color:lc }}>{t.level}</span></TD>
-                <TD>
-                  <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-                    <div style={{ flex:1, height:6, background:'rgba(255,255,255,0.08)', borderRadius:3, overflow:'hidden', minWidth:60 }}>
-                      <div style={{ height:'100%', width:`${Math.min(fill,100)}%`, background:'linear-gradient(90deg,#f43f5e,#f97316)', borderRadius:3 }} />
+                  <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+                    <div style={{ width:38, height:38, borderRadius:11, background:cc.bg, border:`1px solid ${cc.border}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:17, flexShrink:0, boxShadow:'0 2px 8px rgba(0,0,0,0.2)' }}>
+                      {cc.icon}
                     </div>
-                    <span style={{ fontSize:12, fontWeight:700, color:'rgba(255,255,255,0.55)', width:52 }}>{t.enrolled || 0}/{t.total}</span>
+                    <div>
+                      <div style={{ fontWeight:800, color:'#fff', fontSize:13.5 }}>{t.title}</div>
+                      <div style={{ fontSize:12, color:'rgba(255,255,255,0.5)', marginTop:2, display:'flex', alignItems:'center', gap:6, flexWrap:'wrap' }}>
+                        <span>🏛️ {t.org}</span>
+                        <span>·</span>
+                        <span style={{ color:'rgba(249,115,22,0.85)', fontWeight:600 }}>⏱️ {t.duration}</span>
+                        {t.schedule && <span>· 📅 {t.schedule}</span>}
+                      </div>
+                    </div>
                   </div>
                 </TD>
                 <TD>
-                  <div style={{ display:'flex', gap:6 }}>
-                    <button onClick={() => openEnrollments(t)} className="ap-btn ap-btn-green">Enrollees</button>
-                    <button onClick={() => { setForm({ ...t }); setModal(t); }} className="ap-btn ap-btn-blue">Edit</button>
-                    <button onClick={() => setConfirm(t)} className="ap-btn ap-btn-red">Delete</button>
+                  <span className="ap-badge" style={{ background:cc.bg, color:cc.color, border:`1px solid ${cc.border}`, padding:'4px 10px', borderRadius:8, fontWeight:800, fontSize:12 }}>
+                    {cc.icon} {t.category}
+                  </span>
+                </TD>
+                <TD>
+                  <span className="ap-badge" style={{ background:lc.bg, color:lc.color, border:`1px solid ${lc.border}`, padding:'3px 8px', borderRadius:7, fontWeight:800, fontSize:11.5 }}>
+                    {t.level}
+                  </span>
+                </TD>
+                <TD>
+                  <div style={{ minWidth:130 }}>
+                    <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:4 }}>
+                      <span style={{ fontSize:11, fontWeight:800, color: isFull ? '#f87171' : isMid ? '#fbbf24' : '#34d399' }}>
+                        {fill}% Fill
+                      </span>
+                      <span style={{ fontSize:11.5, color:'rgba(255,255,255,0.55)', fontWeight:700 }}>
+                        {t.enrolled || 0} / {t.total || 0}
+                      </span>
+                    </div>
+                    <div style={{ height:6, background:'rgba(255,255,255,0.08)', borderRadius:4, overflow:'hidden', width:'100%' }}>
+                      <div style={{ height:'100%', width:`${Math.min(fill,100)}%`, background:barGradient, borderRadius:4, transition:'width 0.3s ease' }} />
+                    </div>
+                  </div>
+                </TD>
+                <TD>
+                  <div style={{ display:'flex', gap:6, alignItems:'center' }}>
+                    <button
+                      onClick={() => openEnrollments(t)}
+                      className="ap-btn ap-btn-ghost"
+                      style={{ padding:'6px 11px', fontSize:12, borderRadius:8, color:'#34d399', borderColor:'rgba(52,211,153,0.3)', background:'rgba(16,185,129,0.08)' }}
+                      title="View enrolled students & details"
+                    >
+                      👥 Enrollees ({t.enrolled || 0})
+                    </button>
+                    <button
+                      onClick={() => { setForm({ ...t }); setModal(t); }}
+                      className="ap-btn ap-btn-blue"
+                      style={{ padding:'6px 10px', fontSize:12, borderRadius:8 }}
+                      title="Edit training program"
+                    >
+                      ✏️ Edit
+                    </button>
+                    <button
+                      onClick={() => setConfirm(t)}
+                      className="ap-btn ap-btn-red"
+                      style={{ padding:'6px 10px', fontSize:12, borderRadius:8 }}
+                      title="Delete training program"
+                    >
+                      🗑
+                    </button>
                   </div>
                 </TD>
               </TR>
