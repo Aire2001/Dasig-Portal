@@ -154,6 +154,41 @@ router.patch('/users/:id/activate', async (req, res) => {
   res.json({ message: 'User activated', user: data });
 });
 
+// PATCH /api/admin/users/:id — update user details (name, email, institution, campus, phone)
+router.patch('/users/:id', async (req, res) => {
+  const { name, email, institution, campus, phone } = req.body;
+  const updates = {};
+  if (name !== undefined) updates.name = name.trim();
+  if (email !== undefined) updates.email = email.trim().toLowerCase();
+  if (institution !== undefined) updates.institution = institution;
+  if (campus !== undefined) updates.campus = campus;
+  if (phone !== undefined) updates.phone = phone;
+
+  const { data, error } = await supabase.from('users')
+    .update(updates).eq('id', req.params.id)
+    .select('id, name, email, role, status, institution, campus, phone, avatar_url, tier, member_since, renewal_due, created_at').single();
+  if (error) return res.status(404).json({ error: 'User not found or update failed' });
+  res.json({ message: 'User updated successfully', user: data });
+});
+
+// DELETE /api/admin/users/:id — delete user account
+router.delete('/users/:id', async (req, res) => {
+  if (req.params.id === req.user.id) {
+    return res.status(400).json({ error: 'Cannot delete your own admin account' });
+  }
+
+  // Also clean up any linked applications, registrations, enrollments
+  await Promise.all([
+    supabase.from('event_registrations').delete().eq('user_id', req.params.id),
+    supabase.from('training_enrollments').delete().eq('user_id', req.params.id),
+    supabase.from('membership_applications').delete().eq('user_id', req.params.id),
+  ]).catch(() => {});
+
+  const { error } = await supabase.from('users').delete().eq('id', req.params.id);
+  if (error) return res.status(404).json({ error: 'User not found or deletion failed' });
+  res.json({ message: 'User account deleted successfully' });
+});
+
 // GET /api/admin/reports/events — event attendance report (uses actual registration count)
 router.get('/reports/events', async (req, res) => {
   const { data: events, error } = await supabase.from('events')

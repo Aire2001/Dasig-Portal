@@ -974,6 +974,8 @@ function UsersTab({ showToast }) {
   const [acting, setActing] = useState(null);
   const [page, setPage]     = useState(1);
   const [detailUser, setDetailUser] = useState(null);
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [editName, setEditName] = useState('');
 
   const load = useCallback(() => {
     setLoading(true);
@@ -985,9 +987,13 @@ function UsersTab({ showToast }) {
 
   useEffect(() => { load(); }, [load]);
 
+  useEffect(() => {
+    if (detailUser) setEditName(detailUser.name || '');
+  }, [detailUser]);
+
   async function changeRole(u, role) {
     setActing(u.id + 'r');
-    try { await api.admin.changeRole(u.id, role); setUsers(p => p.map(x => x.id === u.id ? { ...x, role } : x)); showToast('Role updated successfully!', true, `${u.name} is now ${role}`); }
+    try { await api.admin.changeRole(u.id, role); setUsers(p => p.map(x => x.id === u.id ? { ...x, role } : x)); showToast('Role updated successfully!', true, `${u.name || u.email} is now ${role}`); }
     catch (e) { showToast(e.message, false); } finally { setActing(null); }
   }
 
@@ -998,21 +1004,71 @@ function UsersTab({ showToast }) {
         await api.admin.activate(u.id);
         setUsers(p => p.map(x => x.id === u.id ? { ...x, status: 'ACTIVE' } : x));
         if (detailUser && detailUser.id === u.id) setDetailUser(prev => ({ ...prev, status: 'ACTIVE' }));
-        showToast('Account activated successfully!', true, `${u.name} can now log in`);
+        showToast('Account activated successfully!', true, `${u.name || u.email} can now log in`);
       } else {
         await api.admin.suspend(u.id);
         setUsers(p => p.map(x => x.id === u.id ? { ...x, status: 'INACTIVE' } : x));
         if (detailUser && detailUser.id === u.id) setDetailUser(prev => ({ ...prev, status: 'INACTIVE' }));
-        showToast('Account suspended', false, `${u.name} has been suspended`);
+        showToast('Account suspended', false, `${u.name || u.email} has been suspended`);
       }
     } catch (e) { showToast(e.message, false); } finally { setActing(null); }
+  }
+
+  async function handleMakeNameSameAsEmail(u) {
+    setActing(u.id + 'n');
+    try {
+      await api.admin.updateUser(u.id, { name: u.email });
+      setUsers(p => p.map(x => x.id === u.id ? { ...x, name: u.email } : x));
+      if (detailUser && detailUser.id === u.id) {
+        setDetailUser(prev => ({ ...prev, name: u.email }));
+        setEditName(u.email);
+      }
+      showToast('Name updated to match email!', true, `Display name is now ${u.email}`);
+    } catch (e) {
+      showToast(e.message || 'Failed to update name', false);
+    } finally {
+      setActing(null);
+    }
+  }
+
+  async function handleSaveUserName(u) {
+    if (!editName.trim()) {
+      showToast('Name cannot be empty', false);
+      return;
+    }
+    setActing(u.id + 'n');
+    try {
+      await api.admin.updateUser(u.id, { name: editName.trim() });
+      setUsers(p => p.map(x => x.id === u.id ? { ...x, name: editName.trim() } : x));
+      if (detailUser && detailUser.id === u.id) setDetailUser(prev => ({ ...prev, name: editName.trim() }));
+      showToast('User name updated successfully!');
+    } catch (e) {
+      showToast(e.message || 'Failed to save name', false);
+    } finally {
+      setActing(null);
+    }
+  }
+
+  async function handleDeleteUser(u) {
+    setActing(u.id + 'd');
+    try {
+      await api.admin.deleteUser(u.id);
+      setUsers(p => p.filter(x => x.id !== u.id));
+      if (detailUser && detailUser.id === u.id) setDetailUser(null);
+      setDeleteConfirm(null);
+      showToast('User deleted permanently', true, `${u.name || u.email} account has been deleted`);
+    } catch (e) {
+      showToast(e.message || 'Failed to delete user', false);
+    } finally {
+      setActing(null);
+    }
   }
 
   function exportUsersCSV() {
     if (!users.length) return;
     const headers = ['Name','Email','Institution','Campus','Role','Status','Tier','Joined'];
     const rows = users.map(u => [
-      u.name || '', u.email || '', u.institution || '', u.campus || '', u.role || '', u.status || '', u.tier || '', u.created_at?.slice(0,10) || ''
+      u.name || u.email || '', u.email || '', u.institution || '', u.campus || '', u.role || '', u.status || '', u.tier || '', u.created_at?.slice(0,10) || ''
     ]);
     const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
     const a = document.createElement('a');
@@ -1029,9 +1085,44 @@ function UsersTab({ showToast }) {
 
   return (
     <div>
-      {/* User Detail Modal */}
+      {/* Delete User Confirmation Modal */}
+      {deleteConfirm && (
+        <Modal title="Delete User Account" onClose={() => setDeleteConfirm(null)}>
+          <div style={{ display:'flex', flexDirection:'column', gap:16, textAlign:'center', padding:'10px 0' }}>
+            <div style={{ fontSize:48 }}>⚠️</div>
+            <div>
+              <div style={{ color:'#fff', fontWeight:900, fontSize:18, marginBottom:6 }}>
+                Delete user {deleteConfirm.name || deleteConfirm.email}?
+              </div>
+              <div style={{ color:'rgba(255,255,255,0.6)', fontSize:13.5, lineHeight:1.5 }}>
+                Are you sure you want to permanently delete this user account (<span style={{ color:'#f87171', fontWeight:700 }}>{deleteConfirm.email}</span>)?
+                <br />This will remove their registrations and cannot be undone.
+              </div>
+            </div>
+            <div style={{ display:'flex', gap:10, marginTop:12 }}>
+              <button
+                onClick={() => setDeleteConfirm(null)}
+                className="ap-btn ap-btn-ghost"
+                style={{ flex:1, padding:'11px' }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleDeleteUser(deleteConfirm)}
+                disabled={acting === deleteConfirm.id + 'd'}
+                className="ap-btn ap-btn-red"
+                style={{ flex:1, padding:'11px', fontWeight:800 }}
+              >
+                {acting === deleteConfirm.id + 'd' ? '⏳ Deleting…' : '🗑 Permanently Delete'}
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* User Detail & Edit Modal */}
       {detailUser && (
-        <Modal title="User Details" onClose={() => setDetailUser(null)}>
+        <Modal title="User Details & Management" onClose={() => setDetailUser(null)}>
           <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
             <div style={{ display:'flex', alignItems:'center', gap:14, padding:'4px 0' }}>
               <div style={{ width:56, height:56, borderRadius:16, overflow:'hidden', border:'2px solid rgba(255,255,255,0.2)', boxShadow:'0 4px 16px rgba(0,0,0,0.4)', flexShrink:0 }}>
@@ -1039,15 +1130,48 @@ function UsersTab({ showToast }) {
                   <img src={detailUser.avatar_url} alt="" style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }} />
                 ) : (
                   <div style={{ width:'100%', height:'100%', background:'linear-gradient(135deg,#1e3a8a,#4f46e5)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:18, fontWeight:900, color:'#fff' }}>
-                    {(detailUser.name || 'U').split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase()}
+                    {((detailUser.name || detailUser.email) || 'U').split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase()}
                   </div>
                 )}
               </div>
-              <div>
-                <div style={{ color:'#fff', fontWeight:900, fontSize:17 }}>{detailUser.name}</div>
+              <div style={{ flex:1 }}>
+                <div style={{ color:'#fff', fontWeight:900, fontSize:17 }}>{detailUser.name || detailUser.email}</div>
                 <div style={{ color:'rgba(255,255,255,0.5)', fontSize:13 }}>{detailUser.email}</div>
               </div>
             </div>
+
+            {/* Quick Name Sync to Email */}
+            <div style={{ background:'rgba(249,115,22,0.08)', border:'1px solid rgba(249,115,22,0.2)', borderRadius:12, padding:'12px 14px' }}>
+              <div style={{ fontSize:11.5, fontWeight:800, color:'#fb923c', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:6 }}>
+                Display Name Settings
+              </div>
+              <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+                <input
+                  className="ap-input"
+                  value={editName}
+                  onChange={e => setEditName(e.target.value)}
+                  placeholder="Enter full name or email"
+                  style={{ flex:1 }}
+                />
+                <button
+                  onClick={() => setEditName(detailUser.email)}
+                  title="Make name same as email"
+                  className="ap-btn ap-btn-ghost"
+                  style={{ fontSize:12, whiteSpace:'nowrap', color:'#fb923c', borderColor:'rgba(249,115,22,0.3)' }}
+                >
+                  📧 Same as Email
+                </button>
+                <button
+                  onClick={() => handleSaveUserName(detailUser)}
+                  disabled={acting === detailUser.id + 'n' || editName === (detailUser.name || '')}
+                  className="ap-btn ap-btn-primary"
+                  style={{ fontSize:12, whiteSpace:'nowrap' }}
+                >
+                  {acting === detailUser.id + 'n' ? '…' : 'Save'}
+                </button>
+              </div>
+            </div>
+
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
               {[
                 { l:'Role', v:detailUser.role },
@@ -1065,22 +1189,32 @@ function UsersTab({ showToast }) {
                 </div>
               ))}
             </div>
-            <div style={{ display:'flex', gap:10, marginTop:6 }}>
+
+            <div style={{ display:'flex', gap:10, marginTop:8, flexWrap:'wrap' }}>
               <button
                 onClick={() => toggleStatus(detailUser)}
                 disabled={acting === detailUser.id + 's'}
-                className={`ap-btn ${detailUser.status === 'INACTIVE' ? 'ap-btn-green' : 'ap-btn-red'}`}
+                className={`ap-btn ${detailUser.status === 'INACTIVE' ? 'ap-btn-green' : 'ap-btn-ghost'}`}
                 style={{ flex:1, padding:'11px', fontSize:13 }}
               >
                 {acting === detailUser.id + 's' ? '…' : detailUser.status === 'INACTIVE' ? 'Activate Account' : 'Suspend Account'}
               </button>
-              <button onClick={() => setDetailUser(null)} className="ap-btn ap-btn-ghost" style={{ flex:1, padding:'11px', fontSize:13 }}>Close</button>
+              <button
+                onClick={() => { setDetailUser(null); setDeleteConfirm(detailUser); }}
+                className="ap-btn ap-btn-red"
+                style={{ flex:1, padding:'11px', fontSize:13 }}
+              >
+                🗑 Delete User
+              </button>
+              <button onClick={() => setDetailUser(null)} className="ap-btn ap-btn-ghost" style={{ padding:'11px 18px', fontSize:13 }}>
+                Close
+              </button>
             </div>
           </div>
         </Modal>
       )}
 
-      <PageHeader title="Users" desc="Manage roles and account status" action={
+      <PageHeader title="Users" desc="Manage roles, delete accounts, and update profiles" action={
         <div style={{ display:'flex', gap:8, alignItems:'center' }}>
           <button onClick={exportUsersCSV} className="ap-btn ap-btn-ghost" style={{ fontSize:12.5, whiteSpace:'nowrap' }}>⬇ Export CSV</button>
           <input className="ap-input" placeholder="Search name, email, institution…" value={search} onChange={e => setSearch(e.target.value)} style={{ width:210 }} />
@@ -1104,12 +1238,13 @@ function UsersTab({ showToast }) {
         <DataTable head={['User','Institution','Role','Status','Joined','Actions']}>
           {users.length === 0 ? <EmptyTR cols={6} /> : paged.map(u => {
             const rs = ROLE_STYLE[u.role] || ROLE_STYLE.GUEST;
+            const displayName = u.name || u.email;
             return (
               <TR key={u.id}>
                 <TD>
                   <div
                     onClick={() => setDetailUser(u)}
-                    title="Click to view details"
+                    title="Click to view & edit details"
                     style={{ display:'flex', alignItems:'center', gap:12, cursor:'pointer' }}
                   >
                     <div style={{ width:38, height:38, borderRadius:11, overflow:'hidden', flexShrink:0, border:'1.5px solid rgba(255,255,255,0.12)', boxShadow:'0 2px 8px rgba(0,0,0,0.25)' }}>
@@ -1121,13 +1256,13 @@ function UsersTab({ showToast }) {
                           background: u.role==='ADMIN' ? 'linear-gradient(135deg,#e11d48,#9f1239)' : u.role==='MEMBER' ? 'linear-gradient(135deg,#10b981,#059669)' : 'linear-gradient(135deg,#1e3a8a,#3b82f6)',
                           display:'flex', alignItems:'center', justifyContent:'center', fontSize:12.5, fontWeight:900, color:'#fff'
                         }}>
-                          {(u.name || 'U').split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase()}
+                          {(displayName || 'U').split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase()}
                         </div>
                       )}
                     </div>
                     <div>
                       <div style={{ fontWeight:800, color:'#fff', fontSize:13.5, display:'flex', alignItems:'center', gap:6 }}>
-                        {u.name}
+                        {displayName}
                         <span style={{ fontSize:10, color:'rgba(249,115,22,0.8)', fontWeight:700 }}>🔍</span>
                       </div>
                       <div style={{ fontSize:12, color:'rgba(255,255,255,0.5)' }}>{u.email}</div>
@@ -1148,9 +1283,34 @@ function UsersTab({ showToast }) {
                 </TD>
                 <TD muted>{u.created_at?.slice(0,10) || '—'}</TD>
                 <TD>
-                  <button onClick={() => toggleStatus(u)} disabled={!!acting} className={`ap-btn ${u.status === 'INACTIVE' ? 'ap-btn-green' : 'ap-btn-red'}`} style={{ padding:'6px 12px', borderRadius:8 }}>
-                    {acting === u.id + 's' ? '…' : u.status === 'INACTIVE' ? 'Activate' : 'Suspend'}
-                  </button>
+                  <div style={{ display:'flex', gap:6, alignItems:'center' }}>
+                    <button
+                      onClick={() => toggleStatus(u)}
+                      disabled={!!acting}
+                      className={`ap-btn ${u.status === 'INACTIVE' ? 'ap-btn-green' : 'ap-btn-ghost'}`}
+                      style={{ padding:'5px 10px', fontSize:12, borderRadius:7 }}
+                    >
+                      {acting === u.id + 's' ? '…' : u.status === 'INACTIVE' ? 'Activate' : 'Suspend'}
+                    </button>
+                    <button
+                      onClick={() => handleMakeNameSameAsEmail(u)}
+                      disabled={acting === u.id + 'n' || u.name === u.email}
+                      className="ap-btn ap-btn-ghost"
+                      style={{ padding:'5px 8px', fontSize:11.5, borderRadius:7, color: u.name === u.email ? 'rgba(255,255,255,0.3)' : '#fb923c' }}
+                      title="Set user's name same as their email"
+                    >
+                      {acting === u.id + 'n' ? '…' : '📧 Name=Email'}
+                    </button>
+                    <button
+                      onClick={() => setDeleteConfirm(u)}
+                      disabled={acting === u.id + 'd'}
+                      className="ap-btn ap-btn-red"
+                      style={{ padding:'5px 9px', fontSize:12, borderRadius:7 }}
+                      title="Delete user account"
+                    >
+                      🗑
+                    </button>
+                  </div>
                 </TD>
               </TR>
             );
