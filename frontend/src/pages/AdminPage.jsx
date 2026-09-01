@@ -2733,16 +2733,16 @@ function parseAdminRange(str) {
 }
 
 const EV_CAL_COLORS = {
-  Summit:   { bg:'rgba(79,70,229,0.4)', border:'rgba(99,102,241,0.7)', text:'#c4b5fd' },
-  Workshop: { bg:'rgba(5,150,105,0.4)', border:'rgba(16,185,129,0.7)', text:'#6ee7b7' },
-  Seminar:  { bg:'rgba(124,58,237,0.4)',border:'rgba(167,139,250,0.7)',text:'#ddd6fe' },
-  Funding:  { bg:'rgba(245,158,11,0.4)',border:'rgba(251,191,36,0.7)', text:'#fde68a' },
+  Summit:   { bg:'linear-gradient(90deg,rgba(99,102,241,0.65),rgba(129,140,248,0.45))', border:'rgba(129,140,248,0.7)', text:'#fff', icon:'🦁' },
+  Workshop: { bg:'linear-gradient(90deg,rgba(16,185,129,0.65),rgba(52,211,153,0.45))', border:'rgba(52,211,153,0.7)', text:'#fff', icon:'🛠️' },
+  Seminar:  { bg:'linear-gradient(90deg,rgba(168,85,247,0.65),rgba(192,132,252,0.45))', border:'rgba(192,132,252,0.7)', text:'#fff', icon:'🎙️' },
+  Funding:  { bg:'linear-gradient(90deg,rgba(245,158,11,0.65),rgba(251,191,36,0.45))', border:'rgba(251,191,36,0.7)', text:'#fff', icon:'💰' },
 };
 const TR_CAL_COLORS = {
-  Technology:'rgba(37,99,235,0.4)',
-  Research:  'rgba(5,150,105,0.4)',
-  Leadership:'rgba(217,119,6,0.4)',
-  Governance:'rgba(124,58,237,0.4)',
+  Technology:{ bg:'linear-gradient(90deg,rgba(14,165,233,0.65),rgba(56,189,248,0.45))', border:'rgba(56,189,248,0.7)', text:'#fff', icon:'💻' },
+  Research:  { bg:'linear-gradient(90deg,rgba(16,185,129,0.65),rgba(52,211,153,0.45))', border:'rgba(52,211,153,0.7)', text:'#fff', icon:'🔬' },
+  Leadership:{ bg:'linear-gradient(90deg,rgba(249,115,22,0.65),rgba(251,146,60,0.45))', border:'rgba(251,146,60,0.7)', text:'#fff', icon:'🎖️' },
+  Governance:{ bg:'linear-gradient(90deg,rgba(139,92,246,0.65),rgba(167,139,250,0.45))', border:'rgba(167,139,250,0.7)', text:'#fff', icon:'⚖️' },
 };
 
 function AdminCalendarTab({ showToast, setTab }) {
@@ -2753,7 +2753,9 @@ function AdminCalendarTab({ showToast, setTab }) {
   const [trainings, setTrainings] = useState([]);
   const [loading,   setLoading]   = useState(true);
   const [detail,    setDetail]    = useState(null);
-  const [selectedDay, setSelectedDay] = useState(null); // ALL hooks must be at the top
+  const [selectedDay, setSelectedDay] = useState(null);
+  const [showEvents, setShowEvents]     = useState(true);
+  const [showTraining, setShowTraining] = useState(true);
 
   useEffect(() => {
     Promise.all([
@@ -2768,16 +2770,16 @@ function AdminCalendarTab({ showToast, setTab }) {
 
   // All calendar items
   const allItems = [
-    ...events.map(e => {
+    ...(showEvents ? events.map(e => {
       const r = parseAdminRange(e.date);
       const c = EV_CAL_COLORS[e.category] || EV_CAL_COLORS.Summit;
-      return { ...e, startDate:r?.start||null, endDate:r?.end||null, _type:'event', _bg:c.bg, _border:c.border, _text:c.text };
-    }),
-    ...trainings.map(t => {
+      return { ...e, startDate:r?.start||null, endDate:r?.end||null, _type:'event', _bg:c.bg, _border:c.border, _text:c.text, _icon:c.icon };
+    }) : []),
+    ...(showTraining ? trainings.map(t => {
       const r = parseAdminRange(t.schedule);
-      const bg = TR_CAL_COLORS[t.category] || TR_CAL_COLORS.Technology;
-      return { ...t, startDate:r?.start||null, endDate:r?.end||null, _type:'training', _bg:bg, _border:bg.replace('0.4','0.75'), _text:'#fff' };
-    }),
+      const c = TR_CAL_COLORS[t.category] || TR_CAL_COLORS.Technology;
+      return { ...t, startDate:r?.start||null, endDate:r?.end||null, _type:'training', _bg:c.bg, _border:c.border, _text:c.text, _icon:c.icon };
+    }) : []),
   ].filter(i => i.startDate);
 
   function prevMon() { if (month===0){setMonth(11);setYear(y=>y-1);}else setMonth(m=>m-1); }
@@ -2841,8 +2843,8 @@ function AdminCalendarTab({ showToast, setTab }) {
     if (md-1>miniDays && r>=3) break;
   }
 
-  const evCount = allItems.filter(i=>i._type==='event').length;
-  const trCount = allItems.filter(i=>i._type==='training').length;
+  const rawEvCount = events.length;
+  const rawTrCount = trainings.length;
 
   function handleMiniClick(d) {
     if (d < 1 || d > daysInMon) return;
@@ -2851,57 +2853,55 @@ function AdminCalendarTab({ showToast, setTab }) {
     setDetail(null);
   }
 
-  const ROLE_SHORTCUTS = {
-    ADMIN: [
-      { icon:'📅', label:'Add Event',    action:() => setTab('events')    },
-      { icon:'🎓', label:'Add Training', action:() => setTab('training')  },
-      { icon:'👥', label:'View Users',   action:() => setTab('users')     },
-      { icon:'📊', label:'Reports',      action:() => setTab('reports')   },
-    ],
-    MEMBER: [
-      { icon:'📅', label:'Browse Events',   action:() => {} },
-      { icon:'🎓', label:'Enroll Training', action:() => {} },
-      { icon:'📋', label:'View Policies',   action:() => {} },
-      { icon:'💰', label:'Funding',         action:() => {} },
-    ],
-    GUEST: [
-      { icon:'📅', label:'Upcoming Events', action:() => {} },
-      { icon:'👤', label:'Join DASIG',      action:() => {} },
-      { icon:'📰', label:'Latest News',     action:() => {} },
-      { icon:'🏛', label:'Members',         action:() => {} },
-    ],
-  };
-  // Admin panel is admin-only, so always show ADMIN shortcuts
-  const shortcuts = ROLE_SHORTCUTS.ADMIN;
+  const shortcuts = [
+    { icon:'📅', label:'Add Event',    action:() => setTab('events'), color:'#818cf8' },
+    { icon:'🎓', label:'Add Training', action:() => setTab('training'), color:'#34d399' },
+    { icon:'👥', label:'View Users',   action:() => setTab('users'), color:'#60a5fa' },
+    { icon:'📊', label:'Reports',      action:() => setTab('reports'), color:'#f59e0b' },
+  ];
 
   return (
     <div style={{ display:'flex', gap:0, height:'calc(100vh - 140px)', overflow:'hidden' }}>
 
       {/* ── Left sidebar ── */}
-      <div style={{ width:220, flexShrink:0, padding:'4px 16px 16px 0', overflowY:'auto', borderRight:'1px solid rgba(255,255,255,0.06)' }}>
+      <div style={{ width:240, flexShrink:0, padding:'4px 18px 16px 0', overflowY:'auto', borderRight:'1px solid rgba(255,255,255,0.08)' }}>
 
         {/* Mini calendar — clickable */}
-        <div style={{ background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:14, padding:'14px 12px', marginBottom:12 }}>
-          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10 }}>
-            <span style={{ color:'#fff', fontWeight:800, fontSize:13 }}>{MONTH_NAMES_LONG[month].slice(0,3)} {year}</span>
-            <div style={{ display:'flex', gap:2 }}>
-              <button onClick={prevMon} style={{ background:'none',border:'none',color:'rgba(255,255,255,0.5)',cursor:'pointer',fontSize:14,padding:'2px 5px',borderRadius:4,transition:'color .12s' }}
-                onMouseEnter={e=>e.currentTarget.style.color='#fff'}
-                onMouseLeave={e=>e.currentTarget.style.color='rgba(255,255,255,0.5)'}
+        <div style={{
+          background:'rgba(11, 19, 38, 0.85)', border:'1px solid rgba(255,255,255,0.09)',
+          borderRadius:16, padding:'16px 14px', marginBottom:14, backdropFilter:'blur(12px)',
+          boxShadow:'0 4px 20px rgba(0,0,0,0.25)'
+        }}>
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:12 }}>
+            <span style={{ color:'#fff', fontWeight:900, fontSize:13.5, letterSpacing:'-0.2px' }}>
+              {MONTH_NAMES_LONG[month].slice(0,3)} {year}
+            </span>
+            <div style={{ display:'flex', gap:3 }}>
+              <button onClick={prevMon} style={{
+                background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.1)',
+                color:'rgba(255,255,255,0.7)', cursor:'pointer', fontSize:13, width:26, height:24,
+                borderRadius:6, display:'flex', alignItems:'center', justifyContent:'center', transition:'all .12s'
+              }}
+              onMouseEnter={e=>{e.currentTarget.style.background='rgba(255,255,255,0.15)';e.currentTarget.style.color='#fff';}}
+              onMouseLeave={e=>{e.currentTarget.style.background='rgba(255,255,255,0.06)';e.currentTarget.style.color='rgba(255,255,255,0.7)';}}
               >‹</button>
-              <button onClick={nextMon} style={{ background:'none',border:'none',color:'rgba(255,255,255,0.5)',cursor:'pointer',fontSize:14,padding:'2px 5px',borderRadius:4,transition:'color .12s' }}
-                onMouseEnter={e=>e.currentTarget.style.color='#fff'}
-                onMouseLeave={e=>e.currentTarget.style.color='rgba(255,255,255,0.5)'}
+              <button onClick={nextMon} style={{
+                background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.1)',
+                color:'rgba(255,255,255,0.7)', cursor:'pointer', fontSize:13, width:26, height:24,
+                borderRadius:6, display:'flex', alignItems:'center', justifyContent:'center', transition:'all .12s'
+              }}
+              onMouseEnter={e=>{e.currentTarget.style.background='rgba(255,255,255,0.15)';e.currentTarget.style.color='#fff';}}
+              onMouseLeave={e=>{e.currentTarget.style.background='rgba(255,255,255,0.06)';e.currentTarget.style.color='rgba(255,255,255,0.7)';}}
               >›</button>
             </div>
           </div>
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', marginBottom:4 }}>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', marginBottom:6 }}>
             {['M','T','W','T','F','S','S'].map((d,i) => (
-              <div key={i} style={{ textAlign:'center', fontSize:9.5, fontWeight:700, color:'rgba(255,255,255,0.28)' }}>{d}</div>
+              <div key={i} style={{ textAlign:'center', fontSize:10, fontWeight:800, color: i >= 5 ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.45)' }}>{d}</div>
             ))}
           </div>
           {miniGrid.map((row,ri) => (
-            <div key={ri} style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)' }}>
+            <div key={ri} style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', gap:'2px 0' }}>
               {row.map((d,ci) => {
                 const inM    = d >= 1 && d <= miniDays;
                 const isT    = inM && d===today.getDate() && month===today.getMonth() && year===today.getFullYear();
@@ -2914,15 +2914,15 @@ function AdminCalendarTab({ showToast, setTab }) {
                     style={{ textAlign:'center', padding:'2px 0', position:'relative', cursor: inM ? 'pointer' : 'default' }}>
                     <span style={{
                       display:'inline-flex', alignItems:'center', justifyContent:'center',
-                      width:22, height:22, borderRadius:'50%', fontSize:12, transition:'all .12s',
-                      fontWeight: isT || isSel ? 900 : 400,
-                      color: isT ? '#fff' : isSel ? '#fff' : inM ? 'rgba(255,255,255,0.72)' : 'rgba(255,255,255,0.18)',
-                      background: isT ? '#f97316' : isSel ? '#3b82f6' : 'transparent',
-                      boxShadow: isSel ? '0 0 0 2px rgba(59,130,246,0.4)' : 'none',
+                      width:22, height:22, borderRadius:'50%', fontSize:11.5, transition:'all .14s',
+                      fontWeight: isT || isSel ? 900 : 500,
+                      color: isT ? '#fff' : isSel ? '#fff' : inM ? (ci >= 5 ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.85)') : 'rgba(255,255,255,0.15)',
+                      background: isT ? 'linear-gradient(135deg,#f97316,#e11d48)' : isSel ? 'linear-gradient(135deg,#3b82f6,#1d4ed8)' : 'transparent',
+                      boxShadow: isT ? '0 0 10px rgba(249,115,22,0.5)' : isSel ? '0 0 10px rgba(59,130,246,0.5)' : 'none',
                     }}>{inM ? d : ''}</span>
                     {/* Event/training dots */}
                     {inM && !isT && !isSel && (evCnt > 0 || trCnt > 0) && (
-                      <div style={{ position:'absolute', bottom:0, left:'50%', transform:'translateX(-50%)', display:'flex', gap:2 }}>
+                      <div style={{ position:'absolute', bottom:1, left:'50%', transform:'translateX(-50%)', display:'flex', gap:2 }}>
                         {evCnt > 0 && <span style={{ width:3, height:3, borderRadius:'50%', background:'#818cf8', display:'block' }} />}
                         {trCnt > 0 && <span style={{ width:3, height:3, borderRadius:'50%', background:'#34d399', display:'block' }} />}
                       </div>
@@ -2936,165 +2936,230 @@ function AdminCalendarTab({ showToast, setTab }) {
 
         {/* Day quick panel — shows when a date is clicked */}
         {selectedDay && (
-          <div style={{ background:'rgba(59,130,246,0.08)', border:'1px solid rgba(59,130,246,0.25)', borderRadius:12, padding:'12px 12px', marginBottom:12, animation:'modalIn .18s ease' }}>
+          <div style={{ background:'rgba(59,130,246,0.1)', border:'1px solid rgba(59,130,246,0.3)', borderRadius:14, padding:'12px', marginBottom:14, animation:'modalIn .18s ease' }}>
             <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8 }}>
               <div>
-                <div style={{ color:'rgba(255,255,255,0.45)', fontSize:9.5, fontWeight:700, textTransform:'uppercase', letterSpacing:'.5px' }}>
-                  {MONTH_NAMES_LONG[month].slice(0,3)} {selectedDay.day}
+                <div style={{ color:'#93c5fd', fontSize:10, fontWeight:800, textTransform:'uppercase', letterSpacing:'.5px' }}>
+                  {MONTH_NAMES_LONG[month].slice(0,3)} {selectedDay.day}, {year}
                 </div>
                 <div style={{ color:'#fff', fontWeight:900, fontSize:13, marginTop:1 }}>
-                  {selectedDay.items.length === 0 ? 'No items' : `${selectedDay.items.length} scheduled`}
+                  {selectedDay.items.length === 0 ? 'No items scheduled' : `${selectedDay.items.length} item${selectedDay.items.length > 1 ? 's' : ''}`}
                 </div>
               </div>
-              <button onClick={() => setSelectedDay(null)} style={{ background:'none',border:'none',color:'rgba(255,255,255,0.5)',cursor:'pointer',fontSize:14,lineHeight:1,padding:2 }}>✕</button>
+              <button onClick={() => setSelectedDay(null)} style={{ background:'none',border:'none',color:'rgba(255,255,255,0.6)',cursor:'pointer',fontSize:13,padding:2 }}>✕</button>
             </div>
 
             {selectedDay.items.length === 0 ? (
               <div>
-                <p style={{ color:'rgba(255,255,255,0.5)', fontSize:12.5, margin:'0 0 8px', lineHeight:1.5 }}>Nothing scheduled on this day.</p>
-                <button onClick={() => setTab('events')} style={{ width:'100%', background:'linear-gradient(90deg,#f97316,#e11d48)', color:'#fff', border:'none', borderRadius:8, padding:'7px', fontSize:13, fontWeight:800, cursor:'pointer', fontFamily:'inherit' }}>
-                  ＋ Add Event on this date
+                <p style={{ color:'rgba(255,255,255,0.5)', fontSize:12, margin:'0 0 8px', lineHeight:1.5 }}>No events or training on this day.</p>
+                <button onClick={() => setTab('events')} style={{ width:'100%', background:'linear-gradient(90deg,#f97316,#e11d48)', color:'#fff', border:'none', borderRadius:8, padding:'7px', fontSize:12.5, fontWeight:800, cursor:'pointer', fontFamily:'inherit' }}>
+                  ＋ Add Event
                 </button>
               </div>
             ) : (
-              <div style={{ display:'flex', flexDirection:'column', gap:5 }}>
+              <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
                 {selectedDay.items.map(it => (
                   <div key={it.id} onClick={() => { setDetail(it); setSelectedDay(null); }}
-                    style={{ display:'flex', alignItems:'center', gap:8, padding:'6px 8px', background: it._type==='event' ? 'rgba(129,140,248,0.12)' : 'rgba(52,211,153,0.12)', border: `1px solid ${it._type==='event' ? 'rgba(129,140,248,0.3)' : 'rgba(52,211,153,0.3)'}`, borderRadius:8, cursor:'pointer', transition:'all .13s' }}
-                    onMouseEnter={e=>e.currentTarget.style.background= it._type==='event' ? 'rgba(129,140,248,0.22)' : 'rgba(52,211,153,0.22)'}
-                    onMouseLeave={e=>e.currentTarget.style.background= it._type==='event' ? 'rgba(129,140,248,0.12)' : 'rgba(52,211,153,0.12)'}
+                    style={{
+                      display:'flex', alignItems:'center', gap:8, padding:'7px 9px',
+                      background: it._type==='event' ? 'rgba(129,140,248,0.15)' : 'rgba(52,211,153,0.15)',
+                      border: `1px solid ${it._type==='event' ? 'rgba(129,140,248,0.35)' : 'rgba(52,211,153,0.35)'}`,
+                      borderRadius:9, cursor:'pointer', transition:'all .13s'
+                    }}
+                    onMouseEnter={e=>e.currentTarget.style.transform='translateX(2px)'}
+                    onMouseLeave={e=>e.currentTarget.style.transform='translateX(0)'}
                   >
-                    <span style={{ fontSize:12, flexShrink:0 }}>{it._type==='event' ? '📅' : '🎓'}</span>
-                    <span style={{ fontSize:12.5, fontWeight:700, color:'#fff', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', flex:1 }}>{it.title}</span>
-                    <span style={{ fontSize:9.5, color: it._type==='event' ? '#a5b4fc' : '#6ee7b7', flexShrink:0, fontWeight:700 }}>{it._type==='event' ? it.category : it.level}</span>
+                    <span style={{ fontSize:13 }}>{it._icon || (it._type==='event' ? '📅' : '🎓')}</span>
+                    <span style={{ fontSize:12, fontWeight:700, color:'#fff', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', flex:1 }}>{it.title}</span>
+                    <span style={{ fontSize:10, color: it._type==='event' ? '#a5b4fc' : '#6ee7b7', fontWeight:800 }}>{it.category || it.level}</span>
                   </div>
                 ))}
-                <button onClick={() => setTab('events')} style={{ marginTop:2, background:'rgba(255,255,255,0.06)', color:'rgba(255,255,255,0.55)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:8, padding:'6px', fontSize:12.5, fontWeight:700, cursor:'pointer', fontFamily:'inherit' }}>
-                  ＋ Add more
-                </button>
               </div>
             )}
           </div>
         )}
 
         {/* Role-based quick shortcuts */}
-        <div style={{ background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:12, padding:'12px', marginBottom:14 }}>
-          <div style={{ fontSize:12, fontWeight:800, color:'rgba(255,255,255,0.3)', textTransform:'uppercase', letterSpacing:'.6px', marginBottom:10 }}>
-            ⚡ Quick Shortcuts
+        <div style={{ background:'rgba(11,19,38,0.85)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:14, padding:'14px 12px', marginBottom:14 }}>
+          <div style={{ fontSize:11, fontWeight:800, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', letterSpacing:'.6px', marginBottom:10, display:'flex', alignItems:'center', gap:6 }}>
+            <span>⚡</span> Quick Shortcuts
           </div>
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6 }}>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:7 }}>
             {shortcuts.map(s => (
               <button key={s.label} onClick={s.action} style={{
-                background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.08)',
-                borderRadius:9, padding:'9px 6px', cursor:'pointer', fontFamily:'inherit',
+                background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.08)',
+                borderRadius:10, padding:'10px 6px', cursor:'pointer', fontFamily:'inherit',
                 display:'flex', flexDirection:'column', alignItems:'center', gap:4,
                 transition:'all .15s',
               }}
-              onMouseEnter={e=>{e.currentTarget.style.background='rgba(249,115,22,0.12)';e.currentTarget.style.borderColor='rgba(249,115,22,0.3)';}}
-              onMouseLeave={e=>{e.currentTarget.style.background='rgba(255,255,255,0.05)';e.currentTarget.style.borderColor='rgba(255,255,255,0.08)';}}
+              onMouseEnter={e=>{e.currentTarget.style.background='rgba(249,115,22,0.14)';e.currentTarget.style.borderColor='rgba(249,115,22,0.35)';e.currentTarget.style.transform='translateY(-2px)';}}
+              onMouseLeave={e=>{e.currentTarget.style.background='rgba(255,255,255,0.04)';e.currentTarget.style.borderColor='rgba(255,255,255,0.08)';e.currentTarget.style.transform='translateY(0)';}}
               >
                 <span style={{ fontSize:18 }}>{s.icon}</span>
-                <span style={{ fontSize:12, fontWeight:700, color:'rgba(255,255,255,0.6)', textAlign:'center', lineHeight:1.2 }}>{s.label}</span>
+                <span style={{ fontSize:11.5, fontWeight:800, color:'rgba(255,255,255,0.8)', textAlign:'center', lineHeight:1.2 }}>{s.label}</span>
               </button>
             ))}
           </div>
         </div>
 
-        {/* Legend */}
-        <div style={{ marginBottom:14 }}>
-          <div style={{ fontSize:12, fontWeight:800, color:'rgba(255,255,255,0.3)', textTransform:'uppercase', letterSpacing:'.6px', marginBottom:8 }}>My Calendars</div>
-          {[
-            { color:'#818cf8', label:`Events (${evCount})`,   key:'event'    },
-            { color:'#34d399', label:`Training (${trCount})`, key:'training' },
-          ].map(l => (
-            <div key={l.key} style={{ display:'flex', alignItems:'center', gap:8, marginBottom:7 }}>
-              <div style={{ width:10, height:10, borderRadius:3, background:l.color, flexShrink:0 }} />
-              <span style={{ fontSize:12, color:'rgba(255,255,255,0.65)', fontWeight:600 }}>{l.label}</span>
-            </div>
-          ))}
+        {/* My Calendars Filter Toggles */}
+        <div style={{ background:'rgba(11,19,38,0.85)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:14, padding:'14px 12px', marginBottom:14 }}>
+          <div style={{ fontSize:11, fontWeight:800, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', letterSpacing:'.6px', marginBottom:10 }}>
+            🗂️ My Calendars
+          </div>
+          <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+            <label style={{ display:'flex', alignItems:'center', justifyContent:'space-between', cursor:'pointer', padding:'6px 8px', background:'rgba(255,255,255,0.03)', borderRadius:8, border:'1px solid rgba(255,255,255,0.06)' }}>
+              <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                <input type="checkbox" checked={showEvents} onChange={e=>setShowEvents(e.target.checked)} style={{ accentColor:'#818cf8', width:15, height:15, cursor:'pointer' }} />
+                <span style={{ fontSize:12.5, color: showEvents ? '#fff' : 'rgba(255,255,255,0.4)', fontWeight:700 }}>Events</span>
+              </div>
+              <span style={{ fontSize:11, fontWeight:800, color:'#818cf8', background:'rgba(129,140,248,0.15)', border:'1px solid rgba(129,140,248,0.3)', borderRadius:5, padding:'1px 6px' }}>
+                {rawEvCount}
+              </span>
+            </label>
+
+            <label style={{ display:'flex', alignItems:'center', justifyContent:'space-between', cursor:'pointer', padding:'6px 8px', background:'rgba(255,255,255,0.03)', borderRadius:8, border:'1px solid rgba(255,255,255,0.06)' }}>
+              <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                <input type="checkbox" checked={showTraining} onChange={e=>setShowTraining(e.target.checked)} style={{ accentColor:'#34d399', width:15, height:15, cursor:'pointer' }} />
+                <span style={{ fontSize:12.5, color: showTraining ? '#fff' : 'rgba(255,255,255,0.4)', fontWeight:700 }}>Training</span>
+              </div>
+              <span style={{ fontSize:11, fontWeight:800, color:'#34d399', background:'rgba(52,211,153,0.15)', border:'1px solid rgba(52,211,153,0.3)', borderRadius:5, padding:'1px 6px' }}>
+                {rawTrCount}
+              </span>
+            </label>
+          </div>
         </div>
 
         {/* Quick actions */}
-        <div style={{ fontSize:12, fontWeight:800, color:'rgba(255,255,255,0.3)', textTransform:'uppercase', letterSpacing:'.6px', marginBottom:8 }}>Quick Actions</div>
-        {[
-          { label:'＋ Add Event', action:() => setTab('events') },
-          { label:'＋ Add Training', action:() => setTab('training') },
-        ].map(a => (
-          <button key={a.label} onClick={a.action} style={{
-            display:'block', width:'100%', textAlign:'left', background:'transparent',
-            border:'none', color:'rgba(255,255,255,0.55)', fontSize:12.5, fontWeight:600,
-            cursor:'pointer', padding:'6px 0', fontFamily:'inherit', transition:'color .13s',
-          }}
-          onMouseEnter={e=>e.currentTarget.style.color='#f97316'}
-          onMouseLeave={e=>e.currentTarget.style.color='rgba(255,255,255,0.55)'}
-          >{a.label}</button>
-        ))}
+        <div style={{ padding:'0 4px' }}>
+          <div style={{ fontSize:11, fontWeight:800, color:'rgba(255,255,255,0.35)', textTransform:'uppercase', letterSpacing:'.6px', marginBottom:8 }}>
+            Quick Actions
+          </div>
+          {[
+            { label:'＋ Add New Event', action:() => setTab('events'), color:'#fb923c' },
+            { label:'＋ Add New Training', action:() => setTab('training'), color:'#34d399' },
+          ].map(a => (
+            <button key={a.label} onClick={a.action} style={{
+              display:'block', width:'100%', textAlign:'left', background:'transparent',
+              border:'none', color:'rgba(255,255,255,0.6)', fontSize:12, fontWeight:700,
+              cursor:'pointer', padding:'6px 0', fontFamily:'inherit', transition:'all .13s',
+            }}
+            onMouseEnter={e=>{e.currentTarget.style.color=a.color;e.currentTarget.style.transform='translateX(3px)';}}
+            onMouseLeave={e=>{e.currentTarget.style.color='rgba(255,255,255,0.6)';e.currentTarget.style.transform='translateX(0)';}}
+            >{a.label}</button>
+          ))}
+        </div>
       </div>
 
       {/* ── Main calendar ── */}
       <div style={{ flex:1, overflow:'hidden', display:'flex', flexDirection:'column', paddingLeft:20 }}>
 
         {/* Toolbar */}
-        <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:14, flexShrink:0 }}>
-          <button onClick={goToday} style={{ background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.14)', borderRadius:8, padding:'7px 16px', color:'rgba(255,255,255,0.8)', fontSize:13, fontWeight:700, cursor:'pointer', fontFamily:'inherit', transition:'all .13s' }}
-            onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,0.13)'}
-            onMouseLeave={e=>e.currentTarget.style.background='rgba(255,255,255,0.07)'}
-          >Today</button>
-          <div style={{ display:'flex', gap:2 }}>
-            {[['‹',prevMon],['›',nextMon]].map(([ch,fn])=>(
-              <button key={ch} onClick={fn} style={{ background:'none',border:'1px solid rgba(255,255,255,0.12)',borderRadius:7,width:32,height:32,color:'rgba(255,255,255,0.65)',fontSize:16,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',transition:'all .13s' }}
-                onMouseEnter={e=>{e.currentTarget.style.background='rgba(255,255,255,0.09)';e.currentTarget.style.color='#fff';}}
-                onMouseLeave={e=>{e.currentTarget.style.background='none';e.currentTarget.style.color='rgba(255,255,255,0.65)';}}
-              >{ch}</button>
-            ))}
+        <div style={{
+          display:'flex', alignItems:'center', justifyContent:'space-between',
+          gap:12, marginBottom:16, flexShrink:0,
+          background:'rgba(11, 19, 38, 0.85)', border:'1px solid rgba(255,255,255,0.08)',
+          borderRadius:16, padding:'12px 18px', backdropFilter:'blur(14px)',
+          boxShadow:'0 4px 20px rgba(0,0,0,0.25)'
+        }}>
+          <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+            <button onClick={goToday} style={{
+              background:'linear-gradient(135deg,#f97316,#e11d48)',
+              border:'none', borderRadius:9, padding:'8px 16px', color:'#fff',
+              fontSize:13, fontWeight:800, cursor:'pointer', fontFamily:'inherit',
+              boxShadow:'0 4px 14px rgba(249,115,22,0.35)', transition:'all .14s'
+            }}
+            onMouseEnter={e=>e.currentTarget.style.opacity='.9'}
+            onMouseLeave={e=>e.currentTarget.style.opacity='1'}
+            >Today</button>
+
+            <div style={{ display:'flex', gap:4 }}>
+              {[['‹',prevMon],['›',nextMon]].map(([ch,fn])=>(
+                <button key={ch} onClick={fn} style={{
+                  background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.12)',
+                  borderRadius:8, width:34, height:34, color:'rgba(255,255,255,0.8)',
+                  fontSize:16, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center',
+                  transition:'all .13s'
+                }}
+                onMouseEnter={e=>{e.currentTarget.style.background='rgba(255,255,255,0.15)';e.currentTarget.style.color='#fff';}}
+                onMouseLeave={e=>{e.currentTarget.style.background='rgba(255,255,255,0.06)';e.currentTarget.style.color='rgba(255,255,255,0.8)';}}
+                >{ch}</button>
+              ))}
+            </div>
+
+            <div style={{ display:'flex', alignItems:'center', gap:8, marginLeft:6 }}>
+              <span style={{ fontSize:18 }}>📅</span>
+              <h2 style={{ color:'#fff', fontWeight:900, fontSize:19, letterSpacing:'-0.4px', margin:0 }}>
+                {MONTH_NAMES_LONG[month]} {year}
+              </h2>
+            </div>
           </div>
-          <h2 style={{ color:'#fff', fontWeight:900, fontSize:18, letterSpacing:'-0.3px', margin:0 }}>
-            {MONTH_NAMES_LONG[month]} {year}
-          </h2>
-          <div style={{ marginLeft:'auto', display:'flex', gap:8, alignItems:'center' }}>
-            <span style={{ fontSize:12, color:'rgba(255,255,255,0.5)' }}>
+
+          <div style={{ display:'flex', gap:10, alignItems:'center' }}>
+            <span style={{ fontSize:12, fontWeight:700, color:'rgba(255,255,255,0.6)', background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.09)', borderRadius:8, padding:'6px 12px' }}>
               {allItems.filter(i=>{ const m=i.startDate?.getMonth(); return m===month; }).length} items this month
             </span>
-            <button onClick={() => setTab('events')} style={{ background:'linear-gradient(90deg,#f97316,#e11d48)', color:'#fff', border:'none', borderRadius:9, padding:'8px 16px', fontSize:12.5, fontWeight:800, cursor:'pointer', fontFamily:'inherit', display:'flex', alignItems:'center', gap:6 }}>
+            <button onClick={() => setTab('events')} style={{
+              background:'linear-gradient(90deg,#f97316,#e11d48)', color:'#fff',
+              border:'none', borderRadius:10, padding:'9px 18px', fontSize:13,
+              fontWeight:800, cursor:'pointer', fontFamily:'inherit',
+              display:'flex', alignItems:'center', gap:6, boxShadow:'0 4px 16px rgba(249,115,22,0.35)'
+            }}>
               ＋ New Event
             </button>
           </div>
         </div>
 
         {/* Day headers Mon–Sun */}
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', borderBottom:'1px solid rgba(255,255,255,0.08)', paddingBottom:6, marginBottom:0, flexShrink:0 }}>
+        <div style={{
+          display:'grid', gridTemplateColumns:'repeat(7,1fr)',
+          background:'rgba(15,23,42,0.6)', border:'1px solid rgba(255,255,255,0.08)',
+          borderBottom:'none', borderRadius:'14px 14px 0 0',
+          padding:'10px 0', flexShrink:0
+        }}>
           {DAY_LABELS.map((d,i) => (
-            <div key={d} style={{ textAlign:'center', fontSize:13, fontWeight:700, color: i>=5 ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.45)', letterSpacing:'.5px', textTransform:'uppercase' }}>{d}</div>
+            <div key={d} style={{
+              textAlign:'center', fontSize:11.5, fontWeight:800,
+              color: i>=5 ? '#f87171' : 'rgba(255,255,255,0.7)',
+              letterSpacing:'.6px', textTransform:'uppercase'
+            }}>{d}</div>
           ))}
         </div>
 
         {loading ? (
-          <div style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', color:'rgba(255,255,255,0.3)' }}>
+          <div style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', color:'rgba(255,255,255,0.3)', background:'rgba(11,19,38,0.5)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:'0 0 14px 14px' }}>
             <div style={{ textAlign:'center' }}><div style={{ fontSize:32, marginBottom:8 }}>⏳</div>Loading calendar…</div>
           </div>
         ) : (
           /* Week rows */
-          <div style={{ flex:1, overflowY:'auto', display:'flex', flexDirection:'column' }}>
+          <div style={{
+            flex:1, overflowY:'auto', display:'flex', flexDirection:'column',
+            background:'rgba(11,19,38,0.75)', border:'1px solid rgba(255,255,255,0.08)',
+            borderRadius:'0 0 14px 14px', backdropFilter:'blur(12px)'
+          }}>
             {weeks.map((wDays, wi) => {
               const bars = getWeekBars(wDays);
               const maxRow = bars.reduce((mx,b)=>Math.max(mx,b.row), -1);
               return (
-                <div key={wi} style={{ flex:1, minHeight:90, borderBottom:'1px solid rgba(255,255,255,0.05)', display:'flex', flexDirection:'column' }}>
+                <div key={wi} style={{
+                  flex:1, minHeight:105, borderBottom: wi < weeks.length - 1 ? '1px solid rgba(255,255,255,0.06)' : 'none',
+                  display:'flex', flexDirection:'column', position:'relative'
+                }}>
                   {/* Event bars */}
                   {bars.length > 0 && (
                     <div style={{
                       display:'grid', gridTemplateColumns:'repeat(7,1fr)',
-                      gridTemplateRows:`repeat(${maxRow+1}, 22px)`,
-                      gap:2, padding:'4px 4px 2px', flexShrink:0,
-                      minHeight:(maxRow+1)*24+8,
+                      gridTemplateRows:`repeat(${maxRow+1}, 26px)`,
+                      gap:3, padding:'6px 6px 2px', flexShrink:0,
+                      minHeight:(maxRow+1)*28+10, zIndex:2,
                     }}>
                       {bars.map((item,ii) => {
-                        const lR = item.isStart ? 5 : 0;
-                        const rR = item.isEnd   ? 5 : 0;
+                        const lR = item.isStart ? 8 : 0;
+                        const rR = item.isEnd   ? 8 : 0;
                         return (
                           <div
                             key={`${item.id}-w${wi}-${ii}`}
-                            title={item.title}
+                            title={`${item.title} (${item.date || item.schedule})`}
                             onClick={() => setDetail(item)}
                             style={{
                               gridColumnStart: item.sCol+1, gridColumnEnd: item.eCol+2,
@@ -3102,37 +3167,56 @@ function AdminCalendarTab({ showToast, setTab }) {
                               background: item._bg,
                               border: `1px solid ${item._border}`,
                               borderRadius: `${lR}px ${rR}px ${rR}px ${lR}px`,
-                              padding: '1px 7px',
+                              padding: '2px 9px',
                               cursor:'pointer', overflow:'hidden',
-                              display:'flex', alignItems:'center', gap:5,
-                              transition:'filter .12s',
+                              display:'flex', alignItems:'center', gap:6,
+                              boxShadow:'0 2px 8px rgba(0,0,0,0.3)',
+                              transition:'all .15s ease',
                             }}
-                            onMouseEnter={e=>e.currentTarget.style.filter='brightness(1.25)'}
-                            onMouseLeave={e=>e.currentTarget.style.filter='none'}
+                            onMouseEnter={e=>{
+                              e.currentTarget.style.transform='translateY(-1px)';
+                              e.currentTarget.style.filter='brightness(1.2)';
+                              e.currentTarget.style.boxShadow='0 4px 14px rgba(0,0,0,0.5)';
+                            }}
+                            onMouseLeave={e=>{
+                              e.currentTarget.style.transform='translateY(0)';
+                              e.currentTarget.style.filter='none';
+                              e.currentTarget.style.boxShadow='0 2px 8px rgba(0,0,0,0.3)';
+                            }}
                           >
-                            {item._type === 'training' && <span style={{ fontSize:8, flexShrink:0, opacity:0.8 }}>🎓</span>}
-                            {!item.isStart && <span style={{ fontSize:9, color:item._text, opacity:0.5, flexShrink:0 }}>◀</span>}
-                            <span style={{ fontSize:12, fontWeight:700, color:item._text, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', flex:1 }}>
+                            <span style={{ fontSize:11, flexShrink:0 }}>{item._icon || (item._type === 'training' ? '🎓' : '📅')}</span>
+                            {!item.isStart && <span style={{ fontSize:9, color:item._text, opacity:0.6, flexShrink:0 }}>◀</span>}
+                            <span style={{ fontSize:12, fontWeight:800, color:item._text, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', flex:1 }}>
                               {item.title}
                             </span>
+                            {item.isEnd && (
+                              <span style={{ fontSize:9.5, opacity:0.85, fontWeight:700, color:'#fff', background:'rgba(0,0,0,0.25)', borderRadius:4, padding:'1px 4px', flexShrink:0 }}>
+                                {item.category || item.level}
+                              </span>
+                            )}
                           </div>
                         );
                       })}
                     </div>
                   )}
                   {/* Day number cells */}
-                  <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', flex:1 }}>
+                  <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', flex:1, position:'absolute', inset:0, zIndex:1, pointerEvents:'none' }}>
                     {wDays.map((d, di) => {
                       const inM = d >= 1 && d <= daysInMon;
                       const isT = inM && d===today.getDate() && month===today.getMonth() && year===today.getFullYear();
                       const isWE = di >= 5;
                       return (
-                        <div key={di} style={{ borderLeft: di>0 ? '1px solid rgba(255,255,255,0.04)' : 'none', padding:'4px 7px', background: isT ? 'rgba(249,115,22,0.05)' : 'transparent' }}>
+                        <div key={di} style={{
+                          borderLeft: di>0 ? '1px solid rgba(255,255,255,0.04)' : 'none',
+                          padding:'6px 8px',
+                          background: isT ? 'rgba(249,115,22,0.06)' : isWE ? 'rgba(255,255,255,0.012)' : 'transparent'
+                        }}>
                           <div style={{
-                            width:24, height:24, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center',
-                            background: isT ? '#f97316' : 'transparent',
-                            fontSize:12, fontWeight: isT ? 900 : 400,
-                            color: isT ? '#fff' : inM ? (isWE ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.65)') : 'rgba(255,255,255,0.18)',
+                            width:26, height:26, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center',
+                            background: isT ? 'linear-gradient(135deg,#f97316,#e11d48)' : 'transparent',
+                            fontSize:12.5, fontWeight: isT ? 900 : 700,
+                            color: isT ? '#fff' : inM ? (isWE ? '#f87171' : 'rgba(255,255,255,0.85)') : 'rgba(255,255,255,0.15)',
+                            boxShadow: isT ? '0 0 12px rgba(249,115,22,0.6)' : 'none'
                           }}>
                             {inM ? d : ''}
                           </div>
@@ -3149,35 +3233,70 @@ function AdminCalendarTab({ showToast, setTab }) {
 
       {/* ── Detail side panel ── */}
       {detail && (
-        <div onClick={() => setDetail(null)} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.45)', zIndex:9100, display:'flex', alignItems:'flex-start', justifyContent:'flex-end', padding:20 }}>
-          <div onClick={e => e.stopPropagation()} style={{ background:'#0f172a', border:'1px solid rgba(255,255,255,0.12)', borderRadius:20, width:340, maxHeight:'80vh', overflow:'auto', animation:'modalIn .22s ease', boxShadow:'0 24px 80px rgba(0,0,0,0.7)' }}>
-            <div style={{ background: detail._type==='event' ? (EV_CAL_COLORS[detail.category]?.bg?.replace('0.4','0.7') || 'rgba(79,70,229,0.7)') : TR_CAL_COLORS[detail.category]?.replace('0.4','0.7'), padding:'18px 20px 16px', position:'relative' }}>
-              <button onClick={()=>setDetail(null)} style={{ position:'absolute',top:12,right:12,background:'rgba(255,255,255,0.18)',border:'none',borderRadius:'50%',width:36,height:36,color:'#fff',fontSize:16,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',backdropFilter:'blur(6px)',boxShadow:'0 2px 8px rgba(0,0,0,0.4)' }}>✕</button>
-              <div style={{ fontSize:12, fontWeight:700, color:'rgba(255,255,255,0.65)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:5 }}>
-                {detail._type === 'event' ? `📅 ${detail.category}` : `🎓 ${detail.category}`}
+        <div onClick={() => setDetail(null)} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.65)', zIndex:9100, display:'flex', alignItems:'center', justifyContent:'flex-end', padding:24, backdropFilter:'blur(6px)' }}>
+          <div onClick={e => e.stopPropagation()} style={{
+            background:'linear-gradient(180deg,#0f172a,#090e1c)',
+            border:'1px solid rgba(255,255,255,0.15)', borderRadius:22,
+            width:380, maxHeight:'85vh', overflow:'auto',
+            animation:'modalIn .22s cubic-bezier(0.16, 1, 0.3, 1)',
+            boxShadow:'0 30px 90px rgba(0,0,0,0.85)'
+          }}>
+            <div style={{ background: detail._bg, padding:'24px 24px 20px', position:'relative', borderBottom:'1px solid rgba(255,255,255,0.1)' }}>
+              <button onClick={()=>setDetail(null)} style={{
+                position:'absolute',top:14,right:14,background:'rgba(0,0,0,0.3)',
+                border:'1px solid rgba(255,255,255,0.2)',borderRadius:'50%',width:32,height:32,
+                color:'#fff',fontSize:13,fontWeight:900,cursor:'pointer',display:'flex',
+                alignItems:'center',justifyContent:'center',backdropFilter:'blur(8px)',
+                boxShadow:'0 2px 8px rgba(0,0,0,0.4)',transition:'all .13s'
+              }}>✕</button>
+              <div style={{ fontSize:11.5, fontWeight:800, color:'rgba(255,255,255,0.85)', textTransform:'uppercase', letterSpacing:'.6px', marginBottom:6 }}>
+                {detail._icon} {detail._type === 'event' ? `Consortium Event · ${detail.category}` : `Faculty Training · ${detail.category}`}
               </div>
-              <div style={{ color:'#fff', fontSize:16, fontWeight:900, lineHeight:1.35 }}>{detail.title}</div>
+              <div style={{ color:'#fff', fontSize:18, fontWeight:900, lineHeight:1.35, textShadow:'0 2px 6px rgba(0,0,0,0.4)' }}>
+                {detail.title}
+              </div>
             </div>
-            <div style={{ padding:'16px 20px' }}>
-              {detail._type === 'event'
-                ? [['📅','Date',detail.date],['📍','Venue',detail.venue],['🏛','Organizer',detail.organizer],['👥','Seats',`${detail.enrolled}/${detail.total}`]]
-                    .map(([ic,l,v]) => v && (
-                      <div key={l} style={{ display:'flex',gap:10,marginBottom:10 }}>
-                        <span style={{ fontSize:14,flexShrink:0 }}>{ic}</span>
-                        <div><div style={{ fontSize:12,color:'rgba(255,255,255,0.3)',fontWeight:700,textTransform:'uppercase',letterSpacing:'.5px' }}>{l}</div><div style={{ fontSize:13,color:'#fff',fontWeight:600 }}>{v}</div></div>
-                      </div>
-                    ))
-                : [['🏛','Organizer',detail.org],['⏱','Duration',detail.duration],['📊','Level',detail.level],['📅','Schedule',detail.schedule],['👥','Enrollment',`${detail.enrolled}/${detail.total}`]]
-                    .map(([ic,l,v]) => v && (
-                      <div key={l} style={{ display:'flex',gap:10,marginBottom:10 }}>
-                        <span style={{ fontSize:14,flexShrink:0 }}>{ic}</span>
-                        <div><div style={{ fontSize:12,color:'rgba(255,255,255,0.3)',fontWeight:700,textTransform:'uppercase',letterSpacing:'.5px' }}>{l}</div><div style={{ fontSize:13,color:'#fff',fontWeight:600 }}>{v}</div></div>
-                      </div>
-                    ))
-              }
-              {detail.description && <p style={{ color:'rgba(255,255,255,0.5)',fontSize:12.5,lineHeight:1.65,marginBottom:14 }}>{detail.description}</p>}
-              <button onClick={() => { setDetail(null); setTab(detail._type==='event'?'events':'training'); }} style={{ width:'100%', background:'linear-gradient(90deg,#f97316,#e11d48)', color:'#fff', border:'none', borderRadius:11, padding:'11px', fontSize:13.5, fontWeight:800, cursor:'pointer', fontFamily:'inherit' }}>
-                Edit in {detail._type==='event'?'Events':'Training'} tab →
+
+            <div style={{ padding:'20px 24px' }}>
+              <div style={{ display:'flex', flexDirection:'column', gap:10, marginBottom:16 }}>
+                {detail._type === 'event'
+                  ? [['📅','Date & Schedule',detail.date],['📍','Venue / Location',detail.venue],['🏛','Lead Organizer',detail.organizer],['👥','Seat Capacity',`${detail.enrolled}/${detail.total} Registered`]]
+                      .map(([ic,l,v]) => v && (
+                        <div key={l} style={{ display:'flex',gap:12,alignItems:'center',padding:'8px 12px',background:'rgba(255,255,255,0.035)',border:'1px solid rgba(255,255,255,0.06)',borderRadius:10 }}>
+                          <span style={{ fontSize:16,flexShrink:0 }}>{ic}</span>
+                          <div>
+                            <div style={{ fontSize:10.5,color:'rgba(255,255,255,0.4)',fontWeight:800,textTransform:'uppercase',letterSpacing:'.5px' }}>{l}</div>
+                            <div style={{ fontSize:13,color:'#fff',fontWeight:700,marginTop:1 }}>{v}</div>
+                          </div>
+                        </div>
+                      ))
+                  : [['🏛','Host Institution',detail.org],['⏱','Duration',detail.duration],['📊','Target Level',detail.level],['📅','Schedule',detail.schedule],['👥','Enrollment',`${detail.enrolled}/${detail.total} Faculty Enrolled`]]
+                      .map(([ic,l,v]) => v && (
+                        <div key={l} style={{ display:'flex',gap:12,alignItems:'center',padding:'8px 12px',background:'rgba(255,255,255,0.035)',border:'1px solid rgba(255,255,255,0.06)',borderRadius:10 }}>
+                          <span style={{ fontSize:16,flexShrink:0 }}>{ic}</span>
+                          <div>
+                            <div style={{ fontSize:10.5,color:'rgba(255,255,255,0.4)',fontWeight:800,textTransform:'uppercase',letterSpacing:'.5px' }}>{l}</div>
+                            <div style={{ fontSize:13,color:'#fff',fontWeight:700,marginTop:1 }}>{v}</div>
+                          </div>
+                        </div>
+                      ))
+                }
+              </div>
+
+              {detail.description && (
+                <div style={{ background:'rgba(255,255,255,0.025)', border:'1px solid rgba(255,255,255,0.05)', borderRadius:12, padding:'12px 14px', marginBottom:18 }}>
+                  <div style={{ fontSize:10.5, fontWeight:800, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:6 }}>Program Overview</div>
+                  <p style={{ color:'rgba(255,255,255,0.7)',fontSize:12.5,lineHeight:1.7,margin:0 }}>{detail.description}</p>
+                </div>
+              )}
+
+              <button onClick={() => { setDetail(null); setTab(detail._type==='event'?'events':'training'); }} style={{
+                width:'100%', background:'linear-gradient(90deg,#f97316,#e11d48)',
+                color:'#fff', border:'none', borderRadius:12, padding:'12px',
+                fontSize:13.5, fontWeight:800, cursor:'pointer', fontFamily:'inherit',
+                boxShadow:'0 4px 16px rgba(249,115,22,0.35)'
+              }}>
+                ✏️ Edit in {detail._type==='event'?'Events':'Training'} tab →
               </button>
             </div>
           </div>
