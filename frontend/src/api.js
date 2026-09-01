@@ -144,6 +144,14 @@ export const api = {
   chatbot: {
     send: (message) => request('/chatbot/message', { method: 'POST', body: JSON.stringify({ message }) }),
     intents: () => request('/chatbot/intents'),
+    tts: (text, voice = 'Adam') => {
+      const BASE_URL = import.meta.env.VITE_API_URL || 'https://dasig-portal.onrender.com/api';
+      return fetch(`${BASE_URL}/chatbot/tts`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, voice }),
+      });
+    },
   },
   contact: {
     send: (body) => request('/contact', { method: 'POST', body: JSON.stringify(body) }),

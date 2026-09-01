@@ -739,6 +739,79 @@ router.post('/message', async (req, res) => {
   });
 });
 
+// POST /api/chatbot/tts — Neural Voice Generation (ElevenLabs + Neural Fallback)
+router.post('/tts', async (req, res) => {
+  const { text, voice = 'Adam' } = req.body;
+  if (!text || typeof text !== 'string') {
+    return res.status(400).json({ error: 'Text is required for voice generation' });
+  }
+
+  const clean = text
+    .replace(/https?:\/\/\S+/gi, '')
+    .replace(/[\*\_\~`#]/g, '')
+    .replace(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '')
+    .replace(/^[•▸\-\*\d+\.]\s*/gm, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 1000);
+
+  const apiKey = process.env.ELEVENLABS_API_KEY;
+  if (!apiKey) {
+    return res.status(200).json({
+      fallback: true,
+      message: 'No ElevenLabs API key found; using client-side High-Fidelity Neural voice synthesizer',
+      text: clean,
+    });
+  }
+
+  // Known ElevenLabs voice IDs: Adam (pNInz6obpgDQGcFmaJgB), Rachel (21m00Tcm4TlvDq8ikWAM)
+  const VOICE_IDS = {
+    Adam: 'pNInz6obpgDQGcFmaJgB',
+    Rachel: '21m00Tcm4TlvDq8ikWAM',
+    Antoni: 'ErXwobaYiN019PkySvjV',
+    Josh: 'TxGEqnHWrfWFTfGW9XjX',
+  };
+  const voiceId = VOICE_IDS[voice] || VOICE_IDS.Adam;
+
+  try {
+    const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+      method: 'POST',
+      headers: {
+        'xi-api-key': apiKey,
+        'Content-Type': 'application/json',
+        'Accept': 'audio/mpeg',
+      },
+      body: JSON.stringify({
+        text: clean,
+        model_id: 'eleven_multilingual_v2',
+        voice_settings: {
+          stability: 0.5,
+          similarity_boost: 0.8,
+          style: 0.15,
+          use_speaker_boost: true,
+        },
+      }),
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      console.warn('[elevenlabs tts] API returned error:', response.status, errText);
+      return res.status(200).json({ fallback: true, text: clean });
+    }
+
+    const audioBuffer = await response.arrayBuffer();
+    res.set({
+      'Content-Type': 'audio/mpeg',
+      'Content-Length': audioBuffer.byteLength,
+      'Cache-Control': 'public, max-age=86400',
+    });
+    return res.send(Buffer.from(audioBuffer));
+  } catch (err) {
+    console.error('[elevenlabs tts] Fetch error:', err.message);
+    return res.status(200).json({ fallback: true, text: clean });
+  }
+});
+
 // GET /api/chatbot/intents
 router.get('/intents', (req, res) => {
   res.json(KB.map(k => ({ intent: k.intent, sample: k.keywords[0] })));

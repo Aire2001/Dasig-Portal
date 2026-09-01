@@ -747,26 +747,66 @@ export default function ChatbotPage() {
       .trim();
   }
 
-  function speakMessage(idx, text, overrideSpeed) {
-    if (!window.speechSynthesis) return;
+  const audioPlayerRef = useRef(null);
+
+  async function speakMessage(idx, text, overrideSpeed) {
     if (speakingIdx === idx && !overrideSpeed) {
-      window.speechSynthesis.cancel();
+      if (audioPlayerRef.current) {
+        audioPlayerRef.current.pause();
+        audioPlayerRef.current = null;
+      }
+      if (window.speechSynthesis) window.speechSynthesis.cancel();
       setSpeakingIdx(null);
       return;
     }
-    window.speechSynthesis.cancel();
+
+    if (audioPlayerRef.current) {
+      audioPlayerRef.current.pause();
+      audioPlayerRef.current = null;
+    }
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
+
     const cleanText = cleanSpeechText(text);
     if (!cleanText) return;
 
+    setSpeakingIdx(idx);
+    const speed = overrideSpeed || voiceSpeed || 1.0;
+
+    try {
+      // 1. Attempt ElevenLabs Neural Audio Generation via Backend API
+      const res = await api.chatbot.tts(cleanText, 'Adam');
+      const contentType = res.headers?.get('content-type') || '';
+
+      if (res.ok && contentType.includes('audio/mpeg')) {
+        const blob = await res.blob();
+        const audioUrl = URL.createObjectURL(blob);
+        const audio = new Audio(audioUrl);
+        audio.playbackRate = speed;
+        audio.onended = () => { setSpeakingIdx(null); audioPlayerRef.current = null; };
+        audio.onerror = () => { fallbackSpeak(idx, cleanText, speed); };
+        audioPlayerRef.current = audio;
+        await audio.play();
+        return;
+      }
+    } catch (e) {
+      console.warn('[tts] Backend streaming fallback:', e.message);
+    }
+
+    // 2. High-fidelity Client Neural Synthesis Fallback
+    fallbackSpeak(idx, cleanText, speed);
+  }
+
+  function fallbackSpeak(idx, cleanText, speed) {
+    if (!window.speechSynthesis) {
+      setSpeakingIdx(null);
+      return;
+    }
     const utter = new SpeechSynthesisUtterance(cleanText);
     const bestVoice = getBestHumanVoice();
     if (bestVoice) utter.voice = bestVoice;
-
-    const speed = overrideSpeed || voiceSpeed || 1.0;
-    utter.rate = speed * 0.96; // Conversational human cadence
-    utter.pitch = 1.0;         // Natural warm pitch
+    utter.rate = (speed || 1.0) * 0.96;
+    utter.pitch = 1.0;
     utter.volume = 1.0;
-
     utter.onend = () => setSpeakingIdx(null);
     utter.onerror = () => setSpeakingIdx(null);
     setSpeakingIdx(idx);
