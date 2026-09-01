@@ -62,46 +62,11 @@ export default function FundingPage() {
   const [selected, setSelected]   = useState(null);
 
   useEffect(() => {
-    if (!isMember) { setLoading(false); return; }
     api.funding.list({ category, status })
       .then(r => setItems(Array.isArray(r) ? r : (r?.data || [])))
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [isMember, category, status]);
-
-  if (!user) {
-    return (
-      <div style={{ background:'linear-gradient(180deg,#000d30 0%,#020817 300px,#0f172a 100%)', minHeight:'100vh', position:'relative' }}>
-        <ParticleBackground density={40} />
-        <div style={{ position:'relative', zIndex:1 }}>
-          <PageHeader eyebrow="Funding & Investment" title="Funding Opportunities" />
-          <div style={{ minHeight:'50vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:16 }}>
-            <div style={{ fontSize:48 }}>💰</div>
-            <div style={{ fontSize:20, fontWeight:800, color:'#fff' }}>Sign in to view funding</div>
-            <p style={{ color:'rgba(255,255,255,0.5)', fontSize:14 }}>Funding opportunities are available to registered users.</p>
-            <button onClick={() => navigate('/login')} style={{ background:'linear-gradient(90deg,#f97316,#e11d48)', color:'#fff', border:'none', borderRadius:12, padding:'13px 32px', fontSize:14, fontWeight:700, cursor:'pointer', fontFamily:'inherit', boxShadow:'0 6px 20px rgba(249,115,22,0.4)' }}>Log in →</button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!isMember) {
-    return (
-      <div style={{ background:'linear-gradient(180deg,#000d30 0%,#020817 300px,#0f172a 100%)', minHeight:'100vh', position:'relative' }}>
-        <ParticleBackground density={40} />
-        <div style={{ position:'relative', zIndex:1 }}>
-          <PageHeader eyebrow="Funding & Investment" title="Funding Opportunities" />
-          <div style={{ minHeight:'50vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:16 }}>
-            <div style={{ fontSize:52 }}>🔒</div>
-            <div style={{ fontSize:20, fontWeight:800, color:'#fff' }}>Members Only</div>
-            <p style={{ color:'rgba(255,255,255,0.5)', fontSize:14, textAlign:'center', maxWidth:400 }}>Funding opportunities are exclusive to verified DASIG members.</p>
-            <button onClick={() => navigate('/membership')} style={{ background:'linear-gradient(90deg,#f97316,#e11d48)', color:'#fff', border:'none', borderRadius:12, padding:'13px 32px', fontSize:14, fontWeight:700, cursor:'pointer', fontFamily:'inherit', boxShadow:'0 6px 20px rgba(249,115,22,0.4)' }}>Apply for Membership →</button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  }, [category, status]);
 
   return (
     <div style={{ background: 'linear-gradient(180deg,#000d30 0%,#020817 300px,#0f172a 100%)', minHeight: '100vh', position: 'relative' }}>
@@ -151,7 +116,43 @@ export default function FundingPage() {
                   <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13.5, lineHeight: 1.8, marginBottom: 18 }}>{selected.eligibility}</p>
                 </>
               )}
-              <button onClick={() => setSelected(null)} style={{ background: 'linear-gradient(90deg,#f97316,#e11d48)', color: '#fff', border: 'none', borderRadius: 12, padding: '11px 28px', fontSize: 13.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 16px rgba(249,115,22,0.35)' }}>Close</button>
+              <div style={{ display: 'flex', gap: 10, marginTop: 6, flexWrap: 'wrap' }}>
+                {isMember ? (
+                  <button
+                    onClick={() => { setSelected(null); navigate('/contact-admin'); }}
+                    style={{
+                      flex: 1, background: 'linear-gradient(90deg,#10b981,#059669)',
+                      color: '#fff', border: 'none', borderRadius: 12, padding: '12px 20px',
+                      fontSize: 13.5, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit',
+                      boxShadow: '0 4px 16px rgba(16,185,129,0.35)',
+                    }}
+                  >
+                    📝 Submit Grant Inquiry / Application →
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => { setSelected(null); navigate('/membership'); }}
+                    style={{
+                      flex: 1, background: 'linear-gradient(90deg,#f97316,#e11d48)',
+                      color: '#fff', border: 'none', borderRadius: 12, padding: '12px 20px',
+                      fontSize: 13.5, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit',
+                      boxShadow: '0 4px 16px rgba(249,115,22,0.35)',
+                    }}
+                  >
+                    🔒 Apply for Membership to Access Grants →
+                  </button>
+                )}
+                <button
+                  onClick={() => setSelected(null)}
+                  style={{
+                    background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)',
+                    color: 'rgba(255,255,255,0.8)', borderRadius: 12, padding: '12px 24px',
+                    fontSize: 13.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+                  }}
+                >
+                  Close
+                </button>
+              </div>
             </div>
           </div>
         </div>

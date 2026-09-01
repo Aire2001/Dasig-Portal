@@ -55,14 +55,14 @@ const SOCIAL = [
 ];
 
 const MODULE_LINKS = [
-  { label: 'Membership',   to: '/membership'   },
-  { label: 'Events',       to: '/events'       },
-  { label: 'News',         to: '/news'         },
-  { label: 'Training',     to: '/training'     },
-  { label: 'Policies',     to: '/policies'     },
-  { label: 'Funding',      to: '/funding'      },
-  { label: 'Partnerships', to: '/partnerships' },
-  { label: 'AI Chatbot',   to: '/chatbot'      },
+  { label: 'Membership',   to: '/membership'         },
+  { label: 'Events',       to: '/programs?tab=events'},
+  { label: 'News',         to: '/news'               },
+  { label: 'Training',     to: '/programs?tab=training'},
+  { label: 'Policies',     to: '/policies'           },
+  { label: 'Funding',      to: '/funding'            },
+  { label: 'Partnerships', to: '/partnerships'       },
+  { label: 'AI Chatbot',   to: '/chatbot'            },
 ];
 
 const MEMBER_LINKS = [
@@ -107,7 +107,7 @@ export default function Footer() {
               </div>
               <p style={{ color:'rgba(255,255,255,0.38)', fontSize:12.5, lineHeight:1.75, margin:'10px 0 18px' }}>
                 Dynamic Alliance for Science, Innovation &amp; Governance — Central Visayas, Region VII.
-                Connecting six institutions for a smarter, more coordinated region.
+                Connecting 7 partner institutions and government agencies for a smarter, more coordinated region.
               </p>
 
               {/* Social icons */}

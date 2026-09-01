@@ -56,31 +56,11 @@ export default function PoliciesPage() {
   const isMember = user && (user.role === 'MEMBER' || user.role === 'ADMIN');
 
   useEffect(() => {
-    if (!user) { setLoading(false); return; }
     api.policies.list({ category: active, search })
       .then(r => setPolicies(Array.isArray(r) ? r : (r?.data || [])))
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [user, active, search]);
-
-  if (!user) {
-    return (
-      <div style={{ background: 'linear-gradient(180deg,#000d30 0%,#020817 300px,#0f172a 100%)', minHeight: '100vh', position: 'relative' }}>
-        <ParticleBackground density={40} />
-        <div style={{ position: 'relative', zIndex: 1 }}>
-        <PageHeader eyebrow="Governance" title="Policies & Guidelines" />
-        <div style={{ minHeight: '50vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
-          <div style={{ fontSize: 48 }}>📋</div>
-          <div style={{ fontSize: 20, fontWeight: 800, color: '#fff' }}>Sign in to access policies</div>
-          <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 14 }}>Policy documents are available to registered users.</p>
-          <button onClick={() => navigate('/login')} style={{ background: 'linear-gradient(90deg,#f97316,#e11d48)', color: '#fff', border: 'none', borderRadius: 12, padding: '13px 32px', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 6px 20px rgba(249,115,22,0.4)' }}>
-            Log in →
-          </button>
-        </div>
-        </div>
-      </div>
-    );
-  }
+  }, [active, search]);
 
   return (
     <div style={{ background: 'linear-gradient(180deg,#000d30 0%,#020817 300px,#0f172a 100%)', minHeight: '100vh', position: 'relative' }}>
