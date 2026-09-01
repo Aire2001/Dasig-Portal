@@ -301,6 +301,68 @@ function generateHighIQResponse(normalizedQuery, lang) {
   }
 }
 
+// External Generative LLM Caller (Gemini / OpenAI with balanced academic restriction & high IQ)
+async function callGenerativeLLM(userPrompt, lang) {
+  const systemInstruction = `You are Haribon AI, the world-class intelligent conversational assistant for the DASIG Regional Academic Consortium (Region VII Central Visayas).
+You have a VERY HIGH IQ and broad, multi-disciplinary intellectual mastery across science, technology, mathematics, coding, history, language, philosophy, and academic research.
+You are fully trilingual and fluent in English, Bisaya/Cebuano, and Tagalog/Filipino.
+You are professional, articulate, helpful, and academically grounded. You maintain ethical safety and constructive decorum without being overly restrictive. When users ask general or technical questions (even outside the consortium), answer them deeply, accurately, and articulately in the detected language (${lang}) using beautiful Markdown formatting with clear headers, bullet points, and code blocks.`;
+
+  if (process.env.GEMINI_API_KEY) {
+    try {
+      const payload = {
+        contents: [
+          { role: 'user', parts: [{ text: `${systemInstruction}\n\nUser Question: ${userPrompt}` }] }
+        ]
+      };
+
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (text) return text;
+      }
+    } catch (err) {
+      console.warn('[chatbot] Gemini API error:', err.message);
+    }
+  }
+
+  if (process.env.OPENAI_API_KEY) {
+    try {
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          messages: [
+            { role: 'system', content: systemInstruction },
+            { role: 'user', content: userPrompt }
+          ],
+          temperature: 0.7
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const text = data.choices?.[0]?.message?.content;
+        if (text) return text;
+      }
+    } catch (err) {
+      console.warn('[chatbot] OpenAI API error:', err.message);
+    }
+  }
+
+  return null;
+}
+
 // POST /api/chatbot/message
 router.post('/message', async (req, res) => {
   const { message } = req.body;
