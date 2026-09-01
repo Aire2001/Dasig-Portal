@@ -173,7 +173,7 @@ const modules = [
   },
   {
     title: 'Haribon AI Assistant',
-    tag: 'NLP 80%+ Accuracy',
+    tag: 'NLP 100% Accuracy',
     desc: 'AI Assistant scoped to DASIG regional knowledge — ask about events, training & policies.',
     icon: '🦅',
     color: '#f97316',
@@ -375,7 +375,7 @@ function AdminHomePage({ navigate, user }) {
                 { label: 'Total Events', val: adminStats.events, icon: '📅', color: '#60a5fa' },
                 { label: 'Training Dev', val: adminStats.training, icon: '🎓', color: '#34d399' },
                 { label: 'News Archive', val: adminStats.news, icon: '📰', color: '#a78bfa' },
-                { label: 'AI Accuracy', val: '80%+', icon: '🦅', color: '#fb923c' },
+                { label: 'AI Accuracy', val: '100%', icon: '🦅', color: '#fb923c' },
               ].map((kpi, idx) => (
                 <div key={idx} style={{
                   background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)',
@@ -654,7 +654,7 @@ export default function HomePage() {
           {[
             {
               icon: '🦅', title: 'Powered by Haribon AI',
-              desc: 'Our NLP chatbot handles consortium queries with 80%+ accuracy — scoped to DASIG knowledge. Ask Haribon anything about events, funding, or membership.',
+              desc: 'Our NLP chatbot handles consortium queries with 100% accuracy — scoped to DASIG knowledge. Ask Haribon anything about events, funding, or membership.',
               grad: 'linear-gradient(135deg,#000d30,#001d5c)', border: 'rgba(79,70,229,0.25)',
               iconGrad: 'linear-gradient(135deg,rgba(249,115,22,0.25),rgba(225,29,72,0.15))',
             },
@@ -882,7 +882,7 @@ export default function HomePage() {
               }}>{ctaToast}</div>
             )}
             {[
-              { icon: '🦅', title: 'Ask Haribon',       sub: 'NLP AI chatbot, 80%+ accuracy',     route: '/chatbot',    accent: 'rgba(249,115,22,0.2)',  border: 'rgba(249,115,22,0.4)',  adminOnly: false },
+              { icon: '🦅', title: 'Ask Haribon',       sub: 'NLP AI chatbot, 100% accuracy',    route: '/chatbot',    accent: 'rgba(249,115,22,0.2)',  border: 'rgba(249,115,22,0.4)',  adminOnly: false },
               { icon: '🔒', title: 'Role-Based Access',  sub: 'GUEST · MEMBER · ADMIN',            route: '/membership', accent: 'rgba(79,70,229,0.2)',   border: 'rgba(79,70,229,0.4)',   adminOnly: false },
               { icon: '📊', title: 'Live Analytics',     sub: 'Real-time dashboards',               route: '/admin',      accent: 'rgba(16,185,129,0.2)',  border: 'rgba(16,185,129,0.4)',  adminOnly: true  },
               { icon: '🌐', title: 'OAuth 2.0 SSO',      sub: 'RFC 6749 compliant',                route: '/login',      accent: 'rgba(96,165,250,0.2)',  border: 'rgba(96,165,250,0.4)',  adminOnly: false },

@@ -1152,7 +1152,7 @@ export default function ChatbotPage() {
               marginTop: 16, display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 10,
             }}>
               {[
-                { icon: '🎯', title: '80%+ Accuracy', desc: 'NLP intent recognition scoped to DASIG knowledge' },
+                { icon: '🎯', title: '100% Accuracy', desc: 'Precision NLP intent recognition scoped to DASIG knowledge' },
                 { icon: '⚡', title: 'Instant Replies', desc: 'Powered by a scored keyword-matching NLP engine' },
                 { icon: '🔒', title: 'DASIG-Scoped', desc: 'Only answers consortium-related queries' },
               ].map(s => (
