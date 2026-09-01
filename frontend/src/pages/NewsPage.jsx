@@ -243,12 +243,45 @@ export default function NewsPage() {
     setSearchParams({ id: a.id }, { replace: true });
   }
 
+  const [featuredIdx, setFeaturedIdx] = useState(0);
+  const [isAutoPaused, setIsAutoPaused] = useState(false);
+  const [liveShuffle, setLiveShuffle] = useState(true);
+
   const displayedArticles = filter === 'Bookmarks'
     ? articles.filter(a => bookmarks.includes(a.id))
     : articles;
 
-  const featured = displayedArticles[0];
-  const rest = displayedArticles.slice(1);
+  const topStories = displayedArticles.slice(0, 5);
+  const activeFeatured = topStories[featuredIdx % Math.max(1, topStories.length)] || displayedArticles[0];
+  const restArticles = filter === 'All' && activeFeatured
+    ? displayedArticles.filter(a => a.id !== activeFeatured.id)
+    : displayedArticles;
+
+  // Auto-rotate Live Shuffle every 7 seconds
+  useEffect(() => {
+    if (!liveShuffle || isAutoPaused || topStories.length <= 1 || selected || readingAudioId) return;
+    const interval = setInterval(() => {
+      setFeaturedIdx(prev => (prev + 1) % topStories.length);
+    }, 7000);
+    return () => clearInterval(interval);
+  }, [liveShuffle, isAutoPaused, topStories.length, selected, readingAudioId]);
+
+  function nextFeatured() {
+    if (!topStories.length) return;
+    setFeaturedIdx(prev => (prev + 1) % topStories.length);
+  }
+
+  function prevFeatured() {
+    if (!topStories.length) return;
+    setFeaturedIdx(prev => (prev - 1 + topStories.length) % topStories.length);
+  }
+
+  function shuffleRandom() {
+    if (topStories.length <= 1) return;
+    let next = Math.floor(Math.random() * topStories.length);
+    if (next === featuredIdx) next = (next + 1) % topStories.length;
+    setFeaturedIdx(next);
+  }
 
   // Category counts
   const counts = {
@@ -394,21 +427,32 @@ export default function NewsPage() {
               </div>
             ) : (
               <>
-                {/* ── Featured hero card ── */}
-                {featured && filter === 'All' && (
+                {/* ── Featured hero card (Live Shuffle Carousel) ── */}
+                {activeFeatured && filter === 'All' && (
                   <FeaturedCard
-                    article={featured}
-                    isBookmarked={bookmarks.includes(featured.id)}
-                    isPlayingAudio={readingAudioId === featured.id}
-                    onToggleBookmark={() => toggleBookmark(featured.id)}
-                    onTogglePlayAudio={() => togglePlayArticleAudio(featured)}
-                    onOpen={() => openArticle(featured)}
+                    article={activeFeatured}
+                    topStories={topStories}
+                    currentIndex={featuredIdx % Math.max(1, topStories.length)}
+                    isAutoPaused={isAutoPaused}
+                    liveShuffle={liveShuffle}
+                    onToggleLiveShuffle={() => setLiveShuffle(!liveShuffle)}
+                    onNext={nextFeatured}
+                    onPrev={prevFeatured}
+                    onSelectIndex={(idx) => setFeaturedIdx(idx)}
+                    onShuffleRandom={shuffleRandom}
+                    onMouseEnter={() => setIsAutoPaused(true)}
+                    onMouseLeave={() => setIsAutoPaused(false)}
+                    isBookmarked={bookmarks.includes(activeFeatured.id)}
+                    isPlayingAudio={readingAudioId === activeFeatured.id}
+                    onToggleBookmark={() => toggleBookmark(activeFeatured.id)}
+                    onTogglePlayAudio={() => togglePlayArticleAudio(activeFeatured)}
+                    onOpen={() => openArticle(activeFeatured)}
                   />
                 )}
 
                 {/* ── Article grid ── */}
-                <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(320px,1fr))', gap:20, marginTop: filter === 'All' && featured ? 20 : 0 }}>
-                  {(filter === 'All' ? rest : displayedArticles).map((a, i) => (
+                <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(320px,1fr))', gap:20, marginTop: filter === 'All' && activeFeatured ? 20 : 0 }}>
+                  {(filter === 'All' ? restArticles : displayedArticles).map((a, i) => (
                     <NewsCard
                       key={a.id}
                       article={a}
@@ -430,32 +474,89 @@ export default function NewsPage() {
   );
 }
 
-/* ── Featured hero card ── */
-function FeaturedCard({ article: a, isBookmarked, isPlayingAudio, onToggleBookmark, onTogglePlayAudio, onOpen }) {
+/* ── Featured hero card (with Live Shuffle Carousel) ── */
+function FeaturedCard({
+  article: a,
+  topStories = [],
+  currentIndex = 0,
+  isAutoPaused = false,
+  liveShuffle = true,
+  onToggleLiveShuffle,
+  onNext,
+  onPrev,
+  onSelectIndex,
+  onShuffleRandom,
+  onMouseEnter,
+  onMouseLeave,
+  isBookmarked,
+  isPlayingAudio,
+  onToggleBookmark,
+  onTogglePlayAudio,
+  onOpen
+}) {
   const [imgOk, setImgOk] = useState(true);
   const bs = BADGE[a.badge] || B0;
 
   return (
-    <div onClick={onOpen} className="news-card-hover"
+    <div
+      onClick={onOpen}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
+      className="news-card-hover"
       style={{
-        borderRadius:18, overflow:'hidden', cursor:'pointer', position:'relative',
+        borderRadius: 20, overflow: 'hidden', cursor: 'pointer', position: 'relative',
         background: '#070d1c',
-        border: '1px solid rgba(255,255,255,0.12)',
-        boxShadow: '0 12px 36px rgba(0,0,0,0.5)',
-        minHeight:360,
-      }}>
+        border: '1px solid rgba(255,255,255,0.14)',
+        boxShadow: '0 16px 48px rgba(0,0,0,0.6), 0 0 25px rgba(249,115,22,0.12)',
+        minHeight: 375,
+      }}
+    >
       {imgOk
-        ? <img src={coverUrl(a)} alt={a.title} onError={() => setImgOk(false)}
-            style={{ width:'100%', height:'100%', objectFit:'cover', display:'block', position:'absolute', inset:0 }} />
+        ? <img key={a.id} src={coverUrl(a)} alt={a.title} onError={() => setImgOk(false)}
+            style={{ width:'100%', height:'100%', objectFit:'cover', display:'block', position:'absolute', inset:0, transition: 'opacity 0.4s ease' }} />
         : <div style={{ position:'absolute', inset:0, background: bs.accent }} />
       }
-      <div style={{ position:'absolute', inset:0, background:'linear-gradient(to right, rgba(4,7,18,0.95) 0%, rgba(4,7,18,0.85) 45%, rgba(4,7,18,0.35) 100%)' }} />
+      <div style={{ position:'absolute', inset:0, background:'linear-gradient(to right, rgba(4,7,18,0.96) 0%, rgba(4,7,18,0.85) 45%, rgba(4,7,18,0.4) 100%)' }} />
 
-      {/* Top Header Tags */}
-      <div style={{ position:'relative', zIndex:2, padding:'20px 24px 0', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-        <span style={{ background:'linear-gradient(90deg,#f97316,#e11d48)', color:'#fff', borderRadius:7, padding:'5px 14px', fontSize:11, fontWeight:900, letterSpacing:'0.8px', textTransform:'uppercase', boxShadow:'0 2px 10px rgba(249,115,22,0.4)' }}>
-          ★ Top Story & Featured
-        </span>
+      {/* Top Controls Bar */}
+      <div style={{ position:'relative', zIndex:2, padding:'20px 24px 0', display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ background:'linear-gradient(90deg,#f97316,#e11d48)', color:'#fff', borderRadius:7, padding:'5px 12px', fontSize:11, fontWeight:900, letterSpacing:'0.8px', textTransform:'uppercase', boxShadow:'0 2px 10px rgba(249,115,22,0.4)' }}>
+            ★ Top Story & Featured
+          </span>
+
+          {/* Live Shuffle Pill Toggle */}
+          <button
+            onClick={(e) => { e.stopPropagation(); onToggleLiveShuffle(); }}
+            title="Toggle automatic carousel rotation"
+            style={{
+              background: liveShuffle ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.06)',
+              border: `1px solid ${liveShuffle ? 'rgba(16,185,129,0.4)' : 'rgba(255,255,255,0.15)'}`,
+              borderRadius: 8, padding: '4px 10px',
+              color: liveShuffle ? '#34d399' : 'rgba(255,255,255,0.6)',
+              fontSize: 11, fontWeight: 800, cursor: 'pointer',
+              display: 'flex', alignItems: 'center', gap: 6, backdropFilter: 'blur(8px)',
+            }}
+          >
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: liveShuffle ? '#34d399' : 'rgba(255,255,255,0.4)', display: 'inline-block', boxShadow: liveShuffle ? '0 0 6px #34d399' : 'none' }} />
+            <span>Live Shuffle: {liveShuffle ? (isAutoPaused ? 'PAUSED' : 'LIVE') : 'OFF'}</span>
+          </button>
+
+          {/* Manual Shuffle button */}
+          <button
+            onClick={(e) => { e.stopPropagation(); onShuffleRandom(); }}
+            title="Shuffle to random top publication"
+            style={{
+              background: 'rgba(249,115,22,0.15)', border: '1px solid rgba(249,115,22,0.35)',
+              borderRadius: 8, padding: '4px 9px', color: '#fb923c', fontSize: 11, fontWeight: 800,
+              cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, backdropFilter: 'blur(8px)'
+            }}
+          >
+            🎲 Shuffle
+          </button>
+        </div>
+
+        {/* Audio & Bookmark Actions */}
         <div style={{ display:'flex', gap:8, alignItems:'center' }}>
           <button
             onClick={(e) => { e.stopPropagation(); onTogglePlayAudio(); }}
@@ -483,8 +584,8 @@ function FeaturedCard({ article: a, isBookmarked, isPlayingAudio, onToggleBookma
       </div>
 
       {/* Content Body */}
-      <div style={{ position:'relative', zIndex:2, padding:'32px 24px 24px', maxWidth: 720 }}>
-        <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:12, flexWrap:'wrap' }}>
+      <div style={{ position:'relative', zIndex:2, padding:'28px 24px 28px', maxWidth: 740 }}>
+        <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:10, flexWrap:'wrap' }}>
           <span style={{ background: bs.bg, color: bs.color, border:`1px solid ${bs.border}`, borderRadius:6, padding:'3px 10px', fontSize:11.5, fontWeight:800 }}>{bs.icon} {a.badge}</span>
           <span style={{ color:'rgba(255,255,255,0.7)', fontSize:12, fontWeight:600 }}>📅 {fmtDate(a.date)}</span>
           <span style={{ color:'rgba(255,255,255,0.4)', fontSize:12 }}>· ⏱ {readTime(a.content)}</span>
@@ -503,6 +604,63 @@ function FeaturedCard({ article: a, isBookmarked, isPlayingAudio, onToggleBookma
           </span>
         </div>
       </div>
+
+      {/* Carousel Navigation Bottom Bar */}
+      {topStories.length > 1 && (
+        <div style={{
+          position:'relative', zIndex:2, padding:'0 24px 16px',
+          display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap: 10
+        }}>
+          {/* Slide Indicator Pills */}
+          <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+            {topStories.map((s, idx) => (
+              <button
+                key={s.id}
+                onClick={(e) => { e.stopPropagation(); onSelectIndex(idx); }}
+                title={`Jump to story ${idx + 1}: ${s.title}`}
+                style={{
+                  height: 6,
+                  width: currentIndex === idx ? 28 : 8,
+                  borderRadius: 3,
+                  background: currentIndex === idx ? 'linear-gradient(90deg, #f97316, #e11d48)' : 'rgba(255,255,255,0.2)',
+                  border: 'none',
+                  cursor: 'pointer',
+                  transition: 'all 0.25s ease',
+                }}
+              />
+            ))}
+            <span style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.4)', marginLeft: 6 }}>
+              {currentIndex + 1} of {topStories.length}
+            </span>
+          </div>
+
+          {/* Navigation Arrows */}
+          <div style={{ display:'flex', gap:6, alignItems:'center' }}>
+            <button
+              onClick={(e) => { e.stopPropagation(); onPrev(); }}
+              title="Previous featured story"
+              style={{
+                background:'rgba(0,0,0,0.6)', border:'1px solid rgba(255,255,255,0.18)',
+                borderRadius:8, width:30, height:30, color:'#fff', fontSize:14, fontWeight:900,
+                cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', backdropFilter:'blur(6px)'
+              }}
+            >
+              ‹
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); onNext(); }}
+              title="Next featured story"
+              style={{
+                background:'rgba(0,0,0,0.6)', border:'1px solid rgba(255,255,255,0.18)',
+                borderRadius:8, width:30, height:30, color:'#fff', fontSize:14, fontWeight:900,
+                cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', backdropFilter:'blur(6px)'
+              }}
+            >
+              ›
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
