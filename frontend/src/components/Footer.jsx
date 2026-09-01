@@ -173,10 +173,8 @@ export default function Footer() {
                 NPC RA 10173 &amp; DOST-7 Research Framework Compliant
               </span>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11.5, color: 'rgba(255,255,255,0.4)' }}>
-              <span style={{ color: '#fb923c', fontWeight: 800 }}>🦅 Haribon AI 100% Accuracy</span>
-              <span>·</span>
-              <span>Cebu Institute of Technology - University Node</span>
+            <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.35)', fontWeight: 500 }}>
+              Central Visayas Academic Network
             </div>
           </div>
         </div>
