@@ -1121,7 +1121,6 @@ function UsersTab({ showToast }) {
             <div style={{ display:'flex', gap:10, marginTop:8, flexWrap:'wrap' }}>
               <button
                 onClick={() => toggleStatus(detailUser)}
-                disabled={acting === detailUser.id + 's'}
                 className={`ap-btn ${detailUser.status === 'INACTIVE' ? 'ap-btn-green' : 'ap-btn-ghost'}`}
                 style={{ flex:1, padding:'11px', fontSize:13 }}
               >
@@ -1216,7 +1215,6 @@ function UsersTab({ showToast }) {
                       onClick={() => toggleStatus(u)}
                       disabled={!!acting}
                       className={`ap-btn ${u.status === 'INACTIVE' ? 'ap-btn-green' : 'ap-btn-ghost'}`}
-                      style={{ padding:'6px 12px', fontSize:12, borderRadius:8 }}
                     >
                       {acting === u.id + 's' ? '…' : u.status === 'INACTIVE' ? 'Activate' : 'Suspend'}
                     </button>
@@ -1292,7 +1290,6 @@ function ApplicationsTab({ showToast }) {
     APPROVED: { bg:'rgba(16,185,129,.15)',  color:'#6ee7b7' },
     REJECTED: { bg:'rgba(225,29,72,.15)',   color:'#fca5a5' },
   };
-
   const filteredApps = apps.filter(a => statusF === 'All' || a.status === statusF);
 
   return (
@@ -1310,7 +1307,6 @@ function ApplicationsTab({ showToast }) {
                 className="ap-input"
                 value={rejectReason}
                 onChange={e => setRejectReason(e.target.value)}
-                rows={3}
                 placeholder="e.g., Incomplete institutional accreditation documents..."
                 style={{ resize:'vertical' }}
               />
@@ -1456,13 +1452,22 @@ function EventsTab({ showToast }) {
   const [form, setForm]           = useState(EV_BLANK);
   const [saving, setSaving]       = useState(false);
   const [confirm, setConfirm]     = useState(null);
+  const [search, setSearch]       = useState('');
+  const [catFilter, setCatFilter] = useState('All');
   const [attnEvent, setAttnEvent] = useState(null);   // event object for attendees modal
   const [attnList, setAttnList]   = useState([]);
   const [attnLoading, setAttnLoading] = useState(false);
   const [attnFilter, setAttnFilter] = useState('all');
   const [attnSearch, setAttnSearch] = useState('');
 
-  const load = useCallback(() => { setLoading(true); api.events.list({ limit: 1000 }).then(r => setItems(Array.isArray(r) ? r : (r?.data || []))).catch(() => showToast('Failed', false)).finally(() => setLoading(false)); }, []);
+  const load = useCallback(() => {
+    setLoading(true);
+    api.events.list({ limit: 1000 })
+      .then(r => setItems(Array.isArray(r) ? r : (r?.data || [])))
+      .catch(() => showToast('Failed to load events', false))
+      .finally(() => setLoading(false));
+  }, []);
+
   useEffect(load, [load]);
   const fc = e => setForm(p => ({ ...p, [e.target.name]: e.target.type === 'checkbox' ? e.target.checked : e.target.value }));
 
@@ -1494,7 +1499,7 @@ function EventsTab({ showToast }) {
   }
 
   async function save() {
-    if (!form.title || !form.date || !form.venue || !form.organizer) { showToast('Fill required fields', false); return; }
+    if (!form.title || !form.date || !form.venue || !form.organizer) { showToast('Please fill all required fields', false); return; }
     setSaving(true);
     try {
       const body = { ...form, total: Number(form.total) || 50 };
@@ -1504,12 +1509,47 @@ function EventsTab({ showToast }) {
       load();
     } catch (e) { showToast(e.message, false); } finally { setSaving(false); }
   }
+
   async function del(id, title) {
     try { await api.events.delete(id); setItems(p => p.filter(x => x.id !== id)); showToast('Event deleted successfully!', true, title); setConfirm(null); }
     catch (e) { showToast(e.message, false); }
   }
 
-  const CAT = { Summit:'#a855f7', Workshop:'#3b82f6', Seminar:'#14b8a6', Funding:'#10b981' };
+  function exportEventsCSV() {
+    if (!items.length) return;
+    const headers = ['Title', 'Date', 'Category', 'Venue', 'Organizer', 'Enrolled', 'Total Capacity', 'Registration Deadline'];
+    const rows = items.map(e => [
+      e.title || '', e.date || '', e.category || '', e.venue || '', e.organizer || '', e.enrolled || 0, e.total || 0, e.registration_deadline || ''
+    ]);
+    const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+    a.download = 'dasig_events_export.csv';
+    a.click();
+  }
+
+  const CAT = {
+    Summit:   { bg:'rgba(168,85,247,0.18)', color:'#c084fc', border:'rgba(168,85,247,0.35)', icon:'🦁' },
+    Workshop: { bg:'rgba(59,130,246,0.18)',  color:'#60a5fa', border:'rgba(59,130,246,0.35)',  icon:'🛠️' },
+    Seminar:  { bg:'rgba(244,114,182,0.18)', color:'#f472b6', border:'rgba(244,114,182,0.35)', icon:'🎙️' },
+    Funding:  { bg:'rgba(52,211,153,0.18)',  color:'#34d399', border:'rgba(52,211,153,0.35)',  icon:'💰' },
+  };
+
+  const filteredItems = items.filter(ev => {
+    if (catFilter !== 'All' && ev.category !== catFilter) return false;
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      const title = (ev.title || '').toLowerCase();
+      const venue = (ev.venue || '').toLowerCase();
+      const org = (ev.organizer || '').toLowerCase();
+      if (!title.includes(q) && !venue.includes(q) && !org.includes(q)) return false;
+    }
+    return true;
+  });
+
+  const totalEnrolled = items.reduce((sum, e) => sum + (e.enrolled || 0), 0);
+  const totalCapacity = items.reduce((sum, e) => sum + (Number(e.total) || 0), 0);
+  const avgFillRate = items.length ? Math.round(items.reduce((sum, e) => sum + (e.total > 0 ? (e.enrolled / e.total) * 100 : 0), 0) / items.length) : 0;
 
   // Filtered attendees list
   const filteredAttn = attnList.filter(r => {
@@ -1533,12 +1573,45 @@ function EventsTab({ showToast }) {
 
   return (
     <div>
-      <PageHeader title="Events" desc="Create and manage consortium events" action={<AddBtn onClick={() => { setForm(EV_BLANK); setModal('create'); }} />} />
-      {confirm && <ConfirmModal msg={`Delete "${confirm.title}"?`} onConfirm={() => del(confirm.id, confirm.title)} onCancel={() => setConfirm(null)} />}
+      <PageHeader
+        title="Events"
+        desc="Create, schedule, and oversee consortium summits, workshops, and seminars"
+        action={
+          <div style={{ display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
+            <button onClick={exportEventsCSV} className="ap-btn ap-btn-ghost" style={{ fontSize:12.5, whiteSpace:'nowrap' }}>⬇ Export CSV</button>
+            <input
+              className="ap-input"
+              placeholder="Search title, venue, host…"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              style={{ width:210 }}
+            />
+            <select
+              className="ap-input"
+              value={catFilter}
+              onChange={e => setCatFilter(e.target.value)}
+              style={{ width:120, cursor:'pointer' }}
+            >
+              {['All','Summit','Workshop','Seminar','Funding'].map(c => (
+                <option key={c} value={c} style={{ background:'#0f172a' }}>{c}</option>
+              ))}
+            </select>
+            <button
+              onClick={() => { setForm(EV_BLANK); setModal('create'); }}
+              className="ap-btn ap-btn-primary"
+              style={{ padding:'8px 16px', fontSize:13, fontWeight:800, whiteSpace:'nowrap' }}
+            >
+              + Create Event
+            </button>
+          </div>
+        }
+      />
+
+      {confirm && <ConfirmModal msg={`Are you sure you want to delete event "${confirm.title}"?`} onConfirm={() => del(confirm.id, confirm.title)} onCancel={() => setConfirm(null)} />}
 
       {/* ── Attendees Modal ── */}
       {attnEvent && (
-        <Modal title={`Attendance — ${attnEvent.title}`} onClose={() => { setAttnEvent(null); load(); }} wide>
+        <Modal title={`Attendance & Roster — ${attnEvent.title}`} onClose={() => { setAttnEvent(null); load(); }} wide>
           {/* Header Summary & Actions */}
           <div style={{ marginBottom:14, display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap:10 }}>
             <div>
@@ -1630,16 +1703,20 @@ function EventsTab({ showToast }) {
                   }}>
                     <div style={{ display:'flex', alignItems:'center', gap:10 }}>
                       <div style={{
-                        width:34, height:34, borderRadius:10,
+                        width:36, height:36, borderRadius:10, overflow:'hidden',
                         background: isMember ? 'linear-gradient(135deg,#059669,#10b981)' : isAdmin ? 'linear-gradient(135deg,#e11d48,#f43f5e)' : 'linear-gradient(135deg,#475569,#64748b)',
                         display:'flex', alignItems:'center', justifyContent:'center',
-                        fontSize:11.5, fontWeight:900, color:'#fff', flexShrink:0
+                        fontSize:12, fontWeight:900, color:'#fff', flexShrink:0
                       }}>
-                        {(reg.users?.name || 'U').split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase()}
+                        {reg.users?.avatar_url ? (
+                          <img src={reg.users.avatar_url} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }} />
+                        ) : (
+                          (reg.users?.name || reg.users?.email || 'U').split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase()
+                        )}
                       </div>
                       <div>
                         <div style={{ display:'flex', alignItems:'center', gap:7 }}>
-                          <span style={{ fontWeight:700, color:'#fff', fontSize:13.5 }}>{reg.users?.name || 'Unknown User'}</span>
+                          <span style={{ fontWeight:700, color:'#fff', fontSize:13.5 }}>{reg.users?.name || reg.users?.email || 'Unknown User'}</span>
                           {isMember ? (
                             <span style={{ background:'rgba(16,185,129,0.18)', color:'#34d399', border:'1px solid rgba(16,185,129,0.3)', borderRadius:5, padding:'1px 6px', fontSize:10, fontWeight:800 }}>👤 Member</span>
                           ) : isAdmin ? (
@@ -1706,37 +1783,91 @@ function EventsTab({ showToast }) {
 
       <SectionKPIs items={[
         { label: 'Total Events', value: items.length, icon: '📅', color: '#a855f7' },
-        { label: 'Total Enrolled', value: items.reduce((sum, e) => sum + (e.enrolled || 0), 0), icon: '👥', color: '#34d399' },
-        { label: 'Total Capacity', value: items.reduce((sum, e) => sum + (e.total || 0), 0), icon: '💺', color: '#60a5fa' },
-        { label: 'Avg Fill Rate', value: `${items.length ? Math.round(items.reduce((sum, e) => sum + (e.total > 0 ? (e.enrolled / e.total) * 100 : 0), 0) / items.length) : 0}%`, icon: '📊', color: '#fbbf24' },
+        { label: 'Total Enrolled', value: totalEnrolled, icon: '👥', color: '#34d399' },
+        { label: 'Total Capacity', value: totalCapacity, icon: '💺', color: '#60a5fa' },
+        { label: 'Avg Fill Rate', value: `${avgFillRate}%`, icon: '📊', color: '#fbbf24' },
       ]} />
 
       {loading ? <Loading /> : (
         <DataTable head={['Event','Date','Category','Fill Rate','Actions']}>
-          {items.length === 0 ? <EmptyTR cols={5} /> : items.map(ev => {
-            const fill = ev.total > 0 ? Math.round(ev.enrolled / ev.total * 100) : 0;
-            const c = CAT[ev.category] || '#a855f7';
+          {filteredItems.length === 0 ? <EmptyTR cols={5} /> : filteredItems.map(ev => {
+            const fill = ev.total > 0 ? Math.round((ev.enrolled || 0) / ev.total * 100) : 0;
+            const catInfo = CAT[ev.category] || { bg:'rgba(168,85,247,0.18)', color:'#c084fc', border:'rgba(168,85,247,0.35)', icon:'📅' };
+            const isFull = fill >= 90;
+            const isMid = fill >= 50 && fill < 90;
+            const barGradient = isFull ? 'linear-gradient(90deg,#f43f5e,#fb7185)' : isMid ? 'linear-gradient(90deg,#f59e0b,#fbbf24)' : 'linear-gradient(90deg,#06b6d4,#3b82f6)';
+            
             return (
               <TR key={ev.id}>
                 <TD>
-                  <div style={{ fontWeight:700, color:'#fff' }}>{ev.title}</div>
-                  <div style={{ fontSize:13, color:'rgba(255,255,255,0.55)', marginTop:2 }}>{ev.venue} · {ev.organizer}</div>
-                </TD>
-                <TD muted>{ev.date}</TD>
-                <TD><span className="ap-badge" style={{ background:`${c}1a`, color:c }}>{ev.category}</span></TD>
-                <TD>
-                  <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-                    <div style={{ flex:1, height:6, background:'rgba(255,255,255,0.08)', borderRadius:3, overflow:'hidden', minWidth:60 }}>
-                      <div style={{ height:'100%', width:`${Math.min(fill,100)}%`, background:`linear-gradient(90deg,${c},${c}aa)`, borderRadius:3 }} />
+                  <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+                    <div style={{ width:38, height:38, borderRadius:11, background:catInfo.bg, border:`1px solid ${catInfo.border}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:17, flexShrink:0, boxShadow:'0 2px 8px rgba(0,0,0,0.2)' }}>
+                      {catInfo.icon}
                     </div>
-                    <span style={{ fontSize:12, fontWeight:700, color:'rgba(255,255,255,0.55)', width:44 }}>{ev.enrolled}/{ev.total}</span>
+                    <div>
+                      <div style={{ fontWeight:800, color:'#fff', fontSize:13.5 }}>{ev.title}</div>
+                      <div style={{ fontSize:12, color:'rgba(255,255,255,0.5)', marginTop:2, display:'flex', alignItems:'center', gap:6, flexWrap:'wrap' }}>
+                        <span>📍 {ev.venue}</span>
+                        <span>·</span>
+                        <span style={{ color:'rgba(249,115,22,0.85)', fontWeight:600 }}>🏛️ {ev.organizer}</span>
+                      </div>
+                    </div>
                   </div>
                 </TD>
                 <TD>
-                  <div style={{ display:'flex', gap:6 }}>
-                    <button onClick={() => openAttendees(ev)} className="ap-btn ap-btn-green">Attendees</button>
-                    <button onClick={() => { setForm({ ...ev }); setModal(ev); }} className="ap-btn ap-btn-blue">Edit</button>
-                    <button onClick={() => setConfirm(ev)} className="ap-btn ap-btn-red">Delete</button>
+                  <div style={{ display:'flex', flexDirection:'column', gap:2 }}>
+                    <span style={{ fontWeight:700, color:'#fff', fontSize:13 }}>📅 {ev.date}</span>
+                    {ev.start_time && (
+                      <span style={{ fontSize:11, color:'rgba(255,255,255,0.45)' }}>⏰ {ev.start_time}{ev.end_time ? ` – ${ev.end_time}` : ''}</span>
+                    )}
+                  </div>
+                </TD>
+                <TD>
+                  <span className="ap-badge" style={{ background:catInfo.bg, color:catInfo.color, border:`1px solid ${catInfo.border}`, padding:'4px 10px', borderRadius:8, fontWeight:800, fontSize:12 }}>
+                    {catInfo.icon} {ev.category}
+                  </span>
+                </TD>
+                <TD>
+                  <div style={{ minWidth:130 }}>
+                    <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:4 }}>
+                      <span style={{ fontSize:11, fontWeight:800, color: isFull ? '#f87171' : isMid ? '#fbbf24' : '#60a5fa' }}>
+                        {fill}% Fill
+                      </span>
+                      <span style={{ fontSize:11.5, color:'rgba(255,255,255,0.55)', fontWeight:700 }}>
+                        {ev.enrolled || 0} / {ev.total || 0}
+                      </span>
+                    </div>
+                    <div style={{ height:6, background:'rgba(255,255,255,0.08)', borderRadius:4, overflow:'hidden', width:'100%' }}>
+                      <div style={{ height:'100%', width:`${Math.min(fill,100)}%`, background:barGradient, borderRadius:4, transition:'width 0.3s ease' }} />
+                    </div>
+                  </div>
+                </TD>
+                <TD>
+                  <div style={{ display:'flex', gap:6, alignItems:'center' }}>
+                    <button
+                      onClick={() => openAttendees(ev)}
+                      className="ap-btn ap-btn-ghost"
+                      style={{ padding:'6px 11px', fontSize:12, borderRadius:8, color:'#34d399', borderColor:'rgba(52,211,153,0.3)', background:'rgba(16,185,129,0.08)' }}
+                      title="View attendees list & mark attendance"
+                    >
+                      👥 Attendees ({ev.enrolled || 0})
+                    </button>
+                    <button
+                      onClick={() => { setForm({ ...ev }); setModal(ev); }}
+                      className="ap-btn ap-btn-blue"
+                      style={{ padding:'6px 10px', fontSize:12, borderRadius:8 }}
+                      title="Edit event details"
+                    >
+                      ✏️ Edit
+                    </button>
+                    <button
+                      onClick={() => setConfirm(ev)}
+                      className="ap-btn ap-btn-red"
+                      style={{ padding:'6px 10px', fontSize:12, borderRadius:8 }}
+                      title="Delete event"
+                    >
+                      🗑
+                    </button>
                   </div>
                 </TD>
               </TR>
