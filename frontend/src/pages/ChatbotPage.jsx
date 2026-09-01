@@ -525,6 +525,16 @@ export default function ChatbotPage() {
     } catch (_) {}
   }
 
+  function regenerateResponse(idx) {
+    if (thinking || idx <= 0) return;
+    for (let i = idx - 1; i >= 0; i--) {
+      if (messages[i].from === 'user') {
+        send(messages[i].text);
+        break;
+      }
+    }
+  }
+
   function toggleVoiceInput() {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
@@ -919,6 +929,14 @@ export default function ChatbotPage() {
                           title="Read aloud"
                         >
                           {speakingIdx === i ? '⏹ Stop' : '🔊 Read'}
+                        </button>
+                        <button
+                          className="action-btn"
+                          onClick={() => regenerateResponse(i)}
+                          title="Regenerate response"
+                          disabled={thinking}
+                        >
+                          🔄 Retry
                         </button>
                       </div>
                     )}
