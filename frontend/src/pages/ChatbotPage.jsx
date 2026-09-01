@@ -254,35 +254,39 @@ const CHAT_CSS = `
   .action-btn:hover { background: rgba(249,115,22,0.15); border-color: rgba(249,115,22,0.3); color: #f97316; }
   .action-btn.rated-up { background: rgba(16,185,129,0.15); border-color: rgba(16,185,129,0.3); color: #34d399; }
   .action-btn.rated-down { background: rgba(225,29,72,0.15); border-color: rgba(225,29,72,0.3); color: #f87171; }
-  .action-btn.copied { background: rgba(16,185,129,0.15); border-color: rgba(16,185,129,0.3); color: #34d399; }
   @keyframes waveBar {
-    0%, 100% { height: 4px; }
-    50%      { height: 18px; }
+    0%   { height: 4px; opacity: 0.45; }
+    50%  { height: 18px; opacity: 1; }
+    100% { height: 6px; opacity: 0.55; }
   }
   .voicemail-bar {
-    width: 3px;
-    background: #f97316;
-    border-radius: 2px;
+    width: 2.5px;
+    background: linear-gradient(180deg, #f97316 0%, #fb923c 100%);
+    border-radius: 3px;
     height: 6px;
-    transition: height 0.15s ease;
+    transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
   }
   .voicemail-bar.active {
-    animation: waveBar 0.7s ease-in-out infinite alternate;
+    animation: waveBar 0.75s ease-in-out infinite alternate;
   }
   .voicemail-card {
-    background: rgba(249,115,22,0.08);
-    border: 1px solid rgba(249,115,22,0.25);
+    background: linear-gradient(135deg, rgba(249,115,22,0.11) 0%, rgba(30,58,138,0.12) 100%);
+    border: 1px solid rgba(249,115,22,0.28);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.08);
+    backdrop-filter: blur(12px);
     border-radius: 12px;
-    padding: 8px 14px;
-    margin-bottom: 8px;
+    padding: 7px 12px;
+    margin-bottom: 9px;
     display: flex;
     align-items: center;
-    gap: 12px;
-    transition: all 0.2s;
+    gap: 10px;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    user-select: none;
   }
   .voicemail-card:hover {
-    background: rgba(249,115,22,0.14);
-    border-color: rgba(249,115,22,0.4);
+    background: linear-gradient(135deg, rgba(249,115,22,0.18) 0%, rgba(30,58,138,0.20) 100%);
+    border-color: rgba(249,115,22,0.5);
+    box-shadow: 0 6px 20px rgba(249,115,22,0.2), inset 0 1px 0 rgba(255,255,255,0.14);
   }
 `;
 
@@ -701,19 +705,68 @@ export default function ChatbotPage() {
   }
 
   const [speakingIdx, setSpeakingIdx] = useState(null);
+  const [voiceSpeed, setVoiceSpeed]   = useState(1.0);
 
-  function speakMessage(idx, text) {
+  // Intelligently select the most realistic natural / neural human voice on the system
+  function getBestHumanVoice() {
+    if (!window.speechSynthesis) return null;
+    const voices = window.speechSynthesis.getVoices() || [];
+    if (!voices.length) return null;
+
+    // 1. Prioritize Microsoft Natural / Neural voices (Jenny, Guy, Aria, Ryan, Christopher)
+    const natural = voices.find(v =>
+      /natural|neural|online/i.test(v.name) && (/english|en[-_]/i.test(v.lang) || /en[-_]us|en[-_]ph|en[-_]gb/i.test(v.lang))
+    );
+    if (natural) return natural;
+
+    // 2. Google High Quality US / UK / PH English
+    const google = voices.find(v =>
+      /google/i.test(v.name) && /en[-_]/i.test(v.lang)
+    );
+    if (google) return google;
+
+    // 3. Apple Enhanced / Premium voices (Samantha, Ava, Alex, Daniel)
+    const apple = voices.find(v =>
+      /enhanced|premium|samantha|ava|daniel|karen|moira/i.test(v.name) && /en[-_]/i.test(v.lang)
+    );
+    if (apple) return apple;
+
+    // 4. Default high-compatibility English voice
+    const english = voices.find(v => /en[-_]ph|en[-_]us|en[-_]gb/i.test(v.lang)) || voices.find(v => v.lang.startsWith('en'));
+    return english || voices[0];
+  }
+
+  function cleanSpeechText(text) {
+    if (!text) return '';
+    return text
+      .replace(/https?:\/\/\S+/gi, '') // Remove URLs
+      .replace(/[\*\_\~`#]/g, '') // Remove markdown formatting
+      .replace(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '') // Remove emojis to avoid robotic symbol reading
+      .replace(/^[•▸\-\*\d+\.]\s*/gm, '') // Remove bullets
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  function speakMessage(idx, text, overrideSpeed) {
     if (!window.speechSynthesis) return;
-    if (speakingIdx === idx) {
+    if (speakingIdx === idx && !overrideSpeed) {
       window.speechSynthesis.cancel();
       setSpeakingIdx(null);
       return;
     }
     window.speechSynthesis.cancel();
-    const cleanText = text.replace(/[•▸\d+\.]/g, '').trim();
+    const cleanText = cleanSpeechText(text);
+    if (!cleanText) return;
+
     const utter = new SpeechSynthesisUtterance(cleanText);
-    utter.rate = 1.05;
-    utter.pitch = 1.0;
+    const bestVoice = getBestHumanVoice();
+    if (bestVoice) utter.voice = bestVoice;
+
+    const speed = overrideSpeed || voiceSpeed || 1.0;
+    utter.rate = speed * 0.96; // Conversational human cadence
+    utter.pitch = 1.0;         // Natural warm pitch
+    utter.volume = 1.0;
+
     utter.onend = () => setSpeakingIdx(null);
     utter.onerror = () => setSpeakingIdx(null);
     setSpeakingIdx(idx);
@@ -829,7 +882,7 @@ export default function ChatbotPage() {
                   title="Automatically speak out responses like an audio voice message"
                 >
                   <span>{autoVoicemail ? '🔊' : '🔈'}</span>
-                  <span>Auto Voice Mail: {autoVoicemail ? 'ON' : 'OFF'}</span>
+                  <span>Natural Voice: {autoVoicemail ? 'ON' : 'OFF'}</span>
                 </button>
                 <button
                   onClick={() => setShowHistory(!showHistory)}
@@ -1111,40 +1164,70 @@ export default function ChatbotPage() {
                     }}>
                       {msg.from === 'bot' ? (
                         <>
-                          {/* Voicemail Audio Note Player */}
+                          {/* Studio Neural Audio Note Player */}
                           <div
                             className="voicemail-card"
                             onClick={() => speakMessage(i, msg.text)}
                             style={{ cursor: 'pointer' }}
-                            title="Click to listen to Haribon voice mail"
+                            title="Click to play realistic human voice note"
                           >
                             <button
                               type="button"
+                              onClick={(e) => { e.stopPropagation(); speakMessage(i, msg.text); }}
                               style={{
                                 width: 28, height: 28, borderRadius: '50%',
-                                background: speakingIdx === i ? '#e11d48' : '#f97316',
+                                background: speakingIdx === i ? 'linear-gradient(135deg, #e11d48, #f43f5e)' : 'linear-gradient(135deg, #f97316, #ea580c)',
                                 border: 'none', color: '#fff', fontSize: 11,
                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                                 cursor: 'pointer', flexShrink: 0,
-                                boxShadow: '0 2px 8px rgba(249,115,22,0.4)',
+                                boxShadow: speakingIdx === i ? '0 0 0 3px rgba(225,29,72,0.35)' : '0 2px 8px rgba(249,115,22,0.45)',
+                                transition: 'all 0.15s ease',
                               }}
                             >
                               {speakingIdx === i ? '⏸' : '▶'}
                             </button>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 3, flex: 1, minWidth: 60 }}>
-                              {[10, 16, 8, 14, 18, 10, 15, 20, 12, 16, 8, 14, 18, 10, 15].map((h, bi) => (
+
+                            {/* Soundwave equalizer */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 2.5, flex: 1, minWidth: 70, height: 20 }}>
+                              {[6, 12, 18, 10, 15, 20, 8, 14, 19, 11, 16, 22, 13, 8, 17, 21, 12, 16, 9, 14].map((h, bi) => (
                                 <div
                                   key={bi}
                                   className={`voicemail-bar${speakingIdx === i ? ' active' : ''}`}
                                   style={{
-                                    height: speakingIdx === i ? undefined : `${h * 0.55}px`,
-                                    animationDelay: `${bi * 0.07}s`
+                                    height: speakingIdx === i ? undefined : `${Math.max(4, h * 0.55)}px`,
+                                    animationDelay: `${bi * 0.05}s`
                                   }}
                                 />
                               ))}
                             </div>
-                            <div style={{ fontSize: 11, fontWeight: 700, color: speakingIdx === i ? '#fb923c' : 'rgba(255,255,255,0.6)', whiteSpace: 'nowrap' }}>
-                              {speakingIdx === i ? 'Playing Voice Mail…' : '🎙️ Voice Mail'}
+
+                            {/* Natural Voice badge & Speed button */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+                              <span style={{ fontSize: 10.5, fontWeight: 800, color: speakingIdx === i ? '#fb923c' : 'rgba(255,255,255,0.7)', letterSpacing: '0.2px' }}>
+                                {speakingIdx === i ? 'Playing Voice…' : '🎙️ Natural Voice'}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  const nextSpeed = voiceSpeed === 1.0 ? 1.25 : voiceSpeed === 1.25 ? 0.9 : 1.0;
+                                  setVoiceSpeed(nextSpeed);
+                                  if (speakingIdx === i) speakMessage(i, msg.text, nextSpeed);
+                                }}
+                                style={{
+                                  background: 'rgba(255,255,255,0.08)',
+                                  border: '1px solid rgba(255,255,255,0.15)',
+                                  borderRadius: 5,
+                                  padding: '1px 5px',
+                                  fontSize: 9.5,
+                                  fontWeight: 800,
+                                  color: '#fb923c',
+                                  cursor: 'pointer'
+                                }}
+                                title="Click to toggle playback speed (1.0x, 1.25x, 0.9x)"
+                              >
+                                {voiceSpeed}x
+                              </button>
                             </div>
                           </div>
                           <BotText text={msg.text} />
