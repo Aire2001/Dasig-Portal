@@ -9,16 +9,18 @@ router.use(verifyToken, requireRole('ADMIN'));
 
 // GET /api/admin/stats — dashboard overview
 router.get('/stats', async (req, res) => {
-  const [users, events, news, trainings, members, applications, policies, funding, partnerships] = await Promise.all([
+  const [users, events, news, trainings, members, applications, policies, funding, partnerships, eventRegs, trainRegs] = await Promise.all([
     supabase.from('users').select('id, role, status', { count: 'exact', head: false }),
-    supabase.from('events').select('id, enrolled, total', { count: 'exact', head: false }),
+    supabase.from('events').select('id, enrolled, total, registrations:event_registrations(count)', { count: 'exact', head: false }),
     supabase.from('news').select('id', { count: 'exact', head: false }),
-    supabase.from('trainings').select('id, enrolled, total', { count: 'exact', head: false }),
+    supabase.from('trainings').select('id, enrolled, total, enrollments:training_enrollments(count)', { count: 'exact', head: false }),
     supabase.from('members').select('id', { count: 'exact', head: false }),
     supabase.from('membership_applications').select('id, status', { count: 'exact', head: false }),
     supabase.from('policies').select('id, archived', { count: 'exact', head: false }),
     supabase.from('funding_opportunities').select('id, status', { count: 'exact', head: false }),
     supabase.from('partnerships').select('id, status', { count: 'exact', head: false }),
+    supabase.from('event_registrations').select('id', { count: 'exact', head: true }),
+    supabase.from('training_enrollments').select('id', { count: 'exact', head: true }),
   ]);
 
   const userList = users.data || [];
@@ -26,6 +28,16 @@ router.get('/stats', async (req, res) => {
   const policyList = policies.data || [];
   const fundingList = funding.data || [];
   const partnerList = partnerships.data || [];
+  const eventList = events.data || [];
+  const trainList = trainings.data || [];
+
+  const realEventEnrolled = typeof eventRegs.count === 'number'
+    ? eventRegs.count
+    : eventList.reduce((s, e) => s + (e.registrations?.[0]?.count ?? e.enrolled ?? 0), 0);
+
+  const realTrainEnrolled = typeof trainRegs.count === 'number'
+    ? trainRegs.count
+    : trainList.reduce((s, t) => s + (t.enrollments?.[0]?.count ?? t.enrolled ?? 0), 0);
 
   res.json({
     users: {
@@ -37,14 +49,15 @@ router.get('/stats', async (req, res) => {
       inactive: userList.filter(u => u.status === 'INACTIVE').length,
     },
     events: {
-      total: (events.data || []).length,
-      totalEnrolled: (events.data || []).reduce((s, e) => s + (e.enrolled || 0), 0),
-      totalCapacity: (events.data || []).reduce((s, e) => s + (e.total || 0), 0),
+      total: eventList.length,
+      totalEnrolled: realEventEnrolled,
+      totalCapacity: eventList.reduce((s, e) => s + (Number(e.total) || 50), 0),
     },
     news: { total: (news.data || []).length },
     trainings: {
-      total: (trainings.data || []).length,
-      totalEnrolled: (trainings.data || []).reduce((s, t) => s + (t.enrolled || 0), 0),
+      total: trainList.length,
+      totalEnrolled: realTrainEnrolled,
+      totalCapacity: trainList.reduce((s, t) => s + (Number(t.total) || 20), 0),
     },
     members: { total: (members.data || []).length },
     applications: {
