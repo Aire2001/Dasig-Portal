@@ -179,7 +179,34 @@ const KB = [
   }
 ];
 
-// Levenshtein distance for fuzzy typo tolerance
+// Helper: Month detection map
+const MONTH_MAP = {
+  january: 'Jan', jan: 'Jan', enero: 'Jan',
+  february: 'Feb', feb: 'Feb', pebrero: 'Feb',
+  march: 'Mar', mar: 'Mar', marso: 'Mar',
+  april: 'Apr', apr: 'Apr', abril: 'Apr',
+  may: 'May', mayo: 'May',
+  june: 'Jun', jun: 'Jun', hunyo: 'Jun',
+  july: 'Jul', jul: 'Jul', hulyo: 'Jul',
+  august: 'Aug', aug: 'Aug', agosto: 'Aug',
+  september: 'Sep', sep: 'Sep', sept: 'Sep', setyembre: 'Sep',
+  october: 'Oct', oct: 'Oct', oktubre: 'Oct',
+  november: 'Nov', nov: 'Nov', nobyembre: 'Nov',
+  december: 'Dec', dec: 'Dec', disyembre: 'Dec'
+};
+
+function detectMonthQuery(text) {
+  if (!text) return null;
+  const words = text.toLowerCase().split(/[^a-z0-9]+/);
+  for (const w of words) {
+    if (MONTH_MAP[w]) {
+      return { token: w, prefix: MONTH_MAP[w], original: w.charAt(0).toUpperCase() + w.slice(1) };
+    }
+  }
+  return null;
+}
+
+// Typo-tolerant Levenshtein distance
 function levenshtein(a, b) {
   const m = a.length, n = b.length;
   const dp = Array.from({ length: m + 1 }, (_, i) =>
@@ -194,68 +221,67 @@ function levenshtein(a, b) {
   return dp[m][n];
 }
 
-// Scored NLP Intent Matcher with Multi-Lingual Regex + Specificity Weighting
-function matchIntent(text) {
-  const lower = text.toLowerCase().trim();
+// Match intent with scoring
+function matchIntent(normalizedText) {
+  const lower = normalizedText.toLowerCase();
   let best = null;
-  let bestScore = 0;
+  let highestScore = 0;
 
   for (const entry of KB) {
     let score = 0;
     for (const kw of entry.keywords) {
-      const escaped = kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      if (lower === kw) {
-        score += 6; // Exact match bonus
-      } else if (new RegExp(`\\b${escaped}\\b`, 'i').test(lower)) {
-        const tokenCount = kw.split(/\s+/).length;
-        score += 2.5 + (tokenCount * 1.0);
-      } else if (lower.includes(kw) && kw.length >= 4) {
-        score += 1.2;
+      const kwLower = kw.toLowerCase();
+      if (lower === kwLower) {
+        score = Math.max(score, 10);
+      } else if (lower.startsWith(kwLower + ' ') || lower.endsWith(' ' + kwLower) || lower.includes(' ' + kwLower + ' ')) {
+        score = Math.max(score, 6 + (kwLower.length / 10));
+      } else if (lower.includes(kwLower)) {
+        score = Math.max(score, 4 + (kwLower.length / 12));
       }
     }
-    if (score > bestScore) {
-      bestScore = score;
+
+    if (score > highestScore) {
+      highestScore = score;
       best = entry;
     }
   }
 
-  return bestScore > 0 ? { entry: best, score: bestScore } : null;
+  if (highestScore >= 3.5) {
+    return { entry: best, score: highestScore };
+  }
+  return null;
 }
 
-// Follow-up suggestions in 3 languages
+// Multi-language followups
 const MULTI_FOLLOWUPS = {
   english: [
-    '📅 What events are coming up?',
-    '🎓 What training is available?',
-    '👥 How do I become a member?',
-    '💰 What funding opportunities exist?',
-    '📋 What policies are available?',
-    '🦅 Tell me about Haribon AI'
+    'What events are coming up?',
+    'How do I become a DASIG member?',
+    'What training programs are available?',
+    'Tell me about research grants & funding',
+    'Who are the member institutions in Region VII?'
   ],
   bisaya: [
-    '📅 Unsay mga umaabot nga events?',
-    '🎓 Unsay mga training programs?',
-    '👥 Unsaon pagkahimong miyembro?',
-    '💰 Naay funding para sa research?',
-    '🏛️ Kinsay mga miyembro sa DASIG?',
-    '🦅 Kinsa ka Haribon?'
+    'Unsay mga umaabot nga events?',
+    'Unsaon pag-apil sa DASIG?',
+    'Unsay mga training programs?',
+    'Unsay mga research grants ug funding?',
+    'Kinsay mga miyembro nga unibersidad sa Region VII?'
   ],
   tagalog: [
-    '📅 Anong mga paparating na kaganapan?',
-    '🎓 Anong mga training ang available?',
-    '👥 Paano maging miyembro ng DASIG?',
-    '💰 May research funding ba?',
-    '🏛️ Sino-sino ang mga miyembrong unibersidad?',
-    '🦅 Sino ka Haribon?'
+    'Anong mga events ang paparating?',
+    'Paano sumali sa DASIG?',
+    'Anong training programs ang meron?',
+    'Anong research grants at funding ang bukas?',
+    'Sino-sino ang mga kasaping unibersidad sa Region VII?'
   ]
 };
 
 // External Generative LLM Caller (Gemini / OpenAI fallback)
 async function callGenerativeLLM(userPrompt, lang) {
-  // If Google Gemini API Key is configured in environment
   if (process.env.GEMINI_API_KEY) {
     try {
-      const systemInstruction = `You are Haribon AI, the world-class intelligent conversational assistant for the DASIG Regional Academic Consortium (Region VII Central & Western Visayas) and general intelligence assistant (like Gemini & ChatGPT). You are completely fluent in English, Bisaya/Cebuano, and Tagalog/Filipino. Respond naturally in the user's detected language (${lang}). Maintain a professional, articulate, and friendly tone with Markdown formatting, bullet points, and clear headers.`;
+      const systemInstruction = `You are Haribon AI, the world-class intelligent conversational assistant for the DASIG Regional Academic Consortium (Region VII Central & Western Visayas). You are completely fluent in English, Bisaya/Cebuano, and Tagalog/Filipino. Respond naturally in the user's detected language (${lang}). Maintain a professional, articulate, and friendly tone with Markdown formatting, bullet points, and clear headers.`;
       
       const payload = {
         contents: [
@@ -279,7 +305,6 @@ async function callGenerativeLLM(userPrompt, lang) {
     }
   }
 
-  // If OpenAI API Key is configured in environment
   if (process.env.OPENAI_API_KEY) {
     try {
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -322,12 +347,75 @@ router.post('/message', async (req, res) => {
   // 1. Detect User's Language
   const lang = detectLanguage(normalized);
 
-  // 2. High-Accuracy NLP Intent Scoring
+  // 2. Check if this is a Calendar Month Query (e.g. "september", "events in october", "setyembre 2026")
+  const monthMatch = detectMonthQuery(normalized);
+  if (monthMatch) {
+    try {
+      const [eventsRes, trainRes] = await Promise.all([
+        supabase.from('events').select('id, title, date, venue, category, organizer, enrolled, total').order('id', { ascending: true }),
+        supabase.from('trainings').select('id, title, duration, level, schedule, category, org').order('id', { ascending: true }),
+      ]);
+
+      const allEvents = eventsRes.data || [];
+      const allTrainings = trainRes.data || [];
+
+      // Filter events/trainings matching this month prefix (e.g. 'Sep', 'Oct', 'Nov', 'Dec', etc.)
+      const matchedEvents = allEvents.filter(e => (e.date && (e.date.includes(monthMatch.prefix) || e.date.toLowerCase().includes(monthMatch.token))));
+      const matchedTrainings = allTrainings.filter(t => (t.schedule && (t.schedule.includes(monthMatch.prefix) || t.schedule.toLowerCase().includes(monthMatch.token))));
+
+      if (matchedEvents.length > 0 || matchedTrainings.length > 0) {
+        let reply = '';
+        if (lang === 'bisaya') {
+          reply = `📅 **Mga Kalihokan ug Training sa ${monthMatch.original} 2026:**\n\n`;
+          if (matchedEvents.length > 0) {
+            reply += `### 🏛️ Consortium Events:\n` + matchedEvents.map(e => `• **${e.title}**\n  📅 **Petsa:** ${e.date}\n  📍 **Lugar:** ${e.venue || 'TBA'}\n  👥 **Slots:** ${e.enrolled || 0}/${e.total || 50} rehistrado\n`).join('\n');
+          }
+          if (matchedTrainings.length > 0) {
+            reply += `\n### 🎓 Faculty & Technical Bootcamps:\n` + matchedTrainings.map(t => `• **${t.title}**\n  ⏱️ **Gidugayon:** ${t.duration} (${t.level})\n  🏛️ **Organized by:** ${t.org}\n`).join('\n');
+          }
+          reply += `\n👉 *Mahimo kang magparehistro direkta sa [Programs Module](/programs?tab=events)!*`;
+        } else if (lang === 'tagalog') {
+          reply = `📅 **Mga Kaganapan at Pagsasanay para sa ${monthMatch.original} 2026:**\n\n`;
+          if (matchedEvents.length > 0) {
+            reply += `### 🏛️ Consortium Events:\n` + matchedEvents.map(e => `• **${e.title}**\n  📅 **Petsa:** ${e.date}\n  📍 **Lugar:** ${e.venue || 'TBA'}\n  👥 **Slots:** ${e.enrolled || 0}/${e.total || 50} rehistrado\n`).join('\n');
+          }
+          if (matchedTrainings.length > 0) {
+            reply += `\n### 🎓 Faculty & Technical Bootcamps:\n` + matchedTrainings.map(t => `• **${t.title}**\n  ⏱️ **Tagal:** ${t.duration} (${t.level})\n  🏛️ **Organized by:** ${t.org}\n`).join('\n');
+          }
+          reply += `\n👉 *Maaari kang magparehistro sa [Programs Module](/programs?tab=events)!*`;
+        } else {
+          reply = `📅 **Consortium Schedule for ${monthMatch.original} 2026:**\n\n`;
+          if (matchedEvents.length > 0) {
+            reply += `### 🏛️ Consortium Events:\n` + matchedEvents.map(e => `• **${e.title}**\n  📅 **Date:** ${e.date}\n  📍 **Venue:** ${e.venue || 'TBA'}\n  👥 **Capacity:** ${e.enrolled || 0}/${e.total || 50} registered\n`).join('\n');
+          }
+          if (matchedTrainings.length > 0) {
+            reply += `\n### 🎓 Faculty & Technical Bootcamps:\n` + matchedTrainings.map(t => `• **${t.title}**\n  ⏱️ **Duration:** ${t.duration} (${t.level})\n  🏛️ **Organized by:** ${t.org}\n`).join('\n');
+          }
+          reply += `\n👉 *You can register directly in the [Programs Module](/programs?tab=events)!*`;
+        }
+
+        return res.json({
+          reply,
+          matched: true,
+          intent: 'events_month',
+          score: 10,
+          language: lang,
+          followups: MULTI_FOLLOWUPS[lang],
+          navigate_to: '/programs?tab=events',
+          suggestions: []
+        });
+      }
+    } catch (err) {
+      console.warn('[chatbot] Month query error:', err.message);
+    }
+  }
+
+  // 3. High-Accuracy NLP Intent Scoring
   let matchedResult = matchIntent(normalized);
   let match = matchedResult ? matchedResult.entry : null;
   let bestScore = matchedResult ? matchedResult.score : 0;
 
-  // 3. Typo-Tolerant Fuzzy Matching Fallback
+  // 4. Typo-Tolerant Fuzzy Matching Fallback
   if (!match || bestScore < 1.5) {
     const inputWords = normalized.toLowerCase().split(/\s+/).filter(w => w.length >= 3);
     let fuzzyBest = null;
@@ -354,13 +442,69 @@ router.post('/message', async (req, res) => {
     }
   }
 
-  // 4. Check Generative LLM if query is open-ended
+  // 5. Cross-Table Semantic Database Search if not matched
+  if (!match) {
+    try {
+      const searchTerms = normalized.toLowerCase().split(/\s+/).filter(w => w.length >= 3);
+      if (searchTerms.length > 0) {
+        const [evs, trs, nws, fnd] = await Promise.all([
+          supabase.from('events').select('title, date, venue').limit(10),
+          supabase.from('trainings').select('title, org, duration').limit(10),
+          supabase.from('news').select('title, category, date').limit(10),
+          supabase.from('funding_opportunities').select('title, funding_agency').limit(10),
+        ]);
+
+        const hits = [];
+        (evs.data || []).forEach(e => {
+          if (searchTerms.some(st => e.title.toLowerCase().includes(st) || (e.venue && e.venue.toLowerCase().includes(st)))) {
+            hits.push(`📅 **Event:** ${e.title} (${e.date || 'TBA'})`);
+          }
+        });
+        (trs.data || []).forEach(t => {
+          if (searchTerms.some(st => t.title.toLowerCase().includes(st) || (t.org && t.org.toLowerCase().includes(st)))) {
+            hits.push(`🎓 **Training:** ${t.title} by ${t.org}`);
+          }
+        });
+        (nws.data || []).forEach(n => {
+          if (searchTerms.some(st => n.title.toLowerCase().includes(st))) {
+            hits.push(`📰 **News:** ${n.title}`);
+          }
+        });
+
+        if (hits.length > 0) {
+          let dynamicReply = '';
+          if (lang === 'bisaya') {
+            dynamicReply = `🔍 **Nakakita ko og mga may kalabotan nga resulta sa DASIG Database:**\n\n${hits.slice(0, 4).join('\n')}\n\n💡 *Gusto ka ba og dugang impormasyon bahin sa bisan asa niini?*`;
+          } else if (lang === 'tagalog') {
+            dynamicReply = `🔍 **May natagpuan akong may kaugnayang resulta sa DASIG Database:**\n\n${hits.slice(0, 4).join('\n')}\n\n💡 *Nais mo bang malaman ang higit pang detalye tungkol dito?*`;
+          } else {
+            dynamicReply = `🔍 **I found relevant matches in the DASIG Consortium Database:**\n\n${hits.slice(0, 4).join('\n')}\n\n💡 *Would you like more details about any of these?*`;
+          }
+
+          return res.json({
+            reply: dynamicReply,
+            matched: true,
+            intent: 'database_search',
+            score: 8.0,
+            language: lang,
+            followups: MULTI_FOLLOWUPS[lang],
+            navigate_to: null,
+            suggestions: []
+          });
+        }
+      }
+    } catch (err) {
+      console.warn('[chatbot] Cross-table search error:', err.message);
+    }
+  }
+
+  // 6. Check Generative LLM if query is open-ended
   let generatedReply = null;
   if (!match) {
     generatedReply = await callGenerativeLLM(normalized, lang);
   }
 
-  // 5. Log interaction telemetry (fire-and-forget)
+  // 7. Log interaction telemetry (fire-and-forget)
   Promise.resolve(
     supabase.from('chatbot_logs').insert({
       message: normalized,
@@ -383,7 +527,7 @@ router.post('/message', async (req, res) => {
     });
   }
 
-  // 6. If No Match Found — Deliver Polite Multilingual Guidance
+  // 8. If No Match Found — Deliver Polite Multilingual Guidance
   if (!match) {
     const unmatchedFallbacks = {
       english: "I understand your question! As Haribon AI, I specialize in consortium events, research grants, faculty training, and governance policies in Region VII. Feel free to rephrase or explore one of the suggested topics below:",
@@ -409,12 +553,12 @@ router.post('/message', async (req, res) => {
     });
   }
 
-  // 7. Select Appropriate Language Reply
+  // 9. Select Appropriate Language Reply
   let reply = match.reply_en;
   if (lang === 'bisaya' && match.reply_ceb) reply = match.reply_ceb;
   if (lang === 'tagalog' && match.reply_tgl) reply = match.reply_tgl;
 
-  // 8. Dynamic Real-Time Supabase Database Enrichment
+  // 10. Dynamic Real-Time Supabase Database Enrichment
   const uniq = (arr, key) => {
     const seen = new Set();
     return arr.filter(r => { const v = r[key]; return seen.has(v) ? false : seen.add(v); });
@@ -468,7 +612,7 @@ router.post('/message', async (req, res) => {
     console.warn('[chatbot] DB enrichment error:', err.message);
   }
 
-  // 9. Navigation Target Mapping
+  // 11. Navigation Target Mapping
   const PAGE_LINKS = {
     events: '/programs?tab=events', event_register: '/programs?tab=events',
     training: '/programs?tab=training', certificate: '/programs?tab=training',
