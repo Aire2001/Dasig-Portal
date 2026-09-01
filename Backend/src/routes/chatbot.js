@@ -268,7 +268,7 @@ function generateHighIQResponse(normalizedQuery, lang) {
     }
   }
 
-  // ── APP-SPECIFIC INTENTS (CIT-U, UPV, DOST, CAPSTONE, CERTIFICATES) ───────
+  // ── APP-SPECIFIC INTENTS (CIT-U, UPV, USA, DOST, DICT, DTI, DEPED, CAPSTONE, CERTIFICATES) ───────
   if (q.includes('cit') || q.includes('cebu institute of technology') || q.includes('host institution')) {
     if (lang === 'bisaya') {
       return `🏛️ **Cebu Institute of Technology – University (CIT-U):**\n\nAng **CIT-University** maoy nanguna nga pribadong autonomous university sa Cebu City ug nagsilbing **Central Host Node** sa DASIG Regional Consortium.\n\n• **Eksperto:** Engineering, Computing, Software Development, ug Applied Artificial Intelligence.\n• **Papel sa DASIG:** Naggunit sa teknikal nga imprastraktura sa portal ug nangulo sa inter-HEI technology transfer sa Central Visayas.\n• **Website:** [cit.edu](https://cit.edu) · **Location:** N. Bacalso Ave, Cebu City.`;
@@ -283,30 +283,46 @@ function generateHighIQResponse(normalizedQuery, lang) {
     return `🌊 **University of the Philippines Visayas (UPV):**\n\nUPV is a premier national research university in Western Visayas (Miagao & Iloilo City) specializing in **Marine Science, Fisheries, and Coastal Resource Management**.\n\n• **Consortium Role:** Leads marine and environmental research initiatives, climate adaptation frameworks, and biodiversity protection across Visayas.`;
   }
 
+  if (q.includes('usa') || q.includes('san agustin') || q.includes('university of san agustin')) {
+    return `🏛️ **University of San Agustin (USa):**\n\nEstablished in 1904 in Iloilo City, USa is a distinguished Augustinian Catholic university and key DASIG academic partner leading in **Institutional Governance, Pharmacy & Health Sciences, Law, and Research Ethics**.`;
+  }
+
   if (q.includes('dost') || q.includes('proposal') || q.includes('grant') || q.includes('research funding') || q.includes('pondo')) {
     return `💰 **DOST-7 Research Grants & Funding Framework:**\n\nDOST Region VII provides robust financial and technical grant mechanisms for academic researchers:\n\n1. **Grants-In-Aid (GIA):** Direct funding for high-impact R&D projects aligning with regional and national development goals.\n2. **SETUP Program:** Tech upgrading and enterprise innovation assistance.\n3. **Consortium Collaborative Grants:** Joint inter-HEI research grants with partner universities.\n\n👉 *Track open grant calls and eligibility criteria in the [Funding Module](/funding)!*`;
+  }
+
+  if (q.includes('dict') || q.includes('digital') || q.includes('ict') || q.includes('bootcamp')) {
+    return `💻 **DICT Region VII — Digital Transformation Node:**\n\nDICT Region VII collaborates with DASIG to deliver **advanced technical bootcamps**, digital infrastructure, cybersecurity assessments, and regional startup incubation programs. Check active sessions in the **Training** module!`;
+  }
+
+  if (q.includes('dti') || q.includes('trade') || q.includes('msme') || q.includes('commercialization')) {
+    return `💼 **DTI Region VII — Commercialization Node:**\n\nDTI Region VII supports DASIG researchers in transitioning academic inventions into commercially viable MSME products, patents, and regional trade partnerships.`;
+  }
+
+  if (q.includes('deped') || q.includes('basic education') || q.includes('k-12') || q.includes('edtech')) {
+    return `📚 **DepEd Region VII — Educational Leadership Node:**\n\nDepEd Region VII oversees K-12 integration, faculty development, and educational technology pipelines in partnership with DASIG consortium member universities.`;
   }
 
   if (q.includes('capstone') || q.includes('it411') || q.includes('methodology') || q.includes('validation') || q.includes('framework') || q.includes('iso 25010') || q.includes('tam')) {
     return `🎓 **Academic Research & Capstone Framework Guidance:**\n\nFor IT411 Capstone & MVP Validation (Weeks 1–2):\n\n1. **ISO/IEC 25010 Software Quality Model:** Evaluates Functional Suitability, Usability, Performance Efficiency, Security, and Reliability.\n2. **TAM (Technology Acceptance Model):** Measures Perceived Usefulness (PU) and Perceived Ease of Use (PEOU).\n3. **Target Validation Demographic:** 30 stakeholders across Students (Guests), Faculty (Members), IT Experts (SMEs), and Decision-Makers (Admins).\n4. **Live Deployment:** Accessible 24/7 on Vercel CDN and Render Backend Cloud!`;
   }
 
-  // ── COMPREHENSIVE HIGH-IQ SYNTHESIS FOR ANY INQUIRY ───────────────────────
+  // ── SCOPED HIGH-IQ POLITE REDIRECT (Strictly App/Consortium Focused) ────────
   if (lang === 'bisaya') {
-    return `🧠 **Haribon AI Intelligence:**\n\nBahin sa imong gipangutana: **"${normalizedQuery}"**\n\nAndam ko motubag sa bisan unsang pangutana—gikan sa **Computer Science, Mathematics, General Knowledge, Science, Pinulongan, ug Academic Research** hangtod sa mga serbisyo sa **DASIG Regional Consortium** sa Rehiyon VII.\n\n💡 *Unsa pa ang imong gusto mahibaloan o i-explore nato karon?*`;
+    return `🦅 **Haribon AI — DASIG Consortium Assistant:**\n\nNakasabot ko sa imong gipangutana: **"${normalizedQuery}"**.\n\nIsip opisyal nga virtual assistant sa **DASIG Regional Academic Consortium (Rehiyon VII)**, ang akong salabutan gigahin lamang sa pagtabang kanimo sa atong portal:\n\n• 📅 **Events & Summits:** Pagrehistro ug pagsubay sa live slots.\n• 🎓 **Faculty Bootcamps:** Pag-enrol sa mga technical training programs.\n• 💰 **DOST Research Grants:** Pagsusi sa mga bukas nga pondo ug tawag.\n• 👥 **Membership:** Pagsulod ug pag-apil sa konsorsyum (CIT-U, UPV, USA).\n• 📋 **Governance Policies:** Pagbasa sa mga regional charters ug IP guidelines.\n\n💡 *Unsay akong ikatabang kanimo bahin sa mga serbisyo sa DASIG Portal?*`;
   } else if (lang === 'tagalog') {
-    return `🧠 **Haribon AI Intelligence:**\n\nTungkol sa iyong tanong: **"${normalizedQuery}"**\n\nHanda akong sumagot sa anumang paksa—mula sa **Computer Science, Matematika, General Knowledge, Agham, Wika, at Academic Research** hanggang sa mga kaganapan at serbisyo ng **DASIG Regional Consortium** sa Rehiyon VII.\n\n💡 *Ano pa ang nais mong talakayin o itanong?*`;
+    return `🦅 **Haribon AI — DASIG Consortium Assistant:**\n\nNauunawaan ko ang iyong tanong: **"${normalizedQuery}"**.\n\nBilang opisyal na virtual assistant ng **DASIG Regional Academic Consortium (Rehiyon VII)**, ang aking kadalubhasaan ay nakalaan lamang para sa aming portal at mga serbisyo:\n\n• 📅 **Events & Summits:** Pagpaparehistro at pag-alam sa mga iskedyul.\n• 🎓 **Faculty Bootcamps:** Pag-enrol sa mga technical training programs.\n• 💰 **DOST Research Grants:** Pagsusuri sa mga bukas na pondo at tawag.\n• 👥 **Membership:** Pag-aplay sa konsorsyum (CIT-U, UPV, USA).\n• 📋 **Governance Policies:** Pagbasa sa mga regional charters at IP guidelines.\n\n💡 *Paano kita matutulungan patungkol sa DASIG Portal ngayon?*`;
   } else {
-    return `🧠 **Haribon AI General Intelligence:**\n\nRegarding your inquiry: **"${normalizedQuery}"**\n\nI am equipped to converse intelligently on **any subject matter**—including Computer Science, Mathematics, General World Knowledge, Science, Writing, Language Translation, and Academic Research, alongside full support for the **DASIG Regional Consortium** in Region VII.\n\n💡 *What other specific questions or topics would you like to explore?*`;
+    return `🦅 **Haribon AI — DASIG Consortium Assistant:**\n\nI understand your inquiry: **"${normalizedQuery}"**.\n\nAs the dedicated intelligent assistant for the **DASIG Regional Academic Consortium (Region VII)**, I specialize exclusively in assisting you with our portal and consortium initiatives:\n\n• 📅 **Consortium Summits & Events:** Real-time seat registration and schedules.\n• 🎓 **Faculty Development Bootcamps:** Technical training courses and certificates.\n• 💰 **DOST Research Grants & Funding:** Exploring GIA, SETUP, and open calls.\n• 👥 **Institutional Membership:** Applying for Tier 1 / Tier 2 membership (CIT-U, UPV, USA).\n• 📋 **Governance & Policy Charters:** Consortium bylaws, data privacy, and IP ethics.\n\n💡 *How may I assist you with the DASIG Portal today?*`;
   }
 }
 
-// External Generative LLM Caller (Gemini / OpenAI with balanced academic restriction & high IQ)
+// External Generative LLM Caller (Scoped Strictly to DASIG Portal & Region VII with High IQ)
 async function callGenerativeLLM(userPrompt, lang) {
-  const systemInstruction = `You are Haribon AI, the world-class intelligent conversational assistant for the DASIG Regional Academic Consortium (Region VII Central Visayas).
-You have a VERY HIGH IQ and broad, multi-disciplinary intellectual mastery across science, technology, mathematics, coding, history, language, philosophy, and academic research.
-You are fully trilingual and fluent in English, Bisaya/Cebuano, and Tagalog/Filipino.
-You are professional, articulate, helpful, and academically grounded. You maintain ethical safety and constructive decorum without being overly restrictive. When users ask general or technical questions (even outside the consortium), answer them deeply, accurately, and articulately in the detected language (${lang}) using beautiful Markdown formatting with clear headers, bullet points, and code blocks.`;
+  const systemInstruction = `You are Haribon AI, the specialized, high-IQ intelligent assistant exclusively for the DASIG Regional Academic Consortium (Region VII Central Visayas, Philippines).
+Your scope is strictly focused on the DASIG Portal, its member institutions (CIT-University as Central Host, UP Visayas, University of San Agustin, DOST-7, DICT-7, DTI-7, DepEd-7), consortium events, summits, faculty training bootcamps, DOST research grants, memberships, policies, and academic capstone evaluation.
+You have a VERY HIGH IQ and understand natural phrasing, typos, and questions in English, Bisaya/Cebuano, and Tagalog/Filipino.
+If a user asks about anything outside the DASIG portal, politely, articulately, and constructively re-orient them back to DASIG portal services in ${lang}. Never provide harmful content. Always format output with clear Markdown headers and bullet points.`;
 
   if (process.env.GEMINI_API_KEY) {
     try {
@@ -346,7 +362,7 @@ You are professional, articulate, helpful, and academically grounded. You mainta
             { role: 'system', content: systemInstruction },
             { role: 'user', content: userPrompt }
           ],
-          temperature: 0.7
+          temperature: 0.5
         })
       });
 
