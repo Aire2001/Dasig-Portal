@@ -139,7 +139,7 @@ const STATUS_COLORS = {
 };
 
 export default function ProfilePage() {
-  const { user, refreshUser } = useAuth();
+  const { user, refreshUser, updateUser } = useAuth();
   const navigate = useNavigate();
   const [tab, setTab] = useState('profile');
   const [toast, setToast] = useState(null); // { msg, ok }
@@ -167,8 +167,13 @@ export default function ProfilePage() {
     try {
       showToast('Uploading photo…', true);
       const dataUri = await compressAvatar(file);
-      await api.auth.updateProfile({ avatar_url: dataUri });
-      await refreshUser();
+      const res = await api.auth.updateProfile({ avatar_url: dataUri });
+      if (res?.user) {
+        updateUser(res.user);
+      } else {
+        updateUser({ avatar_url: dataUri });
+        await refreshUser();
+      }
       showToast('Profile photo updated!');
     } catch (err) {
       showToast(err.message || 'Upload failed', false);
@@ -177,8 +182,13 @@ export default function ProfilePage() {
 
   async function removeAvatar() {
     try {
-      await api.auth.updateProfile({ avatar_url: null });
-      await refreshUser();
+      const res = await api.auth.updateProfile({ avatar_url: null });
+      if (res?.user) {
+        updateUser(res.user);
+      } else {
+        updateUser({ avatar_url: null });
+        await refreshUser();
+      }
       showToast('Profile photo removed');
     } catch (err) {
       showToast(err.message || 'Failed to remove photo', false);
@@ -301,6 +311,7 @@ export default function ProfilePage() {
 
 /* ─── PROFILE TAB ─────────────────────────────────────────────── */
 function ProfileTab({ user, showToast, onSaved }) {
+  const { updateUser } = useAuth();
   const [name,        setName]        = useState(user.name        || '');
   const [institution, setInstitution] = useState(user.institution || '');
   const [campus,      setCampus]      = useState(user.campus      || '');
@@ -318,7 +329,12 @@ function ProfileTab({ user, showToast, onSaved }) {
     setConfirmOpen(false);
     setSaving(true);
     try {
-      await api.auth.updateProfile({ name: name.trim(), institution, campus, phone });
+      const res = await api.auth.updateProfile({ name: name.trim(), institution, campus, phone });
+      if (res?.user) {
+        updateUser(res.user);
+      } else {
+        updateUser({ name: name.trim(), institution, campus, phone });
+      }
       await onSaved?.();
       showToast('Profile updated successfully!');
     } catch (err) {

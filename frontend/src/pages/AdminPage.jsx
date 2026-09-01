@@ -509,7 +509,15 @@ export default function AdminPage() {
               🏛️ {user?.institution || 'Region VII Consortium'}{user?.campus ? ` · ${user.campus}` : ''}
             </div>
           </div>
-          <div style={{ width:34, height:34, borderRadius:10, background:'linear-gradient(135deg,#e11d48,#9f1239)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, fontWeight:900, color:'#fff' }}>{initials}</div>
+          <div style={{ width:36, height:36, borderRadius:10, overflow:'hidden', flexShrink:0, border:'1.5px solid rgba(255,255,255,0.2)', boxShadow:'0 2px 8px rgba(0,0,0,0.3)' }}>
+            {user?.avatar_url ? (
+              <img src={user.avatar_url} alt="" style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }} />
+            ) : (
+              <div style={{ width:'100%', height:'100%', background:'linear-gradient(135deg,#e11d48,#9f1239)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, fontWeight:900, color:'#fff' }}>
+                {initials}
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
@@ -1026,11 +1034,17 @@ function UsersTab({ showToast }) {
         <Modal title="User Details" onClose={() => setDetailUser(null)}>
           <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
             <div style={{ display:'flex', alignItems:'center', gap:14, padding:'4px 0' }}>
-              <div style={{ width:52, height:52, borderRadius:14, background:'linear-gradient(135deg,#1e3a8a,#4f46e5)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:18, fontWeight:900, color:'#fff', flexShrink:0 }}>
-                {(detailUser.name || 'U').split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase()}
+              <div style={{ width:56, height:56, borderRadius:16, overflow:'hidden', border:'2px solid rgba(255,255,255,0.2)', boxShadow:'0 4px 16px rgba(0,0,0,0.4)', flexShrink:0 }}>
+                {detailUser.avatar_url ? (
+                  <img src={detailUser.avatar_url} alt="" style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }} />
+                ) : (
+                  <div style={{ width:'100%', height:'100%', background:'linear-gradient(135deg,#1e3a8a,#4f46e5)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:18, fontWeight:900, color:'#fff' }}>
+                    {(detailUser.name || 'U').split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase()}
+                  </div>
+                )}
               </div>
               <div>
-                <div style={{ color:'#fff', fontWeight:900, fontSize:16.5 }}>{detailUser.name}</div>
+                <div style={{ color:'#fff', fontWeight:900, fontSize:17 }}>{detailUser.name}</div>
                 <div style={{ color:'rgba(255,255,255,0.5)', fontSize:13 }}>{detailUser.email}</div>
               </div>
             </div>
@@ -1040,12 +1054,12 @@ function UsersTab({ showToast }) {
                 { l:'Status', v:detailUser.status },
                 { l:'Institution', v:detailUser.institution || '—' },
                 { l:'Campus', v:detailUser.campus || '—' },
+                { l:'Phone', v:detailUser.phone || '—' },
                 { l:'Tier', v:detailUser.tier || '—' },
                 { l:'Joined Date', v:detailUser.created_at?.slice(0,10) || '—' },
-                { l:'Member Since', v:detailUser.member_since || '—' },
                 { l:'Renewal Due', v:detailUser.renewal_due || '—' },
               ].map(r => (
-                <div key={r.l} style={{ background:'rgba(255,255,255,0.04)', borderRadius:9, padding:'10px 12px' }}>
+                <div key={r.l} style={{ background:'rgba(255,255,255,0.04)', borderRadius:10, padding:'10px 12px', border:'1px solid rgba(255,255,255,0.06)' }}>
                   <div style={{ fontSize:10.5, fontWeight:800, color:'rgba(255,255,255,0.38)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:3 }}>{r.l}</div>
                   <div style={{ fontSize:13.5, color:'#fff', fontWeight:600 }}>{r.v}</div>
                 </div>
@@ -1069,7 +1083,7 @@ function UsersTab({ showToast }) {
       <PageHeader title="Users" desc="Manage roles and account status" action={
         <div style={{ display:'flex', gap:8, alignItems:'center' }}>
           <button onClick={exportUsersCSV} className="ap-btn ap-btn-ghost" style={{ fontSize:12.5, whiteSpace:'nowrap' }}>⬇ Export CSV</button>
-          <input className="ap-input" placeholder="Search name, email…" value={search} onChange={e => setSearch(e.target.value)} style={{ width:190 }} />
+          <input className="ap-input" placeholder="Search name, email, institution…" value={search} onChange={e => setSearch(e.target.value)} style={{ width:210 }} />
           <select className="ap-input" value={roleF} onChange={e => setRoleF(e.target.value)} style={{ width:110, cursor:'pointer' }}>
             {['All','ADMIN','MEMBER','GUEST'].map(r => <option key={r} value={r} style={{ background:'#0f172a' }}>{r}</option>)}
           </select>
@@ -1096,35 +1110,45 @@ function UsersTab({ showToast }) {
                   <div
                     onClick={() => setDetailUser(u)}
                     title="Click to view details"
-                    style={{ display:'flex', alignItems:'center', gap:10, cursor:'pointer' }}
+                    style={{ display:'flex', alignItems:'center', gap:12, cursor:'pointer' }}
                   >
-                    <div style={{ width:34, height:34, borderRadius:9, background:'linear-gradient(135deg,#1e3a8a,#4f46e5)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:12, fontWeight:900, color:'#fff', flexShrink:0 }}>
-                      {(u.name || 'U').split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase()}
+                    <div style={{ width:38, height:38, borderRadius:11, overflow:'hidden', flexShrink:0, border:'1.5px solid rgba(255,255,255,0.12)', boxShadow:'0 2px 8px rgba(0,0,0,0.25)' }}>
+                      {u.avatar_url ? (
+                        <img src={u.avatar_url} alt="" style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }} />
+                      ) : (
+                        <div style={{
+                          width:'100%', height:'100%',
+                          background: u.role==='ADMIN' ? 'linear-gradient(135deg,#e11d48,#9f1239)' : u.role==='MEMBER' ? 'linear-gradient(135deg,#10b981,#059669)' : 'linear-gradient(135deg,#1e3a8a,#3b82f6)',
+                          display:'flex', alignItems:'center', justifyContent:'center', fontSize:12.5, fontWeight:900, color:'#fff'
+                        }}>
+                          {(u.name || 'U').split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase()}
+                        </div>
+                      )}
                     </div>
                     <div>
-                      <div style={{ fontWeight:700, color:'#fff', fontSize:13, display:'flex', alignItems:'center', gap:6 }}>
+                      <div style={{ fontWeight:800, color:'#fff', fontSize:13.5, display:'flex', alignItems:'center', gap:6 }}>
                         {u.name}
-                        <span style={{ fontSize:10, color:'rgba(255,255,255,0.3)', fontWeight:400 }}>🔍</span>
+                        <span style={{ fontSize:10, color:'rgba(249,115,22,0.8)', fontWeight:700 }}>🔍</span>
                       </div>
-                      <div style={{ fontSize:13, color:'rgba(255,255,255,0.55)' }}>{u.email}</div>
+                      <div style={{ fontSize:12, color:'rgba(255,255,255,0.5)' }}>{u.email}</div>
                     </div>
                   </div>
                 </TD>
                 <TD muted>{u.institution || '—'}{u.campus ? `, ${u.campus}` : ''}</TD>
                 <TD>
                   <select onChange={e => changeRole(u, e.target.value)} value={u.role} disabled={!!acting}
-                    style={{ background:rs.bg, color:rs.color, border:`1px solid ${rs.color}44`, borderRadius:7, padding:'4px 8px', fontSize:13, fontWeight:800, cursor:'pointer', fontFamily:'inherit', outline:'none' }}>
+                    style={{ background:rs.bg, color:rs.color, border:`1px solid ${rs.color}44`, borderRadius:8, padding:'5px 10px', fontSize:12.5, fontWeight:800, cursor:'pointer', fontFamily:'inherit', outline:'none' }}>
                     {['ADMIN','MEMBER','GUEST'].map(r => <option key={r} value={r} style={{ background:'#0f172a' }}>{r}</option>)}
                   </select>
                 </TD>
                 <TD>
-                  <span className="ap-pill" style={{ background: u.status === 'ACTIVE' ? 'rgba(16,185,129,.15)' : 'rgba(255,255,255,.06)', color: u.status === 'ACTIVE' ? '#6ee7b7' : 'rgba(255,255,255,.38)' }}>
+                  <span className="ap-pill" style={{ background: u.status === 'ACTIVE' ? 'rgba(16,185,129,.15)' : 'rgba(255,255,255,.06)', color: u.status === 'ACTIVE' ? '#6ee7b7' : 'rgba(255,255,255,.38)', border: `1px solid ${u.status === 'ACTIVE' ? 'rgba(16,185,129,.3)' : 'rgba(255,255,255,.1)'}` }}>
                     {u.status === 'ACTIVE' ? '● Active' : '● Inactive'}
                   </span>
                 </TD>
                 <TD muted>{u.created_at?.slice(0,10) || '—'}</TD>
                 <TD>
-                  <button onClick={() => toggleStatus(u)} disabled={!!acting} className={`ap-btn ${u.status === 'INACTIVE' ? 'ap-btn-green' : 'ap-btn-red'}`}>
+                  <button onClick={() => toggleStatus(u)} disabled={!!acting} className={`ap-btn ${u.status === 'INACTIVE' ? 'ap-btn-green' : 'ap-btn-red'}`} style={{ padding:'6px 12px', borderRadius:8 }}>
                     {acting === u.id + 's' ? '…' : u.status === 'INACTIVE' ? 'Activate' : 'Suspend'}
                   </button>
                 </TD>

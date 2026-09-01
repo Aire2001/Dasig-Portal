@@ -88,7 +88,7 @@ router.get('/users', async (req, res) => {
   const { role, status, search, page = 1, limit = 20 } = req.query;
 
   let query = supabase.from('users')
-    .select('id, name, email, role, status, institution, campus, tier, member_since, renewal_due, created_at', { count: 'exact' });
+    .select('id, name, email, role, status, institution, campus, phone, avatar_url, tier, member_since, renewal_due, created_at', { count: 'exact' });
 
   if (role && role !== 'All') query = query.eq('role', role);
   if (status && status !== 'All') query = query.eq('status', status);
@@ -105,7 +105,7 @@ router.get('/users', async (req, res) => {
 // GET /api/admin/users/:id — get single user details
 router.get('/users/:id', async (req, res) => {
   const { data, error } = await supabase.from('users')
-    .select('id, name, email, role, status, institution, campus, tier, member_since, renewal_due, created_at')
+    .select('id, name, email, role, status, institution, campus, phone, avatar_url, tier, member_since, renewal_due, created_at')
     .eq('id', req.params.id).single();
   if (error) return res.status(404).json({ error: 'User not found' });
   res.json(data);

@@ -63,8 +63,13 @@ export function AuthProvider({ children }) {
   async function refreshUser() {
     try {
       const u = await api.auth.me();
-      applyUser(u);
+      if (u) applyUser(u);
     } catch (_) {}
+  }
+
+  function updateUser(updated) {
+    const next = { ...user, ...(updated?.user || updated) };
+    applyUser(next);
   }
 
   function logout() {
@@ -72,7 +77,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, refreshUser }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, refreshUser, updateUser }}>
       {children}
     </AuthContext.Provider>
   );
