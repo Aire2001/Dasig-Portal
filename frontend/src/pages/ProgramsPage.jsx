@@ -1551,19 +1551,79 @@ function TrainingTab({ user }) {
                     onChange={e => setPosition(e.target.value)} />
                 </div>
               </div>
-              <div style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 14px', background:'rgba(255,255,255,0.04)', borderRadius:10, border:'1px solid rgba(255,255,255,0.08)' }}>
-                <span style={{ fontSize:16 }}>🪪</span>
-                <div>
-                  <div style={{ fontSize:10, color:'rgba(255,255,255,0.3)', fontWeight:700, letterSpacing:'.5px', textTransform:'uppercase', marginBottom:2 }}>Account Type</div>
-                  <div style={{ fontSize:12.5, fontWeight:800, color: user?.role==='ADMIN'?'#fca5a5':user?.role==='MEMBER'?'#6ee7b7':'#93c5fd' }}>
-                    {user?.role==='ADMIN'?'🛡 Administrator':user?.role==='MEMBER'?'✓ Member':'○ Guest'}
+
+              {/* VIP Member Privileges vs Guest Comparison Banner */}
+              {user?.role === 'MEMBER' || user?.role === 'ADMIN' ? (
+                <div style={{
+                  background: 'linear-gradient(135deg, rgba(16,185,129,0.14) 0%, rgba(245,158,11,0.12) 100%)',
+                  border: '1.5px solid rgba(16,185,129,0.38)',
+                  borderRadius: 14, padding: '12px 16px',
+                  boxShadow: '0 4px 20px rgba(16,185,129,0.12)',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span style={{ fontSize: 14 }}>👑</span>
+                      <span style={{ fontSize: 12, fontWeight: 900, color: '#34d399', letterSpacing: '0.4px', textTransform: 'uppercase' }}>
+                        VIP Consortium Member Perks
+                      </span>
+                    </div>
+                    <span style={{ fontSize: 10.5, background: 'rgba(16,185,129,0.25)', color: '#6ee7b7', border: '1px solid rgba(16,185,129,0.4)', padding: '2px 8px', borderRadius: 6, fontWeight: 800 }}>
+                      100% Free Pass
+                    </span>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, fontSize: 11, color: 'rgba(255,255,255,0.82)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}><span>⚡</span><span>Instant Priority Slot</span></div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}><span>🎖️</span><span>Free Certificate</span></div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}><span>📂</span><span>Course Toolkits & Slides</span></div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}><span>✓</span><span>Fast-Track Enrollment</span></div>
                   </div>
                 </div>
-              </div>
+              ) : (
+                <div style={{
+                  background: 'rgba(255,255,255,0.03)',
+                  border: '1px solid rgba(255,255,255,0.09)',
+                  borderRadius: 14, padding: '12px 16px',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span style={{ fontSize: 14 }}>👤</span>
+                      <span style={{ fontSize: 12, fontWeight: 800, color: 'rgba(255,255,255,0.75)' }}>
+                        Standard Guest Registration
+                      </span>
+                    </div>
+                    <span style={{ fontSize: 10, background: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.6)', padding: '2px 8px', borderRadius: 6, fontWeight: 700 }}>
+                      Public Pass
+                    </span>
+                  </div>
+                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', lineHeight: 1.5 }}>
+                    Want instant priority seats, free certificates & course toolkits? <a href="/membership" target="_blank" rel="noreferrer" style={{ color: '#fb923c', fontWeight: 800, textDecoration: 'underline' }}>Apply for DASIG Membership →</a>
+                  </div>
+                </div>
+              )}
+
               <div style={{ display:'flex', gap:10, marginTop:4 }}>
                 <button onClick={() => setFormModal(null)} style={{ flex:1, background:'rgba(255,255,255,0.06)', color:'rgba(255,255,255,0.55)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:12, padding:'12px', fontSize:13.5, fontWeight:700, cursor:'pointer', fontFamily:'inherit' }}>Cancel</button>
-                <button onClick={submitEnroll} disabled={submitting} style={{ flex:2, background: submitting?'#475569':ts(formModal).accent, color:'#fff', border:'none', borderRadius:12, padding:'12px', fontSize:14, fontWeight:800, cursor: submitting?'not-allowed':'pointer', fontFamily:'inherit' }}>
-                  {submitting ? '⏳ Registering…' : '✅ Confirm Registration'}
+                <button
+                  onClick={submitEnroll}
+                  disabled={submitting}
+                  style={{
+                    flex: 2,
+                    background: submitting
+                      ? '#475569'
+                      : user?.role === 'MEMBER' || user?.role === 'ADMIN'
+                      ? 'linear-gradient(90deg, #059669, #10b981)'
+                      : ts(formModal).accent,
+                    color: '#fff', border: 'none', borderRadius: 12, padding: '12px',
+                    fontSize: 14, fontWeight: 800, cursor: submitting ? 'not-allowed' : 'pointer',
+                    fontFamily: 'inherit',
+                    boxShadow: submitting ? 'none' : user?.role === 'MEMBER' ? '0 4px 16px rgba(16,185,129,0.4)' : '0 4px 16px rgba(249,115,22,0.4)',
+                  }}
+                >
+                  {submitting
+                    ? '⏳ Registering…'
+                    : user?.role === 'MEMBER' || user?.role === 'ADMIN'
+                    ? '⚡ Confirm VIP Member Enrollment'
+                    : '✅ Confirm Guest Enrollment'}
                 </button>
               </div>
             </div>
@@ -1573,10 +1633,20 @@ function TrainingTab({ user }) {
 
       {/* Success */}
       {okModal && (
-        <div onClick={() => setOkModal(null)} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.65)', zIndex:9200, display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
-          <div onClick={e => e.stopPropagation()} style={{ background:'#0f172a', borderRadius:24, maxWidth:'min(420px,calc(100vw - 32px))', width:'100%', overflow:'hidden', border:'1px solid rgba(255,255,255,0.1)', animation:'modalIn .26s cubic-bezier(.34,1.56,.64,1)' }}>
-            <div style={{ background: ts(okModal.training).accent, padding:'26px 26px 48px', textAlign:'center', position:'relative' }}>
-              <div style={{ color:'rgba(255,255,255,0.6)', fontSize:10.5, fontWeight:700, letterSpacing:1, textTransform:'uppercase', marginBottom:6 }}>Registration Confirmed</div>
+        <div onClick={() => setOkModal(null)} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.7)', zIndex:9200, display:'flex', alignItems:'center', justifyContent:'center', padding:20, backdropFilter:'blur(8px)' }}>
+          <div onClick={e => e.stopPropagation()} style={{ background:'#0f172a', borderRadius:24, maxWidth:'min(440px,calc(100vw - 32px))', width:'100%', overflow:'hidden', border:'1px solid rgba(255,255,255,0.12)', animation:'modalIn .26s cubic-bezier(.34,1.56,.64,1)', boxShadow:'0 32px 80px rgba(0,0,0,0.85)' }}>
+            <div style={{ background: ts(okModal.training).accent, padding:'26px 24px 50px', textAlign:'center', position:'relative' }}>
+              <div style={{ display:'flex', justifyContent:'center', marginBottom:6 }}>
+                {okModal.role === 'MEMBER' || okModal.role === 'ADMIN' ? (
+                  <span style={{ background:'rgba(0,0,0,0.4)', color:'#34d399', border:'1px solid rgba(52,211,153,0.4)', borderRadius:6, padding:'3px 10px', fontSize:11, fontWeight:900, letterSpacing:'0.6px', textTransform:'uppercase' }}>
+                    👑 VIP Consortium Member Pass
+                  </span>
+                ) : (
+                  <span style={{ background:'rgba(0,0,0,0.4)', color:'rgba(255,255,255,0.8)', border:'1px solid rgba(255,255,255,0.2)', borderRadius:6, padding:'3px 10px', fontSize:11, fontWeight:800, textTransform:'uppercase' }}>
+                    Standard Attendee Pass
+                  </span>
+                )}
+              </div>
               <div style={{ color:'#fff', fontSize:18, fontWeight:900 }}>{okModal.training.title}</div>
               <div style={{ position:'absolute', bottom:-32, left:'50%', transform:'translateX(-50%)', width:64, height:64, borderRadius:'50%', background: ts(okModal.training).accent, border:'4px solid #0f172a', display:'flex', alignItems:'center', justifyContent:'center', fontSize:24, fontWeight:900, color:'#fff' }}>
                 {(okModal.name||'U')[0].toUpperCase()}
@@ -1584,9 +1654,8 @@ function TrainingTab({ user }) {
             </div>
             <div style={{ paddingTop:44, paddingBottom:10, textAlign:'center', paddingLeft:22, paddingRight:22 }}>
               <div style={{ fontWeight:900, fontSize:16, color:'#fff' }}>{okModal.name}</div>
-              <div style={{ fontSize:12, color:'rgba(255,255,255,0.38)', marginTop:3 }}>{okModal.email}</div>
-              {okModal.position && <div style={{ fontSize:12, color:'rgba(255,255,255,0.32)', marginTop:2 }}>{okModal.position}</div>}
-              {okModal.institution && <div style={{ fontSize:12, color:'rgba(255,255,255,0.32)', marginTop:2 }}>🏛 {okModal.institution}</div>}
+              <div style={{ fontSize:12, color:'rgba(255,255,255,0.45)', marginTop:3 }}>{okModal.email}</div>
+              {okModal.institution && <div style={{ fontSize:12, color:'rgba(255,255,255,0.4)', marginTop:2 }}>🏛 {okModal.institution}</div>}
             </div>
             <div style={{ padding:'0 22px 22px', display:'flex', flexDirection:'column', gap:7 }}>
               {[
@@ -1595,18 +1664,35 @@ function TrainingTab({ user }) {
                 {i:'⏱',l:'DURATION',v:okModal.training.duration},
                 {i:'📊',l:'LEVEL',v:okModal.training.level},
                 {i:'📅',l:'SCHEDULE',v:okModal.training.schedule?.split('|')[0]?.trim()},
-                {i:'👥',l:'SLOTS',v:`${okModal.training.enrolled}/${okModal.training.total} registered`},
               ].filter(r=>r.v).map(r => (
                 <div key={r.l} style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 12px', background:'rgba(255,255,255,0.04)', borderRadius:10 }}>
                   <span style={{ fontSize:14 }}>{r.i}</span>
-                  <div><div style={{ fontSize:10, color:'rgba(255,255,255,0.3)', fontWeight:700, letterSpacing:'.5px' }}>{r.l}</div><div style={{ fontSize:12.5, color:'#fff', fontWeight:700 }}>{r.v}</div></div>
+                  <div><div style={{ fontSize:10, color:'rgba(255,255,255,0.35)', fontWeight:700, letterSpacing:'.5px' }}>{r.l}</div><div style={{ fontSize:12.5, color:'#fff', fontWeight:700 }}>{r.v}</div></div>
                 </div>
               ))}
-              <div style={{ background:'rgba(16,185,129,0.12)', border:'1px solid rgba(16,185,129,0.3)', borderRadius:12, padding:'11px 14px', marginTop:4 }}>
-                <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:3 }}><span style={{ animation:'checkPop 0.4s 0.15s both', display:'inline-block', fontSize:14 }}>✅</span><span style={{ fontSize:12.5, color:'#34d399', fontWeight:700 }}>You&apos;re registered!</span></div>
-                <div style={{ fontSize:11.5, color:'rgba(52,211,153,0.8)', lineHeight:1.5 }}>Confirmation email sent to <strong style={{ color:'#34d399' }}>{okModal.email}</strong>.</div>
+
+              {/* Status Message */}
+              <div style={{
+                background: okModal.role === 'MEMBER' || okModal.role === 'ADMIN' ? 'rgba(16,185,129,0.14)' : 'rgba(59,130,246,0.12)',
+                border: `1px solid ${okModal.role === 'MEMBER' || okModal.role === 'ADMIN' ? 'rgba(16,185,129,0.35)' : 'rgba(59,130,246,0.3)'}`,
+                borderRadius: 12, padding: '11px 14px', marginTop: 4,
+              }}>
+                <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:3 }}>
+                  <span style={{ fontSize:14 }}>{okModal.role === 'MEMBER' ? '👑' : '✅'}</span>
+                  <span style={{ fontSize:12.5, color: okModal.role === 'MEMBER' ? '#34d399' : '#60a5fa', fontWeight:800 }}>
+                    {okModal.role === 'MEMBER' ? 'VIP Member Enrollment Confirmed!' : 'Enrollment Confirmed!'}
+                  </span>
+                </div>
+                <div style={{ fontSize:11.5, color:'rgba(255,255,255,0.7)', lineHeight:1.5 }}>
+                  {okModal.role === 'MEMBER'
+                    ? 'Your priority training slot and certificate completion tracking are locked in. Confirmation email sent!'
+                    : `Confirmation email sent to ${okModal.email}.`}
+                </div>
               </div>
-              <button onClick={() => setOkModal(null)} style={{ width:'100%', background: ts(okModal.training).accent, color:'#fff', border:'none', borderRadius:14, padding:'12px', fontSize:14, fontWeight:800, cursor:'pointer', fontFamily:'inherit', marginTop:4 }}>Done</button>
+
+              <button onClick={() => setOkModal(null)} style={{ width:'100%', background: ts(okModal.training).accent, color:'#fff', border:'none', borderRadius:14, padding:'12px', fontSize:14, fontWeight:800, cursor:'pointer', fontFamily:'inherit', marginTop:4 }}>
+                Done
+              </button>
             </div>
           </div>
         </div>
