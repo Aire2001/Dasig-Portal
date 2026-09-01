@@ -390,7 +390,93 @@ router.post('/message', async (req, res) => {
   // 1. Detect User's Language
   const lang = detectLanguage(normalized);
 
-  // 2. Check if this is a Calendar Month Query (e.g. "september", "events in october", "setyembre 2026")
+  // 2. Check if this is a Live Database Counts/Stats Query (e.g. "how many events", "how many members", "pila ka miyembro", "ilang events")
+  if (
+    normalized.includes('how many') || normalized.includes('pila ka') || normalized.includes('ilang') ||
+    normalized.includes('total count') || normalized.includes('number of') || normalized.includes('pila tanan')
+  ) {
+    try {
+      const [usersCount, eventsRes, trainRes] = await Promise.all([
+        supabase.from('users').select('id', { count: 'exact', head: true }),
+        supabase.from('events').select('id, title, enrolled, total'),
+        supabase.from('trainings').select('id, title, duration, level'),
+      ]);
+
+      const totalUsers = usersCount.count || 0;
+      const allEvents = eventsRes.data || [];
+      const allTrainings = trainRes.data || [];
+
+      if (normalized.includes('member') || normalized.includes('user') || normalized.includes('tawo') || normalized.includes('miyembro')) {
+        let reply = '';
+        if (lang === 'bisaya') {
+          reply = `👥 **Mga Miyembro ug tiggamit sa DASIG:**\n\nAdunay **${totalUsers} ka rehistradong miyembro ug tiggamit** sa DASIG Regional Academic Consortium gikan sa lain-laing unibersidad (CIT-U, UPV, USA) ug ahensya sa Rehiyon VII.\n\n👉 *Mahimo kang mo-apply sa [Membership Module](/membership)!*`;
+        } else if (lang === 'tagalog') {
+          reply = `👥 **Mga Miyembro at gumagamit ng DASIG:**\n\nMayroong **${totalUsers} rehistradong miyembro at gumagamit** sa DASIG Regional Academic Consortium mula sa iba't ibang unibersidad (CIT-U, UPV, USA) at ahensya sa Rehiyon VII.\n\n👉 *Maaari kang mag-aplay sa [Membership Module](/membership)!*`;
+        } else {
+          reply = `👥 **DASIG Consortium Membership Metrics:**\n\nThere are currently **${totalUsers} registered users and members** across partner universities (CIT-U, UPV, USA) and government agencies in Region VII.\n\n👉 *You can apply or view criteria in the [Membership Module](/membership)!*`;
+        }
+
+        return res.json({
+          reply,
+          matched: true,
+          intent: 'members_count',
+          score: 10,
+          language: lang,
+          followups: MULTI_FOLLOWUPS[lang],
+          navigate_to: '/membership',
+          suggestions: []
+        });
+      }
+
+      if (normalized.includes('event') || normalized.includes('summit') || normalized.includes('kalihokan') || normalized.includes('kaganapan')) {
+        let reply = '';
+        if (lang === 'bisaya') {
+          reply = `📅 **Total nga mga Events sa DASIG:**\n\nAdunay **${allEvents.length} ka aktibong symposiums ug events** sa atong portal karon.\n\n` + allEvents.slice(0, 3).map(e => `• **${e.title}** (${e.enrolled || 0}/${e.total || 50} slots)`).join('\n') + `\n\n👉 *Tan-awa ang tanan sa [Programs Module](/programs?tab=events)!*`;
+        } else if (lang === 'tagalog') {
+          reply = `📅 **Kabuuang bilang ng mga Event sa DASIG:**\n\nMayroong **${allEvents.length} aktibong symposiums at events** sa portal ngayon.\n\n` + allEvents.slice(0, 3).map(e => `• **${e.title}** (${e.enrolled || 0}/${e.total || 50} slots)`).join('\n') + `\n\n👉 *Tingnan ang lahat sa [Programs Module](/programs?tab=events)!*`;
+        } else {
+          reply = `📅 **DASIG Active Events Count:**\n\nThere are **${allEvents.length} active consortium symposiums and summits** on the portal right now.\n\n` + allEvents.slice(0, 3).map(e => `• **${e.title}** (${e.enrolled || 0}/${e.total || 50} slots registered)`).join('\n') + `\n\n👉 *Explore all events in the [Programs Module](/programs?tab=events)!*`;
+        }
+
+        return res.json({
+          reply,
+          matched: true,
+          intent: 'events_count',
+          score: 10,
+          language: lang,
+          followups: MULTI_FOLLOWUPS[lang],
+          navigate_to: '/programs?tab=events',
+          suggestions: []
+        });
+      }
+
+      if (normalized.includes('training') || normalized.includes('course') || normalized.includes('bootcamp') || normalized.includes('kurso') || normalized.includes('pagsasanay')) {
+        let reply = '';
+        if (lang === 'bisaya') {
+          reply = `🎓 **Mga Training ug Bootcamps:**\n\nAdunay **${allTrainings.length} ka faculty development courses** nga gi-organisar kauban ang DICT, DOST, ug CIT-U.\n\n` + allTrainings.slice(0, 3).map(t => `• **${t.title}** (${t.duration})`).join('\n') + `\n\n👉 *Mag-enrol sa [Training Module](/programs?tab=training)!*`;
+        } else if (lang === 'tagalog') {
+          reply = `🎓 **Mga Pagsasanay at Bootcamps:**\n\nMayroong **${allTrainings.length} faculty development courses** na inorganisa kasama ang DICT, DOST, at CIT-U.\n\n` + allTrainings.slice(0, 3).map(t => `• **${t.title}** (${t.duration})`).join('\n') + `\n\n👉 *Mag-enrol sa [Training Module](/programs?tab=training)!*`;
+        } else {
+          reply = `🎓 **Faculty Training Programs Count:**\n\nThere are **${allTrainings.length} active training bootcamps** organized alongside DICT, DOST, and CIT-U.\n\n` + allTrainings.slice(0, 3).map(t => `• **${t.title}** (${t.duration})`).join('\n') + `\n\n👉 *Enroll directly in the [Training Module](/programs?tab=training)!*`;
+        }
+
+        return res.json({
+          reply,
+          matched: true,
+          intent: 'training_count',
+          score: 10,
+          language: lang,
+          followups: MULTI_FOLLOWUPS[lang],
+          navigate_to: '/programs?tab=training',
+          suggestions: []
+        });
+      }
+    } catch (err) {
+      console.warn('[chatbot] Stats query error:', err.message);
+    }
+  }
+
+  // 2b. Check if this is a Calendar Month Query (e.g. "september", "events in october", "setyembre 2026")
   const monthMatch = detectMonthQuery(normalized);
   if (monthMatch) {
     try {
