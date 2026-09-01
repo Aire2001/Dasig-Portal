@@ -518,43 +518,11 @@ function FeaturedCard({
       }
       <div style={{ position:'absolute', inset:0, background:'linear-gradient(to right, rgba(4,7,18,0.96) 0%, rgba(4,7,18,0.85) 45%, rgba(4,7,18,0.4) 100%)' }} />
 
-      {/* Top Controls Bar */}
-      <div style={{ position:'relative', zIndex:2, padding:'20px 24px 0', display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap: 10 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ background:'linear-gradient(90deg,#f97316,#e11d48)', color:'#fff', borderRadius:7, padding:'5px 12px', fontSize:11, fontWeight:900, letterSpacing:'0.8px', textTransform:'uppercase', boxShadow:'0 2px 10px rgba(249,115,22,0.4)' }}>
-            ★ Top Story & Featured
-          </span>
-
-          {/* Live Shuffle Pill Toggle */}
-          <button
-            onClick={(e) => { e.stopPropagation(); onToggleLiveShuffle(); }}
-            title="Toggle automatic carousel rotation"
-            style={{
-              background: liveShuffle ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.06)',
-              border: `1px solid ${liveShuffle ? 'rgba(16,185,129,0.4)' : 'rgba(255,255,255,0.15)'}`,
-              borderRadius: 8, padding: '4px 10px',
-              color: liveShuffle ? '#34d399' : 'rgba(255,255,255,0.6)',
-              fontSize: 11, fontWeight: 800, cursor: 'pointer',
-              display: 'flex', alignItems: 'center', gap: 6, backdropFilter: 'blur(8px)',
-            }}
-          >
-            <span style={{ width: 6, height: 6, borderRadius: '50%', background: liveShuffle ? '#34d399' : 'rgba(255,255,255,0.4)', display: 'inline-block', boxShadow: liveShuffle ? '0 0 6px #34d399' : 'none' }} />
-            <span>Live Shuffle: {liveShuffle ? (isAutoPaused ? 'PAUSED' : 'LIVE') : 'OFF'}</span>
-          </button>
-
-          {/* Manual Shuffle button */}
-          <button
-            onClick={(e) => { e.stopPropagation(); onShuffleRandom(); }}
-            title="Shuffle to random top publication"
-            style={{
-              background: 'rgba(249,115,22,0.15)', border: '1px solid rgba(249,115,22,0.35)',
-              borderRadius: 8, padding: '4px 9px', color: '#fb923c', fontSize: 11, fontWeight: 800,
-              cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, backdropFilter: 'blur(8px)'
-            }}
-          >
-            🎲 Shuffle
-          </button>
-        </div>
+      {/* Top Header Bar */}
+      <div style={{ position:'relative', zIndex:2, padding:'20px 24px 0', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+        <span style={{ background:'linear-gradient(90deg,#f97316,#e11d48)', color:'#fff', borderRadius:7, padding:'5px 14px', fontSize:11, fontWeight:900, letterSpacing:'0.8px', textTransform:'uppercase', boxShadow:'0 2px 10px rgba(249,115,22,0.4)' }}>
+          ★ Top Story & Featured
+        </span>
 
         {/* Audio & Bookmark Actions */}
         <div style={{ display:'flex', gap:8, alignItems:'center' }}>
