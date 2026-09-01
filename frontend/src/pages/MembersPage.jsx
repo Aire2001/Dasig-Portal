@@ -113,23 +113,28 @@ const MEMBER_ASSETS = {
 const MEMBERS_CSS = `
   .member-card {
     border-radius: 20px;
-    padding: 26px 22px;
     cursor: pointer;
     position: relative;
     overflow: hidden;
-    transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
-    border: 1px solid rgba(255,255,255,0.1);
+    transition: transform 0.22s cubic-bezier(0.4,0,0.2,1), border-color 0.22s ease, box-shadow 0.22s ease;
+    border: 1px solid rgba(255,255,255,0.09);
+    background: rgba(10,16,32,0.95);
   }
   .member-card:hover {
-    transform: translateY(-3px);
-    border-color: rgba(249,115,22,0.4);
-    box-shadow: 0 16px 40px rgba(0,0,0,0.5);
+    transform: translateY(-5px);
+    box-shadow: 0 20px 48px rgba(0,0,0,0.65);
   }
-  .member-card::after {
-    content: '';
-    position: absolute; inset: 0;
-    background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 55%);
-    pointer-events: none;
+  .member-filter-pill {
+    border-radius: 10px;
+    padding: 7px 15px;
+    font-size: 12.5px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
   }
 `;
 
@@ -138,7 +143,8 @@ export default function MembersPage() {
   const [loading, setLoading]   = useState(true);
   const [selected, setSelected] = useState(null);
   const [search, setSearch]     = useState('');
-  const [typeF, setTypeF]       = useState('All Types');
+  const [typeF, setTypeF]       = useState('All');
+  const [readingId, setReadingId] = useState(null);
 
   useEffect(() => {
     api.members.list()
@@ -147,12 +153,82 @@ export default function MembersPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  function cleanSpeechText(text) {
+    if (!text) return '';
+    return text
+      .replace(/https?:\/\/\S+/gi, '')
+      .replace(/[\*\_\~`#]/g, '')
+      .replace(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '')
+      .replace(/^[•▸\-\*\d+\.]\s*/gm, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  function getBestVoice() {
+    if (!window.speechSynthesis) return null;
+    const voices = window.speechSynthesis.getVoices() || [];
+    const natural = voices.find(v => /natural|neural|online/i.test(v.name) && (/english|en[-_]/i.test(v.lang)));
+    if (natural) return natural;
+    const google = voices.find(v => /google/i.test(v.name) && /en[-_]/i.test(v.lang));
+    if (google) return google;
+    return voices.find(v => v.lang?.startsWith('en')) || voices[0];
+  }
+
+  async function speakInstitutionAudio(m) {
+    if (readingId === m.abbr) {
+      if (window.speechSynthesis) window.speechSynthesis.cancel();
+      setReadingId(null);
+      return;
+    }
+
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
+    const info = INSTITUTION_ABOUT[m.abbr];
+    const speech = `${m.full_name}, ${m.campus}. ${info ? info.about : ''}`;
+    const clean = cleanSpeechText(speech);
+    if (!clean) return;
+
+    setReadingId(m.abbr);
+
+    try {
+      const res = await api.chatbot.tts(clean, 'Adam');
+      const contentType = res.headers?.get('content-type') || '';
+      if (res.ok && contentType.includes('audio/mpeg')) {
+        const blob = await res.blob();
+        const audio = new Audio(URL.createObjectURL(blob));
+        audio.onended = () => setReadingId(null);
+        audio.onerror = () => fallbackSpeak(m.abbr, clean);
+        await audio.play();
+        return;
+      }
+    } catch (_) {}
+
+    fallbackSpeak(m.abbr, clean);
+  }
+
+  function fallbackSpeak(id, clean) {
+    if (!window.speechSynthesis) {
+      setReadingId(null);
+      return;
+    }
+    const utter = new SpeechSynthesisUtterance(clean);
+    const bestVoice = getBestVoice();
+    if (bestVoice) utter.voice = bestVoice;
+    utter.rate = 0.96;
+    utter.pitch = 1.0;
+    utter.onend = () => setReadingId(null);
+    utter.onerror = () => setReadingId(null);
+    setReadingId(id);
+    window.speechSynthesis.speak(utter);
+  }
+
+  const TYPES = ['All', 'State University', 'Private University', 'Government Agency'];
+
   const filteredMembers = members.filter(m => {
     const matchSearch = !search.trim() ||
       m.full_name?.toLowerCase().includes(search.toLowerCase()) ||
       m.abbr?.toLowerCase().includes(search.toLowerCase()) ||
       m.campus?.toLowerCase().includes(search.toLowerCase());
-    const matchType = typeF === 'All Types' || m.type === typeF;
+    const matchType = typeF === 'All' || m.type === typeF;
     return matchSearch && matchType;
   });
 
@@ -217,6 +293,24 @@ export default function MembersPage() {
                       <h2 style={{ color: '#fff', fontSize: 22, fontWeight: 900, margin: '0 0 6px', lineHeight: 1.25, textAlign: 'center', textShadow: '0 2px 10px rgba(0,0,0,0.5)' }}>{selected.full_name}</h2>
                       <div style={{ color: 'rgba(255,255,255,0.78)', fontSize: 13, textAlign: 'center', textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}>📍 {selected.campus}</div>
                     </div>
+
+                    {/* Audio Narration Button */}
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); speakInstitutionAudio(selected); }}
+                      style={{
+                        background: readingId === selected.abbr ? 'rgba(225,29,72,0.35)' : 'rgba(0,0,0,0.45)',
+                        border: `1px solid ${readingId === selected.abbr ? 'rgba(225,29,72,0.6)' : 'rgba(255,255,255,0.25)'}`,
+                        borderRadius: 20, padding: '6px 14px',
+                        color: readingId === selected.abbr ? '#fca5a5' : '#fff',
+                        fontSize: 12, fontWeight: 800, cursor: 'pointer',
+                        display: 'flex', alignItems: 'center', gap: 7, backdropFilter: 'blur(8px)',
+                        boxShadow: '0 2px 10px rgba(0,0,0,0.4)',
+                      }}
+                    >
+                      <span>{readingId === selected.abbr ? '⏸' : '🎧'}</span>
+                      <span>{readingId === selected.abbr ? 'Playing Overview…' : 'Listen to Overview (AI Voice)'}</span>
+                    </button>
                   </div>
                 </div>
 
@@ -224,7 +318,7 @@ export default function MembersPage() {
                 <div style={{ overflowY: 'auto', flex: 1, padding: '22px 26px 26px' }}>
                   {/* About */}
                   {info && (
-                    <p style={{ color: 'rgba(255,255,255,0.68)', fontSize: 13.5, lineHeight: 1.8, marginBottom: 20, borderLeft: '3px solid rgba(249,115,22,0.6)', paddingLeft: 14, background: 'rgba(255,255,255,0.03)', borderRadius: '0 8px 8px 0', padding: '12px 14px' }}>
+                    <p style={{ color: 'rgba(255,255,255,0.72)', fontSize: 13.5, lineHeight: 1.8, marginBottom: 20, borderLeft: '3px solid rgba(249,115,22,0.6)', paddingLeft: 14, background: 'rgba(255,255,255,0.03)', borderRadius: '0 8px 8px 0', padding: '12px 14px' }}>
                       {info.about}
                     </p>
                   )}
@@ -360,66 +454,91 @@ export default function MembersPage() {
               </div>
             </div>
 
-            {/* Section heading & Search Filter */}
-            <div style={{ marginBottom: 24, display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:14 }}>
-              <div>
-                <div style={{
-                  fontSize: 12, fontWeight: 800, letterSpacing: '.8px', textTransform: 'uppercase', marginBottom: 5,
-                  background: 'linear-gradient(90deg,#f97316,#e11d48)',
-                  WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-                }}>Member Institutions</div>
-                <h3 style={{ color: '#fff', fontSize: 18, fontWeight: 900, margin: 0 }}>
-                  Click any institution to learn more
-                </h3>
+            {/* Section heading & Filter Bar */}
+            <div style={{
+              background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)',
+              borderRadius: 16, padding: '12px 18px', marginBottom: 28,
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12,
+              backdropFilter: 'blur(8px)',
+            }}>
+              {/* Category Pills */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', flex: 1 }}>
+                {TYPES.map(t => {
+                  const count = t === 'All' ? members.length : members.filter(m => m.type === t).length;
+                  const isActive = typeF === t;
+                  return (
+                    <button
+                      key={t}
+                      className="member-filter-pill"
+                      onClick={() => setTypeF(t)}
+                      style={{
+                        background: isActive ? 'linear-gradient(90deg,#f97316,#e11d48)' : 'rgba(255,255,255,0.06)',
+                        color: isActive ? '#fff' : 'rgba(255,255,255,0.65)',
+                        border: `1px solid ${isActive ? 'transparent' : 'rgba(255,255,255,0.1)'}`,
+                        boxShadow: isActive ? '0 4px 12px rgba(249,115,22,0.35)' : 'none',
+                      }}
+                    >
+                      <span>{t === 'All' ? 'All Institutions' : t}</span>
+                      <span style={{
+                        fontSize: 10,
+                        background: isActive ? 'rgba(0,0,0,0.25)' : 'rgba(255,255,255,0.1)',
+                        borderRadius: 10,
+                        padding: '1px 6px',
+                        fontWeight: 800,
+                      }}>
+                        {count}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
-              <div style={{ display:'flex', alignItems:'center', gap:10, flexWrap:'wrap' }}>
+
+              {/* Search input */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <input
                   type="text"
                   placeholder="Search institution, campus…"
                   value={search}
                   onChange={e => setSearch(e.target.value)}
                   style={{
-                    background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.14)',
-                    borderRadius:20, padding:'7px 16px', color:'#fff', fontSize:12.5,
-                    fontFamily:'inherit', outline:'none', width:200,
+                    background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.14)',
+                    borderRadius: 10, padding: '8px 14px', color: '#fff', fontSize: 13,
+                    fontFamily: 'inherit', outline: 'none', width: 220,
                   }}
                   onFocus={e => e.target.style.borderColor = '#f97316'}
                   onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.14)'}
                 />
-                <select
-                  value={typeF}
-                  onChange={e => setTypeF(e.target.value)}
+                {search && (
+                  <button onClick={() => setSearch('')} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', fontSize: 13 }}>✕</button>
+                )}
+                <button
+                  onClick={() => { setLoading(true); api.members.list().then(setMembers).catch(()=>{}).finally(()=>setLoading(false)); }}
+                  title="Refresh member list"
                   style={{
-                    background:'#0d1424', border:'1px solid rgba(255,255,255,0.14)',
-                    borderRadius:20, padding:'7px 14px', color:'rgba(255,255,255,0.85)',
-                    fontSize:12.5, fontWeight:600, cursor:'pointer', outline:'none',
+                    background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.14)',
+                    borderRadius: 10, padding: '8px 13px', color: 'rgba(255,255,255,0.7)',
+                    fontSize: 13, cursor: 'pointer', fontFamily: 'inherit',
                   }}
                 >
-                  {['All Types','State University','Private University','Government Agency'].map(t => (
-                    <option key={t} value={t} style={{ background:'#0d1424' }}>{t}</option>
-                  ))}
-                </select>
-                <button onClick={() => { setLoading(true); api.members.list().then(setMembers).catch(()=>{}).finally(()=>setLoading(false)); }} style={{ background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.12)', borderRadius:20, padding:'7px 16px', color:'rgba(255,255,255,0.65)', fontSize:12.5, fontWeight:700, cursor:'pointer', fontFamily:'inherit', display:'flex', alignItems:'center', gap:5, transition:'all .13s' }}
-                  onMouseEnter={e=>{e.currentTarget.style.background='rgba(255,255,255,0.13)'; e.currentTarget.style.color='#fff';}}
-                  onMouseLeave={e=>{e.currentTarget.style.background='rgba(255,255,255,0.07)'; e.currentTarget.style.color='rgba(255,255,255,0.65)';}}
-                >↻ Refresh</button>
+                  ↻
+                </button>
               </div>
             </div>
 
             {loading ? (
               <div style={{ textAlign: 'center', padding: '60px 0', color: 'rgba(255,255,255,0.35)' }}>
-                <div style={{ fontSize: 36, marginBottom: 12 }}>⏳</div>Loading members…
+                <div style={{ fontSize: 36, marginBottom: 12 }}>⏳</div>Loading consortium members…
               </div>
             ) : filteredMembers.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '60px 0', color: 'rgba(255,255,255,0.4)' }}>
                 <div style={{ fontSize: 40, marginBottom: 10 }}>🏛️</div>
                 <div style={{ fontSize: 16, fontWeight: 700, color: '#fff' }}>No institutions match your search</div>
-                <button onClick={() => { setSearch(''); setTypeF('All Types'); }} style={{ marginTop: 14, background:'rgba(249,115,22,0.2)', color:'#fb923c', border:'1px solid rgba(249,115,22,0.4)', borderRadius:12, padding:'8px 18px', fontSize:13, fontWeight:700, cursor:'pointer' }}>
+                <button onClick={() => { setSearch(''); setTypeF('All'); }} style={{ marginTop: 14, background:'rgba(249,115,22,0.2)', color:'#fb923c', border:'1px solid rgba(249,115,22,0.4)', borderRadius:12, padding:'8px 18px', fontSize:13, fontWeight:700, cursor:'pointer' }}>
                   Clear Filters
                 </button>
               </div>
             ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(320px,1fr))', gap: 18 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(320px,1fr))', gap: 20 }}>
                 {filteredMembers.map((m, i) => (
                   <MemberCard
                     key={m.id}
@@ -438,7 +557,7 @@ export default function MembersPage() {
   );
 }
 
-// Logo with 3-tier fallback: Wikimedia CDN → Clearbit → styled emoji badge
+// Logo with 3-tier fallback
 function LogoImg({ asset, abbr, name, size = 100, style = {} }) {
   const [src, setSrc] = useState(asset.logo);
   const [tried, setTried] = useState(0);
@@ -451,8 +570,8 @@ function LogoImg({ asset, abbr, name, size = 100, style = {} }) {
   if (!src) {
     return (
       <div style={{
-        width: size, height: size, borderRadius: size * 0.22,
-        background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(8px)',
+        width: size, height: size, borderRadius: '50%',
+        background: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(8px)',
         border: '2px solid rgba(255,255,255,0.35)',
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
         gap: size * 0.04, ...style,
@@ -479,51 +598,72 @@ function ModalLogo({ asset, abbr, name }) {
 function MemberCard({ member: m, grad, index, onClick }) {
   const [hov, setHov] = useState(false);
   const asset = MEMBER_ASSETS[m.abbr] || { logo: null, logo2: null, bg: grad, accent: '#f97316', emoji: '🏛️' };
+  const info = INSTITUTION_ABOUT[m.abbr];
 
   return (
     <div
       className="member-card"
       style={{
-        background: 'rgba(12,18,36,0.96)',
-        animationDelay: `${index * 0.07}s`, animation: 'cardUp 0.5s ease both',
-        padding: 0, overflow: 'hidden', cursor: 'pointer',
+        background: 'rgba(10,16,32,0.96)',
         border: `1.5px solid ${hov ? asset.accent + '80' : 'rgba(255,255,255,0.08)'}`,
-        boxShadow: hov ? `0 22px 52px ${asset.accent}25` : '0 4px 22px rgba(0,0,0,0.38)',
-        transform: hov ? 'translateY(-7px) scale(1.02)' : 'none',
-        transition: 'all 0.24s cubic-bezier(.34,1.56,.64,1)',
+        boxShadow: hov ? `0 20px 48px ${asset.accent}20, 0 0 20px ${asset.accent}15` : '0 4px 20px rgba(0,0,0,0.4)',
+        transform: hov ? 'translateY(-5px)' : 'none',
       }}
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
       onClick={onClick}
     >
       {/* ── Logo on institution-color header ── */}
-      <div style={{ background: asset.bg, height: 175, position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 12 }}>
-        <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at 50% 35%, rgba(255,255,255,0.14) 0%, transparent 68%)', pointerEvents: 'none' }} />
+      <div style={{ background: asset.bg, height: 175, position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 10 }}>
+        <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at 50% 35%, rgba(255,255,255,0.18) 0%, transparent 70%)', pointerEvents: 'none' }} />
+        
+        {/* Type Badge top-right */}
         <div style={{ position: 'absolute', top: 12, right: 12 }}>
-          <span style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(8px)', color: '#fff', borderRadius: 7, padding: '5px 12px', fontSize: 12, fontWeight: 800, border: '1px solid rgba(255,255,255,0.3)' }}>{m.type}</span>
+          <span style={{
+            background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(8px)',
+            color: '#fff', borderRadius: 7, padding: '4px 10px',
+            fontSize: 11.5, fontWeight: 800, border: '1px solid rgba(255,255,255,0.25)',
+          }}>
+            {m.type}
+          </span>
         </div>
-        {/* Logo with fallback */}
-        <div style={{ position: 'relative', zIndex: 1, transition: 'transform .3s ease', transform: hov ? 'scale(1.09)' : 'scale(1)' }}>
+
+        {/* Logo container */}
+        <div style={{ position: 'relative', zIndex: 1, transition: 'transform .3s ease', transform: hov ? 'scale(1.08)' : 'scale(1)' }}>
           <LogoImg
             asset={asset}
             abbr={m.abbr}
             name={m.full_name}
-            size={88}
-            style={{ filter: 'drop-shadow(0 5px 18px rgba(0,0,0,0.65))' }}
+            size={84}
+            style={{ filter: 'drop-shadow(0 6px 18px rgba(0,0,0,0.6))' }}
           />
         </div>
-        {/* Abbr label */}
-        <div style={{ color: 'rgba(255,255,255,0.88)', fontWeight: 900, fontSize: 14, letterSpacing: '0.5px', textShadow: '0 1px 6px rgba(0,0,0,0.7)', position: 'relative', zIndex: 1 }}>{m.abbr}</div>
-        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 40, background: 'linear-gradient(to bottom, transparent, rgba(12,18,36,0.65))' }} />
+
+        {/* Abbreviation label */}
+        <div style={{ color: '#fff', fontWeight: 900, fontSize: 15, letterSpacing: '0.6px', textShadow: '0 2px 8px rgba(0,0,0,0.8)', position: 'relative', zIndex: 1 }}>
+          {m.abbr}
+        </div>
+        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 36, background: 'linear-gradient(to bottom, transparent, rgba(10,16,32,0.85))' }} />
       </div>
 
       {/* ── Card body ── */}
-      <div style={{ padding: '14px 18px 17px' }}>
-        <div style={{ fontWeight: 800, fontSize: 14, color: '#fff', lineHeight: 1.35, marginBottom: 5 }}>{m.full_name}</div>
-        <div style={{ color: 'rgba(255,255,255,0.42)', fontSize: 12.5, marginBottom: 14 }}>📍 {m.campus}</div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ background: `${asset.accent}18`, color: asset.accent, border: `1px solid ${asset.accent}45`, borderRadius: 7, padding: '5px 12px', fontSize: 12.5, fontWeight: 700 }}>{m.type}</span>
-          <span style={{ fontSize: 12.5, color: hov ? asset.accent : 'rgba(255,255,255,0.35)', fontWeight: 700, transition: 'color .15s' }}>View details →</span>
+      <div style={{ padding: '16px 18px 18px' }}>
+        <div style={{ fontWeight: 800, fontSize: 14.5, color: '#fff', lineHeight: 1.35, marginBottom: 5 }}>
+          {m.full_name}
+        </div>
+        <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12.5, marginBottom: 14, display: 'flex', alignItems: 'center', gap: 4 }}>
+          <span>📍</span>
+          <span>{m.campus}</span>
+        </div>
+
+        {/* Bottom meta row */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 10, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+          <span style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.45)', fontWeight: 700 }}>
+            {info?.founded ? `🏛️ Est. ${info.founded}` : '✓ Region VII Member'}
+          </span>
+          <span style={{ fontSize: 12.5, color: hov ? '#f97316' : 'rgba(255,255,255,0.4)', fontWeight: 700, transition: 'color .15s' }}>
+            View details →
+          </span>
         </div>
       </div>
     </div>
