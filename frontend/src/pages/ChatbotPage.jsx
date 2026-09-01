@@ -215,6 +215,35 @@ const CHAT_CSS = `
   .action-btn.rated-up { background: rgba(16,185,129,0.15); border-color: rgba(16,185,129,0.3); color: #34d399; }
   .action-btn.rated-down { background: rgba(225,29,72,0.15); border-color: rgba(225,29,72,0.3); color: #f87171; }
   .action-btn.copied { background: rgba(16,185,129,0.15); border-color: rgba(16,185,129,0.3); color: #34d399; }
+  @keyframes waveBar {
+    0%, 100% { height: 4px; }
+    50%      { height: 18px; }
+  }
+  .voicemail-bar {
+    width: 3px;
+    background: #f97316;
+    border-radius: 2px;
+    height: 6px;
+    transition: height 0.15s ease;
+  }
+  .voicemail-bar.active {
+    animation: waveBar 0.7s ease-in-out infinite alternate;
+  }
+  .voicemail-card {
+    background: rgba(249,115,22,0.08);
+    border: 1px solid rgba(249,115,22,0.25);
+    border-radius: 12px;
+    padding: 8px 14px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: all 0.2s;
+  }
+  .voicemail-card:hover {
+    background: rgba(249,115,22,0.14);
+    border-color: rgba(249,115,22,0.4);
+  }
 `;
 
 function formatTime(d) {
@@ -302,6 +331,7 @@ export default function ChatbotPage() {
   const [ratings, setRatings]   = useState({});   // {[msgIndex]: 'up'|'down'}
   const [copied,  setCopied]    = useState(null);  // message index recently copied
   const [listening, setListening] = useState(false);
+  const [autoVoicemail, setAutoVoicemail] = useState(false);
   const recognitionRef = useRef(null);
   const msgsContainerRef              = useRef(null);
 
@@ -424,7 +454,7 @@ export default function ChatbotPage() {
       setTotalMatched(newMatched);
       setMatchRate(Math.round((newMatched / newTotal) * 100));
       setHasReplied(true);
-      setMessages(prev => [...prev, {
+      const botMsg = {
         from: 'bot',
         text: res.reply,
         intent: res.intent,
@@ -433,7 +463,14 @@ export default function ChatbotPage() {
         suggestions: res.suggestions || [],
         navigate_to: res.navigate_to || null,
         time: new Date(),
-      }]);
+      };
+      setMessages(prev => {
+        const next = [...prev, botMsg];
+        if (autoVoicemail) {
+          setTimeout(() => speakMessage(next.length - 1, res.reply), 200);
+        }
+        return next;
+      });
     } catch {
       setHasReplied(true);
       setMessages(prev => [...prev, {
@@ -636,6 +673,20 @@ export default function ChatbotPage() {
                 </div>
               )}
               <div style={{ marginLeft: 'auto', display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                <button
+                  onClick={() => setAutoVoicemail(!autoVoicemail)}
+                  style={{
+                    background: autoVoicemail ? 'rgba(249,115,22,0.22)' : 'rgba(255,255,255,0.06)',
+                    border: `1px solid ${autoVoicemail ? 'rgba(249,115,22,0.5)' : 'rgba(255,255,255,0.12)'}`,
+                    borderRadius: 8, padding: '5px 12px', fontSize: 11.5, fontWeight: 700,
+                    color: autoVoicemail ? '#fb923c' : 'rgba(255,255,255,0.7)', cursor: 'pointer', fontFamily: 'inherit',
+                    display: 'flex', alignItems: 'center', gap: 5,
+                  }}
+                  title="Automatically speak out responses like an audio voice message"
+                >
+                  <span>{autoVoicemail ? '🔊' : '🔈'}</span>
+                  <span>Auto Voice Mail: {autoVoicemail ? 'ON' : 'OFF'}</span>
+                </button>
                 <button
                   onClick={() => setShowHistory(!showHistory)}
                   style={{
@@ -914,10 +965,49 @@ export default function ChatbotPage() {
                         boxShadow: '0 4px 16px rgba(30,58,138,0.4)',
                       }),
                     }}>
-                      {msg.from === 'bot'
-                        ? <BotText text={msg.text} />
-                        : <span style={{ lineHeight: 1.55 }}>{msg.text}</span>
-                      }
+                      {msg.from === 'bot' ? (
+                        <>
+                          {/* Voicemail Audio Note Player */}
+                          <div
+                            className="voicemail-card"
+                            onClick={() => speakMessage(i, msg.text)}
+                            style={{ cursor: 'pointer' }}
+                            title="Click to listen to Haribon voice mail"
+                          >
+                            <button
+                              type="button"
+                              style={{
+                                width: 28, height: 28, borderRadius: '50%',
+                                background: speakingIdx === i ? '#e11d48' : '#f97316',
+                                border: 'none', color: '#fff', fontSize: 11,
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                cursor: 'pointer', flexShrink: 0,
+                                boxShadow: '0 2px 8px rgba(249,115,22,0.4)',
+                              }}
+                            >
+                              {speakingIdx === i ? '⏸' : '▶'}
+                            </button>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 3, flex: 1, minWidth: 60 }}>
+                              {[10, 16, 8, 14, 18, 10, 15, 20, 12, 16, 8, 14, 18, 10, 15].map((h, bi) => (
+                                <div
+                                  key={bi}
+                                  className={`voicemail-bar${speakingIdx === i ? ' active' : ''}`}
+                                  style={{
+                                    height: speakingIdx === i ? undefined : `${h * 0.55}px`,
+                                    animationDelay: `${bi * 0.07}s`
+                                  }}
+                                />
+                              ))}
+                            </div>
+                            <div style={{ fontSize: 11, fontWeight: 700, color: speakingIdx === i ? '#fb923c' : 'rgba(255,255,255,0.6)', whiteSpace: 'nowrap' }}>
+                              {speakingIdx === i ? 'Playing Voice Mail…' : '🎙️ Voice Mail'}
+                            </div>
+                          </div>
+                          <BotText text={msg.text} />
+                        </>
+                      ) : (
+                        <span style={{ lineHeight: 1.55 }}>{msg.text}</span>
+                      )}
                     </div>
 
                     {/* Timestamp */}
