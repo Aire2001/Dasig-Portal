@@ -161,11 +161,28 @@ router.delete('/:id/enroll', verifyToken, async (req, res) => {
 router.get('/:id/enrollments', verifyToken, requireRole('ADMIN'), async (req, res) => {
   const trainingId = Number(req.params.id);
   const { data, error } = await supabase.from('training_enrollments')
-    .select('id, created_at, user_id, users(name, email, institution, role, avatar_url)')
+    .select('id, created_at, attended, user_id, users(name, email, institution, role, avatar_url)')
     .eq('training_id', trainingId)
     .order('created_at', { ascending: false });
   if (error) return res.status(500).json({ error: error.message });
   res.json(data || []);
+});
+
+// POST /api/training/:id/attend/:userId — mark attendance (ADMIN only)
+router.post('/:id/attend/:userId', verifyToken, requireRole('ADMIN'), async (req, res) => {
+  const trainingId = Number(req.params.id);
+  const userId = Number(req.params.userId);
+  const { attended = true } = req.body;
+
+  const { data, error } = await supabase.from('training_enrollments')
+    .update({ attended: Boolean(attended) })
+    .eq('training_id', trainingId)
+    .eq('user_id', userId)
+    .select()
+    .single();
+
+  if (error) return res.status(404).json({ error: 'Enrollment not found' });
+  res.json({ message: 'Attendance updated', attended: data.attended });
 });
 
 module.exports = router;

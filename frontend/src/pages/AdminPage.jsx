@@ -2271,6 +2271,14 @@ function TrainingTab({ showToast }) {
   useEffect(load, [load]);
   const fc = e => setForm(p => ({ ...p, [e.target.name]: e.target.value }));
 
+  async function toggleAttendance(reg, attended) {
+    try {
+      await api.training.markAttendance(enrolEvent.id, reg.user_id, attended);
+      setEnrolList(prev => prev.map(r => r.user_id === reg.user_id ? { ...r, attended } : r));
+      showToast(attended ? 'Attendance marked successfully!' : 'Marked as absent', attended, reg.users?.name);
+    } catch (e) { showToast(e.message, false); }
+  }
+
   async function openEnrollments(t) {
     setEnrolEvent(t);
     setEnrolLoading(true);
@@ -2362,6 +2370,8 @@ function TrainingTab({ showToast }) {
     const role = (en.users?.role || 'GUEST').toUpperCase();
     if (enrolFilter === 'MEMBER' && role !== 'MEMBER') return false;
     if (enrolFilter === 'GUEST' && role !== 'GUEST') return false;
+    if (enrolFilter === 'attended' && !en.attended) return false;
+    if (enrolFilter === 'absent' && en.attended) return false;
     if (enrolSearch.trim()) {
       const q = enrolSearch.toLowerCase();
       const name = (en.users?.name || '').toLowerCase();
@@ -2415,16 +2425,16 @@ function TrainingTab({ showToast }) {
 
       {/* Enrollments Modal */}
       {enrolEvent && (
-        <Modal title={`Enrollments & Roster — ${enrolEvent.title}`} onClose={() => { setEnrolEvent(null); load(); }} wide>
+        <Modal title={`Attendance & Roster — ${enrolEvent.title}`} onClose={() => { setEnrolEvent(null); load(); }} wide>
           {/* Header Summary & Actions */}
           <div style={{ marginBottom:14, display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap:10 }}>
             <div>
               <div style={{ display:'flex', alignItems:'center', gap:8, flexWrap:'wrap' }}>
                 <span style={{ fontSize:14, fontWeight:800, color:'#fff' }}>
-                  {enrolList.length} Total Enrolled
+                  {enrolList.filter(r => r.attended).length} Attended
                 </span>
                 <span style={{ fontSize:13, color:'rgba(255,255,255,0.45)' }}>
-                  / {enrolEvent.total} Capacity
+                  / {enrolList.length} Total Enrolled
                 </span>
                 <span style={{ fontSize:11, background:'rgba(16,185,129,0.15)', color:'#34d399', border:'1px solid rgba(16,185,129,0.3)', borderRadius:6, padding:'2px 8px', fontWeight:800 }}>
                   👤 {trMemberCount} Members
@@ -2438,9 +2448,10 @@ function TrainingTab({ showToast }) {
               <button onClick={() => {
                 if (!enrolList.length) return;
                 const rows = [
-                  ['Name','Email','Role','Institution','Enrolled At'],
+                  ['Name','Email','Role','Institution','Attended','Enrolled At'],
                   ...enrolList.map(en => [
                     en.users?.name || '', en.users?.email || '', (en.users?.role || 'GUEST').toUpperCase(), en.users?.institution || '',
+                    en.attended ? 'Yes' : 'No',
                     en.created_at ? new Date(en.created_at).toLocaleDateString('en-PH') : '',
                   ])
                 ];
@@ -2469,6 +2480,8 @@ function TrainingTab({ showToast }) {
                 { id:'all', label:`All (${enrolList.length})` },
                 { id:'MEMBER', label:`Members (${trMemberCount})` },
                 { id:'GUEST', label:`Guests (${trGuestCount})` },
+                { id:'attended', label:`Attended (${enrolList.filter(r => r.attended).length})` },
+                { id:'absent', label:`Absent (${enrolList.filter(r => !r.attended).length})` },
               ].map(f => (
                 <button
                   key={f.id}
@@ -2531,13 +2544,16 @@ function TrainingTab({ showToast }) {
                         </div>
                       </div>
                     </div>
-                    <div style={{ display:'flex', alignItems:'center', gap:10, flexShrink:0 }}>
-                      <span className="ap-pill" style={{ background:'rgba(16,185,129,0.15)', color:'#6ee7b7', border:'1px solid rgba(16,185,129,0.3)' }}>
-                        ● Enrolled
-                      </span>
-                      <span style={{ fontSize:12, color:'rgba(255,255,255,0.5)', whiteSpace:'nowrap' }}>
-                        📅 {en.created_at ? new Date(en.created_at).toLocaleDateString('en-PH') : 'N/A'}
-                      </span>
+                    <div style={{ display:'flex', alignItems:'center', gap:8, flexShrink:0 }}>
+                      {en.attended
+                        ? <span className="ap-badge" style={{ background:'rgba(16,185,129,0.18)', color:'#6ee7b7' }}>✓ Attended</span>
+                        : <span className="ap-badge" style={{ background:'rgba(255,255,255,0.07)', color:'rgba(255,255,255,0.45)' }}>Absent</span>
+                      }
+                      <button
+                        onClick={() => toggleAttendance(en, !en.attended)}
+                        className={`ap-btn ${en.attended ? 'ap-btn-amber' : 'ap-btn-green'}`}
+                        style={{ fontSize:12, padding:'5px 12px' }}
+                      >{en.attended ? 'Mark Absent' : 'Mark Attended'}</button>
                     </div>
                   </div>
                 );
