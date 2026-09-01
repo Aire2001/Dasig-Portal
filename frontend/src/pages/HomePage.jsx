@@ -260,14 +260,14 @@ function ModuleCard({ mod }) {
 }
 
 const ADMIN_MODULES = [
-  { title: 'Manage Users',        desc: 'View, promote, suspend and manage all portal members.',  icon: '👥', tab: 'users',        color: '#e11d48' },
-  { title: 'Manage Events',       desc: 'Create, edit, delete events and track registrations.',   icon: '📅', tab: 'events',       color: '#8b5cf6' },
-  { title: 'Manage News',         desc: 'Publish and archive consortium announcements.',           icon: '📰', tab: 'news',         color: '#0ea5e9' },
-  { title: 'Manage Training',     desc: 'Add training programs and track enrollments.',            icon: '🎓', tab: 'training',     color: '#f97316' },
-  { title: 'Manage Policies',     desc: 'Upload, archive and update governance documents.',       icon: '📋', tab: 'policies',     color: '#f59e0b' },
-  { title: 'Manage Funding',      desc: 'Post grants, scholarships and funding opportunities.',   icon: '💰', tab: 'funding',      color: '#10b981' },
-  { title: 'Manage Partnerships', desc: 'Add and update academic and industry partnerships.',     icon: '🤝', tab: 'partnerships', color: '#06b6d4' },
-  { title: 'Reports & Analytics', desc: 'Chatbot accuracy, event fill rates, training stats.',    icon: '📊', tab: 'reports',      color: '#a855f7' },
+  { title: 'Manage Users',        desc: 'View, verify, promote, suspend, and audit consortium user accounts.',  icon: '👥', tab: 'users',        color: '#f43f5e', countKey: 'users', countLabel: 'Registered' },
+  { title: 'Manage Events',       desc: 'Schedule consortium conferences, summits, track capacity & attendance.', icon: '📅', tab: 'events',       color: '#8b5cf6', countKey: 'events', countLabel: 'Active' },
+  { title: 'Manage News',         desc: 'Publish, edit, and archive press releases and institutional updates.',   icon: '📰', tab: 'news',         color: '#0ea5e9', countKey: 'news', countLabel: 'Published' },
+  { title: 'Manage Training',     desc: 'Organize faculty development bootcamps and verify participant enrollments.', icon: '🎓', tab: 'training',     color: '#f97316', countKey: 'training', countLabel: 'Courses' },
+  { title: 'Manage Policies',     desc: 'Upload and maintain consortium governance charters, IP rules, and ethics.', icon: '📋', tab: 'policies',     color: '#f59e0b', countKey: 'policies', countLabel: 'Documents' },
+  { title: 'Manage Funding',      desc: 'Post grant calls, DOST scholarships, and monitor research grant deadlines.', icon: '💰', tab: 'funding',      color: '#10b981', countKey: 'funding', countLabel: 'Grant Calls' },
+  { title: 'Manage Partnerships', desc: 'Maintain strategic MOUs with government agencies and international universities.', icon: '🤝', tab: 'partnerships', color: '#06b6d4', countKey: 'partnerships', countLabel: 'Active MOUs' },
+  { title: 'Reports & Analytics', desc: 'Inspect Haribon AI accuracy, event seat utilization, and consortium KPIs.',    icon: '📊', tab: 'reports',      color: '#a855f7', countKey: 'accuracy', countLabel: '100% Rate' },
 ];
 
 const ADMIN_CSS = `
@@ -275,115 +275,168 @@ const ADMIN_CSS = `
     0%,100% { box-shadow: 0 0 6px rgba(225,29,72,0.6); }
     50%      { box-shadow: 0 0 16px rgba(225,29,72,1); }
   }
-  @keyframes adminFadeUp {
-    from { transform: translateY(20px); opacity: 0; }
-    to   { transform: translateY(0);    opacity: 1; }
+  @keyframes adminGlow {
+    0%,100% { transform: scale(1); opacity: 0.5; }
+    50%     { transform: scale(1.08); opacity: 0.8; }
   }
   .admin-pulse { animation: adminPulse 2s ease-in-out infinite; }
-  .admin-card { transition: transform 0.2s, border-color 0.2s, background 0.2s, box-shadow 0.2s; }
-  .admin-card:hover { transform: translateY(-5px); box-shadow: 0 16px 40px rgba(0,0,0,0.5); }
+  .admin-card {
+    transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+    overflow: hidden;
+  }
+  .admin-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+  }
 `;
 
 function AdminHomePage({ navigate, user }) {
-  const [adminStats, setAdminStats] = useState({ users: 12, events: 7, training: 6, news: 8 });
+  const [adminStats, setAdminStats] = useState({
+    users: 13,
+    events: 7,
+    training: 4,
+    news: 8,
+    policies: 4,
+    funding: 2,
+    partnerships: 3,
+    pendingApps: 1,
+  });
 
   useEffect(() => {
     Promise.allSettled([
-      api.events.list({ limit: 1 }),
-      api.training.list({ limit: 1 }),
-      api.news.list({ limit: 1 }),
-    ]).then(([ev, tr, nw]) => {
+      api.admin.metrics(),
+      api.events.list({ limit: 100 }),
+      api.training.list({ limit: 100 }),
+      api.news.list({ limit: 100 }),
+    ]).then(([met, ev, tr, nw]) => {
+      const mData = met.status === 'fulfilled' ? met.value : null;
       setAdminStats(prev => ({
         ...prev,
-        events: ev.status === 'fulfilled' ? (ev.value.total ?? 7) : 7,
-        training: tr.status === 'fulfilled' ? (tr.value.total ?? 6) : 6,
-        news: nw.status === 'fulfilled' ? (nw.value.total ?? 8) : 8,
+        users: mData?.totalUsers ?? prev.users,
+        events: ev.status === 'fulfilled' ? (Array.isArray(ev.value) ? ev.value.length : (ev.value.total ?? prev.events)) : prev.events,
+        training: tr.status === 'fulfilled' ? (Array.isArray(tr.value) ? tr.value.length : (tr.value.total ?? prev.training)) : prev.training,
+        news: nw.status === 'fulfilled' ? (Array.isArray(nw.value) ? nw.value.length : (nw.value.total ?? prev.news)) : prev.news,
+        pendingApps: mData?.pendingApplications ?? prev.pendingApps,
+        policies: mData?.totalPolicies ?? prev.policies,
+        funding: mData?.totalFunding ?? prev.funding,
+        partnerships: mData?.totalPartnerships ?? prev.partnerships,
       }));
     }).catch(() => {});
   }, []);
 
   return (
-    <div style={{ background: 'linear-gradient(180deg,#000d30 0%,#020817 300px,#0f172a 100%)', minHeight: '100vh', position: 'relative' }}>
+    <div style={{ background: 'linear-gradient(180deg,#000924 0%,#020817 320px,#0b132b 100%)', minHeight: '100vh', position: 'relative' }}>
       <style>{ADMIN_CSS}</style>
       <ParticleBackground density={45} />
       <div style={{ position: 'relative', zIndex: 1 }}>
 
-      {/* ── ADMIN HERO BANNER ── */}
+      {/* ── EXECUTIVE ADMIN HERO ── */}
       <section style={{
-        background: 'linear-gradient(135deg,#000d30 0%,#001845 50%,#0f2252 100%)',
-        padding: '52px 24px 46px', position: 'relative', overflow: 'hidden',
+        background: 'linear-gradient(135deg,#000d30 0%,#001845 55%,#0b2158 100%)',
+        padding: '56px 24px 48px', position: 'relative', overflow: 'hidden',
         borderBottom: '1px solid rgba(255,255,255,0.08)',
       }}>
-        <div style={{ position: 'absolute', width: 500, height: 500, borderRadius: '50%', background: 'radial-gradient(rgba(249,115,22,0.08),transparent)', right: -120, top: -150, pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', width: 600, height: 600, borderRadius: '50%', background: 'radial-gradient(rgba(249,115,22,0.12),transparent 70%)', right: -150, top: -180, pointerEvents: 'none', animation: 'adminGlow 8s ease-in-out infinite' }} />
+        <div style={{ position: 'absolute', width: 400, height: 400, borderRadius: '50%', background: 'radial-gradient(rgba(59,130,246,0.1),transparent 70%)', left: -100, bottom: -100, pointerEvents: 'none' }} />
         <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(rgba(255,255,255,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.02) 1px,transparent 1px)', backgroundSize: '40px 40px', pointerEvents: 'none' }} />
 
-        <div style={{ maxWidth: 1140, margin: '0 auto', position: 'relative', zIndex: 1 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 32, alignItems: 'center' }}>
+        <div style={{ maxWidth: 1160, margin: '0 auto', position: 'relative', zIndex: 1 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1.3fr) minmax(0,1fr)', gap: 36, alignItems: 'center' }}>
             <div>
-              {/* Admin badge */}
+              {/* Executive Tag */}
               <div style={{
                 display: 'inline-flex', alignItems: 'center', gap: 8,
-                background: 'rgba(225,29,72,0.12)', border: '1px solid rgba(225,29,72,0.3)',
+                background: 'rgba(225,29,72,0.14)', border: '1px solid rgba(225,29,72,0.35)',
                 borderRadius: 24, padding: '5px 16px', marginBottom: 18,
+                boxShadow: '0 2px 10px rgba(225,29,72,0.15)'
               }}>
                 <div className="admin-pulse" style={{ width: 7, height: 7, borderRadius: '50%', background: '#f43f5e', flexShrink: 0 }} />
-                <span style={{ color: '#f43f5e', fontSize: 12, fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase' }}>
-                  🛡️ Administrator Command Center · Region VII
+                <span style={{ color: '#f43f5e', fontSize: 11.5, fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase' }}>
+                  🛡️ Executive Command Center · Region VII Academic Node
                 </span>
               </div>
 
-              <h1 style={{ color: '#fff', fontSize: 44, fontWeight: 900, lineHeight: 1.1, letterSpacing: '-1.5px', marginBottom: 12 }}>
+              <h1 style={{ color: '#fff', fontSize: 42, fontWeight: 900, lineHeight: 1.15, letterSpacing: '-1.2px', marginBottom: 14 }}>
                 Welcome back,{' '}
                 <span style={{ background: 'linear-gradient(90deg,#f97316,#e11d48)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
                   {user?.name || 'DASIG Admin'}
                 </span>
               </h1>
-              <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 14.5, lineHeight: 1.7, marginBottom: 24, maxWidth: 520 }}>
-                Regional consortium administration, institutional tier management, event scheduling, and analytics overview.
+              <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: 14.5, lineHeight: 1.7, marginBottom: 26, maxWidth: 540 }}>
+                Consortium governance administration, institutional member approvals, event participant registries, and multi-HEI research orchestration.
               </p>
 
-              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+              {/* Action Buttons */}
+              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                 <button onClick={() => navigate('/admin?tab=dashboard')} style={{
                   background: 'linear-gradient(90deg,#f97316,#e11d48)', color: '#fff',
-                  border: 'none', borderRadius: 10, padding: '12px 24px',
+                  border: 'none', borderRadius: 11, padding: '13px 26px',
                   fontSize: 14, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit',
-                  boxShadow: '0 4px 18px rgba(249,115,22,0.4)', transition: 'all 0.18s',
+                  boxShadow: '0 6px 20px rgba(249,115,22,0.4)', transition: 'all 0.18s',
+                  display: 'flex', alignItems: 'center', gap: 8,
                 }}
-                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 24px rgba(249,115,22,0.55)'; }}
-                onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 18px rgba(249,115,22,0.4)'; }}
-                >⚡ Open Admin Panel →</button>
+                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 28px rgba(249,115,22,0.55)'; }}
+                onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(249,115,22,0.4)'; }}
+                >
+                  <span>⚡ Open Admin Dashboard</span>
+                  <span>→</span>
+                </button>
+
                 <button onClick={() => navigate('/programs')} style={{
-                  color: 'rgba(255,255,255,0.75)', background: 'rgba(255,255,255,0.06)',
-                  border: '1px solid rgba(255,255,255,0.14)', borderRadius: 10, padding: '12px 20px',
+                  color: 'rgba(255,255,255,0.85)', background: 'rgba(255,255,255,0.06)',
+                  border: '1px solid rgba(255,255,255,0.15)', borderRadius: 11, padding: '13px 22px',
                   fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.18s',
                 }}
-                onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.12)'}
-                onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.06)'}
+                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.12)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)'; }}
                 >Browse Public Portal</button>
+
+                {adminStats.pendingApps > 0 && (
+                  <button onClick={() => navigate('/admin?tab=applications')} style={{
+                    color: '#fbbf24', background: 'rgba(245,158,11,0.12)',
+                    border: '1px solid rgba(245,158,11,0.35)', borderRadius: 11, padding: '13px 20px',
+                    fontSize: 13.5, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.18s',
+                    display: 'flex', alignItems: 'center', gap: 6,
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(245,158,11,0.22)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'rgba(245,158,11,0.12)'}
+                  >
+                    <span>⏳ Review Pending Apps ({adminStats.pendingApps})</span>
+                  </button>
+                )}
               </div>
             </div>
 
-            {/* Quick KPI Overview Box */}
+            {/* Quick KPI Bento Grid */}
             <div style={{
-              background: 'rgba(8, 14, 28, 0.75)',
-              backdropFilter: 'blur(12px)',
-              border: '1px solid rgba(255,255,255,0.09)',
-              borderRadius: 18, padding: '20px',
+              background: 'rgba(10, 18, 38, 0.75)',
+              backdropFilter: 'blur(16px)',
+              border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: 20, padding: '22px',
               display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12,
+              boxShadow: '0 20px 50px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1)'
             }}>
               {[
-                { label: 'Total Events', val: adminStats.events, icon: '📅', color: '#60a5fa' },
-                { label: 'Training Dev', val: adminStats.training, icon: '🎓', color: '#34d399' },
-                { label: 'News Archive', val: adminStats.news, icon: '📰', color: '#a78bfa' },
-                { label: 'AI Accuracy', val: '100%', icon: '🦅', color: '#fb923c' },
+                { label: 'Consortium Events', val: adminStats.events, icon: '📅', color: '#8b5cf6', sub: 'Active Summits' },
+                { label: 'Faculty Training', val: adminStats.training, icon: '🎓', color: '#34d399', sub: 'Capacity Courses' },
+                { label: 'Registered Users', val: adminStats.users, icon: '👥', color: '#60a5fa', sub: 'Members & Guests' },
+                { label: 'AI Accuracy', val: '100%', icon: '🦅', color: '#f97316', sub: 'NLP & Generative' },
               ].map((kpi, idx) => (
                 <div key={idx} style={{
-                  background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)',
-                  borderRadius: 12, padding: '12px 14px',
+                  background: 'rgba(255,255,255,0.035)', border: '1px solid rgba(255,255,255,0.07)',
+                  borderRadius: 14, padding: '14px 16px',
+                  display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+                  transition: 'all .15s'
                 }}>
-                  <div style={{ fontSize: 18, marginBottom: 4 }}>{kpi.icon}</div>
-                  <div style={{ fontSize: 20, fontWeight: 900, color: '#fff' }}>{kpi.val}</div>
-                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 2, fontWeight: 600 }}>{kpi.label}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                    <span style={{ fontSize: 20 }}>{kpi.icon}</span>
+                    <span style={{ fontSize: 10, color: kpi.color, background: `${kpi.color}18`, border: `1px solid ${kpi.color}35`, borderRadius: 5, padding: '1px 6px', fontWeight: 800 }}>
+                      {kpi.sub}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: 22, fontWeight: 900, color: '#fff', letterSpacing: '-0.5px' }}>{kpi.val}</div>
+                  <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.5)', marginTop: 2, fontWeight: 600 }}>{kpi.label}</div>
                 </div>
               ))}
             </div>
@@ -391,64 +444,92 @@ function AdminHomePage({ navigate, user }) {
         </div>
       </section>
 
-      {/* ── QUICK ACTIONS GRID ── */}
-      <section style={{ padding: '44px 24px 64px' }}>
-        <div style={{ maxWidth: 1140, margin: '0 auto' }}>
-          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 24 }}>
+      {/* ── CONSORTIUM CONTROL MODULES ── */}
+      <section style={{ padding: '48px 24px 72px' }}>
+        <div style={{ maxWidth: 1160, margin: '0 auto' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 28 }}>
             <div>
-              <p style={{ fontSize: 12, fontWeight: 800, letterSpacing: '1.2px', textTransform: 'uppercase', color: '#f97316', marginBottom: 6 }}>Management Modules</p>
-              <h2 style={{ fontSize: 28, fontWeight: 900, color: '#fff', letterSpacing: '-0.6px' }}>Consortium Control Panel</h2>
+              <p style={{ fontSize: 11.5, fontWeight: 800, letterSpacing: '1.2px', textTransform: 'uppercase', color: '#f97316', marginBottom: 6 }}>Executive Governance</p>
+              <h2 style={{ fontSize: 30, fontWeight: 900, color: '#fff', letterSpacing: '-0.8px' }}>Consortium Control Panel</h2>
             </div>
             <button onClick={() => navigate('/admin')} style={{
               color: '#f97316', background: 'rgba(249,115,22,0.1)',
               border: '1px solid rgba(249,115,22,0.3)',
-              borderRadius: 9, padding: '8px 16px', fontSize: 13,
+              borderRadius: 10, padding: '9px 18px', fontSize: 13,
               fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s',
+              display: 'flex', alignItems: 'center', gap: 6,
             }}
             onMouseEnter={e => e.currentTarget.style.background = 'rgba(249,115,22,0.2)'}
             onMouseLeave={e => e.currentTarget.style.background = 'rgba(249,115,22,0.1)'}
-            >Open Dashboard Tab →</button>
+            >
+              <span>Full Command Center</span>
+              <span>→</span>
+            </button>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 14 }}>
-            {ADMIN_MODULES.map((m, idx) => (
-              <div
-                key={m.tab}
-                className="admin-card"
-                onClick={() => navigate(`/admin?tab=${m.tab}`)}
-                style={{
-                  background: 'rgba(8, 14, 28, 0.75)',
-                  backdropFilter: 'blur(12px)',
-                  border: '1px solid rgba(255,255,255,0.08)',
-                  borderRadius: 16, padding: '20px 22px', cursor: 'pointer',
-                  position: 'relative', overflow: 'hidden',
-                  display: 'flex', flexDirection: 'column',
-                }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.borderColor = m.color + '70';
-                  e.currentTarget.style.boxShadow = `0 12px 32px rgba(0,0,0,0.5), 0 0 16px ${m.color}20`;
-                  e.currentTarget.style.transform = 'translateY(-3px)';
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)';
-                  e.currentTarget.style.boxShadow = 'none';
-                  e.currentTarget.style.transform = 'none';
-                }}
-              >
-                <div style={{
-                  width: 42, height: 42, borderRadius: 11,
-                  background: m.color + '15', border: `1px solid ${m.color}35`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 20, marginBottom: 14, flexShrink: 0,
-                }}>{m.icon}</div>
-                <div style={{ fontWeight: 800, fontSize: 15, color: '#fff', marginBottom: 6 }}>{m.title}</div>
-                <div style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.5)', lineHeight: 1.6, marginBottom: 14, flex: 1 }}>{m.desc}</div>
-                <div style={{ fontSize: 12, color: m.color, fontWeight: 800, display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <span>Configure</span>
-                  <span>→</span>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16 }}>
+            {ADMIN_MODULES.map((m) => {
+              const countVal = adminStats[m.countKey] ?? null;
+              return (
+                <div
+                  key={m.tab}
+                  className="admin-card"
+                  onClick={() => navigate(`/admin?tab=${m.tab}`)}
+                  style={{
+                    background: 'rgba(10, 18, 38, 0.8)',
+                    backdropFilter: 'blur(14px)',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    borderRadius: 18, padding: '22px 24px', cursor: 'pointer',
+                    display: 'flex', flexDirection: 'column',
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.35)',
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.borderColor = m.color + '80';
+                    e.currentTarget.style.boxShadow = `0 16px 36px rgba(0,0,0,0.55), 0 0 20px ${m.color}25`;
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)';
+                    e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.35)';
+                  }}
+                >
+                  <div style={{
+                    position: 'absolute', top: 0, left: 0, right: 0, height: 3,
+                    background: `linear-gradient(90deg, transparent, ${m.color}, transparent)`
+                  }} />
+
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                    <div style={{
+                      width: 44, height: 44, borderRadius: 12,
+                      background: m.color + '18', border: `1px solid ${m.color}40`,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 22, flexShrink: 0,
+                    }}>{m.icon}</div>
+
+                    {countVal !== null && (
+                      <span style={{
+                        fontSize: 11, fontWeight: 800, color: m.color,
+                        background: m.color + '14', border: `1px solid ${m.color}30`,
+                        borderRadius: 6, padding: '2px 8px'
+                      }}>
+                        {countVal} {m.countLabel}
+                      </span>
+                    )}
+                  </div>
+
+                  <div style={{ fontWeight: 800, fontSize: 16, color: '#fff', marginBottom: 8 }}>{m.title}</div>
+                  <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', lineHeight: 1.6, marginBottom: 16, flex: 1 }}>{m.desc}</div>
+                  
+                  <div style={{
+                    fontSize: 12.5, color: m.color, fontWeight: 800,
+                    display: 'flex', alignItems: 'center', gap: 5,
+                    borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 12
+                  }}>
+                    <span>Open Module</span>
+                    <span>→</span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>
