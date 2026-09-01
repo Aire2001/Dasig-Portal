@@ -122,6 +122,7 @@ export const api = {
   },
   admin: {
     stats: () => request('/admin/stats'),
+    metrics: () => request('/admin/stats'),
     users: (params = {}) => {
       const q = new URLSearchParams(Object.fromEntries(Object.entries(params).filter(([,v]) => v && v !== 'All')));
       return request(`/admin/users${q.toString() ? '?' + q : ''}`);

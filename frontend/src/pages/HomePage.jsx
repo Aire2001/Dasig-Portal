@@ -304,25 +304,22 @@ function AdminHomePage({ navigate, user }) {
   });
 
   useEffect(() => {
-    Promise.allSettled([
-      api.admin.metrics(),
-      api.events.list({ limit: 100 }),
-      api.training.list({ limit: 100 }),
-      api.news.list({ limit: 100 }),
-    ]).then(([met, ev, tr, nw]) => {
-      const mData = met.status === 'fulfilled' ? met.value : null;
-      setAdminStats(prev => ({
-        ...prev,
-        users: mData?.totalUsers ?? prev.users,
-        events: ev.status === 'fulfilled' ? (Array.isArray(ev.value) ? ev.value.length : (ev.value.total ?? prev.events)) : prev.events,
-        training: tr.status === 'fulfilled' ? (Array.isArray(tr.value) ? tr.value.length : (tr.value.total ?? prev.training)) : prev.training,
-        news: nw.status === 'fulfilled' ? (Array.isArray(nw.value) ? nw.value.length : (nw.value.total ?? prev.news)) : prev.news,
-        pendingApps: mData?.pendingApplications ?? prev.pendingApps,
-        policies: mData?.totalPolicies ?? prev.policies,
-        funding: mData?.totalFunding ?? prev.funding,
-        partnerships: mData?.totalPartnerships ?? prev.partnerships,
-      }));
-    }).catch(() => {});
+    if (typeof api.admin?.stats === 'function') {
+      api.admin.stats().then(statsData => {
+        if (!statsData) return;
+        setAdminStats(prev => ({
+          ...prev,
+          users: statsData.users?.total ?? prev.users,
+          events: statsData.events?.total ?? prev.events,
+          training: statsData.trainings?.total ?? prev.training,
+          news: statsData.news?.total ?? prev.news,
+          pendingApps: statsData.applications?.pending ?? prev.pendingApps,
+          policies: statsData.policies?.total ?? prev.policies,
+          funding: statsData.funding?.total ?? prev.funding,
+          partnerships: statsData.partnerships?.total ?? prev.partnerships,
+        }));
+      }).catch(() => {});
+    }
   }, []);
 
   return (
