@@ -114,7 +114,9 @@ router.post('/:id/register', verifyToken, async (req, res) => {
   await supabase.from('events').update({ enrolled: newCount }).eq('id', eventId);
 
   // Send confirmation email (fire-and-forget — never blocks the response)
-  sendEventRegistrationEmail(req.user.email, req.user.name, ev).catch(() => {});
+  sendEventRegistrationEmail(req.user.email, req.user.name, ev).catch(err => {
+    console.warn('[mailer] Registration email notification error:', err.message);
+  });
 
   res.json({ message: 'Registration successful', eventId, enrolled: newCount, total: maxCapacity });
 });
@@ -145,7 +147,9 @@ router.delete('/:id/register', verifyToken, async (req, res) => {
   await supabase.from('events').update({ enrolled: newCount }).eq('id', eventId);
 
   // Send cancellation email (fire-and-forget)
-  sendEventCancellationEmail(req.user.email, req.user.name, ev).catch(() => {});
+  sendEventCancellationEmail(req.user.email, req.user.name, ev).catch(err => {
+    console.warn('[mailer] Cancellation email notification error:', err.message);
+  });
 
   res.json({ message: 'Registration cancelled', enrolled: newCount });
 });

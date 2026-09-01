@@ -117,7 +117,9 @@ router.post('/:id/enroll', verifyToken, async (req, res) => {
   await supabase.from('trainings').update({ enrolled: newCount }).eq('id', trainingId);
 
   // Send confirmation email (fire-and-forget — never blocks the response)
-  sendTrainingEnrollmentEmail(req.user.email, req.user.name, t).catch(() => {});
+  sendTrainingEnrollmentEmail(req.user.email, req.user.name, t).catch(err => {
+    console.warn('[mailer] Training enrollment email notification error:', err.message);
+  });
 
   res.json({ message: 'Enrollment successful', trainingId, enrolled: newCount, total: maxCapacity });
 });
@@ -148,7 +150,9 @@ router.delete('/:id/enroll', verifyToken, async (req, res) => {
   await supabase.from('trainings').update({ enrolled: newCount }).eq('id', trainingId);
 
   // Send cancellation email (fire-and-forget)
-  sendTrainingCancellationEmail(req.user.email, req.user.name, t).catch(() => {});
+  sendTrainingCancellationEmail(req.user.email, req.user.name, t).catch(err => {
+    console.warn('[mailer] Training cancellation email notification error:', err.message);
+  });
 
   res.json({ message: 'Enrollment cancelled', enrolled: newCount });
 });

@@ -15,7 +15,7 @@ function createTransporter() {
   });
 }
 
-const PORTAL_URL = process.env.PORTAL_URL || 'http://localhost:5173';
+const PORTAL_URL = process.env.PORTAL_URL || 'https://dasig-portal.vercel.app';
 const FROM = `"DASIG Portal" <${process.env.SMTP_USER || 'noreply@dasig.ph'}>`;
 
 async function sendPasswordResetEmail(toEmail, resetToken) {
@@ -122,13 +122,13 @@ async function sendEventRegistrationEmail(toEmail, userName, event) {
             ${event.organizer ? `<div class="row"><span class="row-icon">🏛️</span><div><div class="row-label">Organizer</div><div class="row-val">${event.organizer}</div></div></div>` : ''}
           </div>
           <p style="font-size:13px;color:#64748b;">Please bring this confirmation to the event. Attendance will be recorded by the DASIG administrator.</p>
-          <a href="${PORTAL_URL}/events" class="btn">View Event Details →</a>
+          <a href="${PORTAL_URL}/programs?tab=events" class="btn">View Event Details →</a>
         </div>
         <div class="footer">DASIG Portal · Cebu Institute of Technology – University · IT332 Capstone<br>This is an automated message — please do not reply.</div>
       </div>
       </body></html>
     `,
-    text: `Hi ${userName},\n\nYour registration for "${event.title}" is confirmed!\n\nDate: ${event.date || 'TBA'}\nVenue: ${event.venue || 'TBA'}\nOrganizer: ${event.organizer || 'DASIG'}\n\nView event: ${PORTAL_URL}/events`,
+    text: `Hi ${userName},\n\nYour registration for "${event.title}" is confirmed!\n\nDate: ${event.date || 'TBA'}\nVenue: ${event.venue || 'TBA'}\nOrganizer: ${event.organizer || 'DASIG'}\n\nView event: ${PORTAL_URL}/programs?tab=events`,
   });
 }
 
@@ -177,13 +177,13 @@ async function sendTrainingEnrollmentEmail(toEmail, userName, training) {
             ${training.schedule ? `<div class="row"><span class="row-icon">📅</span><div><div class="row-label">Start Date</div><div class="row-val">${training.schedule}</div></div></div>` : ''}
           </div>
           <p style="font-size:13px;color:#64748b;">A certificate of completion will be issued by the organizing agency upon finishing the program.</p>
-          <a href="${PORTAL_URL}/training" class="btn">View Training Details →</a>
+          <a href="${PORTAL_URL}/programs?tab=training" class="btn">View Training Details →</a>
         </div>
         <div class="footer">DASIG Portal · Cebu Institute of Technology – University · IT332 Capstone<br>This is an automated message — please do not reply.</div>
       </div>
       </body></html>
     `,
-    text: `Hi ${userName},\n\nYou are now enrolled in "${training.title}"!\n\nOrganizer: ${training.org}\nDuration: ${training.duration}\nLevel: ${training.level}\n${training.schedule ? 'Start Date: ' + training.schedule + '\n' : ''}\nView training: ${PORTAL_URL}/training`,
+    text: `Hi ${userName},\n\nYou are now enrolled in "${training.title}"!\n\nOrganizer: ${training.org}\nDuration: ${training.duration}\nLevel: ${training.level}\n${training.schedule ? 'Start Date: ' + training.schedule + '\n' : ''}\nView training: ${PORTAL_URL}/programs?tab=training`,
   });
 }
 
