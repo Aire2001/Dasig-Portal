@@ -4,53 +4,53 @@ import HaribonFace from './HaribonFace';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 
-/* ── Role-based quick chips ───────────────────────────────────── */
+/* ── Role-based quick chips (Trilingual: English, Bisaya, Tagalog) ─ */
 const QUICK_BY_ROLE = {
   GUEST: [
-    { label: '📅 Upcoming Events',        q: 'What events are coming up?' },
-    { label: '🎓 Training Programs',      q: 'What training programs are available?' },
-    { label: '👥 How to become a member', q: 'How do I become a DASIG member?' },
-    { label: '💰 Funding Opportunities',  q: 'What funding opportunities are available?' },
-    { label: '📰 News & Announcements',   q: 'What are the latest news and announcements?' },
-    { label: '🏛 Member Institutions',    q: 'Who are the DASIG member institutions?' },
-    { label: '🦅 About Haribon',          q: 'Who are you and what can you do?' },
-    { label: '🔐 How to register',        q: 'How do I create a DASIG account?' },
+    { label: '📅 Upcoming Events',          q: 'What events are coming up?' },
+    { label: '🇵🇭 (Bisaya) Mga Events',      q: 'Maayong adlaw! Unsay mga umaabot nga events sa DASIG?' },
+    { label: '🇵🇭 (Tagalog) Mga Kaganapan',   q: 'Magandang araw! May mga paparating bang event sa DASIG?' },
+    { label: '🎓 Training Programs',        q: 'What training programs are available?' },
+    { label: '🇵🇭 (Bisaya) Unsaon Pag-apil', q: 'Unsaon pag-apil sa DASIG membership?' },
+    { label: '💰 Funding Grants',           q: 'What funding opportunities are available?' },
+    { label: '🏛 Member Institutions',      q: 'Who are the DASIG member institutions?' },
+    { label: '🦅 About Haribon',            q: 'Who are you and what languages can you speak?' },
   ],
   MEMBER: [
-    { label: '📅 Upcoming Events',        q: 'What events are coming up?' },
-    { label: '🎓 Enroll in Training',     q: 'What training programs can I enroll in?' },
-    { label: '💰 Open Funding',           q: 'What funding opportunities are open?' },
-    { label: '🤝 Partnerships',           q: 'Tell me about DASIG partnerships' },
-    { label: '📋 View Policies',          q: 'What governance policies are available?' },
-    { label: '📰 Latest News',            q: 'What are the latest news and announcements?' },
-    { label: '📊 My Membership Status',   q: 'What is my membership status?' },
-    { label: '🏛 Member Institutions',    q: 'Who are the DASIG member institutions?' },
+    { label: '📅 Upcoming Events',          q: 'What events are coming up?' },
+    { label: '🇵🇭 (Bisaya) Mga Events',      q: 'Unsay mga umaabot nga kalihokan sa DASIG?' },
+    { label: '🎓 Enroll in Training',       q: 'What training programs can I enroll in?' },
+    { label: '💰 Open Funding',             q: 'What funding opportunities are open?' },
+    { label: '🤝 Partnerships',             q: 'Tell me about DASIG partnerships' },
+    { label: '📋 View Policies',            q: 'What governance policies are available?' },
+    { label: '🇵🇭 (Tagalog) Research Grants', q: 'May available bang research grants para sa unibersidad?' },
+    { label: '🏛 Member Institutions',      q: 'Who are the DASIG member institutions?' },
   ],
   ADMIN: [
-    { label: '📅 All Events',             q: 'What events are coming up?' },
-    { label: '🎓 Training Programs',      q: 'What training programs are available?' },
-    { label: '👥 Member Management',      q: 'What can the admin panel manage?' },
-    { label: '🤖 Chatbot Accuracy',       q: 'How is the chatbot performing?' },
-    { label: '💰 Funding Opportunities',  q: 'What funding opportunities exist?' },
-    { label: '📋 Governance Policies',    q: 'What governance policies are available?' },
-    { label: '🤝 Partnerships',           q: 'Tell me about DASIG partnerships' },
-    { label: '🦅 What can Haribon do',    q: 'What topics can Haribon answer?' },
+    { label: '📅 All Events',               q: 'What events are coming up?' },
+    { label: '🎓 Training Programs',        q: 'What training programs are available?' },
+    { label: '👥 Member Management',        q: 'What can the admin panel manage?' },
+    { label: '🤖 Trilingual AI Engine',     q: 'What languages can Haribon understand?' },
+    { label: '💰 Funding Opportunities',    q: 'What funding opportunities exist?' },
+    { label: '📋 Governance Policies',      q: 'What governance policies are available?' },
+    { label: '🤝 Partnerships',             q: 'Tell me about DASIG partnerships' },
+    { label: '🦅 Haribon Capabilities',     q: 'How does the trilingual Haribon AI work?' },
   ],
 };
 
 /* ── Role-based greeting ──────────────────────────────────────── */
 function getGreeting(user) {
   if (!user) {
-    return "Hi! I'm Haribon 🦅 — the DASIG AI Assistant.\n\nI can answer questions about consortium events, training programs, membership, policies, funding opportunities, partnerships, and more.\n\nWhat would you like to know?";
+    return "Hi! I'm Haribon 🦅 — the DASIG AI Assistant.\n\nI am fluent in **English**, **Bisaya (Cebuano)**, and **Tagalog (Filipino)**.\n\nAsk me anything about events, faculty training, membership, research grants, and governance policies. Pwede kang mangutana sa Bisaya o Tagalog!";
   }
   const first = (user.name || '').split(' ')[0];
   if (user.role === 'ADMIN') {
-    return `Hello, ${first}! I'm Haribon 🦅 — the DASIG AI Assistant.\n\nAs an administrator, I can help with portal information, event details, training programs, member management guidance, and system queries.\n\nWhat do you need?`;
+    return `Hello, ${first}! I'm Haribon 🦅 — the DASIG AI Assistant.\n\nAs an administrator, I can assist you in English, Bisaya, or Tagalog with portal metrics, event capacities, training courses, and governance management.\n\nUnsay akong ikatabang kanimo karon?`;
   }
   if (user.role === 'MEMBER') {
-    return `Welcome back, ${first}! 🦅 I'm Haribon — your DASIG AI Assistant.\n\nYou have full member access. Ask me about upcoming events, training enrollments, funding opportunities, partnerships, or governance policies.\n\nHow can I help you today?`;
+    return `Welcome back, ${first}! 🦅 I'm Haribon — your DASIG AI Assistant.\n\nYou have full member access. Ask me in English, Bisaya, or Tagalog about upcoming conferences, training enrollments, DOST grants, or governance policies.\n\nHow can I help you today?`;
   }
-  return `Hi, ${first}! I'm Haribon 🦅 — the DASIG AI Assistant.\n\nI can help you learn about DASIG events, training programs, and how to become a member.\n\nWhat would you like to know?`;
+  return `Hi, ${first}! I'm Haribon 🦅 — the DASIG AI Assistant.\n\nI can help you in English, Bisaya, or Tagalog. What would you like to know?`;
 }
 
 /* ── Bot-text formatter ───────────────────────────────────────── */
@@ -313,11 +313,11 @@ export default function Chatbot() {
             <div style={{ flex:1, minWidth:0 }}>
               <div style={{ display:'flex', alignItems:'center', gap:7 }}>
                 <span style={{ color:'#fff', fontWeight:900, fontSize:13.5 }}>Haribon</span>
-                <span style={{ color:'rgba(255,255,255,0.45)', fontSize:11.5, fontWeight:400 }}>DASIG NLP Engine</span>
+                <span style={{ color:'#38bdf8', fontSize:11, fontWeight:700 }}>Trilingual AI</span>
               </div>
               <div style={{ display:'flex', alignItems:'center', gap:7, marginTop:2 }}>
                 <span style={{ width:6, height:6, borderRadius:'50%', background:'#4ade80', display:'inline-block', boxShadow:'0 0 5px rgba(74,222,128,0.8)' }} />
-                <span style={{ color:'rgba(255,255,255,0.5)', fontSize:10.5 }}>Online · Scoped to DASIG KB</span>
+                <span style={{ color:'rgba(255,255,255,0.7)', fontSize:10.5 }}>English · Bisaya · Tagalog</span>
               </div>
             </div>
 
