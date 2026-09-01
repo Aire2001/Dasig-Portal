@@ -447,7 +447,7 @@ export default function ProgramsPage() {
 
           {/* Tab switcher — pill segmented control */}
           {!isCalendar && (
-            <div style={{ marginBottom:28 }}>
+            <div style={{ marginBottom:20 }}>
               <div style={{
                 display:'inline-flex', background:'rgba(255,255,255,0.05)',
                 border:'1px solid rgba(255,255,255,0.1)', borderRadius:18,
@@ -476,6 +476,64 @@ export default function ProgramsPage() {
                     </button>
                   );
                 })}
+              </div>
+            </div>
+          )}
+
+          {/* Executive Member vs Guest Access Status Ribbon */}
+          {!isCalendar && (
+            <div style={{
+              marginBottom: 26,
+              borderRadius: 16,
+              padding: '14px 20px',
+              background: user?.role === 'MEMBER' || user?.role === 'ADMIN'
+                ? 'linear-gradient(135deg, rgba(16,185,129,0.12) 0%, rgba(245,158,11,0.08) 100%)'
+                : 'rgba(255,255,255,0.03)',
+              border: `1.5px solid ${user?.role === 'MEMBER' || user?.role === 'ADMIN' ? 'rgba(16,185,129,0.3)' : 'rgba(255,255,255,0.08)'}`,
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12,
+              backdropFilter: 'blur(10px)',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{
+                  width: 38, height: 38, borderRadius: 10,
+                  background: user?.role === 'MEMBER' || user?.role === 'ADMIN' ? 'rgba(16,185,129,0.2)' : 'rgba(255,255,255,0.06)',
+                  border: `1px solid ${user?.role === 'MEMBER' || user?.role === 'ADMIN' ? 'rgba(16,185,129,0.4)' : 'rgba(255,255,255,0.1)'}`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18,
+                }}>
+                  {user?.role === 'MEMBER' || user?.role === 'ADMIN' ? '👑' : '👤'}
+                </div>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ color: '#fff', fontSize: 14, fontWeight: 900 }}>
+                      {user?.role === 'MEMBER' || user?.role === 'ADMIN' ? `Consortium Member: ${user.name}` : 'Guest Attendee Access'}
+                    </span>
+                    <span style={{
+                      fontSize: 10.5, fontWeight: 800, padding: '2px 8px', borderRadius: 6,
+                      background: user?.role === 'MEMBER' || user?.role === 'ADMIN' ? 'rgba(16,185,129,0.25)' : 'rgba(59,130,246,0.15)',
+                      color: user?.role === 'MEMBER' || user?.role === 'ADMIN' ? '#34d399' : '#93c5fd',
+                      border: `1px solid ${user?.role === 'MEMBER' || user?.role === 'ADMIN' ? 'rgba(16,185,129,0.4)' : 'rgba(59,130,246,0.3)'}`,
+                    }}>
+                      {user?.role === 'MEMBER' ? 'VIP MEMBER' : user?.role === 'ADMIN' ? 'ADMINISTRATOR' : 'GUEST'}
+                    </span>
+                  </div>
+                  <div style={{ color: 'rgba(255,255,255,0.55)', fontSize: 12, marginTop: 2 }}>
+                    {user?.role === 'MEMBER' || user?.role === 'ADMIN'
+                      ? '⚡ Instant 1-Click Priority Slots • 🎖️ Free Certificates • 📂 Full Resource Toolkits Included'
+                      : 'Public passes available. Want guaranteed priority seats & free verified certificates?'}
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                {user?.role === 'MEMBER' || user?.role === 'ADMIN' ? (
+                  <span style={{ fontSize: 12, color: '#34d399', fontWeight: 800, background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.35)', padding: '6px 14px', borderRadius: 8, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                    <span>✓</span> 100% Free Member Pass Active
+                  </span>
+                ) : (
+                  <a href="/membership" style={{ fontSize: 12.5, color: '#fb923c', fontWeight: 800, background: 'rgba(249,115,22,0.15)', border: '1px solid rgba(249,115,22,0.35)', padding: '6px 14px', borderRadius: 8, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                    <span>👑</span> Apply for Consortium Membership →
+                  </a>
+                )}
               </div>
             </div>
           )}
@@ -532,20 +590,29 @@ function CancelConfirmModal({ title, subtitle, onConfirm, onCancel, confirming }
 /* ═══════════════════════════════════════════════════════════
    CARD COMPONENTS (must be outside any map/render loop)
 ═══════════════════════════════════════════════════════════ */
-function EvCard({ ev, idx, registered, onRegister, onCancel, cancelling }) {
+function EvCard({ ev, idx, registered, onRegister, onCancel, cancelling, user }) {
   const [hov, setHov] = useState(false);
   const pct  = ev.total > 0 ? Math.min(100, Math.round((ev.enrolled / ev.total) * 100)) : 0;
   const full = ev.total > 0 && ev.enrolled >= ev.total;
   const grad = EV_GRADS[ev?.category] || EV_GRADS.Summit;
+  const isMember = user?.role === 'MEMBER' || user?.role === 'ADMIN';
+
   return (
     <div onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
       style={{ borderRadius:18, overflow:'hidden', background:'rgba(15,23,42,0.9)', border:`1px solid ${hov?'rgba(249,115,22,0.4)':'rgba(255,255,255,0.07)'}`, boxShadow: hov?'0 14px 40px rgba(249,115,22,0.12)':'0 4px 16px rgba(0,0,0,0.3)', transform: hov?'translateY(-4px)':'none', transition:'all .22s cubic-bezier(.34,1.56,.64,1)', animation:`cardIn .35s ease ${idx*0.05}s both` }}>
       <div style={{ background: grad, padding:'18px 20px 14px', position:'relative', overflow:'hidden', minHeight:100 }}>
         <div style={{ position:'absolute', right:-8, bottom:-10, fontSize:70, opacity:0.12 }}>{EV_ICONS[ev.category]||'📅'}</div>
-        <div style={{ display:'flex', justifyContent:'space-between', marginBottom:6 }}>
+        <div style={{ display:'flex', justifyContent:'space-between', marginBottom:6, alignItems:'center' }}>
           <span style={{ background:'rgba(255,255,255,0.22)', color:'#fff', borderRadius:6, padding:'3px 10px', fontSize:10.5, fontWeight:700 }}>{ev.category}</span>
-          {registered && <span style={{ background:'rgba(16,185,129,0.28)', color:'#34d399', borderRadius:6, padding:'3px 10px', fontSize:10.5, fontWeight:700, border:'1px solid rgba(16,185,129,0.4)' }}>✓ Registered</span>}
-          {full && !registered && <span style={{ background:'rgba(225,29,72,0.28)', color:'#f87171', borderRadius:6, padding:'3px 10px', fontSize:10.5, fontWeight:700 }}>Full</span>}
+          <div style={{ display:'flex', gap:6 }}>
+            {isMember && (
+              <span style={{ background:'rgba(16,185,129,0.25)', color:'#6ee7b7', borderRadius:6, padding:'2px 8px', fontSize:10, fontWeight:800, border:'1px solid rgba(16,185,129,0.4)' }}>
+                👑 100% Free Pass
+              </span>
+            )}
+            {registered && <span style={{ background:'rgba(16,185,129,0.28)', color:'#34d399', borderRadius:6, padding:'3px 10px', fontSize:10.5, fontWeight:700, border:'1px solid rgba(16,185,129,0.4)' }}>✓ Registered</span>}
+            {full && !registered && <span style={{ background:'rgba(225,29,72,0.28)', color:'#f87171', borderRadius:6, padding:'3px 10px', fontSize:10.5, fontWeight:700 }}>Full</span>}
+          </div>
         </div>
         <div style={{ color:'#fff', fontSize:15, fontWeight:900, lineHeight:1.3, marginBottom:5 }}>{ev.title}</div>
         <div style={{ display:'flex', flexWrap:'wrap', gap:8, rowGap:4 }}>
@@ -572,8 +639,8 @@ function EvCard({ ev, idx, registered, onRegister, onCancel, cancelling }) {
           <div style={{ display:'flex', gap:8, alignItems:'center' }}>
             <span style={{ fontSize:12, color:'rgba(255,255,255,0.45)', flex:1 }}>🏛 {ev.organizer}</span>
             {!registered
-              ? <button onClick={onRegister} disabled={full} style={{ background: full?'rgba(255,255,255,0.05)':'linear-gradient(90deg,#f97316,#e11d48)', color: full?'rgba(255,255,255,0.3)':'#fff', border: full?'1px solid rgba(255,255,255,0.08)':'none', borderRadius:10, padding:'8px 18px', fontSize:13, fontWeight:800, cursor: full?'not-allowed':'pointer', fontFamily:'inherit', boxShadow: full?'none':'0 4px 12px rgba(249,115,22,0.3)', whiteSpace:'nowrap' }}>
-                  {full?'Fully Booked':'Register →'}
+              ? <button onClick={onRegister} disabled={full} style={{ background: full?'rgba(255,255,255,0.05)': isMember ? 'linear-gradient(90deg,#059669,#10b981)' : 'linear-gradient(90deg,#f97316,#e11d48)', color: full?'rgba(255,255,255,0.3)':'#fff', border: full?'1px solid rgba(255,255,255,0.08)':'none', borderRadius:10, padding:'8px 18px', fontSize:13, fontWeight:800, cursor: full?'not-allowed':'pointer', fontFamily:'inherit', boxShadow: full?'none': isMember ? '0 4px 12px rgba(16,185,129,0.35)' : '0 4px 12px rgba(249,115,22,0.3)', whiteSpace:'nowrap' }}>
+                  {full ? 'Fully Booked' : isMember ? '⚡ Fast Register' : 'Register →'}
                 </button>
               : <span style={{ background:'rgba(16,185,129,0.12)', color:'#34d399', borderRadius:10, padding:'7px 14px', fontSize:12.5, fontWeight:700, border:'1px solid rgba(16,185,129,0.22)', whiteSpace:'nowrap' }}>✓ Registered</span>
             }
@@ -603,19 +670,28 @@ function EvCard({ ev, idx, registered, onRegister, onCancel, cancelling }) {
   );
 }
 
-function TrCard({ t, idx, registered, onRegister, onCancel, cancelling }) {
+function TrCard({ t, idx, registered, onRegister, onCancel, cancelling, user }) {
   const [hov, setHov] = useState(false);
   const pct  = t.total > 0 ? Math.min(100, Math.round(t.enrolled / t.total * 100)) : 0;
   const full = t.total > 0 && t.enrolled >= t.total;
   const s    = TR_STYLES[t?.category] || TR_STYLES.Technology;
+  const isMember = user?.role === 'MEMBER' || user?.role === 'ADMIN';
+
   return (
     <div onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
       style={{ borderRadius:18, overflow:'hidden', background:'rgba(15,23,42,0.9)', border:`1px solid ${hov?s.color+'50':'rgba(255,255,255,0.07)'}`, boxShadow: hov?`0 14px 40px ${s.color}20`:'0 4px 16px rgba(0,0,0,0.3)', transform: hov?'translateY(-4px)':'none', transition:'all .22s cubic-bezier(.34,1.56,.64,1)', animation:`cardIn .35s ease ${idx*0.05}s both` }}>
       <div style={{ background: s.accent, padding:'18px 20px 14px', position:'relative', overflow:'hidden', minHeight:100 }}>
         <div style={{ position:'absolute', right:-8, bottom:-10, fontSize:70, opacity:0.12 }}>{TR_ICONS[t.category]||'🎓'}</div>
-        <div style={{ display:'flex', justifyContent:'space-between', marginBottom:6 }}>
+        <div style={{ display:'flex', justifyContent:'space-between', marginBottom:6, alignItems:'center' }}>
           <span style={{ background:'rgba(255,255,255,0.22)', color:'#fff', borderRadius:6, padding:'3px 10px', fontSize:10.5, fontWeight:700 }}>{t.category}</span>
-          <span style={{ background:'rgba(255,255,255,0.18)', color:'#fff', borderRadius:6, padding:'3px 10px', fontSize:10.5, fontWeight:700 }}>{t.level}</span>
+          <div style={{ display:'flex', gap:6 }}>
+            {isMember && (
+              <span style={{ background:'rgba(16,185,129,0.25)', color:'#6ee7b7', borderRadius:6, padding:'2px 8px', fontSize:10, fontWeight:800, border:'1px solid rgba(16,185,129,0.4)' }}>
+                👑 Free Pass
+              </span>
+            )}
+            <span style={{ background:'rgba(255,255,255,0.18)', color:'#fff', borderRadius:6, padding:'3px 10px', fontSize:10.5, fontWeight:700 }}>{t.level}</span>
+          </div>
         </div>
         <div style={{ color:'#fff', fontSize:15, fontWeight:900, lineHeight:1.3, marginBottom:5 }}>{t.title}</div>
         <div style={{ display:'flex', gap:10, flexWrap:'wrap' }}>
@@ -639,8 +715,8 @@ function TrCard({ t, idx, registered, onRegister, onCancel, cancelling }) {
           <div style={{ display:'flex', justifyContent:'flex-end' }}>
             {registered
               ? <span style={{ background:'rgba(16,185,129,0.12)', color:'#34d399', borderRadius:10, padding:'8px 14px', fontSize:12.5, fontWeight:700, border:'1px solid rgba(16,185,129,0.22)' }}>✓ Registered</span>
-              : <button onClick={onRegister} disabled={full} style={{ background: full?'rgba(255,255,255,0.05)':s.accent, color: full?'rgba(255,255,255,0.3)':'#fff', border: full?'1px solid rgba(255,255,255,0.08)':'none', borderRadius:10, padding:'9px 20px', fontSize:13, fontWeight:800, cursor: full?'not-allowed':'pointer', fontFamily:'inherit', boxShadow: full?'none':`0 4px 12px ${s.color}40` }}>
-                  {full?'Fully Booked':'Register →'}
+              : <button onClick={onRegister} disabled={full} style={{ background: full?'rgba(255,255,255,0.05)': isMember ? 'linear-gradient(90deg,#059669,#10b981)' : s.accent, color: full?'rgba(255,255,255,0.3)':'#fff', border: full?'1px solid rgba(255,255,255,0.08)':'none', borderRadius:10, padding:'9px 20px', fontSize:13, fontWeight:800, cursor: full?'not-allowed':'pointer', fontFamily:'inherit', boxShadow: full?'none': isMember ? '0 4px 12px rgba(16,185,129,0.4)' : `0 4px 12px ${s.color}40` }}>
+                  {full ? 'Fully Booked' : isMember ? '⚡ Fast Enroll' : 'Enroll →'}
                 </button>
             }
           </div>
@@ -1213,7 +1289,7 @@ function EventsTab({ user }) {
       {!loading && filteredEvents.length > 0 && (
         <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(300px,1fr))', gap:18 }}>
           {filteredEvents.map((ev, i) => (
-            <EvCard key={ev.id} ev={ev} idx={i} registered={!!myRegs[ev.id]} onRegister={() => openForm(ev)} onCancel={() => cancelReg(ev)} cancelling={cancellingId === ev.id} />
+            <EvCard key={ev.id} ev={ev} idx={i} registered={!!myRegs[ev.id]} onRegister={() => openForm(ev)} onCancel={() => cancelReg(ev)} cancelling={cancellingId === ev.id} user={user} />
           ))}
         </div>
       )}
@@ -1759,7 +1835,7 @@ function TrainingTab({ user }) {
       {!loading && filtered.length > 0 && (
         <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(300px,1fr))', gap:18 }}>
           {filtered.map((t, idx) => (
-            <TrCard key={t.id} t={t} idx={idx} registered={!!myEnr[t.id]} onRegister={() => openEnroll(t)} onCancel={() => cancelEnr(t)} cancelling={cancellingEnrId === t.id} />
+            <TrCard key={t.id} t={t} idx={idx} registered={!!myEnr[t.id]} onRegister={() => openEnroll(t)} onCancel={() => cancelEnr(t)} cancelling={cancellingEnrId === t.id} user={user} />
           ))}
         </div>
       )}
