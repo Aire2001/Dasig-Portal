@@ -2282,6 +2282,21 @@ function TrainingTab({ showToast }) {
     finally { setEnrolLoading(false); }
   }
 
+  async function toggleAttendance(reg, attended) {
+    try {
+      await api.training.markAttendance(enrolEvent.id, reg.user_id, attended);
+      setEnrolList(prev => prev.map(r => r.user_id === reg.user_id ? { ...r, attended } : r));
+      showToast(attended ? 'Attendance marked successfully!' : 'Marked as absent', attended, reg.users?.name);
+    } catch (e) { showToast(e.message, false); }
+  }
+
+  async function reloadEnrollments(t) {
+    setEnrolLoading(true);
+    try { setEnrolList(await api.training.enrollments(t.id)); }
+    catch (e) { showToast(e.message, false); }
+    finally { setEnrolLoading(false); }
+  }
+
   async function save() {
     if (!form.title || !form.org || !form.duration) { showToast('Please fill all required fields', false); return; }
     setSaving(true);
@@ -2345,6 +2360,8 @@ function TrainingTab({ showToast }) {
     const role = (en.users?.role || 'GUEST').toUpperCase();
     if (enrolFilter === 'MEMBER' && role !== 'MEMBER') return false;
     if (enrolFilter === 'GUEST' && role !== 'GUEST') return false;
+    if (enrolFilter === 'attended' && !en.attended) return false;
+    if (enrolFilter === 'absent' && en.attended) return false;
     if (enrolSearch.trim()) {
       const q = enrolSearch.toLowerCase();
       const name = (en.users?.name || '').toLowerCase();
@@ -2398,13 +2415,17 @@ function TrainingTab({ showToast }) {
 
       {/* Enrollments Modal */}
       {enrolEvent && (
-        <Modal title={`Enrollments & Roster — ${enrolEvent.title}`} onClose={() => { setEnrolEvent(null); load(); }} wide>
+        <Modal title={`Attendance & Roster — ${enrolEvent.title}`} onClose={() => { setEnrolEvent(null); load(); }} wide>
           {/* Header Summary & Actions */}
           <div style={{ marginBottom:14, display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap:10 }}>
             <div>
               <div style={{ display:'flex', alignItems:'center', gap:8, flexWrap:'wrap' }}>
-                <span style={{ fontSize:14, fontWeight:800, color:'#fff' }}>{enrolList.length} Total Enrolled</span>
-                <span style={{ fontSize:13, color:'rgba(255,255,255,0.45)' }}>/ {enrolEvent.total} Capacity</span>
+                <span style={{ fontSize:14, fontWeight:800, color:'#fff' }}>
+                  {enrolList.filter(r => r.attended).length} Attended
+                </span>
+                <span style={{ fontSize:13, color:'rgba(255,255,255,0.45)' }}>
+                  / {enrolList.length} Total Enrolled
+                </span>
                 <span style={{ fontSize:11, background:'rgba(16,185,129,0.15)', color:'#34d399', border:'1px solid rgba(16,185,129,0.3)', borderRadius:6, padding:'2px 8px', fontWeight:800 }}>
                   👤 {trMemberCount} Members
                 </span>
@@ -2417,9 +2438,10 @@ function TrainingTab({ showToast }) {
               <button onClick={() => {
                 if (!enrolList.length) return;
                 const rows = [
-                  ['Name','Email','Role','Institution','Enrolled At'],
+                  ['Name','Email','Role','Institution','Attended','Enrolled At'],
                   ...enrolList.map(en => [
                     en.users?.name || '', en.users?.email || '', (en.users?.role || 'GUEST').toUpperCase(), en.users?.institution || '',
+                    en.attended ? 'Yes' : 'No',
                     en.created_at ? new Date(en.created_at).toLocaleDateString('en-PH') : '',
                   ])
                 ];
@@ -2429,7 +2451,7 @@ function TrainingTab({ showToast }) {
                 a.download = `${enrolEvent.title.replace(/[^a-z0-9]/gi,'_')}_enrollees.csv`;
                 a.click();
               }} className="ap-btn ap-btn-green" style={{ fontSize:12 }}>⬇ Export CSV</button>
-              <button onClick={() => { setEnrolLoading(true); api.training.enrollments(enrolEvent.id).then(setEnrolList).catch(() => {}).finally(() => setEnrolLoading(false)); }} className="ap-btn ap-btn-ghost" style={{ fontSize:12.5 }}>↻ Refresh</button>
+              <button onClick={() => reloadEnrollments(enrolEvent)} className="ap-btn ap-btn-ghost" style={{ fontSize:12.5 }}>↻ Refresh</button>
             </div>
           </div>
 
@@ -2448,6 +2470,8 @@ function TrainingTab({ showToast }) {
                 { id:'all', label:`All (${enrolList.length})` },
                 { id:'MEMBER', label:`Members (${trMemberCount})` },
                 { id:'GUEST', label:`Guests (${trGuestCount})` },
+                { id:'attended', label:`Attended (${enrolList.filter(r => r.attended).length})` },
+                { id:'absent', label:`Absent (${enrolList.filter(r => !r.attended).length})` },
               ].map(f => (
                 <button
                   key={f.id}
@@ -2510,9 +2534,17 @@ function TrainingTab({ showToast }) {
                         </div>
                       </div>
                     </div>
-                    <span style={{ fontSize:12, color:'rgba(255,255,255,0.5)', whiteSpace:'nowrap', flexShrink:0 }}>
-                      📅 {en.created_at ? new Date(en.created_at).toLocaleDateString('en-PH') : 'N/A'}
-                    </span>
+                    <div style={{ display:'flex', alignItems:'center', gap:8, flexShrink:0 }}>
+                      {en.attended
+                        ? <span className="ap-badge" style={{ background:'rgba(16,185,129,0.18)', color:'#6ee7b7' }}>✓ Attended</span>
+                        : <span className="ap-badge" style={{ background:'rgba(255,255,255,0.07)', color:'rgba(255,255,255,0.45)' }}>Absent</span>
+                      }
+                      <button
+                        onClick={() => toggleAttendance(en, !en.attended)}
+                        className={`ap-btn ${en.attended ? 'ap-btn-amber' : 'ap-btn-green'}`}
+                        style={{ fontSize:12, padding:'5px 12px' }}
+                      >{en.attended ? 'Mark Absent' : 'Mark Attended'}</button>
+                    </div>
                   </div>
                 );
               })}
@@ -2555,21 +2587,21 @@ function TrainingTab({ showToast }) {
       )}
 
       <SectionKPIs items={[
-        { label: 'Active Programs', value: items.length, icon: '🎓', color: '#f43f5e' },
-        { label: 'Total Enrollees', value: totalEnrolled, icon: '👥', color: '#34d399' },
+        { label: 'Total Programs', value: items.length, icon: '🎓', color: '#f43f5e' },
+        { label: 'Total Enrolled', value: totalEnrolled, icon: '👥', color: '#34d399' },
         { label: 'Total Capacity', value: totalCapacity, icon: '💺', color: '#60a5fa' },
         { label: 'Avg Fill Rate', value: `${avgFillRate}%`, icon: '📊', color: '#fbbf24' },
       ]} />
 
       {loading ? <Loading /> : (
-        <DataTable head={['Program','Category','Level','Fill Rate','Actions']}>
+        <DataTable head={['Program','Date & Duration','Category','Fill Rate','Actions']}>
           {filteredItems.length === 0 ? <EmptyTR cols={5} /> : filteredItems.map(t => {
             const fill = t.total > 0 ? Math.round((t.enrolled || 0) / t.total * 100) : 0;
             const cc = CC[t.category] || { color:'#60a5fa', bg:'rgba(96,165,250,0.18)', border:'rgba(96,165,250,0.35)', icon:'💻' };
             const lc = LC[t.level] || { color:'#6ee7b7', bg:'rgba(110,231,183,0.15)', border:'rgba(110,231,183,0.3)' };
             const isFull = fill >= 90;
             const isMid = fill >= 50 && fill < 90;
-            const barGradient = isFull ? 'linear-gradient(90deg,#f43f5e,#fb7185)' : isMid ? 'linear-gradient(90deg,#f59e0b,#fbbf24)' : 'linear-gradient(90deg,#10b981,#34d399)';
+            const barGradient = isFull ? 'linear-gradient(90deg,#f43f5e,#fb7185)' : isMid ? 'linear-gradient(90deg,#f59e0b,#fbbf24)' : 'linear-gradient(90deg,#06b6d4,#3b82f6)';
 
             return (
               <TR key={t.id}>
@@ -2584,25 +2616,32 @@ function TrainingTab({ showToast }) {
                         <span>🏛️ {t.org}</span>
                         <span>·</span>
                         <span style={{ color:'rgba(249,115,22,0.85)', fontWeight:600 }}>⏱️ {t.duration}</span>
-                        {t.schedule && <span>· 📅 {t.schedule}</span>}
                       </div>
                     </div>
                   </div>
                 </TD>
                 <TD>
-                  <span className="ap-badge" style={{ background:cc.bg, color:cc.color, border:`1px solid ${cc.border}`, padding:'4px 10px', borderRadius:8, fontWeight:800, fontSize:12 }}>
-                    {cc.icon} {t.category}
-                  </span>
+                  <div style={{ display:'flex', flexDirection:'column', gap:2 }}>
+                    <span style={{ fontWeight:700, color:'#fff', fontSize:13 }}>📅 {t.schedule || 'Self-paced'}</span>
+                    {t.session_start_time && (
+                      <span style={{ fontSize:11, color:'rgba(255,255,255,0.45)' }}>⏰ {t.session_start_time}{t.session_end_time ? ` – ${t.session_end_time}` : ''}</span>
+                    )}
+                  </div>
                 </TD>
                 <TD>
-                  <span className="ap-badge" style={{ background:lc.bg, color:lc.color, border:`1px solid ${lc.border}`, padding:'3px 8px', borderRadius:7, fontWeight:800, fontSize:11.5 }}>
-                    {t.level}
-                  </span>
+                  <div style={{ display:'flex', alignItems:'center', gap:6, flexWrap:'wrap' }}>
+                    <span className="ap-badge" style={{ background:cc.bg, color:cc.color, border:`1px solid ${cc.border}`, padding:'4px 10px', borderRadius:8, fontWeight:800, fontSize:12 }}>
+                      {cc.icon} {t.category}
+                    </span>
+                    <span className="ap-badge" style={{ background:lc.bg, color:lc.color, border:`1px solid ${lc.border}`, padding:'3px 8px', borderRadius:7, fontWeight:800, fontSize:11 }}>
+                      {t.level}
+                    </span>
+                  </div>
                 </TD>
                 <TD>
                   <div style={{ minWidth:130 }}>
                     <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:4 }}>
-                      <span style={{ fontSize:11, fontWeight:800, color: isFull ? '#f87171' : isMid ? '#fbbf24' : '#34d399' }}>
+                      <span style={{ fontSize:11, fontWeight:800, color: isFull ? '#f87171' : isMid ? '#fbbf24' : '#60a5fa' }}>
                         {fill}% Fill
                       </span>
                       <span style={{ fontSize:11.5, color:'rgba(255,255,255,0.55)', fontWeight:700 }}>
@@ -2620,9 +2659,9 @@ function TrainingTab({ showToast }) {
                       onClick={() => openEnrollments(t)}
                       className="ap-btn ap-btn-ghost"
                       style={{ padding:'6px 11px', fontSize:12, borderRadius:8, color:'#34d399', borderColor:'rgba(52,211,153,0.3)', background:'rgba(16,185,129,0.08)' }}
-                      title="View enrolled students & details"
+                      title="View attendees list & mark attendance"
                     >
-                      👥 Enrollees ({t.enrolled || 0})
+                      👥 Attendees ({t.enrolled || 0})
                     </button>
                     <button
                       onClick={() => { setForm({ ...t }); setModal(t); }}

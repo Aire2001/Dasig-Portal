@@ -77,6 +77,8 @@ export const api = {
     enroll: (id) => request(`/training/${id}/enroll`, { method: 'POST' }),
     unenroll: (id) => request(`/training/${id}/enroll`, { method: 'DELETE' }),
     enrollments: (id) => request(`/training/${id}/enrollments`),
+    markAttendance: (trainingId, userId, attended) =>
+      request(`/training/${trainingId}/attend/${userId}`, { method: 'POST', body: JSON.stringify({ attended }) }),
   },
   members: {
     list: () => request('/members'),
