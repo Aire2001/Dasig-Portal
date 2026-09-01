@@ -216,7 +216,18 @@ function generateHighIQResponse(normalizedQuery, lang) {
     }
   }
 
-  // 4. Questions about Regional Collaboration / Why Join DASIG / Mission
+  // 4. Questions about Capstone / Research / Software Engineering / IT411 / Frameworks
+  if (q.includes('capstone') || q.includes('it411') || q.includes('methodology') || q.includes('validation') || q.includes('framework') || q.includes('iso 25010') || q.includes('tam')) {
+    if (lang === 'bisaya') {
+      return `🎓 **Academic Research & Capstone Framework Guidance:**\n\nAlang sa IT411 Capstone & MVP Validation (Weeks 1–2):\n\n1. **ISO/IEC 25010 Software Quality Model:** Gisukod ang Functional Suitability, Usability, Performance, Security, ug Reliability.\n2. **TAM (Technology Acceptance Model):** Pagsukod sa Perceived Usefulness (PU) ug Perceived Ease of Use (PEOU).\n3. **Target Validation Group:** Minimum of 30 respondents (Students, Faculty, Subject Matter Experts, and Administrators).\n4. **Koneksyon sa Live System:** Ang DASIG Portal live na sa Vercel CDN ug Render Cloud API!`;
+    } else if (lang === 'tagalog') {
+      return `🎓 **Academic Research & Capstone Framework Guidance:**\n\nPara sa IT411 Capstone & MVP Validation (Weeks 1–2):\n\n1. **ISO/IEC 25010 Software Quality Model:** Sinusukat ang Functional Suitability, Usability, Performance, Security, at Reliability.\n2. **TAM (Technology Acceptance Model):** Pagsusuri sa Perceived Usefulness (PU) at Perceived Ease of Use (PEOU).\n3. **Target Validation Group:** Minimum na 30 respondents (Mag-aaral, Faculty, Subject Matter Experts, at Administrators).\n4. **Live System Deployment:** Naka-deploy na ang DASIG Portal sa Vercel CDN at Render Cloud API!`;
+    } else {
+      return `🎓 **Academic Research & Capstone Framework Guidance:**\n\nFor IT411 Capstone & MVP Validation (Weeks 1–2):\n\n1. **ISO/IEC 25010 Software Quality Model:** Evaluates Functional Suitability, Usability, Performance Efficiency, Security, and Reliability.\n2. **TAM (Technology Acceptance Model):** Measures Perceived Usefulness (PU) and Perceived Ease of Use (PEOU).\n3. **Target Validation Demographic:** 30 stakeholders across Students (Guests), Faculty (Members), IT Experts (SMEs), and Decision-Makers (Admins).\n4. **Live Deployment:** Accessible 24/7 on Vercel CDN and Render Backend Cloud!`;
+    }
+  }
+
+  // 5. Questions about Regional Collaboration / Why Join DASIG / Mission
   if (q.includes('why') || q.includes('benefit') || q.includes('advantage') || q.includes('purpose') || q.includes('ngano') || q.includes('bakit')) {
     if (lang === 'bisaya') {
       return `🎯 **Nganong Mahinungdanon ang DASIG Consortium:**\n\nAng DASIG nagsumpay sa mga unibersidad, ahensya sa gobyerno, ug industriya aron:\n\n1. **Pagpaambit sa Kahibalo:** Pagbayloay sa mga pasilidad sa laboratoryo, digital resources, ug faculty expertise.\n2. **Dako nga Research Impact:** Hiniusang pag-apply sa mga multi-million research grants.\n3. **Standardized Accreditation:** Pagsiguro nga ang mga training bootcamps ug certificates giila sa tibook nasod.\n4. **Public Policy Innovation:** Paghimo og mga polisiya nga nakabase sa siyentipikong ebidensya.`;
@@ -227,7 +238,7 @@ function generateHighIQResponse(normalizedQuery, lang) {
     }
   }
 
-  // 5. Questions about Certificates, Attendance, QR, and Accreditation
+  // 6. Questions about Certificates, Attendance, QR, and Accreditation
   if (q.includes('certificate') || q.includes('attendance') || q.includes('qr') || q.includes('sertipiko') || q.includes('patunay')) {
     if (lang === 'bisaya') {
       return `📜 **Sertipikasyon ug Attendance sa DASIG:**\n\n• **Pagparehistro:** Pag-enrol una sa event o training pinaagi sa Programs module.\n• **Attendance Tracking:** Ang administrator mag-scan o mag-verify sa imong pagtambong gamit ang live dashboard.\n• **Sertipiko:** Human makompleto ang gidugayon sa seminar o bootcamp, usa ka digital Certificate of Completion ang i-isyu ubos sa ngalan sa organizing agency (e.g. DICT, DOST, CIT-U).`;
@@ -238,13 +249,13 @@ function generateHighIQResponse(normalizedQuery, lang) {
     }
   }
 
-  // 6. General Intelligent Reasoning Fallback
+  // 7. General Intelligent Reasoning Fallback
   if (lang === 'bisaya') {
-    return `🧠 **Haribon AI Intelligence Response:**\n\nNakasabot ko sa imong gipangutana bahin sa **"${normalizedQuery}"**.\n\nIsip opisyal nga AI sa DASIG Regional Academic Consortium (Rehiyon VII), andam ko motabang kanimo:\n\n• 📅 **Events & Summits:** Pagpangita og eskedyul ug pagparehistro.\n• 🎓 **Faculty Development:** Pag-apil sa mga kurso sa AI, Research, ug Computing.\n• 💰 **Research Funding:** Pagsubay sa mga grants gikan sa DOST-7 ug CHED.\n• 👥 **Membership:** Pagsumite sa aplikasyon alang sa imong institusyon.\n\n💡 *Unsay piho nga bahin nga gusto nimong mahibaloan pa?*`;
+    return `🧠 **Haribon AI High-IQ Response:**\n\nNakasabot ko sa imong gipangutana bahin sa **"${normalizedQuery}"**.\n\nIsip opisyal nga AI sa DASIG Regional Academic Consortium (Rehiyon VII), andam ko motabang kanimo:\n\n• 📅 **Events & Summits:** Pagpangita og eskedyul ug pagparehistro.\n• 🎓 **Faculty Development:** Pag-apil sa mga kurso sa AI, Research, ug Computing.\n• 💰 **Research Funding:** Pagsubay sa mga grants gikan sa DOST-7 ug CHED.\n• 👥 **Membership:** Pagsumite sa aplikasyon alang sa imong institusyon.\n\n💡 *Unsay piho nga detalye nga gusto nimong atong hisgotan pa?*`;
   } else if (lang === 'tagalog') {
-    return `🧠 **Haribon AI Intelligence Response:**\n\nNauunawaan ko ang iyong tanong tungkol sa **"${normalizedQuery}"**.\n\nBilang opisyal na AI ng DASIG Regional Academic Consortium (Rehiyon VII), narito ako upang magbigay ng gabay:\n\n• 📅 **Events & Summits:** Paghahanap ng iskedyul at pagpaparehistro.\n• 🎓 **Faculty Development:** Pagsali sa mga kurso sa AI, Research, at Computing.\n• 💰 **Research Funding:** Pagsubaybay sa mga grant mula sa DOST-7 at CHED.\n• 👥 **Membership:** Pagsusumite ng aplikasyon para sa iyong institusyon.\n\n💡 *May partikular ka bang aspeto na nais linawin o pag-usapan?*`;
+    return `🧠 **Haribon AI High-IQ Response:**\n\nNauunawaan ko ang iyong tanong tungkol sa **"${normalizedQuery}"**.\n\nBilang opisyal na AI ng DASIG Regional Academic Consortium (Rehiyon VII), narito ako upang magbigay ng gabay:\n\n• 📅 **Events & Summits:** Paghahanap ng iskedyul at pagpaparehistro.\n• 🎓 **Faculty Development:** Pagsali sa mga kurso sa AI, Research, at Computing.\n• 💰 **Research Funding:** Pagsubaybay sa mga grant mula sa DOST-7 at CHED.\n• 👥 **Membership:** Pagsusumite ng aplikasyon para sa iyong institusyon.\n\n💡 *May partikular ka bang detalye na nais linawin o pag-usapan?*`;
   } else {
-    return `🧠 **Haribon AI Intelligence Response:**\n\nI understand your inquiry regarding **"${normalizedQuery}"**.\n\nAs the intelligent assistant for the DASIG Regional Academic Consortium (Region VII), I can provide direct insights on:\n\n• 📅 **Consortium Summits & Events:** Schedules, venue logistics, and real-time registration.\n• 🎓 **Technical Training Bootcamps:** AI Engineering, STEM methods, and faculty certifications.\n• 💰 **Research Grants & Funding:** DOST-7 GIA, SETUP, and institutional grant calls.\n• 👥 **Institutional Membership:** Tier 1 / Tier 2 application procedures and charter benefits.\n\n💡 *What specific details would you like to explore further?*`;
+    return `🧠 **Haribon AI High-IQ Response:**\n\nI understand your inquiry regarding **"${normalizedQuery}"**.\n\nAs the intelligent conversational assistant for the DASIG Regional Academic Consortium (Region VII), I can provide direct insights on:\n\n• 📅 **Consortium Summits & Events:** Schedules, venue logistics, and real-time registration.\n• 🎓 **Technical Training Bootcamps:** AI Engineering, STEM methods, and faculty certifications.\n• 💰 **Research Grants & Funding:** DOST-7 GIA, SETUP, and institutional grant calls.\n• 👥 **Institutional Membership:** Tier 1 / Tier 2 application procedures and charter benefits.\n\n💡 *What specific area would you like to explore further?*`;
   }
 }
 
