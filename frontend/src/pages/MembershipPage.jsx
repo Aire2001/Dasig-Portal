@@ -341,29 +341,40 @@ export default function MembershipPage() {
                   {dataRows.map((row, i) => (
                     <div key={i} style={{
                       display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                      padding: '15px 26px',
+                      padding: '14px 26px',
                       borderBottom: i < dataRows.length - 1 ? '1px solid rgba(255,255,255,0.06)' : 'none',
                     }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                         <span style={{ fontSize: 16 }}>{row.icon}</span>
-                        <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', fontWeight: 600 }}>{row.label}</span>
+                        <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', fontWeight: 600 }}>{row.label}</span>
                       </div>
-                      <span style={{ fontSize: 13.5, color: '#fff', fontWeight: 700, textAlign: 'right', maxWidth: '55%' }}>{row.value}</span>
+                      <span style={{
+                        fontSize: 13, fontWeight: 700, textAlign: 'right', maxWidth: '60%',
+                        color: row.label === 'Tier' ? '#60a5fa' : row.label === 'Modules Access' ? '#34d399' : '#fff',
+                        background: row.label === 'Tier' ? 'rgba(59,130,246,0.15)' : row.label === 'Modules Access' ? 'rgba(16,185,129,0.15)' : 'transparent',
+                        padding: row.label === 'Tier' || row.label === 'Modules Access' ? '3px 10px' : '0',
+                        borderRadius: 8,
+                        border: row.label === 'Tier' ? '1px solid rgba(59,130,246,0.3)' : row.label === 'Modules Access' ? '1px solid rgba(16,185,129,0.3)' : 'none',
+                      }}>{row.value}</span>
                     </div>
                   ))}
                 </div>
-                <div style={{ padding: '20px 24px' }}>
+                <div style={{ padding: '18px 24px 22px' }}>
                   <button style={{
                     width: '100%',
                     background: 'linear-gradient(90deg,#f97316,#e11d48)', color: '#fff',
-                    border: 'none', borderRadius: 14, padding: '14px', fontSize: 14.5, fontWeight: 800,
+                    border: 'none', borderRadius: 14, padding: '14px', fontSize: 14, fontWeight: 800,
                     cursor: 'pointer', fontFamily: 'inherit',
-                    boxShadow: '0 6px 20px rgba(249,115,22,0.4)', transition: 'all 0.2s',
+                    boxShadow: '0 6px 20px rgba(249,115,22,0.35)', transition: 'all 0.2s',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                   }}
                   onClick={() => setShowCert(true)}
-                  onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; }}
-                  >📄 Download Membership Certificate</button>
+                  onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 28px rgba(249,115,22,0.5)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(249,115,22,0.35)'; }}
+                  >
+                    <span>📜</span>
+                    <span>Download Official Membership Certificate (.PDF)</span>
+                  </button>
                 </div>
               </>
             ) : (
@@ -477,40 +488,82 @@ export default function MembershipPage() {
             )}
           </div>
 
-          {/* Tier info cards */}
+          {/* Tier info cards — Modern frosted glass style */}
           <div style={{ marginTop: 24, display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12 }}>
             {[
-              { tier: 'Tier 1', label: 'Full Member', icon: '⭐', grad: 'linear-gradient(135deg,#1e3a8a,#3b82f6)', perks: 'All modules, voting rights' },
-              { tier: 'Tier 2', label: 'Associate',   icon: '🔷', grad: 'linear-gradient(135deg,#065f46,#10b981)', perks: 'All modules, no voting'   },
-              { tier: 'Tier 3', label: 'Observer',    icon: '👁️', grad: 'linear-gradient(135deg,#374151,#6b7280)', perks: 'Read-only access'          },
-            ].map(t => (
-              <div key={t.tier} style={{
-                background: t.grad, borderRadius: 14, padding: '16px 14px',
-                border: '1px solid rgba(255,255,255,0.1)',
-                position: 'relative', overflow: 'hidden',
-              }}>
-                <div style={{ position: 'absolute', bottom: -8, right: -2, fontSize: 48, opacity: 0.1 }}>{t.icon}</div>
-                <div style={{ fontSize: 18, marginBottom: 6 }}>{t.icon}</div>
-                <div style={{ fontSize: 12, fontWeight: 900, color: '#fff', marginBottom: 2 }}>{t.tier}</div>
-                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)', fontWeight: 600, marginBottom: 4 }}>{t.label}</div>
-                <div style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.5)' }}>{t.perks}</div>
-              </div>
-            ))}
+              {
+                tier: 'Tier 1', label: 'Full Member', icon: '⭐',
+                border: 'rgba(59,130,246,0.35)', color: '#60a5fa', bg: 'rgba(59,130,246,0.08)',
+                badge: 'Full Voting Rights', perks: 'All 9 modules, voting & grant lead'
+              },
+              {
+                tier: 'Tier 2', label: 'Associate', icon: '🔷',
+                border: 'rgba(16,185,129,0.35)', color: '#34d399', bg: 'rgba(16,185,129,0.08)',
+                badge: 'Co-Proponent', perks: 'All modules, training & grants'
+              },
+              {
+                tier: 'Tier 3', label: 'Observer', icon: '👁️',
+                border: 'rgba(148,163,184,0.25)', color: '#94a3b8', bg: 'rgba(148,163,184,0.05)',
+                badge: 'Read-Only', perks: 'Public events & agenda viewing'
+              },
+            ].map(t => {
+              const isUserTier = isMember && status?.tier?.includes(t.tier);
+              return (
+                <div key={t.tier} style={{
+                  background: isUserTier ? 'rgba(15,23,42,0.95)' : 'rgba(15,23,42,0.7)',
+                  borderRadius: 16, padding: '16px 14px',
+                  border: `1.5px solid ${isUserTier ? '#3b82f6' : t.border}`,
+                  boxShadow: isUserTier ? '0 8px 24px rgba(59,130,246,0.25)' : 'none',
+                  position: 'relative', overflow: 'hidden', backdropFilter: 'blur(12px)',
+                  transition: 'all 0.2s ease',
+                }}>
+                  {isUserTier && (
+                    <div style={{
+                      position: 'absolute', top: 8, right: 8,
+                      background: 'rgba(59,130,246,0.2)', color: '#60a5fa',
+                      border: '1px solid rgba(59,130,246,0.4)', borderRadius: 6,
+                      padding: '1px 6px', fontSize: 9.5, fontWeight: 800,
+                    }}>
+                      👑 Your Tier
+                    </div>
+                  )}
+                  <div style={{ fontSize: 20, marginBottom: 8 }}>{t.icon}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                    <span style={{ fontSize: 13, fontWeight: 900, color: '#fff' }}>{t.tier}</span>
+                    <span style={{ fontSize: 11.5, color: t.color, fontWeight: 700 }}>{t.label}</span>
+                  </div>
+                  <div style={{
+                    display: 'inline-block',
+                    background: t.bg, color: t.color,
+                    border: `1px solid ${t.border}`, borderRadius: 6,
+                    padding: '2px 7px', fontSize: 10, fontWeight: 800,
+                    margin: '6px 0 8px',
+                  }}>
+                    {t.badge}
+                  </div>
+                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', lineHeight: 1.4 }}>{t.perks}</div>
+                </div>
+              );
+            })}
           </div>
 
           {/* Institutional Tier Privileges Matrix */}
           <div style={{
-            marginTop: 24, background: 'rgba(255,255,255,0.03)',
-            border: '1px solid rgba(255,255,255,0.08)', borderRadius: 18, padding: '22px 24px',
-            backdropFilter: 'blur(10px)',
+            marginTop: 24, background: 'rgba(15,23,42,0.7)',
+            border: '1px solid rgba(255,255,255,0.08)', borderRadius: 20, padding: '22px 24px',
+            backdropFilter: 'blur(12px)', boxShadow: '0 16px 40px rgba(0,0,0,0.3)',
           }}>
-            <div style={{ fontSize: 13, fontWeight: 800, color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: '.6px', marginBottom: 14 }}>
-              🏛️ Consortium Tier Privileges Matrix
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+              <div style={{ fontSize: 13.5, fontWeight: 800, color: '#fff', display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span>🏛️</span>
+                <span>Consortium Tier Privileges Matrix</span>
+              </div>
+              <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>Region VII Consortium Governance</span>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               <div style={{
                 display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr',
-                padding: '8px 12px', borderRadius: 8, background: 'rgba(255,255,255,0.05)',
+                padding: '10px 14px', borderRadius: 10, background: 'rgba(255,255,255,0.04)',
                 fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '.5px',
               }}>
                 <span>Privilege</span>
@@ -519,17 +572,18 @@ export default function MembershipPage() {
                 <span style={{ textAlign: 'center', color: 'rgba(255,255,255,0.4)' }}>Tier 3 (Observer)</span>
               </div>
               {[
-                { feature: 'Event Registration & Schedule Conflict Alerts', t1: '✓ Full', t2: '✓ Full', t3: '✓ View Only' },
-                { feature: 'Training & Development Program Enrollments', t1: '✓ Priority', t2: '✓ Included', t3: '—' },
-                { feature: 'Government & Research Grant Submissions (DOST/DICT)', t1: '✓ Full Lead', t2: '✓ Co-Proponent', t3: '—' },
-                { feature: 'Consortium Policy Voting & Council Privileges', t1: '✓ 1 Vote / Agency', t2: '— (Observer)', t3: '—' },
-                { feature: 'Official Certificate of Membership & Accreditation', t1: '✓ Verified PDF', t2: '✓ Verified PDF', t3: '—' },
+                { feature: 'Event Registration & Fast-Pass Alerts', t1: '✓ Guaranteed', t2: '✓ Full', t3: '✓ View Only' },
+                { feature: 'Training & Development Program Enrollments', t1: '⚡ Priority Fast-Pass', t2: '✓ Included', t3: '—' },
+                { feature: 'Research Grant Submissions (DOST / DICT)', t1: '✓ Principal Lead', t2: '✓ Co-Proponent', t3: '—' },
+                { feature: 'Consortium Policy Voting & Council Standing', t1: '✓ 1 Vote / Member', t2: '— (Observer)', t3: '—' },
+                { feature: 'Verified Membership Certificate & Accreditation', t1: '✓ Verified PDF', t2: '✓ Verified PDF', t3: '—' },
               ].map((row, idx) => (
                 <div key={idx} style={{
                   display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr',
-                  padding: '10px 12px', borderRadius: 8,
+                  padding: '12px 14px', borderRadius: 10,
                   background: idx % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'transparent',
                   alignItems: 'center', fontSize: 12.5,
+                  transition: 'background 0.15s ease',
                 }}>
                   <span style={{ color: 'rgba(255,255,255,0.85)', fontWeight: 600 }}>{row.feature}</span>
                   <span style={{ color: '#60a5fa', fontWeight: 800, textAlign: 'center' }}>{row.t1}</span>
