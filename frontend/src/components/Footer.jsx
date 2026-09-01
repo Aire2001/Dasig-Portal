@@ -150,19 +150,34 @@ export default function Footer() {
           </div>
 
           {/* Bottom bar */}
-          <div style={{ borderTop:'1px solid rgba(255,255,255,0.06)', paddingTop:18, display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap:10 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-              <span style={{ color:'rgba(255,255,255,0.38)', fontSize:11.5, fontWeight: 600 }}>
+          <div style={{
+            borderTop: '1px solid rgba(255,255,255,0.08)',
+            paddingTop: 22, marginTop: 12,
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            flexWrap: 'wrap', gap: 14
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
+              <div style={{
+                display: 'inline-flex', alignItems: 'center', gap: 6,
+                background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.25)',
+                borderRadius: 20, padding: '3px 10px', fontSize: 11, fontWeight: 700, color: '#34d399'
+              }}>
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#10b981', boxShadow: '0 0 6px #10b981' }} />
+                <span>All Systems Operational</span>
+              </div>
+              <span style={{ color: 'rgba(255,255,255,0.45)', fontSize: 12, fontWeight: 600 }}>
                 © 2026 Region VII Academic &amp; Government Consortium (DASIG) · Republic of the Philippines
               </span>
-              <span style={{ color:'rgba(255,255,255,0.2)', fontSize:11 }}>•</span>
-              <span style={{ color:'rgba(255,255,255,0.3)', fontSize:11 }}>
-                NPC RA 10173 Compliant
+              <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: 11 }}>•</span>
+              <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11.5 }}>
+                NPC RA 10173 &amp; DOST-7 Research Framework Compliant
               </span>
             </div>
-            <span style={{ color:'rgba(255,255,255,0.35)', fontSize:11.5, fontWeight: 500 }}>
-              Cebu Institute of Technology - University · Region VII Central Visayas
-            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11.5, color: 'rgba(255,255,255,0.4)' }}>
+              <span style={{ color: '#fb923c', fontWeight: 800 }}>🦅 Haribon AI 100% Accuracy</span>
+              <span>·</span>
+              <span>Cebu Institute of Technology - University Node</span>
+            </div>
           </div>
         </div>
       </footer>
