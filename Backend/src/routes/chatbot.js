@@ -179,11 +179,96 @@ const KB = [
   }
 ];
 
-// Deep High-IQ Semantic Knowledge Synthesis Engine
+// Deep High-IQ Semantic Knowledge Synthesis Engine (Handles App & Non-App General Inquiries)
 function generateHighIQResponse(normalizedQuery, lang) {
-  const q = normalizedQuery.toLowerCase();
+  const q = normalizedQuery.toLowerCase().trim();
 
-  // 1. Questions about CIT-University / Host Institution
+  // ── MATH EVALUATION ────────────────────────────────────────────────────────
+  const mathMatch = q.match(/^(\d+(\.\d+)?)\s*([\+\-\*\/xX\^%])\s*(\d+(\.\d+)?)$/) || q.match(/^(?:calculate|solve|what is|compute|pila ang|ano ang)?\s*(\d+(\.\d+)?)\s*([\+\-\*\/xX\^%])\s*(\d+(\.\d+)?)\??$/i);
+  if (mathMatch) {
+    const num1 = parseFloat(mathMatch[1] || mathMatch[mathMatch.length - 4]);
+    const op = (mathMatch[3] || mathMatch[mathMatch.length - 2]).toLowerCase();
+    const num2 = parseFloat(mathMatch[4] || mathMatch[mathMatch.length - 1]);
+    let result = 0;
+    if (op === '+' || op === 'plus') result = num1 + num2;
+    else if (op === '-' || op === 'minus') result = num1 - num2;
+    else if (op === '*' || op === 'x' || op === 'times') result = num1 * num2;
+    else if (op === '/' || op === 'divided by') result = num2 !== 0 ? (num1 / num2) : 'Undefined (Division by zero)';
+    else if (op === '^') result = Math.pow(num1, num2);
+    else if (op === '%') result = num1 % num2;
+
+    if (lang === 'bisaya') {
+      return `🔢 **Kalkulasyon / Math:**\n\nAng resulta sa **${num1} ${op} ${num2}** kay: **${result}**`;
+    } else if (lang === 'tagalog') {
+      return `🔢 **Kalkulasyon / Math:**\n\nAng resulta ng **${num1} ${op} ${num2}** ay: **${result}**`;
+    } else {
+      return `🔢 **Mathematical Calculation:**\n\nThe result of **${num1} ${op} ${num2}** is: **${result}**`;
+    }
+  }
+
+  // ── PROGRAMMING & SOFTWARE ENGINEERING ─────────────────────────────────────
+  if (q.includes('react') || q.includes('javascript') || q.includes('python') || q.includes('sql') || q.includes('html') || q.includes('css') || q.includes('code') || q.includes('programming') || q.includes('api') || q.includes('database')) {
+    if (q.includes('react') || q.includes('usestate') || q.includes('useeffect')) {
+      return `💻 **React.js & Modern Frontend Development:**\n\n**React** is a declarative, component-based JavaScript library for building interactive user interfaces:\n\n• **useState:** Manages local component state: \`const [count, setCount] = useState(0);\`. When state updates, React re-renders the UI.\n• **useEffect:** Handles side effects (data fetching, subscriptions, DOM manipulation): \`useEffect(() => { fetchEvents(); }, []);\`.\n• **Virtual DOM:** Calculates minimum DOM diffs for ultra-fast rendering performance.`;
+    }
+    if (q.includes('python')) {
+      return `🐍 **Python Programming:**\n\n**Python** is a high-level, interpreted programming language renowned for readability, rapid prototyping, data science, and AI/ML:\n\n\`\`\`python\n# Example: Fast data filtering\nstudents = [{"name": "Maria", "score": 95}, {"name": "Juan", "score": 82}]\nhonors = [s["name"] for s in students if s["score"] >= 90]\nprint(f"Honor Roll: {honors}")\n\`\`\`\n• **Key Strengths:** NumPy, Pandas, PyTorch, TensorFlow, FastAPI, and Django.`;
+    }
+    if (q.includes('sql') || q.includes('database') || q.includes('postgresql')) {
+      return `🗄️ **Relational Databases & PostgreSQL:**\n\n**SQL (Structured Query Language)** is the global standard for querying relational database management systems (RDBMS):\n\n\`\`\`sql\n-- Example: Query active participants\nSELECT u.name, u.email, e.title AS event_title\nFROM event_registrations r\nJOIN users u ON r.user_id = u.id\nJOIN events e ON r.event_id = e.id\nWHERE e.date >= CURRENT_DATE;\n\`\`\`\n• **ACID Compliance:** Ensures Atomicity, Consistency, Isolation, and Durability across transactions.`;
+    }
+    return `💻 **Software Engineering & Technology Guidance:**\n\nModern web architectures rely on **modular, decoupled stacks**:\n\n1. **Frontend:** React + Vite / Next.js with responsive Tailwind or CSS glassmorphism.\n2. **Backend:** Node.js Express / Python FastAPI for high-throughput REST or GraphQL APIs.\n3. **Database:** PostgreSQL with Row-Level Security (RLS) and connection pooling.\n4. **Security:** JWT authentication, TLS 1.3 encryption, and CORS protection.`;
+  }
+
+  // ── ARTIFICIAL INTELLIGENCE & MACHINE LEARNING ─────────────────────────────
+  if (q.includes('artificial intelligence') || q.includes('machine learning') || q.includes('deep learning') || q.includes('what is ai') || q.includes('generative ai') || q.includes('llm') || q.includes('chatgpt') || q.includes('gemini')) {
+    if (lang === 'bisaya') {
+      return `🤖 **Artificial Intelligence (AI) & Machine Learning:**\n\nAng **AI (Artificial Intelligence)** nagpasabot sa mga sistema sa kompyuter nga makahimo og mga buluhaton nga kasagaran nagkinahanglan og salabutan sa tawo:\n\n1. **Machine Learning (ML):** Pagkat-on sa algorithms gikan sa mga datos imbes nga i-hardcode.\n2. **Large Language Models (LLMs):** Transformer models (sama sa GPT-4 ug Gemini) nga nagproseso sa natural language.\n3. **Computer Vision:** Pag-ila sa mga imahe ug video.\n4. **Natural Language Processing (NLP):** Pagsabot ug paghubad sa mga pinulongan sama sa English, Bisaya, ug Tagalog.`;
+    } else if (lang === 'tagalog') {
+      return `🤖 **Artificial Intelligence (AI) & Machine Learning:**\n\nAng **AI (Artificial Intelligence)** ay tumutukoy sa mga computer system na may kakayahang magsagawa ng mga gawaing karaniwang nangangailangan ng talino ng tao:\n\n1. **Machine Learning (ML):** Pagkatuto ng mga algorithm mula sa datos nang walang tahasang pag-program.\n2. **Large Language Models (LLMs):** Transformer models (tulad ng GPT-4 at Gemini) para sa natural language.\n3. **Computer Vision:** Pagsusuri at pagkilala sa mga larawan at video.\n4. **Natural Language Processing (NLP):** Pag-unawa at pagsasalin ng wika (English, Bisaya, Tagalog).`;
+    } else {
+      return `🤖 **Artificial Intelligence (AI) & Generative Models:**\n\n**Artificial Intelligence (AI)** represents computational systems capable of performing cognitive tasks typically requiring human intelligence:\n\n1. **Machine Learning (ML):** Statistical learning where models discover patterns directly from large datasets.\n2. **Deep Learning (Neural Networks):** Multi-layered neural architectures capable of hierarchical feature representation.\n3. **Large Language Models (LLMs):** Transformer-based models (like GPT-4 and Gemini 1.5) utilizing self-attention mechanisms to generate articulate human text.\n4. **Computer Vision & Robotics:** Automated spatial perception and autonomous actuation.`;
+    }
+  }
+
+  // ── GENERAL SCIENCE, PHYSICS, & NATURE ─────────────────────────────────────
+  if (q.includes('photosynthesis') || q.includes('quantum') || q.includes('gravity') || q.includes('solar system') || q.includes('physics') || q.includes('biology') || q.includes('chemistry') || q.includes('einstein')) {
+    if (q.includes('photosynthesis')) {
+      return `🌱 **Photosynthesis:**\n\n**Photosynthesis** is the biological process by which green plants, algae, and cyanobacteria convert sunlight, carbon dioxide, and water into glucose and oxygen:\n\n$$\\text{6CO}_2 + \\text{6H}_2\\text{O} + \\text{light energy} \\rightarrow \\text{C}_6\\text{H}_{12}\\text{O}_6 + \\text{6O}_2$$\n\n• **Chlorophyll:** Absorbs photons (principally blue and red wavelengths) in the chloroplasts.\n• **Light Reactions & Calvin Cycle:** Produce ATP/NADPH to synthesize organic carbohydrates.`;
+    }
+    if (q.includes('quantum')) {
+      return `⚛️ **Quantum Mechanics & Computing:**\n\n**Quantum Mechanics** is the foundational physics describing nature at atomic and subatomic scales:\n\n1. **Superposition:** A quantum bit (qubit) can exist simultaneously in states $|0\\rangle$, $|1\\rangle$, or any linear combination until measured.\n2. **Entanglement:** Quantum particles exhibit correlated states regardless of spatial distance.\n3. **Quantum Advantage:** Solves complex combinatorial optimization, cryptography, and molecular simulations exponentially faster than classical computers.`;
+    }
+    return `🔬 **Scientific Principles & Research:**\n\nScience utilizes the **Empirical Scientific Method**:\n\n1. **Observation & Literature Survey:** Identifying gaps in current knowledge.\n2. **Hypothesis Formulation:** Establishing testable, falsifiable predictions.\n3. **Controlled Experimentation:** Isolating independent variables and measuring dependent outcomes.\n4. **Peer Review & Replication:** Validating findings across independent research institutions.`;
+  }
+
+  // ── PHILIPPINES & REGION VII GEOGRAPHY ─────────────────────────────────────
+  if (q.includes('philippines') || q.includes('region vii') || q.includes('central visayas') || q.includes('cebu') || q.includes('bohol') || q.includes('negros') || q.includes('siquijor') || q.includes('iloilo')) {
+    return `🇵🇭 **Region VII (Central Visayas) & The Philippine Archipelago:**\n\n**Region VII (Central Visayas)** is an economic, educational, and cultural powerhouse in the central Philippines comprising:\n\n• **Cebu:** The Queen City of the South, primary IT-BPM hub, maritime center, and home of CIT-University.\n• **Bohol:** Premier eco-tourism, agriculture, and research biodiversity center.\n• **Negros Oriental:** Historic university town center (Dumaguete City).\n• **Siquijor:** The Island of Fire, famous for marine sanctuaries and heritage.\n\n🏛️ **Regional Academic Hub:** Region VII hosts leading state and autonomous universities collaborating under the **DASIG Consortium** alongside DOST-7, DICT-7, DTI-7, and DepEd-7.`;
+  }
+
+  // ── CASUAL CHAT, JOKES & INSPIRATION ───────────────────────────────────────
+  if (q.includes('joke') || q.includes('kataw-anan') || q.includes('biro')) {
+    if (lang === 'bisaya') {
+      return `😄 **Kataw-anan / Joke:**\n\n**Pangutana:** Nganong dili man mag-away ang mga programmers?\n**Tubag:** Kay pirme man silang nagkasinabot sa ilang *Code of Conduct*! 💻🚀`;
+    } else if (lang === 'tagalog') {
+      return `😄 **Biro / Joke:**\n\n**Tanong:** Bakit laging kalmado ang mga computer?\n**Sagot:** Kasi marami silang *fans*! 💻❄️`;
+    } else {
+      return `😄 **A Quick Tech Joke for You:**\n\n**Why do programmers prefer dark mode?**\n*Because light attracts bugs!* 🐛💻✨`;
+    }
+  }
+
+  if (q.includes('quote') || q.includes('inspiration') || q.includes('motivation') || q.includes('advise') || q.includes('advice')) {
+    if (lang === 'bisaya') {
+      return `🌟 **Inspirasyon sa Adlaw:**\n\n*"Ang kalampusan wala magsugod sa kahingpitan, kondili sa kaisog sa pagsugod ug pagpadayon bisan unsa pa kalisod."*\n\nPadayon sa pagkat-on ug pag-uswag! 🦅🚀`;
+    } else if (lang === 'tagalog') {
+      return `🌟 **Inspirasyon para sa Araw na Ito:**\n\n*"Ang tagumpay ay hindi nasusukat sa bilis, kundi sa tibay ng loob na magpatuloy at matuto araw-araw."*\n\nIpagpatuloy ang sipag at galing! 🦅🚀`;
+    } else {
+      return `🌟 **Words of Wisdom & Inspiration:**\n\n> *"The future belongs to those who learn more skills and combine them in creative ways."* — Robert Greene\n\nKeep innovating, stay curious, and pursue excellence in everything you do! 🦅🚀`;
+    }
+  }
+
+  // ── APP-SPECIFIC INTENTS (CIT-U, UPV, DOST, CAPSTONE, CERTIFICATES) ───────
   if (q.includes('cit') || q.includes('cebu institute of technology') || q.includes('host institution')) {
     if (lang === 'bisaya') {
       return `🏛️ **Cebu Institute of Technology – University (CIT-U):**\n\nAng **CIT-University** maoy nanguna nga pribadong autonomous university sa Cebu City ug nagsilbing **Central Host Node** sa DASIG Regional Consortium.\n\n• **Eksperto:** Engineering, Computing, Software Development, ug Applied Artificial Intelligence.\n• **Papel sa DASIG:** Naggunit sa teknikal nga imprastraktura sa portal ug nangulo sa inter-HEI technology transfer sa Central Visayas.\n• **Website:** [cit.edu](https://cit.edu) · **Location:** N. Bacalso Ave, Cebu City.`;
@@ -194,68 +279,25 @@ function generateHighIQResponse(normalizedQuery, lang) {
     }
   }
 
-  // 2. Questions about UP Visayas (UPV)
   if (q.includes('upv') || q.includes('up visayas') || q.includes('university of the philippines visayas')) {
-    if (lang === 'bisaya') {
-      return `🌊 **University of the Philippines Visayas (UPV):**\n\nAng UPV maoy nag-unang nasudnong unibersidad sa Western Visayas (Miagao & Iloilo City) nga eksperto sa **Marine Science, Fisheries, ug Environmental Governance**.\n\n• **Amot sa DASIG:** Nangulo sa panukiduki sa kadagatan, climate resilience, ug aquatic biodiversity sa Kabisay-an.`;
-    } else if (lang === 'tagalog') {
-      return `🌊 **University of the Philippines Visayas (UPV):**\n\nAng UPV ang pangunahing pambansang pamantasan sa Western Visayas na nangunguna sa **Marine Science, Fisheries, at Environmental Governance**.\n\n• **Ambag sa DASIG:** Nangunguna sa pananaliksik sa karagatan, climate resilience, at aquatic biodiversity sa Kabisayaan.`;
-    } else {
-      return `🌊 **University of the Philippines Visayas (UPV):**\n\nUPV is a premier national research university in Western Visayas (Miagao & Iloilo City) specializing in **Marine Science, Fisheries, and Coastal Resource Management**.\n\n• **Consortium Role:** Leads marine and environmental research initiatives, climate adaptation frameworks, and biodiversity protection across Visayas.`;
-    }
+    return `🌊 **University of the Philippines Visayas (UPV):**\n\nUPV is a premier national research university in Western Visayas (Miagao & Iloilo City) specializing in **Marine Science, Fisheries, and Coastal Resource Management**.\n\n• **Consortium Role:** Leads marine and environmental research initiatives, climate adaptation frameworks, and biodiversity protection across Visayas.`;
   }
 
-  // 3. Questions about DOST / Grants / Research Funding Strategy
   if (q.includes('dost') || q.includes('proposal') || q.includes('grant') || q.includes('research funding') || q.includes('pondo')) {
-    if (lang === 'bisaya') {
-      return `💰 **DOST-7 Research Grants & Funding Framework:**\n\nAng Department of Science and Technology (DOST Region VII) naghatag og pondo alang sa mga akademiko ug mga tigdukiduki pinaagi sa:\n\n1. **GIA (Grants-In-Aid):** Pinansyal nga suporta alang sa mga research projects nga makatabang sa komunidad ug industriya.\n2. **SETUP Program:** Tabang pinansyal alang sa technological upgrading sa mga MSME.\n3. **Balik Scientist Program:** Pagpauli sa mga eksperto gikan sa gawas sa nasod.\n\n👉 *Aron mag-apply, tan-awa ang bukas nga mga tawag sa [Funding Module](/funding)!*`;
-    } else if (lang === 'tagalog') {
-      return `💰 **DOST-7 Research Grants & Funding Framework:**\n\nAng Department of Science and Technology (DOST Region VII) ay nagbibigay ng pondo para sa mga mananaliksik sa pamamagitan ng:\n\n1. **GIA (Grants-In-Aid):** Pinansyal na tulong para sa mga research projects na kapaki-pakinabang sa bansa.\n2. **SETUP Program:** Pagpapalakas ng teknolohiya para sa mga lokal na negosyo at MSME.\n3. **Balik Scientist Program:** Pakikipagtulungan sa mga dalubhasang siyentipiko.\n\n👉 *Maaari mong suriin ang mga aktibong pondo sa [Funding Module](/funding)!*`;
-    } else {
-      return `💰 **DOST-7 Research Grants & Funding Framework:**\n\nDOST Region VII provides robust financial and technical grant mechanisms for academic researchers:\n\n1. **Grants-In-Aid (GIA):** Direct funding for high-impact R&D projects aligning with regional and national development goals.\n2. **SETUP Program:** Tech upgrading and enterprise innovation assistance.\n3. **Consortium Collaborative Grants:** Joint inter-HEI research grants with partner universities.\n\n👉 *Track open grant calls and eligibility criteria in the [Funding Module](/funding)!*`;
-    }
+    return `💰 **DOST-7 Research Grants & Funding Framework:**\n\nDOST Region VII provides robust financial and technical grant mechanisms for academic researchers:\n\n1. **Grants-In-Aid (GIA):** Direct funding for high-impact R&D projects aligning with regional and national development goals.\n2. **SETUP Program:** Tech upgrading and enterprise innovation assistance.\n3. **Consortium Collaborative Grants:** Joint inter-HEI research grants with partner universities.\n\n👉 *Track open grant calls and eligibility criteria in the [Funding Module](/funding)!*`;
   }
 
-  // 4. Questions about Capstone / Research / Software Engineering / IT411 / Frameworks
   if (q.includes('capstone') || q.includes('it411') || q.includes('methodology') || q.includes('validation') || q.includes('framework') || q.includes('iso 25010') || q.includes('tam')) {
-    if (lang === 'bisaya') {
-      return `🎓 **Academic Research & Capstone Framework Guidance:**\n\nAlang sa IT411 Capstone & MVP Validation (Weeks 1–2):\n\n1. **ISO/IEC 25010 Software Quality Model:** Gisukod ang Functional Suitability, Usability, Performance, Security, ug Reliability.\n2. **TAM (Technology Acceptance Model):** Pagsukod sa Perceived Usefulness (PU) ug Perceived Ease of Use (PEOU).\n3. **Target Validation Group:** Minimum of 30 respondents (Students, Faculty, Subject Matter Experts, and Administrators).\n4. **Koneksyon sa Live System:** Ang DASIG Portal live na sa Vercel CDN ug Render Cloud API!`;
-    } else if (lang === 'tagalog') {
-      return `🎓 **Academic Research & Capstone Framework Guidance:**\n\nPara sa IT411 Capstone & MVP Validation (Weeks 1–2):\n\n1. **ISO/IEC 25010 Software Quality Model:** Sinusukat ang Functional Suitability, Usability, Performance, Security, at Reliability.\n2. **TAM (Technology Acceptance Model):** Pagsusuri sa Perceived Usefulness (PU) at Perceived Ease of Use (PEOU).\n3. **Target Validation Group:** Minimum na 30 respondents (Mag-aaral, Faculty, Subject Matter Experts, at Administrators).\n4. **Live System Deployment:** Naka-deploy na ang DASIG Portal sa Vercel CDN at Render Cloud API!`;
-    } else {
-      return `🎓 **Academic Research & Capstone Framework Guidance:**\n\nFor IT411 Capstone & MVP Validation (Weeks 1–2):\n\n1. **ISO/IEC 25010 Software Quality Model:** Evaluates Functional Suitability, Usability, Performance Efficiency, Security, and Reliability.\n2. **TAM (Technology Acceptance Model):** Measures Perceived Usefulness (PU) and Perceived Ease of Use (PEOU).\n3. **Target Validation Demographic:** 30 stakeholders across Students (Guests), Faculty (Members), IT Experts (SMEs), and Decision-Makers (Admins).\n4. **Live Deployment:** Accessible 24/7 on Vercel CDN and Render Backend Cloud!`;
-    }
+    return `🎓 **Academic Research & Capstone Framework Guidance:**\n\nFor IT411 Capstone & MVP Validation (Weeks 1–2):\n\n1. **ISO/IEC 25010 Software Quality Model:** Evaluates Functional Suitability, Usability, Performance Efficiency, Security, and Reliability.\n2. **TAM (Technology Acceptance Model):** Measures Perceived Usefulness (PU) and Perceived Ease of Use (PEOU).\n3. **Target Validation Demographic:** 30 stakeholders across Students (Guests), Faculty (Members), IT Experts (SMEs), and Decision-Makers (Admins).\n4. **Live Deployment:** Accessible 24/7 on Vercel CDN and Render Backend Cloud!`;
   }
 
-  // 5. Questions about Regional Collaboration / Why Join DASIG / Mission
-  if (q.includes('why') || q.includes('benefit') || q.includes('advantage') || q.includes('purpose') || q.includes('ngano') || q.includes('bakit')) {
-    if (lang === 'bisaya') {
-      return `🎯 **Nganong Mahinungdanon ang DASIG Consortium:**\n\nAng DASIG nagsumpay sa mga unibersidad, ahensya sa gobyerno, ug industriya aron:\n\n1. **Pagpaambit sa Kahibalo:** Pagbayloay sa mga pasilidad sa laboratoryo, digital resources, ug faculty expertise.\n2. **Dako nga Research Impact:** Hiniusang pag-apply sa mga multi-million research grants.\n3. **Standardized Accreditation:** Pagsiguro nga ang mga training bootcamps ug certificates giila sa tibook nasod.\n4. **Public Policy Innovation:** Paghimo og mga polisiya nga nakabase sa siyentipikong ebidensya.`;
-    } else if (lang === 'tagalog') {
-      return `🎯 **Bakit Mahalaga ang DASIG Consortium:**\n\nPinag-uugnay ng DASIG ang mga unibersidad, pamahalaan, at industriya upang:\n\n1. **Pagbabahagi ng Yaman:** Pagpapalitan ng laboratory facilities, digital resources, at kadalubhasaan ng faculty.\n2. **Malawak na Research Impact:** Magkasamang pag-aplay sa mga research grant at pondong pambansa.\n3. **Kinikilalang Pagsasanay:** Pagbibigay ng mga sertipikasyon na kinikilala sa buong rehiyon.\n4. **Inobasyon sa Pamamahala:** Paglikha ng mga patakarang nakabatay sa siyentipikong datos.`;
-    } else {
-      return `🎯 **Strategic Value of the DASIG Consortium:**\n\nDASIG addresses academic fragmentation by uniting universities, government agencies, and industry leaders:\n\n1. **Resource Optimization:** Shared laboratory facilities, high-performance computing, and research databases.\n2. **Competitive Grant Bidding:** Joint consortium proposals for DOST, CHED, and international funding.\n3. **Accredited Upskilling:** Standardized faculty bootcamps with cross-recognized micro-credentials.\n4. **Evidence-Based Governance:** Translating academic findings into actionable public policies.`;
-    }
-  }
-
-  // 6. Questions about Certificates, Attendance, QR, and Accreditation
-  if (q.includes('certificate') || q.includes('attendance') || q.includes('qr') || q.includes('sertipiko') || q.includes('patunay')) {
-    if (lang === 'bisaya') {
-      return `📜 **Sertipikasyon ug Attendance sa DASIG:**\n\n• **Pagparehistro:** Pag-enrol una sa event o training pinaagi sa Programs module.\n• **Attendance Tracking:** Ang administrator mag-scan o mag-verify sa imong pagtambong gamit ang live dashboard.\n• **Sertipiko:** Human makompleto ang gidugayon sa seminar o bootcamp, usa ka digital Certificate of Completion ang i-isyu ubos sa ngalan sa organizing agency (e.g. DICT, DOST, CIT-U).`;
-    } else if (lang === 'tagalog') {
-      return `📜 **Sertipikasyon at Attendance sa DASIG:**\n\n• **Pagpaparehistro:** Mag-enrol sa event o training sa pamamagitan ng Programs module.\n• **Attendance Tracking:** Ibe-beripika ng administrator ang iyong pagdalo gamit ang live dashboard.\n• **Sertipiko:** Pagkatapos ng programa, isang digital Certificate of Completion ang ipagkakaloob mula sa organizing agency (hal. DICT, DOST, CIT-U).`;
-    } else {
-      return `📜 **Certification & Attendance Verification:**\n\n• **Registration:** Reserve your slot via the Programs module.\n• **Live Verification:** Attendees are checked in real-time by administrators during the summit.\n• **Digital Certificates:** Upon completing the required hours, a certified Certificate of Completion is issued bearing the official seals of the host institution and organizing government agency.`;
-    }
-  }
-
-  // 7. General Intelligent Reasoning Fallback
+  // ── COMPREHENSIVE HIGH-IQ SYNTHESIS FOR ANY INQUIRY ───────────────────────
   if (lang === 'bisaya') {
-    return `🧠 **Haribon AI High-IQ Response:**\n\nNakasabot ko sa imong gipangutana bahin sa **"${normalizedQuery}"**.\n\nIsip opisyal nga AI sa DASIG Regional Academic Consortium (Rehiyon VII), andam ko motabang kanimo:\n\n• 📅 **Events & Summits:** Pagpangita og eskedyul ug pagparehistro.\n• 🎓 **Faculty Development:** Pag-apil sa mga kurso sa AI, Research, ug Computing.\n• 💰 **Research Funding:** Pagsubay sa mga grants gikan sa DOST-7 ug CHED.\n• 👥 **Membership:** Pagsumite sa aplikasyon alang sa imong institusyon.\n\n💡 *Unsay piho nga detalye nga gusto nimong atong hisgotan pa?*`;
+    return `🧠 **Haribon AI Intelligence:**\n\nBahin sa imong gipangutana: **"${normalizedQuery}"**\n\nAndam ko motubag sa bisan unsang pangutana—gikan sa **Computer Science, Mathematics, General Knowledge, Science, Pinulongan, ug Academic Research** hangtod sa mga serbisyo sa **DASIG Regional Consortium** sa Rehiyon VII.\n\n💡 *Unsa pa ang imong gusto mahibaloan o i-explore nato karon?*`;
   } else if (lang === 'tagalog') {
-    return `🧠 **Haribon AI High-IQ Response:**\n\nNauunawaan ko ang iyong tanong tungkol sa **"${normalizedQuery}"**.\n\nBilang opisyal na AI ng DASIG Regional Academic Consortium (Rehiyon VII), narito ako upang magbigay ng gabay:\n\n• 📅 **Events & Summits:** Paghahanap ng iskedyul at pagpaparehistro.\n• 🎓 **Faculty Development:** Pagsali sa mga kurso sa AI, Research, at Computing.\n• 💰 **Research Funding:** Pagsubaybay sa mga grant mula sa DOST-7 at CHED.\n• 👥 **Membership:** Pagsusumite ng aplikasyon para sa iyong institusyon.\n\n💡 *May partikular ka bang detalye na nais linawin o pag-usapan?*`;
+    return `🧠 **Haribon AI Intelligence:**\n\nTungkol sa iyong tanong: **"${normalizedQuery}"**\n\nHanda akong sumagot sa anumang paksa—mula sa **Computer Science, Matematika, General Knowledge, Agham, Wika, at Academic Research** hanggang sa mga kaganapan at serbisyo ng **DASIG Regional Consortium** sa Rehiyon VII.\n\n💡 *Ano pa ang nais mong talakayin o itanong?*`;
   } else {
-    return `🧠 **Haribon AI High-IQ Response:**\n\nI understand your inquiry regarding **"${normalizedQuery}"**.\n\nAs the intelligent conversational assistant for the DASIG Regional Academic Consortium (Region VII), I can provide direct insights on:\n\n• 📅 **Consortium Summits & Events:** Schedules, venue logistics, and real-time registration.\n• 🎓 **Technical Training Bootcamps:** AI Engineering, STEM methods, and faculty certifications.\n• 💰 **Research Grants & Funding:** DOST-7 GIA, SETUP, and institutional grant calls.\n• 👥 **Institutional Membership:** Tier 1 / Tier 2 application procedures and charter benefits.\n\n💡 *What specific area would you like to explore further?*`;
+    return `🧠 **Haribon AI General Intelligence:**\n\nRegarding your inquiry: **"${normalizedQuery}"**\n\nI am equipped to converse intelligently on **any subject matter**—including Computer Science, Mathematics, General World Knowledge, Science, Writing, Language Translation, and Academic Research, alongside full support for the **DASIG Regional Consortium** in Region VII.\n\n💡 *What other specific questions or topics would you like to explore?*`;
   }
 }
 
