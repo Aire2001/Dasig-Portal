@@ -975,7 +975,6 @@ function UsersTab({ showToast }) {
   const [page, setPage]     = useState(1);
   const [detailUser, setDetailUser] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
-  const [editName, setEditName] = useState('');
 
   const load = useCallback(() => {
     setLoading(true);
@@ -986,10 +985,6 @@ function UsersTab({ showToast }) {
   }, [search, roleF]);
 
   useEffect(() => { load(); }, [load]);
-
-  useEffect(() => {
-    if (detailUser) setEditName(detailUser.name || '');
-  }, [detailUser]);
 
   async function changeRole(u, role) {
     setActing(u.id + 'r');
@@ -1012,41 +1007,6 @@ function UsersTab({ showToast }) {
         showToast('Account suspended', false, `${u.name || u.email} has been suspended`);
       }
     } catch (e) { showToast(e.message, false); } finally { setActing(null); }
-  }
-
-  async function handleMakeNameSameAsEmail(u) {
-    setActing(u.id + 'n');
-    try {
-      await api.admin.updateUser(u.id, { name: u.email });
-      setUsers(p => p.map(x => x.id === u.id ? { ...x, name: u.email } : x));
-      if (detailUser && detailUser.id === u.id) {
-        setDetailUser(prev => ({ ...prev, name: u.email }));
-        setEditName(u.email);
-      }
-      showToast('Name updated to match email!', true, `Display name is now ${u.email}`);
-    } catch (e) {
-      showToast(e.message || 'Failed to update name', false);
-    } finally {
-      setActing(null);
-    }
-  }
-
-  async function handleSaveUserName(u) {
-    if (!editName.trim()) {
-      showToast('Name cannot be empty', false);
-      return;
-    }
-    setActing(u.id + 'n');
-    try {
-      await api.admin.updateUser(u.id, { name: editName.trim() });
-      setUsers(p => p.map(x => x.id === u.id ? { ...x, name: editName.trim() } : x));
-      if (detailUser && detailUser.id === u.id) setDetailUser(prev => ({ ...prev, name: editName.trim() }));
-      showToast('User name updated successfully!');
-    } catch (e) {
-      showToast(e.message || 'Failed to save name', false);
-    } finally {
-      setActing(null);
-    }
   }
 
   async function handleDeleteUser(u) {
@@ -1120,7 +1080,7 @@ function UsersTab({ showToast }) {
         </Modal>
       )}
 
-      {/* User Detail & Edit Modal */}
+      {/* User Detail Modal */}
       {detailUser && (
         <Modal title="User Details & Management" onClose={() => setDetailUser(null)}>
           <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
@@ -1137,38 +1097,6 @@ function UsersTab({ showToast }) {
               <div style={{ flex:1 }}>
                 <div style={{ color:'#fff', fontWeight:900, fontSize:17 }}>{detailUser.name || detailUser.email}</div>
                 <div style={{ color:'rgba(255,255,255,0.5)', fontSize:13 }}>{detailUser.email}</div>
-              </div>
-            </div>
-
-            {/* Quick Name Sync to Email */}
-            <div style={{ background:'rgba(249,115,22,0.08)', border:'1px solid rgba(249,115,22,0.2)', borderRadius:12, padding:'12px 14px' }}>
-              <div style={{ fontSize:11.5, fontWeight:800, color:'#fb923c', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:6 }}>
-                Display Name Settings
-              </div>
-              <div style={{ display:'flex', gap:8, alignItems:'center' }}>
-                <input
-                  className="ap-input"
-                  value={editName}
-                  onChange={e => setEditName(e.target.value)}
-                  placeholder="Enter full name or email"
-                  style={{ flex:1 }}
-                />
-                <button
-                  onClick={() => setEditName(detailUser.email)}
-                  title="Make name same as email"
-                  className="ap-btn ap-btn-ghost"
-                  style={{ fontSize:12, whiteSpace:'nowrap', color:'#fb923c', borderColor:'rgba(249,115,22,0.3)' }}
-                >
-                  📧 Same as Email
-                </button>
-                <button
-                  onClick={() => handleSaveUserName(detailUser)}
-                  disabled={acting === detailUser.id + 'n' || editName === (detailUser.name || '')}
-                  className="ap-btn ap-btn-primary"
-                  style={{ fontSize:12, whiteSpace:'nowrap' }}
-                >
-                  {acting === detailUser.id + 'n' ? '…' : 'Save'}
-                </button>
               </div>
             </div>
 
@@ -1214,7 +1142,7 @@ function UsersTab({ showToast }) {
         </Modal>
       )}
 
-      <PageHeader title="Users" desc="Manage roles, delete accounts, and update profiles" action={
+      <PageHeader title="Users" desc="Manage roles, delete accounts, and view user details" action={
         <div style={{ display:'flex', gap:8, alignItems:'center' }}>
           <button onClick={exportUsersCSV} className="ap-btn ap-btn-ghost" style={{ fontSize:12.5, whiteSpace:'nowrap' }}>⬇ Export CSV</button>
           <input className="ap-input" placeholder="Search name, email, institution…" value={search} onChange={e => setSearch(e.target.value)} style={{ width:210 }} />
@@ -1244,7 +1172,7 @@ function UsersTab({ showToast }) {
                 <TD>
                   <div
                     onClick={() => setDetailUser(u)}
-                    title="Click to view & edit details"
+                    title="Click to view details"
                     style={{ display:'flex', alignItems:'center', gap:12, cursor:'pointer' }}
                   >
                     <div style={{ width:38, height:38, borderRadius:11, overflow:'hidden', flexShrink:0, border:'1.5px solid rgba(255,255,255,0.12)', boxShadow:'0 2px 8px rgba(0,0,0,0.25)' }}>
@@ -1288,24 +1216,15 @@ function UsersTab({ showToast }) {
                       onClick={() => toggleStatus(u)}
                       disabled={!!acting}
                       className={`ap-btn ${u.status === 'INACTIVE' ? 'ap-btn-green' : 'ap-btn-ghost'}`}
-                      style={{ padding:'5px 10px', fontSize:12, borderRadius:7 }}
+                      style={{ padding:'6px 12px', fontSize:12, borderRadius:8 }}
                     >
                       {acting === u.id + 's' ? '…' : u.status === 'INACTIVE' ? 'Activate' : 'Suspend'}
-                    </button>
-                    <button
-                      onClick={() => handleMakeNameSameAsEmail(u)}
-                      disabled={acting === u.id + 'n' || u.name === u.email}
-                      className="ap-btn ap-btn-ghost"
-                      style={{ padding:'5px 8px', fontSize:11.5, borderRadius:7, color: u.name === u.email ? 'rgba(255,255,255,0.3)' : '#fb923c' }}
-                      title="Set user's name same as their email"
-                    >
-                      {acting === u.id + 'n' ? '…' : '📧 Name=Email'}
                     </button>
                     <button
                       onClick={() => setDeleteConfirm(u)}
                       disabled={acting === u.id + 'd'}
                       className="ap-btn ap-btn-red"
-                      style={{ padding:'5px 9px', fontSize:12, borderRadius:7 }}
+                      style={{ padding:'6px 11px', fontSize:13, borderRadius:8 }}
                       title="Delete user account"
                     >
                       🗑
