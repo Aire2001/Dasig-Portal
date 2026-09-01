@@ -107,6 +107,123 @@ const CSS = `
     cursor: default;
   }
   .cal-day-cell:first-child { border-left: none; }
+
+  /* ── FullCalendar Executive Theme Overrides ── */
+  .fc-dark-theme .fc {
+    font-family: inherit !important;
+    --fc-page-bg-color: transparent !important;
+    --fc-neutral-bg-color: rgba(255,255,255,0.02) !important;
+    --fc-list-event-hover-bg-color: rgba(255,255,255,0.06) !important;
+    --fc-theme-standard-border-color: rgba(255,255,255,0.07) !important;
+    --fc-border-color: rgba(255,255,255,0.07) !important;
+  }
+  .fc-dark-theme .fc-toolbar {
+    margin-bottom: 18px !important;
+    padding: 0 4px !important;
+  }
+  .fc-dark-theme .fc-toolbar-title {
+    font-size: 19px !important;
+    font-weight: 900 !important;
+    color: #fff !important;
+    letter-spacing: -0.4px !important;
+  }
+  .fc-dark-theme .fc-button {
+    background: rgba(255,255,255,0.06) !important;
+    border: 1px solid rgba(255,255,255,0.12) !important;
+    color: rgba(255,255,255,0.85) !important;
+    border-radius: 10px !important;
+    font-weight: 700 !important;
+    font-size: 12.5px !important;
+    text-transform: capitalize !important;
+    padding: 7px 14px !important;
+    box-shadow: none !important;
+    transition: all 0.15s ease !important;
+  }
+  .fc-dark-theme .fc-button:hover {
+    background: rgba(255,255,255,0.12) !important;
+    border-color: rgba(255,255,255,0.25) !important;
+    color: #fff !important;
+  }
+  .fc-dark-theme .fc-button-primary:not(:disabled).fc-button-active,
+  .fc-dark-theme .fc-button-primary:not(:disabled):active {
+    background: linear-gradient(135deg,#f97316,#e11d48) !important;
+    border-color: transparent !important;
+    color: #fff !important;
+    box-shadow: 0 4px 14px rgba(249,115,22,0.35) !important;
+  }
+  .fc-dark-theme .fc-col-header-cell {
+    background: rgba(255,255,255,0.03) !important;
+    padding: 10px 0 !important;
+    border-color: rgba(255,255,255,0.06) !important;
+  }
+  .fc-dark-theme .fc-col-header-cell-cushion {
+    color: rgba(255,255,255,0.55) !important;
+    font-weight: 800 !important;
+    font-size: 11px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.6px !important;
+    text-decoration: none !important;
+  }
+  .fc-dark-theme .fc-daygrid-day-frame {
+    min-height: 88px !important;
+    padding: 4px !important;
+    transition: background 0.12s ease !important;
+  }
+  .fc-dark-theme .fc-daygrid-day-frame:hover {
+    background: rgba(255,255,255,0.02) !important;
+  }
+  .fc-dark-theme .fc-daygrid-day-number {
+    color: rgba(255,255,255,0.65) !important;
+    font-weight: 700 !important;
+    font-size: 12px !important;
+    padding: 4px 8px !important;
+    text-decoration: none !important;
+  }
+  .fc-dark-theme .fc-day-today {
+    background: rgba(249,115,22,0.05) !important;
+  }
+  .fc-dark-theme .fc-day-today .fc-daygrid-day-number {
+    background: #f97316 !important;
+    color: #fff !important;
+    border-radius: 50% !important;
+    width: 24px !important;
+    height: 24px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-weight: 900 !important;
+    margin: 4px !important;
+    box-shadow: 0 2px 8px rgba(249,115,22,0.4) !important;
+  }
+  .fc-dark-theme .fc-event {
+    border-radius: 7px !important;
+    padding: 2px 6px !important;
+    margin-bottom: 3px !important;
+    transition: transform 0.14s ease, filter 0.14s ease, box-shadow 0.14s ease !important;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3) !important;
+    cursor: pointer !important;
+  }
+  .fc-dark-theme .fc-event:hover {
+    transform: translateY(-1px) scale(1.01) !important;
+    filter: brightness(1.15) !important;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.5) !important;
+    z-index: 10 !important;
+  }
+  .fc-dark-theme .fc-popover {
+    background: #0f172a !important;
+    border: 1px solid rgba(255,255,255,0.12) !important;
+    border-radius: 14px !important;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.8) !important;
+    backdrop-filter: blur(16px) !important;
+  }
+  .fc-dark-theme .fc-popover-header {
+    background: rgba(255,255,255,0.06) !important;
+    color: #fff !important;
+    font-weight: 800 !important;
+    border-top-left-radius: 14px !important;
+    border-top-right-radius: 14px !important;
+    padding: 8px 12px !important;
+  }
 `;
 
 /* ═══════════════════════════════════════════════════════════
@@ -2143,393 +2260,140 @@ function CalendarTab({ user }) {
       {/* Main UI */}
       <div style={{ background:'linear-gradient(180deg,rgba(10,17,42,0.95),rgba(8,13,32,0.95))', border:'1px solid rgba(255,255,255,0.08)', borderRadius:20, padding:'20px 22px 22px', marginBottom:28, boxShadow:'0 16px 48px rgba(0,0,0,0.4)', backdropFilter:'blur(10px)' }}>
         
-        {/* ── Top Controls Row ── */}
-        <div style={{ display:'flex', gap:10, alignItems:'center', marginBottom:16, flexWrap:'wrap' }}>
-
-          {/* Search */}
-          <div style={{ position:'relative', flex:'1', minWidth:180, maxWidth:280 }}>
-            <span style={{ position:'absolute', left:12, top:'50%', transform:'translateY(-50%)', fontSize:14, pointerEvents:'none' }}>🔍</span>
-            <input type="text" placeholder="Search events or training…" value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              className="prog-input" style={{ paddingLeft:38, height:40 }} />
-          </div>
-
-          {/* ── Custom Category Filter Dropdown ── */}
-          <div style={{ position:'relative', minWidth:210 }}>
-            {/* Trigger */}
-            <button
-              onClick={() => { setFilterOpen(o => !o); setDatePickerOpen(false); }}
-              style={{
-                width:'100%', height:42,
-                background: filterOpen ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.06)',
-                border: `1.5px solid ${filterOpen ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.12)'}`,
-                borderRadius:12, padding:'0 14px', cursor:'pointer', fontFamily:'inherit',
-                display:'flex', alignItems:'center', gap:9, transition:'all .15s',
-              }}
-              onMouseEnter={e => { if (!filterOpen) { e.currentTarget.style.background='rgba(255,255,255,0.09)'; e.currentTarget.style.borderColor='rgba(255,255,255,0.2)'; } }}
-              onMouseLeave={e => { if (!filterOpen) { e.currentTarget.style.background='rgba(255,255,255,0.06)'; e.currentTarget.style.borderColor='rgba(255,255,255,0.12)'; } }}
-            >
-              <span style={{ fontSize:16, flexShrink:0 }}>{(CAT_META[selectedCat]||CAT_META.All).icon}</span>
-              <span style={{ flex:1, textAlign:'left', fontSize:13.5, fontWeight:700, color: selectedCat==='All'?'rgba(255,255,255,0.75)':'#fff' }}>
-                {selectedCat === 'All' ? 'All Categories' : selectedCat}
-              </span>
-              {selectedCat !== 'All' && (
-                <span style={{
-                  background: (CAT_META[selectedCat]||CAT_META.All).bg,
-                  color: (CAT_META[selectedCat]||CAT_META.All).color,
-                  borderRadius:20, padding:'2px 8px', fontSize:11, fontWeight:800,
-                }}>
-                  {fcEvents.length}
-                </span>
+        {/* ── Single Unified Executive Command Toolbar ── */}
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          flexWrap: 'wrap', gap: 12, marginBottom: 18,
+          background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)',
+          borderRadius: 16, padding: '12px 16px',
+        }}>
+          {/* Left: Search + Category Filter */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', flex: 1, minWidth: 280 }}>
+            {/* Search */}
+            <div style={{ position: 'relative', width: 220 }}>
+              <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 13, pointerEvents: 'none', opacity: 0.6 }}>🔍</span>
+              <input
+                type="text"
+                placeholder="Search events or training…"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="prog-input"
+                style={{ paddingLeft: 34, height: 38, fontSize: 13, borderRadius: 10 }}
+              />
+              {searchQuery && (
+                <button onClick={() => setSearchQuery('')} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', fontSize: 12 }}>✕</button>
               )}
-              <span style={{ fontSize:10, color:'rgba(255,255,255,0.4)', transition:'transform .2s', transform: filterOpen?'rotate(180deg)':'rotate(0)', flexShrink:0 }}>▼</span>
-            </button>
+            </div>
 
-            {/* Dropdown menu */}
-            {filterOpen && (
-              <div onClick={e => e.stopPropagation()} style={{
-                position:'absolute', top:48, left:0, zIndex:9999, width:240,
-                background:'linear-gradient(180deg,#0f1832,#0a1020)',
-                border:'1px solid rgba(255,255,255,0.1)', borderRadius:16, overflow:'hidden',
-                boxShadow:'0 24px 60px rgba(0,0,0,0.75)',
-                animation:'dropIn .16s ease',
-              }}>
-                {/* All Categories */}
-                {['All', ...allCategories].map((cat, idx) => {
-                  const meta = CAT_META[cat] || { icon:'📁', color:'#94a3b8', bg:'rgba(148,163,184,0.1)' };
-                  const isActive = selectedCat === cat;
-                  const count = cat === 'All'
-                    ? calItems.filter(it => it.startDate).length
-                    : calItems.filter(it => it.startDate && it.category === cat).length;
-                  return (
-                    <button
-                      key={cat}
-                      onClick={() => { setSelectedCat(cat); setFilterOpen(false); }}
-                      style={{
-                        width:'100%', display:'flex', alignItems:'center', gap:11,
-                        padding:'11px 16px',
-                        background: isActive ? `${meta.bg}` : 'transparent',
-                        border:'none', borderBottom: idx < allCategories.length ? '1px solid rgba(255,255,255,0.04)' : 'none',
-                        cursor:'pointer', fontFamily:'inherit', transition:'background .13s',
-                        borderLeft: isActive ? `3px solid ${meta.color}` : '3px solid transparent',
-                      }}
-                      onMouseEnter={e => { if (!isActive) e.currentTarget.style.background='rgba(255,255,255,0.05)'; }}
-                      onMouseLeave={e => { if (!isActive) e.currentTarget.style.background='transparent'; }}
-                    >
-                      {/* Icon circle */}
-                      <div style={{ width:32, height:32, borderRadius:9, background: isActive ? meta.bg : 'rgba(255,255,255,0.05)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:15, flexShrink:0, border: isActive ? `1px solid ${meta.color}40` : '1px solid rgba(255,255,255,0.06)' }}>
-                        {meta.icon}
-                      </div>
-                      {/* Label */}
-                      <div style={{ flex:1, textAlign:'left' }}>
-                        <div style={{ fontSize:13.5, fontWeight: isActive ? 800 : 600, color: isActive ? '#fff' : 'rgba(255,255,255,0.75)', lineHeight:1.2 }}>{cat === 'All' ? 'All Categories' : cat}</div>
-                        {cat !== 'All' && <div style={{ fontSize:11, color:'rgba(255,255,255,0.35)', marginTop:1 }}>{cat.includes('Summit')||cat.includes('Workshop')||cat.includes('Seminar')||cat.includes('Funding') ? 'Event' : 'Training'}</div>}
-                      </div>
-                      {/* Count badge */}
-                      <span style={{
-                        background: isActive ? meta.bg : 'rgba(255,255,255,0.06)',
-                        color: isActive ? meta.color : 'rgba(255,255,255,0.45)',
-                        border: isActive ? `1px solid ${meta.color}40` : '1px solid rgba(255,255,255,0.08)',
-                        borderRadius:20, padding:'2px 9px', fontSize:12, fontWeight:800, flexShrink:0,
-                      }}>{count}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-            {/* Backdrop close */}
-            {filterOpen && <div onClick={() => setFilterOpen(false)} style={{ position:'fixed', inset:0, zIndex:9998 }} />}
-          </div>
+            {/* Category Filter Dropdown */}
+            <div style={{ position: 'relative', minWidth: 170 }}>
+              <button
+                onClick={() => setFilterOpen(o => !o)}
+                style={{
+                  height: 38,
+                  background: filterOpen ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.06)',
+                  border: `1px solid ${filterOpen ? 'rgba(249,115,22,0.4)' : 'rgba(255,255,255,0.12)'}`,
+                  borderRadius: 10, padding: '0 12px', cursor: 'pointer', fontFamily: 'inherit',
+                  display: 'flex', alignItems: 'center', gap: 8, transition: 'all .15s',
+                }}
+              >
+                <span style={{ fontSize: 14 }}>{(CAT_META[selectedCat] || CAT_META.All).icon}</span>
+                <span style={{ fontSize: 12.5, fontWeight: 700, color: '#fff', whiteSpace: 'nowrap' }}>
+                  {selectedCat === 'All' ? 'All Categories' : selectedCat}
+                </span>
+                <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', marginLeft: 'auto' }}>▼</span>
+              </button>
 
-          {/* Date Picker Shortcut */}
-          <div style={{ position:'relative' }}>
-            {/* ── Premium Date Picker Trigger Button ── */}
-            <button
-              onClick={() => { setPickerYear(pickerYear); setDatePickerOpen(o => !o); }}
-              style={{
-                height:42,
-                background: datePickerOpen
-                  ? 'linear-gradient(135deg,rgba(249,115,22,0.25),rgba(225,29,72,0.18))'
-                  : 'rgba(255,255,255,0.07)',
-                border: `1.5px solid ${datePickerOpen ? 'rgba(249,115,22,0.55)' : 'rgba(255,255,255,0.14)'}`,
-                borderRadius:12, padding:'0 18px',
-                color: datePickerOpen ? '#f97316' : 'rgba(255,255,255,0.8)',
-                fontSize:14, fontWeight:800, cursor:'pointer', fontFamily:'inherit',
-                display:'flex', alignItems:'center', gap:8, transition:'all .18s',
-                boxShadow: datePickerOpen ? '0 4px 20px rgba(249,115,22,0.25)' : 'none',
-              }}
-              onMouseEnter={e => { if (!datePickerOpen) { e.currentTarget.style.background='rgba(255,255,255,0.11)'; e.currentTarget.style.borderColor='rgba(255,255,255,0.25)'; } }}
-              onMouseLeave={e => { if (!datePickerOpen) { e.currentTarget.style.background='rgba(255,255,255,0.07)'; e.currentTarget.style.borderColor='rgba(255,255,255,0.14)'; } }}
-            >
-              <span style={{ fontSize:16 }}>📅</span>
-              <span>{MONTH_NAMES[pickerMonth]?.slice(0,3)} {pickerYear}</span>
-              <span style={{ fontSize:9, opacity:.7, transition:'transform .2s', transform: datePickerOpen ? 'rotate(180deg)' : 'rotate(0)' }}>▼</span>
-            </button>
-
-            {/* ── Premium Date Picker Dropdown ── */}
-            {datePickerOpen && (
-              <div onClick={e => e.stopPropagation()} style={{
-                position: 'absolute', top: 50, left: 0, zIndex: 9999,
-                background: 'rgba(8, 14, 28, 0.96)',
-                backdropFilter: 'blur(24px)',
-                border: '1px solid rgba(255,255,255,0.12)',
-                borderRadius: 22, overflow: 'hidden',
-                boxShadow: '0 32px 80px rgba(0,0,0,0.85), 0 0 0 1px rgba(249,115,22,0.15)',
-                width: 320,
-                animation: 'dropIn .18s ease',
-              }}>
-                {/* Header bar */}
-                <div style={{
-                  background: 'linear-gradient(135deg,rgba(249,115,22,0.14),rgba(225,29,72,0.08))',
-                  borderBottom: '1px solid rgba(255,255,255,0.08)',
-                  padding: '14px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              {/* Dropdown Menu */}
+              {filterOpen && (
+                <div onClick={e => e.stopPropagation()} style={{
+                  position: 'absolute', top: 44, left: 0, zIndex: 9999, width: 220,
+                  background: 'linear-gradient(180deg,#0f1832,#0a1020)',
+                  border: '1px solid rgba(255,255,255,0.12)', borderRadius: 14, overflow: 'hidden',
+                  boxShadow: '0 20px 50px rgba(0,0,0,0.8)',
                 }}>
-                  <div>
-                    <div style={{ fontSize: 10, fontWeight: 800, color: 'rgba(249,115,22,0.85)', textTransform: 'uppercase', letterSpacing: '.8px', marginBottom: 2 }}>
-                      {pickerView === 'day' ? `Select Day · ${MONTH_NAMES[pickerMonth].slice(0,3)} ${pickerYear}` : 'Calendar Navigation'}
-                    </div>
-                    <div style={{ fontSize: 16, fontWeight: 900, color: '#fff', letterSpacing: '-0.3px' }}>
-                      {MONTH_NAMES[pickerMonth]} {pickerYear}
-                    </div>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    {pickerView === 'day' && (
-                      <button onClick={() => setPickerView('month')} style={{
-                        background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)',
-                        borderRadius: 8, padding: '4px 10px', color: 'rgba(255,255,255,0.8)',
-                        fontSize: 11.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
-                      }}>‹ Months</button>
-                    )}
-                    <button onClick={() => setDatePickerOpen(false)} style={{
-                      background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)',
-                      borderRadius: '50%', width: 26, height: 26, color: 'rgba(255,255,255,0.5)',
-                      fontSize: 12, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    }}>✕</button>
-                  </div>
+                  {['All', ...allCategories].map((cat, idx) => {
+                    const meta = CAT_META[cat] || { icon: '📂', color: '#94a3b8', bg: 'rgba(148,163,184,0.1)' };
+                    const isActive = selectedCat === cat;
+                    const count = cat === 'All'
+                      ? calItems.filter(it => it.startDate).length
+                      : calItems.filter(it => it.startDate && it.category === cat).length;
+                    return (
+                      <button
+                        key={cat}
+                        onClick={() => { setSelectedCat(cat); setFilterOpen(false); }}
+                        style={{
+                          width: '100%', display: 'flex', alignItems: 'center', gap: 10,
+                          padding: '9px 14px',
+                          background: isActive ? meta.bg : 'transparent',
+                          border: 'none',
+                          borderBottom: idx < allCategories.length ? '1px solid rgba(255,255,255,0.04)' : 'none',
+                          cursor: 'pointer', fontFamily: 'inherit',
+                          borderLeft: isActive ? `3px solid ${meta.color}` : '3px solid transparent',
+                        }}
+                      >
+                        <span style={{ fontSize: 14 }}>{meta.icon}</span>
+                        <span style={{ fontSize: 12.5, fontWeight: isActive ? 800 : 600, color: isActive ? '#fff' : 'rgba(255,255,255,0.75)', flex: 1, textAlign: 'left' }}>
+                          {cat === 'All' ? 'All Categories' : cat}
+                        </span>
+                        <span style={{ fontSize: 11, fontWeight: 800, color: meta.color, background: 'rgba(255,255,255,0.06)', padding: '1px 6px', borderRadius: 10 }}>
+                          {count}
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
-
-                <div style={{ padding: '16px' }}>
-                  {/* Year navigation */}
-                  <div style={{
-                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    marginBottom: 16, background: 'rgba(255,255,255,0.03)',
-                    border: '1px solid rgba(255,255,255,0.06)',
-                    borderRadius: 12, padding: '6px 10px',
-                  }}>
-                    <button
-                      onClick={() => setPickerYear(y => Math.max(2020, y-1))}
-                      disabled={pickerYear <= 2020}
-                      style={{
-                        width: 32, height: 32, borderRadius: 8, border: 'none',
-                        background: pickerYear <= 2020 ? 'transparent' : 'rgba(255,255,255,0.06)',
-                        color: pickerYear <= 2020 ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.8)',
-                        fontSize: 16, cursor: pickerYear <= 2020 ? 'not-allowed' : 'pointer',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all .14s',
-                      }}
-                      onMouseEnter={e => { if (pickerYear > 2020) e.currentTarget.style.background = 'rgba(249,115,22,0.2)'; }}
-                      onMouseLeave={e => { if (pickerYear > 2020) e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; }}
-                    >‹</button>
-                    <div style={{ textAlign: 'center' }}>
-                      <div style={{ color: '#fff', fontWeight: 900, fontSize: 20, letterSpacing: '-0.5px', lineHeight: 1 }}>{pickerYear}</div>
-                      <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10.5, fontWeight: 600, marginTop: 2 }}>
-                        {pickerYear === new Date().getFullYear() ? 'Current Year' : pickerYear < new Date().getFullYear() ? `${new Date().getFullYear() - pickerYear}y ago` : `in ${pickerYear - new Date().getFullYear()}y`}
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => setPickerYear(y => Math.min(2035, y+1))}
-                      disabled={pickerYear >= 2035}
-                      style={{
-                        width: 32, height: 32, borderRadius: 8, border: 'none',
-                        background: pickerYear >= 2035 ? 'transparent' : 'rgba(255,255,255,0.06)',
-                        color: pickerYear >= 2035 ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.8)',
-                        fontSize: 16, cursor: pickerYear >= 2035 ? 'not-allowed' : 'pointer',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all .14s',
-                      }}
-                      onMouseEnter={e => { if (pickerYear < 2035) e.currentTarget.style.background = 'rgba(249,115,22,0.2)'; }}
-                      onMouseLeave={e => { if (pickerYear < 2035) e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; }}
-                    >›</button>
-                  </div>
-
-                  {pickerView === 'month' ? (
-                    /* ── Month grid 4×3 ── */
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 6, marginBottom: 14 }}>
-                      {MONTH_NAMES.map((mn, mi) => {
-                        const isSelected = mi === pickerMonth;
-                        const isCurrentMonth = mi === new Date().getMonth() && pickerYear === new Date().getFullYear();
-                        const isUpcomingEventMonth = pickerYear === 2026 && (mi === 8 || mi === 9 || mi === 10 || mi === 11);
-                        return (
-                          <button key={mi} onClick={() => jumpToDate(pickerYear, mi)} style={{
-                            padding: '10px 4px', borderRadius: 11,
-                            border: isSelected
-                              ? '1px solid rgba(249,115,22,0.6)'
-                              : isCurrentMonth
-                                ? '1.5px solid rgba(249,115,22,0.45)'
-                                : '1px solid rgba(255,255,255,0.06)',
-                            fontSize: 12.5, fontWeight: isSelected || isCurrentMonth || isUpcomingEventMonth ? 800 : 600,
-                            cursor: 'pointer', fontFamily: 'inherit', transition: 'all .14s',
-                            background: isSelected
-                              ? 'linear-gradient(135deg,#f97316,#e11d48)'
-                              : isCurrentMonth
-                                ? 'rgba(249,115,22,0.1)'
-                                : 'rgba(255,255,255,0.03)',
-                            color: isSelected
-                              ? '#fff'
-                              : isCurrentMonth
-                                ? '#fb923c'
-                                : 'rgba(255,255,255,0.8)',
-                            boxShadow: isSelected ? '0 4px 14px rgba(249,115,22,0.4)' : 'none',
-                            transform: isSelected ? 'scale(1.04)' : 'scale(1)',
-                            position: 'relative',
-                          }}
-                          onMouseEnter={e => { if (!isSelected) { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = '#fff'; } }}
-                          onMouseLeave={e => { if (!isSelected) { e.currentTarget.style.background = isCurrentMonth ? 'rgba(249,115,22,0.1)' : 'rgba(255,255,255,0.03)'; e.currentTarget.style.color = isCurrentMonth ? '#fb923c' : 'rgba(255,255,255,0.8)'; } }}
-                          >
-                            <span>{mn.slice(0,3)}</span>
-                            {isUpcomingEventMonth && !isSelected && (
-                              <span style={{ position: 'absolute', bottom: 3, left: '50%', transform: 'translateX(-50%)', width: 4, height: 4, borderRadius: '50%', background: '#f97316' }} />
-                            )}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    /* ── Day grid ── */
-                    (() => {
-                      const today = new Date();
-                      const daysInMonth = new Date(pickerYear, pickerMonth + 1, 0).getDate();
-                      const firstDow = new Date(pickerYear, pickerMonth, 1).getDay();
-                      const cells = [];
-                      for (let i = 0; i < firstDow; i++) cells.push(null);
-                      for (let d = 1; d <= daysInMonth; d++) cells.push(d);
-                      while (cells.length % 7 !== 0) cells.push(null);
-
-                      return (
-                        <div style={{ marginBottom: 14 }}>
-                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', marginBottom: 4 }}>
-                            {['Su','Mo','Tu','We','Th','Fr','Sa'].map(d => (
-                              <div key={d} style={{ textAlign: 'center', fontSize: 10.5, fontWeight: 700, color: 'rgba(255,255,255,0.3)', padding: '3px 0' }}>{d}</div>
-                            ))}
-                          </div>
-                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 2 }}>
-                            {cells.map((d, i) => {
-                              if (!d) return <div key={i} />;
-                              const isToday = d === today.getDate() && pickerMonth === today.getMonth() && pickerYear === today.getFullYear();
-                              const isPast = new Date(pickerYear, pickerMonth, d) < new Date(today.getFullYear(), today.getMonth(), today.getDate());
-                              return (
-                                <button key={i} onClick={() => jumpToDay(d)} style={{
-                                  width: '100%', aspectRatio: '1', borderRadius: 8, border: 'none',
-                                  fontSize: 12, fontWeight: isToday ? 900 : 600,
-                                  cursor: 'pointer', fontFamily: 'inherit', transition: 'all .13s',
-                                  background: isToday ? 'linear-gradient(135deg,#f97316,#e11d48)' : 'rgba(255,255,255,0.04)',
-                                  color: isToday ? '#fff' : isPast ? 'rgba(255,255,255,0.28)' : 'rgba(255,255,255,0.82)',
-                                  boxShadow: isToday ? '0 3px 10px rgba(249,115,22,0.5)' : 'none',
-                                }}
-                                onMouseEnter={e => { if (!isToday) { e.currentTarget.style.background = 'rgba(249,115,22,0.22)'; e.currentTarget.style.color = '#f97316'; } }}
-                                onMouseLeave={e => { if (!isToday) { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.color = isPast ? 'rgba(255,255,255,0.28)' : 'rgba(255,255,255,0.82)'; } }}
-                                >{d}</button>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      );
-                    })()
-                  )}
-
-                  {/* Footer action */}
-                  <button
-                    onClick={jumpToToday}
-                    style={{
-                      width: '100%', background: 'linear-gradient(90deg,#f97316,#e11d48)',
-                      border: 'none', borderRadius: 12, padding: '10px',
-                      color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer',
-                      fontFamily: 'inherit', boxShadow: '0 4px 16px rgba(249,115,22,0.35)',
-                      transition: 'all .15s',
-                    }}
-                    onMouseEnter={e => { e.currentTarget.style.opacity = '.9'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
-                    onMouseLeave={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.transform = 'none'; }}
-                  >
-                    📍 Jump to Today ({MONTH_NAMES[new Date().getMonth()].slice(0,3)} {new Date().getFullYear()})
-                  </button>
-                </div>
-              </div>
-            )}
-            {/* Close picker on outside click */}
-            {datePickerOpen && <div onClick={() => setDatePickerOpen(false)} style={{ position:'fixed', inset:0, zIndex:9998 }} />}
+              )}
+              {filterOpen && <div onClick={() => setFilterOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 9998 }} />}
+            </div>
           </div>
 
-          {/* Quick Month Shortcuts bar */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginTop: 10, marginBottom: 14 }}>
-            <span style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.45)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.6px' }}>Quick Jump:</span>
+          {/* Center/Right: Quick Month Jump Pills */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+            {[
+              { m: 8,  y: 2026, label: '🗓️ Sep 2026' },
+              { m: 9,  y: 2026, label: '🗓️ Oct 2026' },
+              { m: 10, y: 2026, label: '🗓️ Nov 2026' },
+              { m: 11, y: 2026, label: '🗓️ Dec 2026' },
+            ].map(item => {
+              const isSelected = pickerMonth === item.m && pickerYear === item.y;
+              return (
+                <button
+                  key={item.label}
+                  onClick={() => jumpToMonthYear(item.y, item.m)}
+                  style={{
+                    background: isSelected ? 'linear-gradient(90deg,#f97316,#e11d48)' : 'rgba(255,255,255,0.06)',
+                    color: isSelected ? '#fff' : 'rgba(255,255,255,0.8)',
+                    border: `1px solid ${isSelected ? 'transparent' : 'rgba(255,255,255,0.1)'}`,
+                    borderRadius: 9, padding: '6px 12px', fontSize: 12, fontWeight: 700,
+                    cursor: 'pointer', fontFamily: 'inherit', transition: 'all .14s',
+                    boxShadow: isSelected ? '0 2px 10px rgba(249,115,22,0.35)' : 'none',
+                  }}
+                >
+                  {item.label}
+                </button>
+              );
+            })}
+
+            {/* Refresh */}
             <button
-              onClick={() => jumpToMonthYear(2026, 8)}
+              onClick={() => loadData(true)}
+              disabled={refreshing}
+              title="Refresh calendar data"
               style={{
-                background: pickerMonth === 8 && pickerYear === 2026 ? 'linear-gradient(90deg,#f97316,#e11d48)' : 'rgba(255,255,255,0.06)',
-                color: pickerMonth === 8 && pickerYear === 2026 ? '#fff' : 'rgba(255,255,255,0.85)',
-                border: `1px solid ${pickerMonth === 8 && pickerYear === 2026 ? 'transparent' : 'rgba(255,255,255,0.12)'}`,
-                borderRadius: 9, padding: '5px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
-                transition: 'all .14s',
-              }}
-            >
-              🗓️ Sep 2026 · Summit
-            </button>
-            <button
-              onClick={() => jumpToMonthYear(2026, 9)}
-              style={{
-                background: pickerMonth === 9 && pickerYear === 2026 ? 'linear-gradient(90deg,#f97316,#e11d48)' : 'rgba(255,255,255,0.06)',
-                color: pickerMonth === 9 && pickerYear === 2026 ? '#fff' : 'rgba(255,255,255,0.85)',
-                border: `1px solid ${pickerMonth === 9 && pickerYear === 2026 ? 'transparent' : 'rgba(255,255,255,0.12)'}`,
-                borderRadius: 9, padding: '5px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
-                transition: 'all .14s',
-              }}
-            >
-              🗓️ Oct 2026 · Symposium
-            </button>
-            <button
-              onClick={() => jumpToMonthYear(2026, 10)}
-              style={{
-                background: pickerMonth === 10 && pickerYear === 2026 ? 'linear-gradient(90deg,#f97316,#e11d48)' : 'rgba(255,255,255,0.06)',
-                color: pickerMonth === 10 && pickerYear === 2026 ? '#fff' : 'rgba(255,255,255,0.85)',
-                border: `1px solid ${pickerMonth === 10 && pickerYear === 2026 ? 'transparent' : 'rgba(255,255,255,0.12)'}`,
-                borderRadius: 9, padding: '5px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
-                transition: 'all .14s',
-              }}
-            >
-              🗓️ Nov 2026 · ICT Forum
-            </button>
-            <button
-              onClick={() => jumpToMonthYear(2026, 11)}
-              style={{
-                background: pickerMonth === 11 && pickerYear === 2026 ? 'linear-gradient(90deg,#f97316,#e11d48)' : 'rgba(255,255,255,0.06)',
-                color: pickerMonth === 11 && pickerYear === 2026 ? '#fff' : 'rgba(255,255,255,0.85)',
-                border: `1px solid ${pickerMonth === 11 && pickerYear === 2026 ? 'transparent' : 'rgba(255,255,255,0.12)'}`,
-                borderRadius: 9, padding: '5px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
-                transition: 'all .14s',
-              }}
-            >
-              🗓️ Dec 2026 · Grants
-            </button>
-            <button
-              onClick={jumpToToday}
-              style={{
-                background: pickerMonth === new Date().getMonth() && pickerYear === new Date().getFullYear() ? 'linear-gradient(90deg,#10b981,#059669)' : 'rgba(255,255,255,0.06)',
-                color: pickerMonth === new Date().getMonth() && pickerYear === new Date().getFullYear() ? '#fff' : 'rgba(255,255,255,0.7)',
+                height: 34,
+                background: 'rgba(255,255,255,0.07)',
                 border: '1px solid rgba(255,255,255,0.12)',
-                borderRadius: 9, padding: '5px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
-                transition: 'all .14s',
+                borderRadius: 9, padding: '0 12px',
+                color: 'rgba(255,255,255,0.7)', fontSize: 12.5, fontWeight: 700,
+                cursor: refreshing ? 'default' : 'pointer', fontFamily: 'inherit',
+                display: 'flex', alignItems: 'center', gap: 5,
               }}
             >
-              📍 Today
+              <span style={{ display: 'inline-block', animation: refreshing ? 'spin .7s linear infinite' : 'none' }}>↻</span>
+              <span>Refresh</span>
             </button>
           </div>
-
-          {/* Refresh */}
-          <button onClick={() => loadData(true)} disabled={refreshing} style={{ height:40, background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.12)', borderRadius:10, padding:'0 16px', color:'rgba(255,255,255,0.65)', fontSize:13, fontWeight:700, cursor: refreshing?'default':'pointer', fontFamily:'inherit', display:'flex', alignItems:'center', gap:6, transition:'all .13s', marginLeft:'auto' }}
-            onMouseEnter={e => { if (!refreshing) e.currentTarget.style.background='rgba(255,255,255,0.12)'; }}
-            onMouseLeave={e => e.currentTarget.style.background='rgba(255,255,255,0.07)'}
-          >
-            <span style={{ display:'inline-block', animation: refreshing?'spin .7s linear infinite':'none' }}>↻</span>
-            {refreshing ? 'Refreshing…' : 'Refresh'}
-          </button>
         </div>
 
         {/* Active filter badge */}
