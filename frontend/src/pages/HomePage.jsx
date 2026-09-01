@@ -549,7 +549,7 @@ export default function HomePage() {
       api.news.list({ limit: 1 }),
     ]).then(([ev, tr, nw]) => {
       setStats({
-        members: 6, // fixed — 6 consortium institutions
+        members: 7, // 7 consortium partner institutions & government agencies
         events:   ev.status === 'fulfilled' ? (ev.value.total ?? 4) : 4,
         trainings: tr.status === 'fulfilled' ? (tr.value.total ?? 4) : 4,
         news:     nw.status === 'fulfilled' ? (nw.value.total ?? 8) : 8,
@@ -737,8 +737,8 @@ export default function HomePage() {
               iconGrad: 'linear-gradient(135deg,rgba(249,115,22,0.25),rgba(225,29,72,0.15))',
             },
             {
-              icon: '🏛', title: 'Built for six Region VII institutions',
-              desc: 'One platform connecting UP, USan Agustin, DOST, DICT, DTI, and DepEd — all Region VII — with role-based access for every stakeholder.',
+              icon: '🏛', title: 'Built for 7 Region VII Institutions',
+              desc: 'One platform connecting CIT-University (Host), UP Visayas, USan Agustin, DOST-7, DICT-7, DTI-7, and DepEd-7 with unified RBAC.',
               grad: 'linear-gradient(135deg,#0d1445,#1a3878)', border: 'rgba(59,130,246,0.25)',
               iconGrad: 'linear-gradient(135deg,rgba(79,70,229,0.25),rgba(125,211,252,0.15))',
             },
