@@ -77,6 +77,20 @@ const TR_STYLES = {
 const EV_ICONS = { Summit:'🏛', Workshop:'🔬', Seminar:'📢', Funding:'💰' };
 const TR_ICONS = { Technology:'💻', Research:'🔬', Leadership:'🏛', Governance:'📋' };
 
+const EV_THEMES = {
+  Summit:   { accent: '#3b82f6', bg: 'linear-gradient(180deg, rgba(30,58,138,0.22) 0%, rgba(15,23,42,0.95) 100%)', border: 'rgba(59,130,246,0.35)', badgeBg: 'rgba(59,130,246,0.15)', badgeText: '#93c5fd' },
+  Workshop: { accent: '#10b981', bg: 'linear-gradient(180deg, rgba(5,150,105,0.22) 0%, rgba(15,23,42,0.95) 100%)', border: 'rgba(16,185,129,0.35)', badgeBg: 'rgba(16,185,129,0.15)', badgeText: '#6ee7b7' },
+  Seminar:  { accent: '#a855f7', bg: 'linear-gradient(180deg, rgba(126,34,206,0.22) 0%, rgba(15,23,42,0.95) 100%)', border: 'rgba(168,85,247,0.35)', badgeBg: 'rgba(168,85,247,0.15)', badgeText: '#d8b4fe' },
+  Funding:  { accent: '#f59e0b', bg: 'linear-gradient(180deg, rgba(217,119,6,0.22) 0%, rgba(15,23,42,0.95) 100%)', border: 'rgba(245,158,11,0.35)', badgeBg: 'rgba(245,158,11,0.15)', badgeText: '#fcd34d' },
+};
+
+const TR_THEMES = {
+  Technology: { accent: '#3b82f6', bg: 'linear-gradient(180deg, rgba(30,58,138,0.22) 0%, rgba(15,23,42,0.95) 100%)', border: 'rgba(59,130,246,0.35)', badgeBg: 'rgba(59,130,246,0.15)', badgeText: '#93c5fd' },
+  Research:   { accent: '#10b981', bg: 'linear-gradient(180deg, rgba(5,150,105,0.22) 0%, rgba(15,23,42,0.95) 100%)', border: 'rgba(16,185,129,0.35)', badgeBg: 'rgba(16,185,129,0.15)', badgeText: '#6ee7b7' },
+  Leadership: { accent: '#f59e0b', bg: 'linear-gradient(180deg, rgba(217,119,6,0.22) 0%, rgba(15,23,42,0.95) 100%)', border: 'rgba(245,158,11,0.35)', badgeBg: 'rgba(245,158,11,0.15)', badgeText: '#fcd34d' },
+  Governance: { accent: '#a855f7', bg: 'linear-gradient(180deg, rgba(126,34,206,0.22) 0%, rgba(15,23,42,0.95) 100%)', border: 'rgba(168,85,247,0.35)', badgeBg: 'rgba(168,85,247,0.15)', badgeText: '#d8b4fe' },
+};
+
 const CSS = `
   @keyframes cardIn  { from{transform:translateY(14px);opacity:0} to{transform:translateY(0);opacity:1} }
   @keyframes modalIn { from{transform:scale(.88);opacity:0} to{transform:scale(1);opacity:1} }
@@ -600,54 +614,80 @@ export default function ProgramsPage() {
           {/* Executive Member vs Guest Access Status Ribbon */}
           {!isCalendar && (
             <div style={{
-              marginBottom: 26,
-              borderRadius: 16,
-              padding: '14px 20px',
+              marginBottom: 24,
+              borderRadius: 18,
+              padding: '16px 22px',
               background: user?.role === 'MEMBER' || user?.role === 'ADMIN'
-                ? 'linear-gradient(135deg, rgba(16,185,129,0.12) 0%, rgba(245,158,11,0.08) 100%)'
-                : 'rgba(255,255,255,0.03)',
-              border: `1.5px solid ${user?.role === 'MEMBER' || user?.role === 'ADMIN' ? 'rgba(16,185,129,0.3)' : 'rgba(255,255,255,0.08)'}`,
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12,
-              backdropFilter: 'blur(10px)',
+                ? 'linear-gradient(135deg, rgba(16,185,129,0.14) 0%, rgba(15,23,42,0.92) 100%)'
+                : 'linear-gradient(135deg, rgba(59,130,246,0.12) 0%, rgba(15,23,42,0.92) 100%)',
+              border: `1.5px solid ${user?.role === 'MEMBER' || user?.role === 'ADMIN' ? 'rgba(16,185,129,0.35)' : 'rgba(59,130,246,0.3)'}`,
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 14,
+              backdropFilter: 'blur(16px)',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.35)',
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
                 <div style={{
-                  width: 38, height: 38, borderRadius: 10,
-                  background: user?.role === 'MEMBER' || user?.role === 'ADMIN' ? 'rgba(16,185,129,0.2)' : 'rgba(255,255,255,0.06)',
-                  border: `1px solid ${user?.role === 'MEMBER' || user?.role === 'ADMIN' ? 'rgba(16,185,129,0.4)' : 'rgba(255,255,255,0.1)'}`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18,
+                  width: 44, height: 44, borderRadius: 12,
+                  background: user?.role === 'MEMBER' || user?.role === 'ADMIN'
+                    ? 'linear-gradient(135deg, rgba(16,185,129,0.25), rgba(5,150,105,0.4))'
+                    : 'linear-gradient(135deg, rgba(59,130,246,0.2), rgba(30,58,138,0.4))',
+                  border: `1px solid ${user?.role === 'MEMBER' || user?.role === 'ADMIN' ? 'rgba(16,185,129,0.4)' : 'rgba(59,130,246,0.35)'}`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20,
+                  boxShadow: user?.role === 'MEMBER' ? '0 0 16px rgba(16,185,129,0.25)' : 'none',
                 }}>
                   {user?.role === 'MEMBER' || user?.role === 'ADMIN' ? '👑' : '👤'}
                 </div>
                 <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ color: '#fff', fontSize: 14, fontWeight: 900 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+                    <span style={{ color: '#fff', fontSize: 15, fontWeight: 900, letterSpacing: '-0.2px' }}>
                       {user?.role === 'MEMBER' || user?.role === 'ADMIN' ? `Consortium Member: ${user.name}` : 'Guest Attendee Access'}
                     </span>
                     <span style={{
-                      fontSize: 10.5, fontWeight: 800, padding: '2px 8px', borderRadius: 6,
-                      background: user?.role === 'MEMBER' || user?.role === 'ADMIN' ? 'rgba(16,185,129,0.25)' : 'rgba(59,130,246,0.15)',
+                      fontSize: 10.5, fontWeight: 900, padding: '2px 8px', borderRadius: 6,
+                      background: user?.role === 'MEMBER' || user?.role === 'ADMIN' ? 'rgba(16,185,129,0.25)' : 'rgba(59,130,246,0.18)',
                       color: user?.role === 'MEMBER' || user?.role === 'ADMIN' ? '#34d399' : '#93c5fd',
-                      border: `1px solid ${user?.role === 'MEMBER' || user?.role === 'ADMIN' ? 'rgba(16,185,129,0.4)' : 'rgba(59,130,246,0.3)'}`,
+                      border: `1px solid ${user?.role === 'MEMBER' || user?.role === 'ADMIN' ? 'rgba(16,185,129,0.45)' : 'rgba(59,130,246,0.35)'}`,
+                      letterSpacing: '0.4px',
                     }}>
-                      {user?.role === 'MEMBER' ? 'VIP MEMBER' : user?.role === 'ADMIN' ? 'ADMINISTRATOR' : 'GUEST'}
+                      {user?.role === 'MEMBER' ? 'VIP MEMBER' : user?.role === 'ADMIN' ? 'ADMINISTRATOR' : 'GUEST ATTENDEE'}
                     </span>
                   </div>
-                  <div style={{ color: 'rgba(255,255,255,0.55)', fontSize: 12, marginTop: 2 }}>
-                    {user?.role === 'MEMBER' || user?.role === 'ADMIN'
-                      ? '⚡ Instant 1-Click Priority Slots • 🎖️ Free Certificates • 📂 Full Resource Toolkits Included'
-                      : 'Public passes available. Want guaranteed priority seats & free verified certificates?'}
+                  <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: 12, marginTop: 3, display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+                    {user?.role === 'MEMBER' || user?.role === 'ADMIN' ? (
+                      <>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><span>⚡</span> Instant 1-Click Priority Slots</span>
+                        <span>•</span>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><span>🎖️</span> Free Verified Certificates</span>
+                        <span>•</span>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><span>📂</span> Full Resource Toolkits & Replays</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>Standard public access. Want 1-click priority RSVP, free verified certificates & slide toolkits?</span>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
 
               <div>
                 {user?.role === 'MEMBER' || user?.role === 'ADMIN' ? (
-                  <span style={{ fontSize: 12, color: '#34d399', fontWeight: 800, background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.35)', padding: '6px 14px', borderRadius: 8, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{
+                    fontSize: 12, color: '#34d399', fontWeight: 800,
+                    background: 'rgba(16,185,129,0.16)', border: '1px solid rgba(16,185,129,0.38)',
+                    padding: '8px 16px', borderRadius: 10, display: 'inline-flex', alignItems: 'center', gap: 7,
+                    boxShadow: '0 0 16px rgba(16,185,129,0.15)',
+                  }}>
                     <span>✓</span> 100% Free Member Pass Active
                   </span>
                 ) : (
-                  <a href="/membership" style={{ fontSize: 12.5, color: '#fb923c', fontWeight: 800, background: 'rgba(249,115,22,0.15)', border: '1px solid rgba(249,115,22,0.35)', padding: '6px 14px', borderRadius: 8, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                  <a href="/membership" style={{
+                    fontSize: 12.5, color: '#fb923c', fontWeight: 800,
+                    background: 'rgba(249,115,22,0.16)', border: '1px solid rgba(249,115,22,0.38)',
+                    padding: '8px 16px', borderRadius: 10, textDecoration: 'none',
+                    display: 'inline-flex', alignItems: 'center', gap: 7,
+                    transition: 'all .15s',
+                  }}>
                     <span>👑</span> Apply for Consortium Membership →
                   </a>
                 )}
@@ -658,6 +698,336 @@ export default function ProgramsPage() {
           {tab === 'events'   && <EventsTab   user={user} />}
           {tab === 'training' && <TrainingTab user={user} />}
           {tab === 'calendar' && <CalendarTab user={user} />}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════
+   DIGITAL E-TICKET & BOARDING PASS HELPERS
+═══════════════════════════════════════════════════════════ */
+function QRCodeSvg({ size = 100, value = 'DSG-PASS' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 120 120" style={{ background: '#fff', borderRadius: 10, padding: 6, display: 'block', boxShadow: '0 4px 14px rgba(0,0,0,0.4)' }}>
+      {/* 3 Corner Finder Patterns */}
+      <rect x="10" y="10" width="30" height="30" fill="#000" rx="3" />
+      <rect x="16" y="16" width="18" height="18" fill="#fff" />
+      <rect x="20" y="20" width="10" height="10" fill="#000" />
+
+      <rect x="80" y="10" width="30" height="30" fill="#000" rx="3" />
+      <rect x="86" y="16" width="18" height="18" fill="#fff" />
+      <rect x="90" y="20" width="10" height="10" fill="#000" />
+
+      <rect x="10" y="80" width="30" height="30" fill="#000" rx="3" />
+      <rect x="16" y="86" width="18" height="18" fill="#fff" />
+      <rect x="20" y="90" width="10" height="10" fill="#000" />
+
+      {/* Timing and alignment bars */}
+      <rect x="44" y="22" width="32" height="4" fill="#000" />
+      <rect x="22" y="44" width="4" height="32" fill="#000" />
+      <rect x="80" y="80" width="20" height="20" fill="#000" rx="2" />
+      <rect x="85" y="85" width="10" height="10" fill="#fff" />
+      <rect x="88" y="88" width="4" height="4" fill="#000" />
+
+      {/* Realistic data matrix dots */}
+      <rect x="48" y="10" width="6" height="6" fill="#000" />
+      <rect x="62" y="10" width="8" height="6" fill="#000" />
+      <rect x="48" y="32" width="6" height="6" fill="#000" />
+      <rect x="64" y="30" width="8" height="6" fill="#000" />
+
+      <rect x="10" y="48" width="6" height="6" fill="#000" />
+      <rect x="10" y="62" width="6" height="8" fill="#000" />
+      <rect x="32" y="48" width="6" height="6" fill="#000" />
+      <rect x="30" y="64" width="6" height="8" fill="#000" />
+
+      <rect x="48" y="48" width="8" height="8" fill="#f97316" rx="2" />
+      <rect x="64" y="48" width="6" height="6" fill="#000" />
+      <rect x="48" y="64" width="6" height="6" fill="#000" />
+      <rect x="62" y="62" width="8" height="8" fill="#000" />
+
+      <rect x="48" y="80" width="6" height="8" fill="#000" />
+      <rect x="60" y="86" width="8" height="6" fill="#000" />
+      <rect x="48" y="98" width="10" height="6" fill="#000" />
+      <rect x="66" y="98" width="6" height="6" fill="#000" />
+
+      <rect x="80" y="48" width="8" height="6" fill="#000" />
+      <rect x="96" y="48" width="8" height="6" fill="#000" />
+      <rect x="86" y="60" width="6" height="8" fill="#000" />
+      <rect x="98" y="62" width="6" height="6" fill="#000" />
+      <rect x="104" y="80" width="6" height="10" fill="#000" />
+      <rect x="104" y="96" width="6" height="8" fill="#000" />
+    </svg>
+  );
+}
+
+function getGoogleCalendarUrl(item) {
+  if (!item) return '#';
+  const range = parseRange(item.date || item.schedule);
+  let datesParam = '';
+  if (range && range.start) {
+    const s = range.start;
+    const e = range.end || range.start;
+    const sStr = `${s.getFullYear()}${String(s.getMonth()+1).padStart(2,'0')}${String(s.getDate()).padStart(2,'0')}`;
+    const eDay = new Date(e);
+    eDay.setDate(eDay.getDate() + 1);
+    const eStr = `${eDay.getFullYear()}${String(eDay.getMonth()+1).padStart(2,'0')}${String(eDay.getDate()).padStart(2,'0')}`;
+    datesParam = `&dates=${sStr}/${eStr}`;
+  }
+  const title = encodeURIComponent(item.title || 'DASIG Consortium Event');
+  const details = encodeURIComponent(`${item.title}\n\nHost: ${item.organizer || item.org || 'DASIG Regional Consortium'}\nTicket Status: Verified & Confirmed.\nPortal: https://dasig-portal.vercel.app`);
+  const location = encodeURIComponent(item.venue || 'Central Visayas Node / Online Virtual Hall');
+  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}${datesParam}&details=${details}&location=${location}`;
+}
+
+function downloadIcsFile(item, attendeeName) {
+  if (!item) return;
+  const range = parseRange(item.date || item.schedule);
+  const now = new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+  let startStr = now;
+  let endStr = now;
+  if (range && range.start) {
+    const s = range.start;
+    const e = range.end || range.start;
+    startStr = `${s.getFullYear()}${String(s.getMonth()+1).padStart(2,'0')}${String(s.getDate()).padStart(2,'0')}T090000Z`;
+    endStr = `${e.getFullYear()}${String(e.getMonth()+1).padStart(2,'0')}${String(e.getDate()).padStart(2,'0')}T170000Z`;
+  }
+  const cleanTitle = (item.title || 'DASIG Event').replace(/[^\w\s-]/gi, '');
+  const ics = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//DASIG Regional Consortium//Events Module//EN',
+    'CALSCALE:GREGORIAN',
+    'METHOD:PUBLISH',
+    'BEGIN:VEVENT',
+    `UID:dsg-${item.id}-${Date.now()}@dasig.edu.ph`,
+    `DTSTAMP:${now}`,
+    `DTSTART:${startStr}`,
+    `DTEND:${endStr}`,
+    `SUMMARY:${cleanTitle}`,
+    `DESCRIPTION:Attendee: ${attendeeName || 'Consortium Attendee'}\\nHost: ${item.organizer || item.org || 'DASIG Consortium'}`,
+    `LOCATION:${(item.venue || 'DASIG Regional Consortium Node').replace(/,/g, '\\,')}`,
+    'STATUS:CONFIRMED',
+    'END:VEVENT',
+    'END:VCALENDAR'
+  ].join('\r\n');
+
+  const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${cleanTitle.toLowerCase().replace(/\s+/g, '_')}_ticket_pass.ics`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function DigitalTicketModal({ passData, onClose }) {
+  if (!passData) return null;
+  const { item, isTraining, role, name, email, institution, position, refCode } = passData;
+  const isMember = role === 'MEMBER' || role === 'ADMIN';
+
+  return (
+    <div onClick={onClose} style={{
+      position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)',
+      zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center',
+      padding: '24px 16px', backdropFilter: 'blur(12px)', overflowY: 'auto',
+    }}>
+      <div onClick={e => e.stopPropagation()} style={{
+        background: 'linear-gradient(180deg, #0e172a 0%, #060a14 100%)',
+        borderRadius: 24, maxWidth: 490, width: '100%', overflow: 'hidden',
+        border: isMember ? '1.5px solid rgba(16,185,129,0.45)' : '1.5px solid rgba(59,130,246,0.35)',
+        boxShadow: isMember
+          ? '0 30px 80px rgba(0,0,0,0.85), 0 0 35px rgba(16,185,129,0.18)'
+          : '0 30px 80px rgba(0,0,0,0.85), 0 0 35px rgba(59,130,246,0.15)',
+        animation: 'modalIn .25s cubic-bezier(.34,1.56,.64,1)',
+        position: 'relative', margin: 'auto',
+      }}>
+        {/* Top Header Bar */}
+        <div style={{
+          background: isMember
+            ? 'linear-gradient(135deg, rgba(16,185,129,0.2) 0%, rgba(15,23,42,0.95) 100%)'
+            : 'linear-gradient(135deg, rgba(59,130,246,0.2) 0%, rgba(15,23,42,0.95) 100%)',
+          padding: '16px 20px 14px',
+          borderBottom: '1px solid rgba(255,255,255,0.08)',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 18 }}>🦅</span>
+            <div>
+              <div style={{ fontSize: 10, fontWeight: 900, color: 'rgba(255,255,255,0.5)', letterSpacing: '0.8px', textTransform: 'uppercase' }}>
+                DASIG REGIONAL CONSORTIUM (REGION VII)
+              </div>
+              <div style={{ fontSize: 12, fontWeight: 800, color: '#fff' }}>
+                Official Digital Admission Pass
+              </div>
+            </div>
+          </div>
+          <button onClick={onClose} style={{
+            background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)',
+            borderRadius: '50%', width: 30, height: 30, color: '#fff', fontSize: 13,
+            fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>✕</button>
+        </div>
+
+        {/* Boarding Pass Body */}
+        <div style={{ padding: '20px 24px 16px' }}>
+          {/* Pass Tier Pill */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+            <span style={{
+              background: isMember ? 'rgba(16,185,129,0.18)' : 'rgba(59,130,246,0.15)',
+              color: isMember ? '#34d399' : '#93c5fd',
+              border: `1px solid ${isMember ? 'rgba(16,185,129,0.4)' : 'rgba(59,130,246,0.3)'}`,
+              borderRadius: 8, padding: '3px 10px', fontSize: 11, fontWeight: 900,
+              letterSpacing: '0.4px', textTransform: 'uppercase', display: 'inline-flex', alignItems: 'center', gap: 5,
+            }}>
+              {isMember ? '👑 VIP CONSORTIUM MEMBER PASS' : '👤 STANDARD GUEST ATTENDEE PASS'}
+            </span>
+            <span style={{ fontSize: 11, color: isMember ? '#34d399' : '#94a3b8', fontWeight: 800 }}>
+              {isMember ? '100% Free · Priority RSVP' : 'Public Admission'}
+            </span>
+          </div>
+
+          {/* Title */}
+          <div style={{ color: '#fff', fontSize: 18, fontWeight: 900, lineHeight: 1.35, marginBottom: 14 }}>
+            {item.title}
+          </div>
+
+          {/* Event metadata grid */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
+            <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10, padding: '8px 12px' }}>
+              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.4px' }}>Date & Schedule</div>
+              <div style={{ fontSize: 12.5, color: '#fff', fontWeight: 700, marginTop: 2 }}>📅 {item.date || item.schedule?.split('|')[0]?.trim() || 'Scheduled Session'}</div>
+            </div>
+            <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10, padding: '8px 12px' }}>
+              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.4px' }}>Session Hours</div>
+              <div style={{ fontSize: 12.5, color: '#fde047', fontWeight: 700, marginTop: 2 }}>🕐 {item.start_time || item.session_start_time || '09:00 – 17:00'}{item.end_time ? ` – ${item.end_time}` : item.session_end_time ? ` – ${item.session_end_time}` : ''}</div>
+            </div>
+            <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10, padding: '8px 12px', gridColumn: '1/-1' }}>
+              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.4px' }}>Venue / Host Node</div>
+              <div style={{ fontSize: 12.5, color: '#fff', fontWeight: 700, marginTop: 2 }}>📍 {item.venue || item.org || 'Central Visayas Node / Online Virtual Hall'}</div>
+            </div>
+          </div>
+
+          {/* Attendee Info Card */}
+          <div style={{
+            background: 'rgba(255,255,255,0.03)',
+            border: '1px solid rgba(255,255,255,0.08)',
+            borderRadius: 12, padding: '12px 14px',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            gap: 12,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{
+                width: 38, height: 38, borderRadius: 10,
+                background: isMember ? 'linear-gradient(135deg, #10b981, #059669)' : 'linear-gradient(135deg, #f97316, #ea580c)',
+                color: '#fff', fontWeight: 900, fontSize: 15,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+              }}>
+                {(name || 'U')[0].toUpperCase()}
+              </div>
+              <div>
+                <div style={{ color: '#fff', fontWeight: 800, fontSize: 13.5 }}>{name}</div>
+                <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11 }}>{email}</div>
+                {institution && <div style={{ color: '#fb923c', fontSize: 11, fontWeight: 700 }}>🏛 {institution}</div>}
+              </div>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontSize: 9.5, color: 'rgba(255,255,255,0.4)', fontWeight: 700, textTransform: 'uppercase' }}>Status</div>
+              <div style={{ fontSize: 11.5, color: '#34d399', fontWeight: 800 }}>✓ Confirmed</div>
+            </div>
+          </div>
+
+          {/* Member perks list */}
+          <div style={{ marginTop: 12, display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            {isMember ? (
+              <>
+                <span style={{ fontSize: 10.5, background: 'rgba(16,185,129,0.12)', color: '#6ee7b7', border: '1px solid rgba(16,185,129,0.25)', borderRadius: 6, padding: '2px 7px', fontWeight: 700 }}>✓ Guaranteed Priority Slot</span>
+                <span style={{ fontSize: 10.5, background: 'rgba(16,185,129,0.12)', color: '#6ee7b7', border: '1px solid rgba(16,185,129,0.25)', borderRadius: 6, padding: '2px 7px', fontWeight: 700 }}>🎖️ Free Verified Certificate</span>
+                <span style={{ fontSize: 10.5, background: 'rgba(16,185,129,0.12)', color: '#6ee7b7', border: '1px solid rgba(16,185,129,0.25)', borderRadius: 6, padding: '2px 7px', fontWeight: 700 }}>📂 Digital Toolkits & Slides</span>
+              </>
+            ) : (
+              <>
+                <span style={{ fontSize: 10.5, background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.7)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 6, padding: '2px 7px', fontWeight: 700 }}>✓ General Public Admission</span>
+                <span style={{ fontSize: 10.5, background: 'rgba(249,115,22,0.12)', color: '#fb923c', border: '1px solid rgba(249,115,22,0.25)', borderRadius: 6, padding: '2px 7px', fontWeight: 700 }}>👑 Member Pass includes Free Certificate</span>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Perforated Divider with cutouts */}
+        <div style={{ position: 'relative', margin: '6px 0', display: 'flex', alignItems: 'center' }}>
+          <div style={{ position: 'absolute', left: -14, width: 28, height: 28, borderRadius: '50%', background: '#000', border: '1px solid rgba(255,255,255,0.1)' }} />
+          <div style={{ flex: 1, borderTop: '2px dashed rgba(255,255,255,0.18)', margin: '0 24px' }} />
+          <div style={{ position: 'absolute', right: -14, width: 28, height: 28, borderRadius: '50%', background: '#000', border: '1px solid rgba(255,255,255,0.1)' }} />
+        </div>
+
+        {/* Ticket Barcode / QR Bottom Stub */}
+        <div style={{ padding: '16px 24px 22px', background: 'rgba(0,0,0,0.25)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 14 }}>
+            <div>
+              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', fontWeight: 700, letterSpacing: '0.6px', textTransform: 'uppercase' }}>Ticket Reference No.</div>
+              <div style={{ fontSize: 15, fontWeight: 900, color: '#fff', letterSpacing: '1px', fontFamily: 'monospace', marginTop: 2 }}>{refCode}</div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 4, maxWidth: 220, lineHeight: 1.4 }}>
+                Present this digital pass at the registration desk on event day or use the reference ID for virtual check-in.
+              </div>
+            </div>
+            <div style={{ flexShrink: 0, textAlign: 'center' }}>
+              <QRCodeSvg size={96} value={refCode} />
+            </div>
+          </div>
+
+          {/* Action buttons: Calendar & Download */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 16 }}>
+            <a
+              href={getGoogleCalendarUrl(item)}
+              target="_blank"
+              rel="noreferrer"
+              style={{
+                background: 'rgba(255,255,255,0.07)',
+                border: '1px solid rgba(255,255,255,0.15)',
+                borderRadius: 11, padding: '10px',
+                fontSize: 12, fontWeight: 800, color: '#fff',
+                textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                transition: 'all .15s',
+              }}
+              onMouseEnter={e => e.currentTarget.style.background='rgba(255,255,255,0.13)'}
+              onMouseLeave={e => e.currentTarget.style.background='rgba(255,255,255,0.07)'}
+            >
+              <span>📅</span> Add to Google Cal
+            </a>
+            <button
+              onClick={() => downloadIcsFile(item, name)}
+              style={{
+                background: 'rgba(255,255,255,0.07)',
+                border: '1px solid rgba(255,255,255,0.15)',
+                borderRadius: 11, padding: '10px',
+                fontSize: 12, fontWeight: 800, color: '#fff',
+                cursor: 'pointer', fontFamily: 'inherit',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                transition: 'all .15s',
+              }}
+              onMouseEnter={e => e.currentTarget.style.background='rgba(255,255,255,0.13)'}
+              onMouseLeave={e => e.currentTarget.style.background='rgba(255,255,255,0.07)'}
+            >
+              <span>📥</span> Download .ics Pass
+            </button>
+          </div>
+
+          {/* Close button */}
+          <button
+            onClick={onClose}
+            style={{
+              width: '100%',
+              background: isMember ? 'linear-gradient(90deg, #059669, #10b981)' : 'linear-gradient(90deg, #f97316, #e11d48)',
+              color: '#fff', border: 'none', borderRadius: 12, padding: '11px',
+              fontSize: 13.5, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit',
+              marginTop: 10, boxShadow: isMember ? '0 4px 16px rgba(16,185,129,0.35)' : '0 4px 16px rgba(249,115,22,0.35)',
+            }}
+          >
+            ✓ Done & Return to Programs
+          </button>
         </div>
       </div>
     </div>
@@ -707,78 +1077,191 @@ function CancelConfirmModal({ title, subtitle, onConfirm, onCancel, confirming }
 /* ═══════════════════════════════════════════════════════════
    CARD COMPONENTS (must be outside any map/render loop)
 ═══════════════════════════════════════════════════════════ */
-function EvCard({ ev, idx, registered, onRegister, onCancel, cancelling, user }) {
+function EvCard({ ev, idx, registered, onRegister, onViewTicket, onCancel, cancelling, user }) {
   const [hov, setHov] = useState(false);
   const pct  = ev.total > 0 ? Math.min(100, Math.round((ev.enrolled / ev.total) * 100)) : 0;
   const full = ev.total > 0 && ev.enrolled >= ev.total;
-  const grad = EV_GRADS[ev?.category] || EV_GRADS.Summit;
+  const theme = EV_THEMES[ev?.category] || EV_THEMES.Summit;
   const isMember = user?.role === 'MEMBER' || user?.role === 'ADMIN';
 
   return (
     <div onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
-      style={{ borderRadius:18, overflow:'hidden', background:'rgba(15,23,42,0.9)', border:`1px solid ${hov?'rgba(249,115,22,0.4)':'rgba(255,255,255,0.07)'}`, boxShadow: hov?'0 14px 40px rgba(249,115,22,0.12)':'0 4px 16px rgba(0,0,0,0.3)', transform: hov?'translateY(-4px)':'none', transition:'all .22s cubic-bezier(.34,1.56,.64,1)', animation:`cardIn .35s ease ${idx*0.05}s both` }}>
-      <div style={{ background: grad, padding:'18px 20px 14px', position:'relative', overflow:'hidden', minHeight:100 }}>
-        <div style={{ position:'absolute', right:-8, bottom:-10, fontSize:70, opacity:0.12 }}>{EV_ICONS[ev.category]||'📅'}</div>
-        <div style={{ display:'flex', justifyContent:'space-between', marginBottom:6, alignItems:'center' }}>
-          <span style={{ background:'rgba(255,255,255,0.22)', color:'#fff', borderRadius:6, padding:'3px 10px', fontSize:10.5, fontWeight:700 }}>{ev.category}</span>
-          <div style={{ display:'flex', gap:6 }}>
-            {isMember && (
-              <span style={{ background:'rgba(16,185,129,0.25)', color:'#6ee7b7', borderRadius:6, padding:'2px 8px', fontSize:10, fontWeight:800, border:'1px solid rgba(16,185,129,0.4)' }}>
-                👑 100% Free Pass
+      style={{
+        borderRadius: 18, overflow: 'hidden',
+        background: 'rgba(15, 23, 42, 0.88)',
+        backdropFilter: 'blur(16px)',
+        border: `1px solid ${hov ? 'rgba(249,115,22,0.45)' : 'rgba(255,255,255,0.08)'}`,
+        boxShadow: hov ? '0 16px 44px rgba(0,0,0,0.45), 0 0 20px rgba(249,115,22,0.12)' : '0 8px 30px rgba(0,0,0,0.35)',
+        transform: hov ? 'translateY(-4px)' : 'none',
+        transition: 'all .24s cubic-bezier(.34,1.56,.64,1)',
+        animation: `cardIn .35s ease ${idx * 0.05}s both`,
+        display: 'flex', flexDirection: 'column',
+      }}>
+      {/* Header with ambient glow accent line */}
+      <div style={{
+        background: theme.bg,
+        borderTop: `3px solid ${theme.accent}`,
+        padding: '16px 18px 14px',
+        position: 'relative', overflow: 'hidden',
+      }}>
+        <div style={{ position: 'absolute', right: -12, bottom: -14, fontSize: 64, opacity: 0.08 }}>
+          {EV_ICONS[ev.category] || '📅'}
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, alignItems: 'center', position: 'relative', zIndex: 1 }}>
+          <span style={{
+            background: theme.badgeBg, color: theme.badgeText,
+            border: `1px solid ${theme.border}`,
+            borderRadius: 6, padding: '3px 9px', fontSize: 10.5, fontWeight: 800,
+            display: 'inline-flex', alignItems: 'center', gap: 4,
+          }}>
+            <span>{EV_ICONS[ev.category] || '📅'}</span> {ev.category}
+          </span>
+          <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+            {isMember ? (
+              <span style={{
+                background: 'rgba(16,185,129,0.2)', color: '#6ee7b7',
+                borderRadius: 6, padding: '2px 8px', fontSize: 10, fontWeight: 800,
+                border: '1px solid rgba(16,185,129,0.4)', display: 'inline-flex', alignItems: 'center', gap: 3,
+              }}>
+                👑 VIP Member Pass
+              </span>
+            ) : (
+              <span style={{
+                background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.6)',
+                borderRadius: 6, padding: '2px 8px', fontSize: 10, fontWeight: 700,
+                border: '1px solid rgba(255,255,255,0.1)',
+              }}>
+                Public Pass
               </span>
             )}
-            {registered && <span style={{ background:'rgba(16,185,129,0.28)', color:'#34d399', borderRadius:6, padding:'3px 10px', fontSize:10.5, fontWeight:700, border:'1px solid rgba(16,185,129,0.4)' }}>✓ Registered</span>}
-            {full && !registered && <span style={{ background:'rgba(225,29,72,0.28)', color:'#f87171', borderRadius:6, padding:'3px 10px', fontSize:10.5, fontWeight:700 }}>Full</span>}
+            {registered && (
+              <span style={{
+                background: 'rgba(16,185,129,0.28)', color: '#34d399',
+                borderRadius: 6, padding: '2px 8px', fontSize: 10, fontWeight: 800,
+                border: '1px solid rgba(16,185,129,0.4)',
+              }}>
+                ✓ Enrolled
+              </span>
+            )}
+            {full && !registered && (
+              <span style={{ background: 'rgba(225,29,72,0.28)', color: '#f87171', borderRadius: 6, padding: '2px 8px', fontSize: 10, fontWeight: 800 }}>
+                Full
+              </span>
+            )}
           </div>
         </div>
-        <div style={{ color:'#fff', fontSize:15, fontWeight:900, lineHeight:1.3, marginBottom:5 }}>{ev.title}</div>
-        <div style={{ display:'flex', flexWrap:'wrap', gap:8, rowGap:4 }}>
-          <span style={{ color:'rgba(255,255,255,0.78)', fontSize:11.5 }}>📅 {ev.date}</span>
-          <span style={{ color:'rgba(255,255,255,0.78)', fontSize:11.5 }}>📍 {ev.venue}</span>
+
+        <div style={{ color: '#fff', fontSize: 15.5, fontWeight: 900, lineHeight: 1.32, marginBottom: 8, position: 'relative', zIndex: 1 }}>
+          {ev.title}
+        </div>
+
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, rowGap: 5, position: 'relative', zIndex: 1 }}>
+          <span style={{ color: 'rgba(255,255,255,0.75)', fontSize: 11.5, display: 'flex', alignItems: 'center', gap: 4 }}>
+            <span>📅</span> {ev.date}
+          </span>
+          <span style={{ color: 'rgba(255,255,255,0.75)', fontSize: 11.5, display: 'flex', alignItems: 'center', gap: 4 }}>
+            <span>📍</span> {ev.venue}
+          </span>
           {ev.start_time && (
-            <span style={{ color:'rgba(253,224,130,0.95)', fontSize:11.5, fontWeight:700 }}>
-              🕐 {ev.start_time}{ev.end_time ? ` – ${ev.end_time}` : ''}
+            <span style={{ color: 'rgba(253,224,130,0.95)', fontSize: 11.5, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4 }}>
+              <span>🕐</span> {ev.start_time}{ev.end_time ? ` – ${ev.end_time}` : ''}
             </span>
           )}
         </div>
       </div>
-      <div style={{ padding:'12px 16px' }}>
-        <div style={{ marginBottom:10 }}>
-          <div style={{ display:'flex', justifyContent:'space-between', marginBottom:3 }}>
-            <span style={{ fontSize:11, color:'rgba(255,255,255,0.38)' }}>Seats</span>
-            <span style={{ fontSize:11.5, color: full?'#f87171':pct>80?'#fcd34d':'#6ee7b7', fontWeight:700 }}>{ev.enrolled}/{ev.total}</span>
+
+      {/* Body & Actions */}
+      <div style={{ padding: '14px 18px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+        <div style={{ marginBottom: 12 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+            <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>
+              {full ? '🔴 No seats remaining' : pct > 80 ? '🟡 Filling up quickly' : '🟢 Open for registration'}
+            </span>
+            <span style={{ fontSize: 11.5, color: full ? '#f87171' : pct > 80 ? '#fcd34d' : '#6ee7b7', fontWeight: 700 }}>
+              {ev.enrolled} / {ev.total} seats
+            </span>
           </div>
-          <div style={{ height:5, background:'rgba(255,255,255,0.07)', borderRadius:3, overflow:'hidden' }}>
-            <div style={{ height:'100%', width:`${pct}%`, background: full?'linear-gradient(90deg,#e11d48,#f97316)':pct>80?'linear-gradient(90deg,#f59e0b,#f97316)':'linear-gradient(90deg,#059669,#0891b2)', borderRadius:3, transition:'width .6s' }} />
+          <div style={{ height: 5, background: 'rgba(255,255,255,0.06)', borderRadius: 3, overflow: 'hidden' }}>
+            <div style={{
+              height: '100%', width: `${pct}%`,
+              background: full ? 'linear-gradient(90deg,#e11d48,#f97316)' : pct > 80 ? 'linear-gradient(90deg,#f59e0b,#f97316)' : 'linear-gradient(90deg,#059669,#10b981)',
+              borderRadius: 3, transition: 'width .6s',
+            }} />
           </div>
         </div>
-        <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-          <div style={{ display:'flex', gap:8, alignItems:'center' }}>
-            <span style={{ fontSize:12, color:'rgba(255,255,255,0.45)', flex:1 }}>🏛 {ev.organizer}</span>
-            {!registered
-              ? <button onClick={onRegister} disabled={full} style={{ background: full?'rgba(255,255,255,0.05)': isMember ? 'linear-gradient(90deg,#059669,#10b981)' : 'linear-gradient(90deg,#f97316,#e11d48)', color: full?'rgba(255,255,255,0.3)':'#fff', border: full?'1px solid rgba(255,255,255,0.08)':'none', borderRadius:10, padding:'8px 18px', fontSize:13, fontWeight:800, cursor: full?'not-allowed':'pointer', fontFamily:'inherit', boxShadow: full?'none': isMember ? '0 4px 12px rgba(16,185,129,0.35)' : '0 4px 12px rgba(249,115,22,0.3)', whiteSpace:'nowrap' }}>
-                  {full ? 'Fully Booked' : isMember ? '⚡ Fast Register' : 'Register →'}
-                </button>
-              : <span style={{ background:'rgba(16,185,129,0.12)', color:'#34d399', borderRadius:10, padding:'7px 14px', fontSize:12.5, fontWeight:700, border:'1px solid rgba(16,185,129,0.22)', whiteSpace:'nowrap' }}>✓ Registered</span>
-            }
+
+        <div>
+          <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.45)', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 5 }}>
+            <span>🏛</span> <span>{ev.organizer}</span>
           </div>
-          {/* Cancel button — only shown when registered */}
-          {registered && (
+
+          {registered ? (
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                onClick={onViewTicket}
+                style={{
+                  flex: 1,
+                  background: 'rgba(16,185,129,0.15)',
+                  color: '#34d399',
+                  border: '1px solid rgba(16,185,129,0.3)',
+                  borderRadius: 10,
+                  padding: '9px 12px',
+                  fontSize: 12.5,
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  fontFamily: 'inherit',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                  transition: 'all .15s',
+                }}
+                onMouseEnter={e => e.currentTarget.style.background='rgba(16,185,129,0.25)'}
+                onMouseLeave={e => e.currentTarget.style.background='rgba(16,185,129,0.15)'}
+              >
+                <span>🎟️</span> View Digital Pass
+              </button>
+              <button
+                onClick={onCancel}
+                disabled={cancelling}
+                title="Cancel registration"
+                style={{
+                  background: 'rgba(225,29,72,0.1)',
+                  border: '1px solid rgba(225,29,72,0.25)',
+                  borderRadius: 10,
+                  padding: '9px 12px',
+                  fontSize: 12,
+                  fontWeight: 700,
+                  color: '#f87171',
+                  cursor: cancelling ? 'not-allowed' : 'pointer',
+                  fontFamily: 'inherit',
+                  transition: 'all .15s',
+                }}
+                onMouseEnter={e => e.currentTarget.style.background='rgba(225,29,72,0.2)'}
+                onMouseLeave={e => e.currentTarget.style.background='rgba(225,29,72,0.1)'}
+              >
+                {cancelling ? '…' : '✕ Cancel'}
+              </button>
+            </div>
+          ) : (
             <button
-              onClick={onCancel}
-              disabled={cancelling}
+              onClick={onRegister}
+              disabled={full}
               style={{
-                width:'100%', background:'transparent',
-                border:'1.5px solid rgba(225,29,72,0.35)',
-                borderRadius:10, padding:'8px', fontSize:12.5, fontWeight:700,
-                color: cancelling ? 'rgba(255,255,255,0.3)' : 'rgba(244,63,94,0.9)',
-                cursor: cancelling ? 'not-allowed' : 'pointer',
-                fontFamily:'inherit', transition:'all .15s',
+                width: '100%',
+                background: full
+                  ? 'rgba(255,255,255,0.05)'
+                  : isMember
+                  ? 'linear-gradient(90deg,#059669,#10b981)'
+                  : 'linear-gradient(90deg,#f97316,#ea580c)',
+                color: full ? 'rgba(255,255,255,0.3)' : '#fff',
+                border: full ? '1px solid rgba(255,255,255,0.08)' : 'none',
+                borderRadius: 10, padding: '9px 14px', fontSize: 13, fontWeight: 800,
+                cursor: full ? 'not-allowed' : 'pointer',
+                fontFamily: 'inherit',
+                boxShadow: full ? 'none' : isMember ? '0 4px 14px rgba(16,185,129,0.35)' : '0 4px 14px rgba(249,115,22,0.35)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                transition: 'all .15s',
               }}
-              onMouseEnter={e => { if (!cancelling) { e.currentTarget.style.background='rgba(225,29,72,0.12)'; e.currentTarget.style.borderColor='rgba(225,29,72,0.6)'; } }}
-              onMouseLeave={e => { e.currentTarget.style.background='transparent'; e.currentTarget.style.borderColor='rgba(225,29,72,0.35)'; }}
             >
-              {cancelling ? '⏳ Cancelling…' : '✕ Cancel Registration'}
+              {full ? 'Fully Booked' : isMember ? '⚡ Fast RSVP (Member Pass)' : '🎟️ Register (Guest Pass)'}
             </button>
           )}
         </div>
@@ -787,73 +1270,203 @@ function EvCard({ ev, idx, registered, onRegister, onCancel, cancelling, user })
   );
 }
 
-function TrCard({ t, idx, registered, onRegister, onCancel, cancelling, user }) {
+function TrCard({ t, idx, registered, onRegister, onViewTicket, onCancel, cancelling, user }) {
   const [hov, setHov] = useState(false);
-  const pct  = t.total > 0 ? Math.min(100, Math.round(t.enrolled / t.total * 100)) : 0;
+  const pct  = t.total > 0 ? Math.min(100, Math.round((t.enrolled / t.total) * 100)) : 0;
   const full = t.total > 0 && t.enrolled >= t.total;
-  const s    = TR_STYLES[t?.category] || TR_STYLES.Technology;
+  const theme = TR_THEMES[t?.category] || TR_THEMES.Technology;
   const isMember = user?.role === 'MEMBER' || user?.role === 'ADMIN';
 
   return (
     <div onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
-      style={{ borderRadius:18, overflow:'hidden', background:'rgba(15,23,42,0.9)', border:`1px solid ${hov?s.color+'50':'rgba(255,255,255,0.07)'}`, boxShadow: hov?`0 14px 40px ${s.color}20`:'0 4px 16px rgba(0,0,0,0.3)', transform: hov?'translateY(-4px)':'none', transition:'all .22s cubic-bezier(.34,1.56,.64,1)', animation:`cardIn .35s ease ${idx*0.05}s both` }}>
-      <div style={{ background: s.accent, padding:'18px 20px 14px', position:'relative', overflow:'hidden', minHeight:100 }}>
-        <div style={{ position:'absolute', right:-8, bottom:-10, fontSize:70, opacity:0.12 }}>{TR_ICONS[t.category]||'🎓'}</div>
-        <div style={{ display:'flex', justifyContent:'space-between', marginBottom:6, alignItems:'center' }}>
-          <span style={{ background:'rgba(255,255,255,0.22)', color:'#fff', borderRadius:6, padding:'3px 10px', fontSize:10.5, fontWeight:700 }}>{t.category}</span>
-          <div style={{ display:'flex', gap:6 }}>
-            {isMember && (
-              <span style={{ background:'rgba(16,185,129,0.25)', color:'#6ee7b7', borderRadius:6, padding:'2px 8px', fontSize:10, fontWeight:800, border:'1px solid rgba(16,185,129,0.4)' }}>
-                👑 Free Pass
+      style={{
+        borderRadius: 18, overflow: 'hidden',
+        background: 'rgba(15, 23, 42, 0.88)',
+        backdropFilter: 'blur(16px)',
+        border: `1px solid ${hov ? 'rgba(249,115,22,0.45)' : 'rgba(255,255,255,0.08)'}`,
+        boxShadow: hov ? '0 16px 44px rgba(0,0,0,0.45), 0 0 20px rgba(249,115,22,0.12)' : '0 8px 30px rgba(0,0,0,0.35)',
+        transform: hov ? 'translateY(-4px)' : 'none',
+        transition: 'all .24s cubic-bezier(.34,1.56,.64,1)',
+        animation: `cardIn .35s ease ${idx * 0.05}s both`,
+        display: 'flex', flexDirection: 'column',
+      }}>
+      {/* Header with ambient glow accent line */}
+      <div style={{
+        background: theme.bg,
+        borderTop: `3px solid ${theme.accent}`,
+        padding: '16px 18px 14px',
+        position: 'relative', overflow: 'hidden',
+      }}>
+        <div style={{ position: 'absolute', right: -12, bottom: -14, fontSize: 64, opacity: 0.08 }}>
+          {TR_ICONS[t.category] || '🎓'}
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, alignItems: 'center', position: 'relative', zIndex: 1 }}>
+          <div style={{ display: 'flex', gap: 5 }}>
+            <span style={{
+              background: theme.badgeBg, color: theme.badgeText,
+              border: `1px solid ${theme.border}`,
+              borderRadius: 6, padding: '3px 9px', fontSize: 10.5, fontWeight: 800,
+              display: 'inline-flex', alignItems: 'center', gap: 4,
+            }}>
+              <span>{TR_ICONS[t.category] || '🎓'}</span> {t.category}
+            </span>
+            <span style={{
+              background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.7)',
+              borderRadius: 6, padding: '3px 8px', fontSize: 10.5, fontWeight: 700,
+              border: '1px solid rgba(255,255,255,0.12)',
+            }}>
+              {t.level}
+            </span>
+          </div>
+
+          <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+            {isMember ? (
+              <span style={{
+                background: 'rgba(16,185,129,0.2)', color: '#6ee7b7',
+                borderRadius: 6, padding: '2px 8px', fontSize: 10, fontWeight: 800,
+                border: '1px solid rgba(16,185,129,0.4)', display: 'inline-flex', alignItems: 'center', gap: 3,
+              }}>
+                👑 VIP Member Pass
+              </span>
+            ) : (
+              <span style={{
+                background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.6)',
+                borderRadius: 6, padding: '2px 8px', fontSize: 10, fontWeight: 700,
+                border: '1px solid rgba(255,255,255,0.1)',
+              }}>
+                Public Pass
               </span>
             )}
-            <span style={{ background:'rgba(255,255,255,0.18)', color:'#fff', borderRadius:6, padding:'3px 10px', fontSize:10.5, fontWeight:700 }}>{t.level}</span>
+            {registered && (
+              <span style={{
+                background: 'rgba(16,185,129,0.28)', color: '#34d399',
+                borderRadius: 6, padding: '2px 8px', fontSize: 10, fontWeight: 800,
+                border: '1px solid rgba(16,185,129,0.4)',
+              }}>
+                ✓ Enrolled
+              </span>
+            )}
+            {full && !registered && (
+              <span style={{ background: 'rgba(225,29,72,0.28)', color: '#f87171', borderRadius: 6, padding: '2px 8px', fontSize: 10, fontWeight: 800 }}>
+                Full
+              </span>
+            )}
           </div>
         </div>
-        <div style={{ color:'#fff', fontSize:15, fontWeight:900, lineHeight:1.3, marginBottom:5 }}>{t.title}</div>
-        <div style={{ display:'flex', gap:10, flexWrap:'wrap' }}>
-          <span style={{ color:'rgba(255,255,255,0.78)', fontSize:11.5 }}>🏛 {t.org}</span>
-          <span style={{ color:'rgba(255,255,255,0.78)', fontSize:11.5 }}>⏱ {t.duration}</span>
+
+        <div style={{ color: '#fff', fontSize: 15.5, fontWeight: 900, lineHeight: 1.32, marginBottom: 8, position: 'relative', zIndex: 1 }}>
+          {t.title}
+        </div>
+
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, rowGap: 5, position: 'relative', zIndex: 1 }}>
+          <span style={{ color: 'rgba(255,255,255,0.75)', fontSize: 11.5, display: 'flex', alignItems: 'center', gap: 4 }}>
+            <span>🏛</span> {t.org}
+          </span>
+          <span style={{ color: 'rgba(255,255,255,0.75)', fontSize: 11.5, display: 'flex', alignItems: 'center', gap: 4 }}>
+            <span>⏱</span> {t.duration}
+          </span>
         </div>
       </div>
-      <div style={{ padding:'12px 16px' }}>
-        {t.schedule && <div style={{ fontSize:11.5, color:'rgba(255,255,255,0.4)', marginBottom: t.session_start_time ? 4 : 10 }}>📅 {t.schedule.split('|')[0].trim()}</div>}
-        {t.session_start_time && <div style={{ fontSize:11.5, color:'rgba(253,224,130,0.9)', fontWeight:700, marginBottom:10 }}>🕐 {t.session_start_time}{t.session_end_time ? ` – ${t.session_end_time}` : ''}</div>}
-        <div style={{ marginBottom:10 }}>
-          <div style={{ display:'flex', justifyContent:'space-between', marginBottom:3 }}>
-            <span style={{ fontSize:11, color:'rgba(255,255,255,0.38)' }}>Registration</span>
-            <span style={{ fontSize:11.5, color: full?'#f87171':'#6ee7b7', fontWeight:700 }}>{t.enrolled}/{t.total}</span>
+
+      {/* Body & Actions */}
+      <div style={{ padding: '14px 18px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+        <div style={{ marginBottom: 12 }}>
+          {t.schedule && (
+            <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.45)', marginBottom: t.session_start_time ? 4 : 8 }}>
+              📅 {t.schedule.split('|')[0].trim()}
+            </div>
+          )}
+          {t.session_start_time && (
+            <div style={{ fontSize: 11.5, color: 'rgba(253,224,130,0.95)', fontWeight: 700, marginBottom: 8 }}>
+              🕐 {t.session_start_time}{t.session_end_time ? ` – ${t.session_end_time}` : ''}
+            </div>
+          )}
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+            <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>
+              {full ? '🔴 Cohort full' : pct > 80 ? '🟡 Few slots remaining' : '🟢 Cohort registration open'}
+            </span>
+            <span style={{ fontSize: 11.5, color: full ? '#f87171' : pct > 80 ? '#fcd34d' : '#6ee7b7', fontWeight: 700 }}>
+              {t.enrolled} / {t.total} enrolled
+            </span>
           </div>
-          <div style={{ height:5, background:'rgba(255,255,255,0.07)', borderRadius:3, overflow:'hidden' }}>
-            <div style={{ height:'100%', width:`${pct}%`, background: s.accent, borderRadius:3, transition:'width .6s' }} />
+          <div style={{ height: 5, background: 'rgba(255,255,255,0.06)', borderRadius: 3, overflow: 'hidden' }}>
+            <div style={{
+              height: '100%', width: `${pct}%`,
+              background: full ? 'linear-gradient(90deg,#e11d48,#f97316)' : pct > 80 ? 'linear-gradient(90deg,#f59e0b,#f97316)' : 'linear-gradient(90deg,#059669,#10b981)',
+              borderRadius: 3, transition: 'width .6s',
+            }} />
           </div>
         </div>
-        <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-          <div style={{ display:'flex', justifyContent:'flex-end' }}>
-            {registered
-              ? <span style={{ background:'rgba(16,185,129,0.12)', color:'#34d399', borderRadius:10, padding:'8px 14px', fontSize:12.5, fontWeight:700, border:'1px solid rgba(16,185,129,0.22)' }}>✓ Registered</span>
-              : <button onClick={onRegister} disabled={full} style={{ background: full?'rgba(255,255,255,0.05)': isMember ? 'linear-gradient(90deg,#059669,#10b981)' : s.accent, color: full?'rgba(255,255,255,0.3)':'#fff', border: full?'1px solid rgba(255,255,255,0.08)':'none', borderRadius:10, padding:'9px 20px', fontSize:13, fontWeight:800, cursor: full?'not-allowed':'pointer', fontFamily:'inherit', boxShadow: full?'none': isMember ? '0 4px 12px rgba(16,185,129,0.4)' : `0 4px 12px ${s.color}40` }}>
-                  {full ? 'Fully Booked' : isMember ? '⚡ Fast Enroll' : 'Enroll →'}
-                </button>
-            }
-          </div>
-          {/* Cancel registration — shown for all registered users */}
-          {registered && (
+
+        <div>
+          {registered ? (
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                onClick={onViewTicket}
+                style={{
+                  flex: 1,
+                  background: 'rgba(16,185,129,0.15)',
+                  color: '#34d399',
+                  border: '1px solid rgba(16,185,129,0.3)',
+                  borderRadius: 10,
+                  padding: '9px 12px',
+                  fontSize: 12.5,
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  fontFamily: 'inherit',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                  transition: 'all .15s',
+                }}
+                onMouseEnter={e => e.currentTarget.style.background='rgba(16,185,129,0.25)'}
+                onMouseLeave={e => e.currentTarget.style.background='rgba(16,185,129,0.15)'}
+              >
+                <span>🎟️</span> View Training Pass
+              </button>
+              <button
+                onClick={onCancel}
+                disabled={cancelling}
+                title="Cancel enrollment"
+                style={{
+                  background: 'rgba(225,29,72,0.1)',
+                  border: '1px solid rgba(225,29,72,0.25)',
+                  borderRadius: 10,
+                  padding: '9px 12px',
+                  fontSize: 12,
+                  fontWeight: 700,
+                  color: '#f87171',
+                  cursor: cancelling ? 'not-allowed' : 'pointer',
+                  fontFamily: 'inherit',
+                  transition: 'all .15s',
+                }}
+                onMouseEnter={e => e.currentTarget.style.background='rgba(225,29,72,0.2)'}
+                onMouseLeave={e => e.currentTarget.style.background='rgba(225,29,72,0.1)'}
+              >
+                {cancelling ? '…' : '✕ Cancel'}
+              </button>
+            </div>
+          ) : (
             <button
-              onClick={onCancel}
-              disabled={cancelling}
+              onClick={onRegister}
+              disabled={full}
               style={{
-                width:'100%', background:'transparent',
-                border:'1.5px solid rgba(225,29,72,0.35)',
-                borderRadius:10, padding:'8px', fontSize:12.5, fontWeight:700,
-                color: cancelling ? 'rgba(255,255,255,0.3)' : 'rgba(244,63,94,0.9)',
-                cursor: cancelling ? 'not-allowed' : 'pointer',
-                fontFamily:'inherit', transition:'all .15s',
+                width: '100%',
+                background: full
+                  ? 'rgba(255,255,255,0.05)'
+                  : isMember
+                  ? 'linear-gradient(90deg,#059669,#10b981)'
+                  : 'linear-gradient(90deg,#f97316,#ea580c)',
+                color: full ? 'rgba(255,255,255,0.3)' : '#fff',
+                border: full ? '1px solid rgba(255,255,255,0.08)' : 'none',
+                borderRadius: 10, padding: '9px 14px', fontSize: 13, fontWeight: 800,
+                cursor: full ? 'not-allowed' : 'pointer',
+                fontFamily: 'inherit',
+                boxShadow: full ? 'none' : isMember ? '0 4px 14px rgba(16,185,129,0.35)' : '0 4px 14px rgba(249,115,22,0.35)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                transition: 'all .15s',
               }}
-              onMouseEnter={e => { if (!cancelling) { e.currentTarget.style.background='rgba(225,29,72,0.12)'; e.currentTarget.style.borderColor='rgba(225,29,72,0.6)'; } }}
-              onMouseLeave={e => { e.currentTarget.style.background='transparent'; e.currentTarget.style.borderColor='rgba(225,29,72,0.35)'; }}
             >
-              {cancelling ? '⏳ Cancelling…' : '✕ Cancel Registration'}
+              {full ? 'Fully Booked' : isMember ? '⚡ Fast Enroll (Member Pass)' : '🎓 Enroll (Guest Pass)'}
             </button>
           )}
         </div>
@@ -879,7 +1492,7 @@ function EventsTab({ user }) {
   const [detail, setDetail]       = useState(null);
   const [formModal, setFormModal] = useState(null);
   const [conflict, setConflict]   = useState(null);
-  const [okModal, setOkModal]     = useState(null);
+  const [ticketModal, setTicketModal] = useState(null);
   const [errModal, setErrModal]   = useState('');
   const [submitting, setSub]      = useState(false);
   const [fname, setFname]         = useState('');
@@ -889,6 +1502,20 @@ function EventsTab({ user }) {
   const [position, setPosition]   = useState('');
   const [fnameErr, setFnameErr]   = useState(false);
   const navigate = useNavigate();
+
+  function viewTicket(ev) {
+    const refCode = `DSG-2026-EVT-${String(ev.id).padStart(4, '0')}-${(user?.name || 'GST').replace(/[^a-zA-Z0-9]/g, '').slice(0, 4).toUpperCase()}`;
+    setTicketModal({
+      item: ev,
+      isTraining: false,
+      role: user?.role || 'GUEST',
+      name: user?.name || fname || 'Guest Attendee',
+      email: user?.email || email || '',
+      institution: user?.institution || institution || '',
+      position: user?.campus || position || '',
+      refCode,
+    });
+  }
 
   const loadEvents = useCallback((showSpinner = false) => {
     if (showSpinner) setLoading(true);
@@ -1002,8 +1629,19 @@ function EventsTab({ user }) {
       const updated = { ...formModal, enrolled: res.enrolled ?? formModal.enrolled + 1 };
       setEvents(p => p.map(e => e.id === formModal.id ? updated : e));
       setMyRegs(p => ({ ...p, [formModal.id]: { attended: false } }));
+      const refCode = `DSG-2026-EVT-${String(updated.id).padStart(4, '0')}-${(fname || user?.name || 'GST').replace(/[^a-zA-Z0-9]/g, '').slice(0, 4).toUpperCase()}`;
       setFormModal(null);
-      setOkModal({ event: updated, name: fname, email: email || user?.email || '', phone, institution, position, role: user?.role || 'GUEST' });
+      setTicketModal({
+        item: updated,
+        isTraining: false,
+        name: fname,
+        email: email || user?.email || '',
+        phone,
+        institution,
+        position,
+        role: user?.role || 'GUEST',
+        refCode,
+      });
     } catch (err) {
       const msg = err.message || '';
       setFormModal(null);
@@ -1279,72 +1917,9 @@ function EventsTab({ user }) {
         </div>
       )}
 
-      {/* Success modal */}
-      {okModal && (
-        <div onClick={() => setOkModal(null)} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.7)', zIndex:9200, display:'flex', alignItems:'center', justifyContent:'center', padding:20, backdropFilter:'blur(8px)' }}>
-          <div onClick={e => e.stopPropagation()} style={{ background:'#0f172a', borderRadius:24, maxWidth:'min(460px,calc(100vw - 32px))', width:'100%', overflow:'hidden', border:'1px solid rgba(255,255,255,0.12)', animation:'modalIn .26s cubic-bezier(.34,1.56,.64,1)', boxShadow:'0 32px 80px rgba(0,0,0,0.85)' }}>
-            <div style={{ background: grad(okModal.event), padding:'26px 24px 50px', textAlign:'center', position:'relative' }}>
-              <div style={{ display:'flex', justifyContent:'center', marginBottom:6 }}>
-                {okModal.role === 'MEMBER' || okModal.role === 'ADMIN' ? (
-                  <span style={{ background:'rgba(0,0,0,0.4)', color:'#34d399', border:'1px solid rgba(52,211,153,0.4)', borderRadius:6, padding:'3px 10px', fontSize:11, fontWeight:900, letterSpacing:'0.6px', textTransform:'uppercase' }}>
-                    👑 VIP Consortium Member Pass
-                  </span>
-                ) : (
-                  <span style={{ background:'rgba(0,0,0,0.4)', color:'rgba(255,255,255,0.8)', border:'1px solid rgba(255,255,255,0.2)', borderRadius:6, padding:'3px 10px', fontSize:11, fontWeight:800, textTransform:'uppercase' }}>
-                    Standard Attendee Pass
-                  </span>
-                )}
-              </div>
-              <div style={{ color:'#fff', fontSize:19, fontWeight:900 }}>{okModal.event.title}</div>
-              <div style={{ position:'absolute', bottom:-34, left:'50%', transform:'translateX(-50%)', width:68, height:68, borderRadius:'50%', background: grad(okModal.event), border:'4px solid #0f172a', display:'flex', alignItems:'center', justifyContent:'center', fontSize:26, fontWeight:900, color:'#fff' }}>
-                {(okModal.name || 'U')[0].toUpperCase()}
-              </div>
-            </div>
-            <div style={{ paddingTop:46, paddingBottom:12, textAlign:'center', paddingLeft:24, paddingRight:24 }}>
-              <div style={{ fontWeight:900, fontSize:17, color:'#fff' }}>{okModal.name}</div>
-              <div style={{ fontSize:12, color:'rgba(255,255,255,0.45)', marginTop:3 }}>{okModal.email}</div>
-              {okModal.institution && <div style={{ fontSize:12, color:'rgba(255,255,255,0.4)', marginTop:2 }}>🏛 {okModal.institution}</div>}
-            </div>
-            <div style={{ padding:'0 22px 22px', display:'flex', flexDirection:'column', gap:7 }}>
-              {[
-                {i:'📋',l:'EVENT',v:okModal.event.title},
-                {i:'📅',l:'DATE',v:okModal.event.date||'TBA'},
-                ...(okModal.event.start_time ? [{i:'🕐',l:'TIME',v:`${okModal.event.start_time}${okModal.event.end_time ? ` – ${okModal.event.end_time}` : ''}`}] : []),
-                {i:'📍',l:'VENUE',v:okModal.event.venue||'TBA'},
-                {i:'🏛',l:'ORGANIZER',v:okModal.event.organizer},
-                {i:'🎫',l:'CATEGORY',v:okModal.event.category},
-              ].filter(r=>r.v).map(r => (
-                <div key={r.l} style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 12px', background:'rgba(255,255,255,0.04)', borderRadius:10 }}>
-                  <span style={{ fontSize:14 }}>{r.i}</span>
-                  <div><div style={{ fontSize:10, color:'rgba(255,255,255,0.35)', fontWeight:700, letterSpacing:'.5px' }}>{r.l}</div><div style={{ fontSize:12.5, color:'#fff', fontWeight:700 }}>{r.v}</div></div>
-                </div>
-              ))}
-
-              {/* Status Message */}
-              <div style={{
-                background: okModal.role === 'MEMBER' || okModal.role === 'ADMIN' ? 'rgba(16,185,129,0.14)' : 'rgba(59,130,246,0.12)',
-                border: `1px solid ${okModal.role === 'MEMBER' || okModal.role === 'ADMIN' ? 'rgba(16,185,129,0.35)' : 'rgba(59,130,246,0.3)'}`,
-                borderRadius: 12, padding: '11px 14px', marginTop: 4,
-              }}>
-                <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:3 }}>
-                  <span style={{ fontSize:14 }}>{okModal.role === 'MEMBER' ? '👑' : '✅'}</span>
-                  <span style={{ fontSize:12.5, color: okModal.role === 'MEMBER' ? '#34d399' : '#60a5fa', fontWeight:800 }}>
-                    {okModal.role === 'MEMBER' ? 'VIP Member Registration Confirmed!' : 'Registration Confirmed!'}
-                  </span>
-                </div>
-                <div style={{ fontSize:11.5, color:'rgba(255,255,255,0.7)', lineHeight:1.5 }}>
-                  {okModal.role === 'MEMBER'
-                    ? 'Your priority member slot and complimentary certificate eligibility are locked in. Confirmation email sent!'
-                    : `Confirmation email sent to ${okModal.email}.`}
-                </div>
-              </div>
-
-              <button onClick={() => setOkModal(null)} style={{ width:'100%', background:'linear-gradient(90deg,#f97316,#e11d48)', color:'#fff', border:'none', borderRadius:14, padding:'13px', fontSize:14, fontWeight:800, cursor:'pointer', fontFamily:'inherit', marginTop:4 }}>
-                Done
-              </button>
-            </div>
-          </div>
-        </div>
+      {/* Digital Admission Pass / Boarding Pass */}
+      {ticketModal && (
+        <DigitalTicketModal passData={ticketModal} onClose={() => setTicketModal(null)} />
       )}
 
       {/* Search + Filter toolbar */}
@@ -1406,7 +1981,17 @@ function EventsTab({ user }) {
       {!loading && filteredEvents.length > 0 && (
         <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(300px,1fr))', gap:18 }}>
           {filteredEvents.map((ev, i) => (
-            <EvCard key={ev.id} ev={ev} idx={i} registered={!!myRegs[ev.id]} onRegister={() => openForm(ev)} onCancel={() => cancelReg(ev)} cancelling={cancellingId === ev.id} user={user} />
+            <EvCard
+              key={ev.id}
+              ev={ev}
+              idx={i}
+              registered={!!myRegs[ev.id]}
+              onRegister={() => openForm(ev)}
+              onViewTicket={() => viewTicket(ev)}
+              onCancel={() => cancelReg(ev)}
+              cancelling={cancellingId === ev.id}
+              user={user}
+            />
           ))}
         </div>
       )}
@@ -1450,7 +2035,7 @@ function TrainingTab({ user }) {
   const [myEnr, setMyEnr]         = useState({});
   const [detail, setDetail]       = useState(null);
   const [formModal, setFormModal] = useState(null);
-  const [okModal, setOkModal]     = useState(null);
+  const [ticketModal, setTicketModal] = useState(null);
   const [errModal, setErrModal]   = useState('');
   const [submitting, setSub]      = useState(false);
   const [cancellingEnrId, setCancellingEnrId] = useState(null);
@@ -1463,6 +2048,20 @@ function TrainingTab({ user }) {
   const [position, setPosition]   = useState('');
   const [fnameErr, setFnameErr]   = useState(false);
   const navigate = useNavigate();
+
+  function viewTrainingTicket(t) {
+    const refCode = `DSG-2026-TRN-${String(t.id).padStart(4, '0')}-${(user?.name || 'GST').replace(/[^a-zA-Z0-9]/g, '').slice(0, 4).toUpperCase()}`;
+    setTicketModal({
+      item: t,
+      isTraining: true,
+      role: user?.role || 'GUEST',
+      name: user?.name || fname || 'Guest Attendee',
+      email: user?.email || email || '',
+      institution: user?.institution || institution || '',
+      position: user?.campus || position || '',
+      refCode,
+    });
+  }
 
   const loadTrainings = useCallback((showSpinner = false) => {
     if (showSpinner) setLoading(true);
@@ -1568,8 +2167,19 @@ function TrainingTab({ user }) {
       const upd = { ...formModal, enrolled: res.enrolled ?? formModal.enrolled + 1 };
       setTrainings(p => p.map(t => t.id === formModal.id ? upd : t));
       setMyEnr(p => ({ ...p, [formModal.id]: true }));
+      const refCode = `DSG-2026-TRN-${String(upd.id).padStart(4, '0')}-${(fname || user?.name || 'GST').replace(/[^a-zA-Z0-9]/g, '').slice(0, 4).toUpperCase()}`;
       setFormModal(null);
-      setOkModal({ training: upd, name: fname, email, phone, institution, position, role: user?.role || 'GUEST' });
+      setTicketModal({
+        item: upd,
+        isTraining: true,
+        name: fname,
+        email,
+        phone,
+        institution,
+        position,
+        role: user?.role || 'GUEST',
+        refCode,
+      });
     } catch (err) {
       const msg = err.message || '';
       setFormModal(null);
@@ -1824,71 +2434,9 @@ function TrainingTab({ user }) {
         </div>
       )}
 
-      {/* Success */}
-      {okModal && (
-        <div onClick={() => setOkModal(null)} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.7)', zIndex:9200, display:'flex', alignItems:'center', justifyContent:'center', padding:20, backdropFilter:'blur(8px)' }}>
-          <div onClick={e => e.stopPropagation()} style={{ background:'#0f172a', borderRadius:24, maxWidth:'min(440px,calc(100vw - 32px))', width:'100%', overflow:'hidden', border:'1px solid rgba(255,255,255,0.12)', animation:'modalIn .26s cubic-bezier(.34,1.56,.64,1)', boxShadow:'0 32px 80px rgba(0,0,0,0.85)' }}>
-            <div style={{ background: ts(okModal.training).accent, padding:'26px 24px 50px', textAlign:'center', position:'relative' }}>
-              <div style={{ display:'flex', justifyContent:'center', marginBottom:6 }}>
-                {okModal.role === 'MEMBER' || okModal.role === 'ADMIN' ? (
-                  <span style={{ background:'rgba(0,0,0,0.4)', color:'#34d399', border:'1px solid rgba(52,211,153,0.4)', borderRadius:6, padding:'3px 10px', fontSize:11, fontWeight:900, letterSpacing:'0.6px', textTransform:'uppercase' }}>
-                    👑 VIP Consortium Member Pass
-                  </span>
-                ) : (
-                  <span style={{ background:'rgba(0,0,0,0.4)', color:'rgba(255,255,255,0.8)', border:'1px solid rgba(255,255,255,0.2)', borderRadius:6, padding:'3px 10px', fontSize:11, fontWeight:800, textTransform:'uppercase' }}>
-                    Standard Attendee Pass
-                  </span>
-                )}
-              </div>
-              <div style={{ color:'#fff', fontSize:18, fontWeight:900 }}>{okModal.training.title}</div>
-              <div style={{ position:'absolute', bottom:-32, left:'50%', transform:'translateX(-50%)', width:64, height:64, borderRadius:'50%', background: ts(okModal.training).accent, border:'4px solid #0f172a', display:'flex', alignItems:'center', justifyContent:'center', fontSize:24, fontWeight:900, color:'#fff' }}>
-                {(okModal.name||'U')[0].toUpperCase()}
-              </div>
-            </div>
-            <div style={{ paddingTop:44, paddingBottom:10, textAlign:'center', paddingLeft:22, paddingRight:22 }}>
-              <div style={{ fontWeight:900, fontSize:16, color:'#fff' }}>{okModal.name}</div>
-              <div style={{ fontSize:12, color:'rgba(255,255,255,0.45)', marginTop:3 }}>{okModal.email}</div>
-              {okModal.institution && <div style={{ fontSize:12, color:'rgba(255,255,255,0.4)', marginTop:2 }}>🏛 {okModal.institution}</div>}
-            </div>
-            <div style={{ padding:'0 22px 22px', display:'flex', flexDirection:'column', gap:7 }}>
-              {[
-                {i:'🎓',l:'PROGRAM',v:okModal.training.title},
-                {i:'🏛',l:'ORGANIZER',v:okModal.training.org},
-                {i:'⏱',l:'DURATION',v:okModal.training.duration},
-                {i:'📊',l:'LEVEL',v:okModal.training.level},
-                {i:'📅',l:'SCHEDULE',v:okModal.training.schedule?.split('|')[0]?.trim()},
-              ].filter(r=>r.v).map(r => (
-                <div key={r.l} style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 12px', background:'rgba(255,255,255,0.04)', borderRadius:10 }}>
-                  <span style={{ fontSize:14 }}>{r.i}</span>
-                  <div><div style={{ fontSize:10, color:'rgba(255,255,255,0.35)', fontWeight:700, letterSpacing:'.5px' }}>{r.l}</div><div style={{ fontSize:12.5, color:'#fff', fontWeight:700 }}>{r.v}</div></div>
-                </div>
-              ))}
-
-              {/* Status Message */}
-              <div style={{
-                background: okModal.role === 'MEMBER' || okModal.role === 'ADMIN' ? 'rgba(16,185,129,0.14)' : 'rgba(59,130,246,0.12)',
-                border: `1px solid ${okModal.role === 'MEMBER' || okModal.role === 'ADMIN' ? 'rgba(16,185,129,0.35)' : 'rgba(59,130,246,0.3)'}`,
-                borderRadius: 12, padding: '11px 14px', marginTop: 4,
-              }}>
-                <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:3 }}>
-                  <span style={{ fontSize:14 }}>{okModal.role === 'MEMBER' ? '👑' : '✅'}</span>
-                  <span style={{ fontSize:12.5, color: okModal.role === 'MEMBER' ? '#34d399' : '#60a5fa', fontWeight:800 }}>
-                    {okModal.role === 'MEMBER' ? 'VIP Member Enrollment Confirmed!' : 'Enrollment Confirmed!'}
-                  </span>
-                </div>
-                <div style={{ fontSize:11.5, color:'rgba(255,255,255,0.7)', lineHeight:1.5 }}>
-                  {okModal.role === 'MEMBER'
-                    ? 'Your priority training slot and certificate completion tracking are locked in. Confirmation email sent!'
-                    : `Confirmation email sent to ${okModal.email}.`}
-                </div>
-              </div>
-
-              <button onClick={() => setOkModal(null)} style={{ width:'100%', background: ts(okModal.training).accent, color:'#fff', border:'none', borderRadius:14, padding:'12px', fontSize:14, fontWeight:800, cursor:'pointer', fontFamily:'inherit', marginTop:4 }}>
-                Done
-              </button>
-            </div>
-          </div>
-        </div>
+      {/* Digital Admission Pass / Cohort E-Ticket */}
+      {ticketModal && (
+        <DigitalTicketModal passData={ticketModal} onClose={() => setTicketModal(null)} />
       )}
 
       {loading && <div style={{ textAlign:'center', padding:'60px 0', color:'rgba(255,255,255,0.3)' }}><div style={{ fontSize:32, marginBottom:10 }}>⏳</div>Loading…</div>}
@@ -1952,7 +2500,17 @@ function TrainingTab({ user }) {
       {!loading && filtered.length > 0 && (
         <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(300px,1fr))', gap:18 }}>
           {filtered.map((t, idx) => (
-            <TrCard key={t.id} t={t} idx={idx} registered={!!myEnr[t.id]} onRegister={() => openEnroll(t)} onCancel={() => cancelEnr(t)} cancelling={cancellingEnrId === t.id} user={user} />
+            <TrCard
+              key={t.id}
+              t={t}
+              idx={idx}
+              registered={!!myEnr[t.id]}
+              onRegister={() => openEnroll(t)}
+              onViewTicket={() => viewTrainingTicket(t)}
+              onCancel={() => cancelEnr(t)}
+              cancelling={cancellingEnrId === t.id}
+              user={user}
+            />
           ))}
         </div>
       )}
