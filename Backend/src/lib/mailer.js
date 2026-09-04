@@ -17,6 +17,8 @@ function createTransporter() {
 }
 
 const PORTAL_URL = process.env.PORTAL_URL || 'https://dasig-portal.vercel.app';
+// For scannable QR codes and mobile devices, use public cloud URL or specified public IP
+const PORTAL_PUBLIC_URL = process.env.PORTAL_PUBLIC_URL || (PORTAL_URL.includes('localhost') ? 'https://dasig-portal.vercel.app' : PORTAL_URL);
 const FROM = `"DASIG Portal" <${process.env.SMTP_USER || 'noreply@dasig.ph'}>`;
 
 async function sendPasswordResetEmail(toEmail, resetToken) {
@@ -149,21 +151,31 @@ async function sendEventRegistrationEmail(arg1, arg2, arg3) {
   const isMember = attendee.role === 'MEMBER' || attendee.role === 'ADMIN';
   const refCode = `DSG-2026-EVT-${String(event.id || 1).padStart(4, '0')}-${(attendee.name || 'GST').replace(/[^a-zA-Z0-9]/g, '').slice(0, 4).toUpperCase()}`;
 
-  // Generate QR Code PNG buffer for inline CID attachment
+  const dateStr = event.date || 'TBA';
+  const timeStr = `${event.start_time || '09:00'}${event.end_time ? ` – ${event.end_time}` : ' – 17:00'}`;
+  const venueStr = event.venue || 'Central Visayas Node / Virtual Hall';
+  const verifyParams = new URLSearchParams({
+    ref: refCode,
+    name: attendee.name || 'Registered Attendee',
+    role: attendee.role || 'GUEST',
+    title: event.title || 'DASIG Event',
+    date: dateStr,
+    time: timeStr,
+    venue: venueStr,
+    inst: attendee.institution || '',
+    email: toEmail,
+    type: 'event',
+  });
+  const verifyUrl = `${PORTAL_PUBLIC_URL}/verify-pass?${verifyParams.toString()}`;
+
+  // Generate QR Code PNG buffer for inline CID attachment encoding the live verification URL
   let qrAttachment = null;
   try {
-    const qrPayload = JSON.stringify({
-      portal: 'DASIG',
-      type: 'EVENT',
-      id: event.id,
-      ref: refCode,
-      attendee: attendee.name,
-      tier: isMember ? 'VIP_MEMBER' : 'GUEST',
-    });
-    const qrBuffer = await QRCode.toBuffer(qrPayload, {
-      width: 220,
+    const qrBuffer = await QRCode.toBuffer(verifyUrl, {
+      width: 260,
       margin: 2,
       color: { dark: '#020817', light: '#ffffff' },
+      errorCorrectionLevel: 'M',
     });
     qrAttachment = {
       filename: 'ticket-qr.png',
@@ -234,13 +246,20 @@ async function sendEventRegistrationEmail(arg1, arg2, arg3) {
               <div style="font-size:11px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:12px;">
                 Rapid Check-In Barcode / QR
               </div>
-              ${qrAttachment
-                ? `<img src="cid:ticketqr@dasig" width="160" height="160" alt="Admission QR Code" style="display:block;margin:0 auto;border-radius:10px;border:1px solid #e2e8f0;" />`
-                : `<img src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(refCode)}" width="160" height="160" alt="Admission QR Code" style="display:block;margin:0 auto;border-radius:10px;border:1px solid #e2e8f0;" />`
-              }
+              <a href="${verifyUrl}" target="_blank" style="display:inline-block;text-decoration:none;">
+                ${qrAttachment
+                  ? `<img src="cid:ticketqr@dasig" width="160" height="160" alt="Admission QR Code" style="display:block;margin:0 auto;border-radius:12px;border:1px solid #e2e8f0;box-shadow:0 4px 12px rgba(0,0,0,0.08);" />`
+                  : `<img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(verifyUrl)}" width="160" height="160" alt="Admission QR Code" style="display:block;margin:0 auto;border-radius:12px;border:1px solid #e2e8f0;" />`
+                }
+              </a>
               <div class="ticket-ref">${refCode}</div>
-              <div style="font-size:11px;color:#94a3b8;margin-top:6px;">
-                Scan this QR code upon arrival at the venue desk or present ticket reference for rapid credential verification.
+              <div style="font-size:11.5px;color:#64748b;margin-top:8px;line-height:1.4;">
+                Point your phone camera at this QR code to view and verify your official pass credentials anytime.
+              </div>
+              <div style="margin-top:10px;">
+                <a href="${verifyUrl}" target="_blank" style="display:inline-block;font-size:12px;font-weight:800;color:#2563eb;text-decoration:underline;">
+                  🔍 Click here to test pass verification page directly →
+                </a>
               </div>
             </div>
 
@@ -287,8 +306,8 @@ async function sendEventRegistrationEmail(arg1, arg2, arg3) {
             </div>
 
             <!-- Action Buttons -->
-            <a href="${gcalUrl}" target="_blank" class="btn-primary">📅 Add to Google Calendar</a>
-            <a href="${portalUrl}" target="_blank" class="btn-secondary">🎟️ View Digital Pass in DASIG Portal</a>
+            <a href="${verifyUrl}" target="_blank" class="btn-primary">🎟️ View Verified Admission Pass</a>
+            <a href="${gcalUrl}" target="_blank" class="btn-secondary">📅 Add to Google Calendar</a>
           </div>
           <div class="footer">
             DASIG Regional Higher Education Innovation Consortium · Region VII<br>
@@ -299,7 +318,7 @@ async function sendEventRegistrationEmail(arg1, arg2, arg3) {
       </body>
       </html>
     `,
-    text: `DASIG PORTAL — OFFICIAL ADMISSION PASS\n\nEvent: ${event.title}\nTicket Ref: ${refCode}\nAttendee: ${attendee.name} (${toEmail})\nDate: ${event.date || 'TBA'}\nVenue: ${event.venue || 'TBA'}\nPass Tier: ${isMember ? 'VIP Consortium Member Pass' : 'Standard Guest Pass'}\n\nAdd to calendar: ${gcalUrl}\nView pass: ${portalUrl}`,
+    text: `DASIG PORTAL — OFFICIAL ADMISSION PASS\n\nEvent: ${event.title}\nTicket Ref: ${refCode}\nAttendee: ${attendee.name} (${toEmail})\nDate: ${event.date || 'TBA'}\nVenue: ${event.venue || 'TBA'}\nPass Tier: ${isMember ? 'VIP Consortium Member Pass' : 'Standard Guest Pass'}\n\nVerify Pass: ${verifyUrl}\nAdd to calendar: ${gcalUrl}\nView in portal: ${portalUrl}`,
   });
   console.log(`[mailer] Sent event registration pass to ${toEmail} (Ref: ${refCode})`);
 }
@@ -316,21 +335,31 @@ async function sendTrainingEnrollmentEmail(arg1, arg2, arg3) {
   const isMember = attendee.role === 'MEMBER' || attendee.role === 'ADMIN';
   const refCode = `DSG-2026-TRN-${String(training.id || 1).padStart(4, '0')}-${(attendee.name || 'GST').replace(/[^a-zA-Z0-9]/g, '').slice(0, 4).toUpperCase()}`;
 
-  // Generate QR Code PNG buffer for inline CID attachment
+  const dateStr = training.schedule || 'Scheduled Session';
+  const timeStr = `${training.session_start_time || '09:00'}${training.session_end_time ? ` – ${training.session_end_time}` : ' – 17:00'}`;
+  const venueStr = training.org || 'Central Visayas Node / Virtual Hall';
+  const verifyParams = new URLSearchParams({
+    ref: refCode,
+    name: attendee.name || 'Registered Attendee',
+    role: attendee.role || 'GUEST',
+    title: training.title || 'DASIG Training Program',
+    date: dateStr,
+    time: timeStr,
+    venue: venueStr,
+    inst: attendee.institution || '',
+    email: toEmail,
+    type: 'training',
+  });
+  const verifyUrl = `${PORTAL_PUBLIC_URL}/verify-pass?${verifyParams.toString()}`;
+
+  // Generate QR Code PNG buffer for inline CID attachment encoding the live verification URL
   let qrAttachment = null;
   try {
-    const qrPayload = JSON.stringify({
-      portal: 'DASIG',
-      type: 'TRAINING',
-      id: training.id,
-      ref: refCode,
-      attendee: attendee.name,
-      tier: isMember ? 'VIP_MEMBER' : 'GUEST',
-    });
-    const qrBuffer = await QRCode.toBuffer(qrPayload, {
-      width: 220,
+    const qrBuffer = await QRCode.toBuffer(verifyUrl, {
+      width: 260,
       margin: 2,
       color: { dark: '#064e3b', light: '#ffffff' },
+      errorCorrectionLevel: 'M',
     });
     qrAttachment = {
       filename: 'training-qr.png',
@@ -398,16 +427,23 @@ async function sendTrainingEnrollmentEmail(arg1, arg2, arg3) {
 
             <!-- QR Code Ticket Stub -->
             <div class="qr-box">
-              <div style="font-size:11px;font-weight:800;color:#065f46;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:12px;">
+              <div style="font-size:11px;font-weight:800;color:#064e3b;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:12px;">
                 Cohort Check-In Barcode / QR
               </div>
-              ${qrAttachment
-                ? `<img src="cid:ticketqr@dasig" width="160" height="160" alt="Training QR Code" style="display:block;margin:0 auto;border-radius:10px;border:1px solid #bbf7d0;" />`
-                : `<img src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(refCode)}" width="160" height="160" alt="Training QR Code" style="display:block;margin:0 auto;border-radius:10px;border:1px solid #bbf7d0;" />`
-              }
+              <a href="${verifyUrl}" target="_blank" style="display:inline-block;text-decoration:none;">
+                ${qrAttachment
+                  ? `<img src="cid:ticketqr@dasig" width="160" height="160" alt="Training QR Code" style="display:block;margin:0 auto;border-radius:12px;border:1px solid #bbf7d0;box-shadow:0 4px 12px rgba(0,0,0,0.08);" />`
+                  : `<img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(verifyUrl)}" width="160" height="160" alt="Training QR Code" style="display:block;margin:0 auto;border-radius:12px;border:1px solid #bbf7d0;" />`
+                }
+              </a>
               <div class="ticket-ref">${refCode}</div>
-              <div style="font-size:11px;color:#047857;margin-top:6px;">
-                Present this QR code for electronic attendance tracking and certificate qualification.
+              <div style="font-size:11.5px;color:#047857;margin-top:8px;line-height:1.4;">
+                Point your phone camera at this QR code for instant electronic attendance tracking and credential verification.
+              </div>
+              <div style="margin-top:10px;">
+                <a href="${verifyUrl}" target="_blank" style="display:inline-block;font-size:12px;font-weight:800;color:#059669;text-decoration:underline;">
+                  🔍 Click here to test pass verification page directly →
+                </a>
               </div>
             </div>
 
@@ -451,8 +487,8 @@ async function sendTrainingEnrollmentEmail(arg1, arg2, arg3) {
             </div>
 
             <!-- Action Buttons -->
-            <a href="${gcalUrl}" target="_blank" class="btn-primary">📅 Add to Google Calendar</a>
-            <a href="${portalUrl}" target="_blank" class="btn-secondary">🎓 View Training in DASIG Portal</a>
+            <a href="${verifyUrl}" target="_blank" class="btn-primary">🎓 View Verified Cohort Pass</a>
+            <a href="${gcalUrl}" target="_blank" class="btn-secondary">📅 Add to Google Calendar</a>
           </div>
           <div class="footer">
             DASIG Regional Higher Education Innovation Consortium · Region VII<br>
@@ -463,7 +499,7 @@ async function sendTrainingEnrollmentEmail(arg1, arg2, arg3) {
       </body>
       </html>
     `,
-    text: `DASIG PORTAL — TRAINING ENROLLMENT CONFIRMATION\n\nProgram: ${training.title}\nTicket Ref: ${refCode}\nEnrollee: ${attendee.name} (${toEmail})\nSchedule: ${training.schedule || 'TBA'}\nOrganizer: ${training.org || 'DASIG'}\n\nAdd to calendar: ${gcalUrl}\nView training: ${portalUrl}`,
+    text: `DASIG PORTAL — TRAINING ENROLLMENT CONFIRMATION\n\nProgram: ${training.title}\nTicket Ref: ${refCode}\nEnrollee: ${attendee.name} (${toEmail})\nSchedule: ${training.schedule || 'TBA'}\nOrganizer: ${training.org || 'DASIG'}\n\nVerify Pass: ${verifyUrl}\nAdd to calendar: ${gcalUrl}\nView in portal: ${portalUrl}`,
   });
   console.log(`[mailer] Sent training enrollment pass to ${toEmail} (Ref: ${refCode})`);
 }

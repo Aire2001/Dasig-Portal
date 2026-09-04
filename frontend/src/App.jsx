@@ -20,6 +20,7 @@ import ContactAdminPage from './pages/ContactAdminPage';
 import TermsPage from './pages/TermsPage';
 import ChatbotPage from './pages/ChatbotPage';
 import ProfilePage from './pages/ProfilePage';
+import VerifyPassPage from './pages/VerifyPassPage';
 import NotFoundPage from './pages/NotFoundPage';
 
 export default function App() {
@@ -48,6 +49,7 @@ export default function App() {
                 <Route path="/terms"         element={<TermsPage />} />
                 <Route path="/chatbot"       element={<ChatbotPage />} />
                 <Route path="/profile"       element={<ProfilePage />} />
+                <Route path="/verify-pass"   element={<VerifyPassPage />} />
                 <Route path="*"             element={<NotFoundPage />} />
               </Routes>
               <Footer />

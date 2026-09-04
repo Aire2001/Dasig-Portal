@@ -11,6 +11,7 @@ import PageHeader from '../components/PageHeader';
 import ParticleBackground from '../components/ParticleBackground';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
+import QRCode from 'qrcode';
 
 /* ═══════════════════════════════════════════════════════════
    DATE UTILITIES
@@ -707,57 +708,71 @@ export default function ProgramsPage() {
 /* ═══════════════════════════════════════════════════════════
    DIGITAL E-TICKET & BOARDING PASS HELPERS
 ═══════════════════════════════════════════════════════════ */
-function QRCodeSvg({ size = 100, value = 'DSG-PASS' }) {
+function DynamicQRCode({ value, size = 100 }) {
+  const [dataUrl, setDataUrl] = useState('');
+  const [err, setErr] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    if (!value) return;
+    QRCode.toDataURL(value, {
+      width: size * 2.5,
+      margin: 1.5,
+      color: {
+        dark: '#020817',
+        light: '#ffffff',
+      },
+      errorCorrectionLevel: 'M',
+    })
+      .then(url => {
+        if (active) {
+          setDataUrl(url);
+          setErr(false);
+        }
+      })
+      .catch(e => {
+        console.warn('QR generation error:', e);
+        if (active) setErr(true);
+      });
+    return () => { active = false; };
+  }, [value, size]);
+
+  if (err || !dataUrl) {
+    return (
+      <div style={{
+        width: size,
+        height: size,
+        borderRadius: 12,
+        background: '#ffffff',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        boxShadow: '0 4px 14px rgba(0,0,0,0.4)',
+        padding: 6,
+      }}>
+        <div style={{ fontSize: 10, color: '#64748b', fontWeight: 800, textAlign: 'center' }}>
+          {err ? 'QR Error' : 'Generating QR...'}
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <svg width={size} height={size} viewBox="0 0 120 120" style={{ background: '#fff', borderRadius: 10, padding: 6, display: 'block', boxShadow: '0 4px 14px rgba(0,0,0,0.4)' }}>
-      {/* 3 Corner Finder Patterns */}
-      <rect x="10" y="10" width="30" height="30" fill="#000" rx="3" />
-      <rect x="16" y="16" width="18" height="18" fill="#fff" />
-      <rect x="20" y="20" width="10" height="10" fill="#000" />
-
-      <rect x="80" y="10" width="30" height="30" fill="#000" rx="3" />
-      <rect x="86" y="16" width="18" height="18" fill="#fff" />
-      <rect x="90" y="20" width="10" height="10" fill="#000" />
-
-      <rect x="10" y="80" width="30" height="30" fill="#000" rx="3" />
-      <rect x="16" y="86" width="18" height="18" fill="#fff" />
-      <rect x="20" y="90" width="10" height="10" fill="#000" />
-
-      {/* Timing and alignment bars */}
-      <rect x="44" y="22" width="32" height="4" fill="#000" />
-      <rect x="22" y="44" width="4" height="32" fill="#000" />
-      <rect x="80" y="80" width="20" height="20" fill="#000" rx="2" />
-      <rect x="85" y="85" width="10" height="10" fill="#fff" />
-      <rect x="88" y="88" width="4" height="4" fill="#000" />
-
-      {/* Realistic data matrix dots */}
-      <rect x="48" y="10" width="6" height="6" fill="#000" />
-      <rect x="62" y="10" width="8" height="6" fill="#000" />
-      <rect x="48" y="32" width="6" height="6" fill="#000" />
-      <rect x="64" y="30" width="8" height="6" fill="#000" />
-
-      <rect x="10" y="48" width="6" height="6" fill="#000" />
-      <rect x="10" y="62" width="6" height="8" fill="#000" />
-      <rect x="32" y="48" width="6" height="6" fill="#000" />
-      <rect x="30" y="64" width="6" height="8" fill="#000" />
-
-      <rect x="48" y="48" width="8" height="8" fill="#f97316" rx="2" />
-      <rect x="64" y="48" width="6" height="6" fill="#000" />
-      <rect x="48" y="64" width="6" height="6" fill="#000" />
-      <rect x="62" y="62" width="8" height="8" fill="#000" />
-
-      <rect x="48" y="80" width="6" height="8" fill="#000" />
-      <rect x="60" y="86" width="8" height="6" fill="#000" />
-      <rect x="48" y="98" width="10" height="6" fill="#000" />
-      <rect x="66" y="98" width="6" height="6" fill="#000" />
-
-      <rect x="80" y="48" width="8" height="6" fill="#000" />
-      <rect x="96" y="48" width="8" height="6" fill="#000" />
-      <rect x="86" y="60" width="6" height="8" fill="#000" />
-      <rect x="98" y="62" width="6" height="6" fill="#000" />
-      <rect x="104" y="80" width="6" height="10" fill="#000" />
-      <rect x="104" y="96" width="6" height="8" fill="#000" />
-    </svg>
+    <img
+      src={dataUrl}
+      alt="Admission QR Code"
+      width={size}
+      height={size}
+      style={{
+        width: size,
+        height: size,
+        borderRadius: 12,
+        background: '#ffffff',
+        padding: 5,
+        display: 'block',
+        boxShadow: '0 4px 16px rgba(0,0,0,0.4)',
+      }}
+    />
   );
 }
 
@@ -827,6 +842,32 @@ function DigitalTicketModal({ passData, onClose }) {
   if (!passData) return null;
   const { item, isTraining, role, name, email, institution, position, refCode } = passData;
   const isMember = role === 'MEMBER' || role === 'ADMIN';
+
+  const dateStr = item.date || item.schedule?.split('|')[0]?.trim() || 'Scheduled Session';
+  const timeStr = `${item.start_time || item.session_start_time || '09:00'}${item.end_time ? ` – ${item.end_time}` : item.session_end_time ? ` – ${item.session_end_time}` : ' – 17:00'}`;
+  const venueStr = item.venue || item.org || 'Central Visayas Node / Online Virtual Hall';
+  const attendeeName = name || 'Registered Attendee';
+  const attendeeInst = institution || '';
+
+  const currentOrigin = typeof window !== 'undefined' && window.location ? window.location.origin : 'https://dasig-portal.vercel.app';
+  const verifyQuery = new URLSearchParams({
+    ref: refCode || 'DSG-PASS-VERIFIED',
+    name: attendeeName,
+    role: role || 'GUEST',
+    title: item.title || 'DASIG Consortium Session',
+    date: dateStr,
+    time: timeStr,
+    venue: venueStr,
+    inst: attendeeInst,
+    type: isTraining ? 'training' : 'event',
+    email: email || '',
+  }).toString();
+
+  const localVerifyUrl = `${currentOrigin}/verify-pass?${verifyQuery}`;
+  const publicVerifyUrl = `https://dasig-portal.vercel.app/verify-pass?${verifyQuery}`;
+  const scanQrUrl = (currentOrigin.includes('localhost') || currentOrigin.includes('127.0.0.1'))
+    ? publicVerifyUrl
+    : localVerifyUrl;
 
   return (
     <div onClick={onClose} style={{
@@ -969,17 +1010,51 @@ function DigitalTicketModal({ passData, onClose }) {
             <div>
               <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', fontWeight: 700, letterSpacing: '0.6px', textTransform: 'uppercase' }}>Ticket Reference No.</div>
               <div style={{ fontSize: 15, fontWeight: 900, color: '#fff', letterSpacing: '1px', fontFamily: 'monospace', marginTop: 2 }}>{refCode}</div>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 4, maxWidth: 220, lineHeight: 1.4 }}>
-                Present this digital pass at the registration desk on event day or use the reference ID for virtual check-in.
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginTop: 4, maxWidth: 220, lineHeight: 1.4 }}>
+                Scan the QR code with any smartphone camera (iOS / Android / Google Lens) to instantly view and verify your admission pass.
               </div>
             </div>
             <div style={{ flexShrink: 0, textAlign: 'center' }}>
-              <QRCodeSvg size={96} value={refCode} />
+              <a
+                href={localVerifyUrl}
+                target="_blank"
+                rel="noreferrer"
+                title="Scan with phone or click to open pass verification page"
+                style={{ display: 'inline-block', textDecoration: 'none', cursor: 'pointer' }}
+              >
+                <DynamicQRCode size={100} value={scanQrUrl} />
+              </a>
+              <div style={{ fontSize: 9.5, color: '#93c5fd', fontWeight: 800, marginTop: 5, letterSpacing: '0.4px' }}>
+                📷 Scan with Phone
+              </div>
             </div>
           </div>
 
+          {/* Direct Pass Verification Test Link */}
+          <div style={{ marginTop: 12, textAlign: 'center' }}>
+            <a
+              href={localVerifyUrl}
+              target="_blank"
+              rel="noreferrer"
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 6,
+                fontSize: 12, fontWeight: 800,
+                color: isMember ? '#34d399' : '#93c5fd',
+                textDecoration: 'none',
+                background: isMember ? 'rgba(16,185,129,0.1)' : 'rgba(59,130,246,0.1)',
+                border: `1px solid ${isMember ? 'rgba(16,185,129,0.3)' : 'rgba(59,130,246,0.3)'}`,
+                borderRadius: 9, padding: '7px 16px',
+                transition: 'all .15s',
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = isMember ? 'rgba(16,185,129,0.18)' : 'rgba(59,130,246,0.18)'}
+              onMouseLeave={e => e.currentTarget.style.background = isMember ? 'rgba(16,185,129,0.1)' : 'rgba(59,130,246,0.1)'}
+            >
+              <span>🔍</span> Preview Live Pass Verification Page →
+            </a>
+          </div>
+
           {/* Action buttons: Calendar & Download */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 16 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 12 }}>
             <a
               href={getGoogleCalendarUrl(item)}
               target="_blank"
