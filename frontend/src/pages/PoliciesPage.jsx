@@ -8,10 +8,10 @@ import { useAuth } from '../context/AuthContext';
 const categories = ['All', 'Membership', 'Governance', 'Events', 'Research'];
 
 const catConfig = {
-  Membership: { grad: 'linear-gradient(135deg,#1e3a8a,#3b82f6)', icon: '🏛️' },
-  Governance: { grad: 'linear-gradient(135deg,#4c1d95,#8b5cf6)', icon: '⚖️'  },
-  Events:     { grad: 'linear-gradient(135deg,#be123c,#f43f5e)', icon: '📅'  },
-  Research:   { grad: 'linear-gradient(135deg,#065f46,#10b981)', icon: '🔬'  },
+  Membership: { color: '#60a5fa', bg: 'rgba(59,130,246,0.14)', border: 'rgba(59,130,246,0.3)', grad: 'linear-gradient(135deg,#1e3a8a,#3b82f6)', icon: '🏛️' },
+  Governance: { color: '#c084fc', bg: 'rgba(192,132,252,0.14)', border: 'rgba(192,132,252,0.3)', grad: 'linear-gradient(135deg,#4c1d95,#8b5cf6)', icon: '⚖️'  },
+  Events:     { color: '#fb7185', bg: 'rgba(251,113,133,0.14)', border: 'rgba(251,113,133,0.3)', grad: 'linear-gradient(135deg,#be123c,#f43f5e)', icon: '📅'  },
+  Research:   { color: '#34d399', bg: 'rgba(52,211,153,0.14)', border: 'rgba(52,211,153,0.3)', grad: 'linear-gradient(135deg,#065f46,#10b981)', icon: '🔬'  },
 };
 
 const POLICIES_CSS = `
@@ -22,20 +22,14 @@ const POLICIES_CSS = `
   .policy-card {
     border-radius: 18px; padding: 22px;
     cursor: pointer; position: relative; overflow: hidden;
-    transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
-    border: 1px solid rgba(255,255,255,0.1);
-    background: rgba(15,23,42,0.75);
-    backdrop-filter: blur(12px);
+    transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(15,23,42,0.82);
+    backdrop-filter: blur(14px);
   }
   .policy-card:hover {
     transform: translateY(-3px);
-    border-color: rgba(249,115,22,0.45);
-    box-shadow: 0 16px 38px rgba(0,0,0,0.55);
-  }
-  .policy-card::after {
-    content: ''; position: absolute; inset: 0;
-    background: linear-gradient(135deg, rgba(255,255,255,0.06) 0%, transparent 55%);
-    pointer-events: none;
+    box-shadow: 0 16px 40px rgba(0,0,0,0.6);
   }
   .filter-btn {
     border-radius: 9px; padding: 7px 16px; font-size: 12.5px; font-weight: 700;
@@ -71,21 +65,37 @@ export default function PoliciesPage() {
 
       {/* Detail modal */}
       {selected && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 9000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, backdropFilter: 'blur(4px)' }}
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', zIndex: 9000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, backdropFilter: 'blur(6px)' }}
           onClick={() => setSelected(null)}>
           <div onClick={e => e.stopPropagation()} style={{
             background: 'linear-gradient(180deg,#0f172a,#020817)',
-            border: '1px solid rgba(255,255,255,0.1)',
+            border: '1px solid rgba(255,255,255,0.12)',
             borderRadius: 22, maxWidth: 640, width: '100%', maxHeight: '80vh', overflow: 'auto',
-            boxShadow: '0 32px 80px rgba(0,0,0,0.6)',
+            boxShadow: '0 32px 80px rgba(0,0,0,0.7)',
           }}>
-            <div style={{ background: catConfig[selected.category]?.grad || 'linear-gradient(135deg,#1e3a8a,#3b82f6)', padding: '26px 30px', position: 'relative', overflow: 'hidden' }}>
-              <div style={{ position: 'absolute', bottom: -20, right: -10, fontSize: 80, opacity: 0.1 }}>{catConfig[selected.category]?.icon || '📋'}</div>
-              <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: 12, marginBottom: 8, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{selected.category} · Effective {selected.effective_date}</div>
-              <h2 style={{ color: '#fff', fontSize: 22, fontWeight: 900, margin: 0, lineHeight: 1.25 }}>{selected.title}</h2>
+            <div style={{
+              background: 'linear-gradient(135deg,rgba(15,23,42,0.95),rgba(30,41,59,0.95))',
+              borderBottom: '1px solid rgba(255,255,255,0.08)',
+              padding: '24px 28px', position: 'relative', overflow: 'hidden'
+            }}>
+              <div style={{ position: 'absolute', bottom: -20, right: -10, fontSize: 80, opacity: 0.08 }}>{catConfig[selected.category]?.icon || '📋'}</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                <span style={{
+                  background: catConfig[selected.category]?.bg || 'rgba(59,130,246,0.15)',
+                  color: catConfig[selected.category]?.color || '#60a5fa',
+                  border: `1px solid ${catConfig[selected.category]?.border || 'rgba(59,130,246,0.3)'}`,
+                  borderRadius: 6, padding: '2px 8px', fontSize: 11, fontWeight: 800,
+                }}>
+                  {selected.category}
+                </span>
+                <span style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11.5, fontWeight: 600 }}>
+                  Effective: {selected.effective_date}
+                </span>
+              </div>
+              <h2 style={{ color: '#fff', fontSize: 20, fontWeight: 900, margin: 0, lineHeight: 1.3 }}>{selected.title}</h2>
             </div>
-            <div style={{ padding: '26px 30px' }}>
-              <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: 14.5, lineHeight: 1.85, marginBottom: 24 }}>{selected.content}</p>
+            <div style={{ padding: '24px 28px' }}>
+              <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: 14, lineHeight: 1.85, marginBottom: 24 }}>{selected.content}</p>
               <button onClick={() => setSelected(null)} style={{ background: 'linear-gradient(90deg,#f97316,#e11d48)', color: '#fff', border: 'none', borderRadius: 12, padding: '11px 28px', fontSize: 13.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 16px rgba(249,115,22,0.35)' }}>Close</button>
             </div>
           </div>
@@ -183,32 +193,56 @@ export default function PoliciesPage() {
 }
 
 function PolicyCard({ policy: p, cfg, locked, index, onClick }) {
+  const [hovered, setHovered] = useState(false);
   return (
-    <div className="policy-card"
+    <div
+      className="policy-card"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
       style={{
-        background: locked ? 'rgba(255,255,255,0.04)' : cfg.grad,
-        opacity: locked ? 0.6 : 1,
+        background: 'rgba(15,23,42,0.85)',
+        backdropFilter: 'blur(16px)',
+        border: `1.5px solid ${hovered && !locked ? cfg.border : 'rgba(255,255,255,0.08)'}`,
+        boxShadow: hovered && !locked ? `0 16px 38px rgba(0,0,0,0.6), 0 0 20px ${cfg.bg}` : '0 4px 20px rgba(0,0,0,0.3)',
+        borderRadius: 18,
+        padding: '24px',
+        opacity: locked ? 0.65 : 1,
         cursor: locked ? 'default' : 'pointer',
-        animation: `cardIn 0.4s ease ${index * 0.06}s both`,
+        animation: `cardIn 0.4s ease ${index * 0.05}s both`,
+        position: 'relative',
+        overflow: 'hidden',
+        transition: 'all 0.2s cubic-bezier(.34,1.2,.64,1)',
+        transform: hovered && !locked ? 'translateY(-3px)' : 'none',
       }}
       onClick={onClick}
     >
-      <div style={{ position: 'absolute', bottom: -16, right: -8, fontSize: 72, opacity: 0.08, lineHeight: 1 }}>{cfg.icon}</div>
+      <div style={{ position: 'absolute', bottom: -12, right: -6, fontSize: 72, opacity: 0.06, lineHeight: 1, pointerEvents: 'none' }}>{cfg.icon}</div>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
         <span style={{
-          background: 'rgba(255,255,255,0.2)', color: '#fff',
-          borderRadius: 8, padding: '4px 12px', fontSize: 12, fontWeight: 800,
-        }}>{p.category}</span>
-        <span style={{ fontSize: 20 }}>{locked ? '🔒' : cfg.icon}</span>
+          background: cfg.bg, color: cfg.color, border: `1px solid ${cfg.border}`,
+          borderRadius: 8, padding: '3px 10px', fontSize: 11.5, fontWeight: 800,
+          display: 'inline-flex', alignItems: 'center', gap: 5,
+        }}>
+          <span>{cfg.icon}</span>
+          <span>{p.category}</span>
+        </span>
+        <span style={{ fontSize: 13, color: locked ? '#f87171' : '#34d399', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4 }}>
+          {locked ? '🔒 Members Only' : '✓ Official Charter'}
+        </span>
       </div>
 
-      <h3 style={{ fontWeight: 900, fontSize: 15.5, color: '#fff', lineHeight: 1.35, marginBottom: 8 }}>{p.title}</h3>
-      <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.65)', marginBottom: 10, fontWeight: 600 }}>Effective: {p.effective_date}</div>
+      <h3 style={{ fontWeight: 900, fontSize: 16, color: '#fff', lineHeight: 1.35, marginBottom: 8 }}>{p.title}</h3>
+      <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', marginBottom: 12, fontWeight: 600 }}>📅 Effective Date: {p.effective_date}</div>
       <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.65)', lineHeight: 1.7, marginBottom: 0 }}>
-        {locked ? 'This policy is available to DASIG members only.' : p.content.slice(0, 120) + (p.content.length > 120 ? '…' : '')}
+        {locked ? 'This policy is available to active DASIG members only.' : p.content.slice(0, 130) + (p.content.length > 130 ? '…' : '')}
       </p>
-      {!locked && <div style={{ marginTop: 14, fontSize: 12.5, color: 'rgba(255,255,255,0.6)', fontWeight: 700 }}>Read full policy →</div>}
+      {!locked && (
+        <div style={{ marginTop: 16, fontSize: 12.5, color: '#f97316', fontWeight: 800, display: 'flex', alignItems: 'center', gap: 4 }}>
+          <span>Read full charter</span>
+          <span>→</span>
+        </div>
+      )}
     </div>
   );
 }

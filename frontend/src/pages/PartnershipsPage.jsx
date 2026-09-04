@@ -8,16 +8,16 @@ import { useAuth } from '../context/AuthContext';
 const types = ['All', 'Academic Partnership', 'Research Collaboration', 'Technology Partnership', 'Funding Partnership'];
 
 const typeConfig = {
-  'Academic Partnership':   { grad: 'linear-gradient(135deg,#1e3a8a,#3b82f6)', icon: '🎓' },
-  'Research Collaboration': { grad: 'linear-gradient(135deg,#065f46,#10b981)', icon: '🔬' },
-  'Technology Partnership': { grad: 'linear-gradient(135deg,#4c1d95,#8b5cf6)', icon: '💻' },
-  'Funding Partnership':    { grad: 'linear-gradient(135deg,#b45309,#f59e0b)', icon: '💰' },
+  'Academic Partnership':   { color: '#60a5fa', bg: 'rgba(59,130,246,0.14)', border: 'rgba(59,130,246,0.3)', icon: '🎓' },
+  'Research Collaboration': { color: '#34d399', bg: 'rgba(52,211,153,0.14)', border: 'rgba(52,211,153,0.3)', icon: '🔬' },
+  'Technology Partnership': { color: '#c084fc', bg: 'rgba(192,132,252,0.14)', border: 'rgba(192,132,252,0.3)', icon: '💻' },
+  'Funding Partnership':    { color: '#f59e0b', bg: 'rgba(245,158,11,0.14)', border: 'rgba(245,158,11,0.3)', icon: '💰' },
 };
 
 const statusBadge = {
-  Active:  { bg: 'rgba(16,185,129,0.2)', color: '#34d399', border: 'rgba(16,185,129,0.35)', dot: '#10b981' },
+  Active:  { bg: 'rgba(16,185,129,0.15)', color: '#34d399', border: 'rgba(16,185,129,0.35)', dot: '#10b981' },
   Expired: { bg: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.4)', border: 'rgba(255,255,255,0.12)', dot: '#475569' },
-  Pending: { bg: 'rgba(245,158,11,0.2)', color: '#fbbf24', border: 'rgba(245,158,11,0.35)', dot: '#f59e0b' },
+  Pending: { bg: 'rgba(245,158,11,0.15)', color: '#fbbf24', border: 'rgba(245,158,11,0.35)', dot: '#f59e0b' },
 };
 
 const PARTNERS_CSS = `
@@ -28,20 +28,14 @@ const PARTNERS_CSS = `
   .partner-card {
     border-radius: 18px; padding: 22px;
     cursor: pointer; position: relative; overflow: hidden;
-    transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
-    border: 1px solid rgba(255,255,255,0.1);
-    background: rgba(15,23,42,0.75);
-    backdrop-filter: blur(12px);
+    transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(15,23,42,0.85);
+    backdrop-filter: blur(14px);
   }
   .partner-card:hover {
     transform: translateY(-3px);
-    border-color: rgba(249,115,22,0.45);
-    box-shadow: 0 16px 38px rgba(0,0,0,0.55);
-  }
-  .partner-card::after {
-    content: ''; position: absolute; inset: 0;
-    background: linear-gradient(135deg, rgba(255,255,255,0.06) 0%, transparent 55%);
-    pointer-events: none;
+    box-shadow: 0 16px 40px rgba(0,0,0,0.6);
   }
   .filter-btn {
     border-radius: 9px; padding: 7px 16px; font-size: 12.5px; font-weight: 700;
@@ -108,10 +102,23 @@ export default function PartnershipsPage() {
             borderRadius: 22, maxWidth: 620, width: '100%', maxHeight: '80vh', overflow: 'auto',
             boxShadow: '0 32px 80px rgba(0,0,0,0.7)',
           }}>
-            <div style={{ background: typeConfig[selected.type]?.grad || 'linear-gradient(135deg,#1e3a8a,#3b82f6)', padding: '26px 30px', position: 'relative', overflow: 'hidden' }}>
-              <div style={{ position: 'absolute', bottom: -20, right: -10, fontSize: 80, opacity: 0.1 }}>{typeConfig[selected.type]?.icon || '🤝'}</div>
-              <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: 12, marginBottom: 8, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{selected.type}</div>
-              <h2 style={{ color: '#fff', fontSize: 22, fontWeight: 900, margin: 0, lineHeight: 1.25 }}>{selected.partner_name}</h2>
+            <div style={{
+              background: 'linear-gradient(135deg,rgba(15,23,42,0.95),rgba(30,41,59,0.95))',
+              borderBottom: '1px solid rgba(255,255,255,0.08)',
+              padding: '24px 28px', position: 'relative', overflow: 'hidden'
+            }}>
+              <div style={{ position: 'absolute', bottom: -20, right: -10, fontSize: 80, opacity: 0.08 }}>{typeConfig[selected.type]?.icon || '🤝'}</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                <span style={{
+                  background: typeConfig[selected.type]?.bg || 'rgba(59,130,246,0.15)',
+                  color: typeConfig[selected.type]?.color || '#60a5fa',
+                  border: `1px solid ${typeConfig[selected.type]?.border || 'rgba(59,130,246,0.3)'}`,
+                  borderRadius: 6, padding: '2px 8px', fontSize: 11, fontWeight: 800,
+                }}>
+                  {selected.type}
+                </span>
+              </div>
+              <h2 style={{ color: '#fff', fontSize: 20, fontWeight: 900, margin: 0, lineHeight: 1.3 }}>{selected.partner_name}</h2>
             </div>
             <div style={{ padding: '26px 30px' }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 22 }}>
@@ -197,30 +204,67 @@ export default function PartnershipsPage() {
 function PartnerCard({ p, index, onClick }) {
   const cfg = typeConfig[p.type] || typeConfig['Academic Partnership'];
   const sb  = statusBadge[p.status] || statusBadge.Active;
+  const [hovered, setHovered] = useState(false);
 
   return (
-    <div className="partner-card"
-      style={{ background: cfg.grad, animation: `cardIn 0.4s ease ${index * 0.06}s both` }}
+    <div
+      className="partner-card"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        background: 'rgba(15,23,42,0.85)',
+        backdropFilter: 'blur(16px)',
+        border: `1.5px solid ${hovered ? cfg.border : 'rgba(255,255,255,0.08)'}`,
+        borderRadius: 18,
+        padding: '24px',
+        position: 'relative',
+        overflow: 'hidden',
+        cursor: 'pointer',
+        boxShadow: hovered ? `0 16px 38px rgba(0,0,0,0.6), 0 0 20px ${cfg.bg}` : '0 4px 20px rgba(0,0,0,0.3)',
+        transform: hovered ? 'translateY(-3px)' : 'none',
+        transition: 'all 0.2s cubic-bezier(.34,1.2,.64,1)',
+        animation: `cardIn 0.4s ease ${index * 0.05}s both`,
+      }}
       onClick={onClick}
     >
-      <div style={{ position: 'absolute', bottom: -16, right: -8, fontSize: 72, opacity: 0.08, lineHeight: 1 }}>{cfg.icon}</div>
+      <div style={{ position: 'absolute', bottom: -12, right: -6, fontSize: 72, opacity: 0.06, lineHeight: 1, pointerEvents: 'none' }}>{cfg.icon}</div>
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
           <span style={{ width: 8, height: 8, borderRadius: '50%', background: sb.dot, display: 'inline-block' }} />
           <span style={{
             background: sb.bg, color: sb.color, border: `1px solid ${sb.border}`,
-            borderRadius: 20, padding: '4px 11px', fontSize: 11.5, fontWeight: 800,
+            borderRadius: 20, padding: '3px 11px', fontSize: 11, fontWeight: 800,
           }}>{p.status}</span>
         </div>
-        <span style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.65)', fontWeight: 600 }}>{p.start_date}</span>
+        <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: 600 }}>Started: {p.start_date}</span>
       </div>
 
-      <h3 style={{ fontWeight: 900, fontSize: 16, color: '#fff', lineHeight: 1.3, marginBottom: 8 }}>{p.partner_name}</h3>
-      <div style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.65)', marginBottom: 10 }}>{cfg.icon} {p.type}</div>
-      {p.description && <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', lineHeight: 1.65, marginBottom: 14 }}>{p.description.slice(0, 100)}…</p>}
-      {p.contact_person && <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)' }}>👤 {p.contact_person}</div>}
-      <div style={{ marginTop: 12, fontSize: 12.5, color: 'rgba(255,255,255,0.55)', fontWeight: 700 }}>View details →</div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+        <span style={{ fontSize: 11.5, fontWeight: 800, color: cfg.color, background: cfg.bg, border: `1px solid ${cfg.border}`, borderRadius: 6, padding: '2px 8px' }}>
+          {cfg.icon} {p.type}
+        </span>
+      </div>
+
+      <h3 style={{ fontWeight: 900, fontSize: 16, color: '#fff', lineHeight: 1.35, marginBottom: 10 }}>{p.partner_name}</h3>
+
+      {p.description && (
+        <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', lineHeight: 1.65, marginBottom: 14 }}>
+          {p.description.slice(0, 110)}…
+        </p>
+      )}
+
+      {p.contact_person && (
+        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 5 }}>
+          <span>👤</span>
+          <span>Contact Lead: {p.contact_person}</span>
+        </div>
+      )}
+
+      <div style={{ fontSize: 12.5, color: '#f97316', fontWeight: 800, display: 'flex', alignItems: 'center', gap: 4 }}>
+        <span>View partnership details</span>
+        <span>→</span>
+      </div>
     </div>
   );
 }

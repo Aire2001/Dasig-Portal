@@ -5,67 +5,67 @@ const SECTIONS = [
   {
     title: '1. Acceptance of Terms',
     icon: '📜',
-    grad: 'linear-gradient(135deg,#1e3a8a,#3b82f6)',
+    color: '#60a5fa',
     content: `By accessing and using the DASIG Portal, you agree to be bound by these Terms of Use and all applicable laws and regulations. If you do not agree with any of these terms, you are prohibited from using or accessing this portal. These terms apply to all users, including Guests, Members, and Administrators.`,
   },
   {
     title: '2. Use of the Portal',
     icon: '🖥️',
-    grad: 'linear-gradient(135deg,#7c3aed,#a855f7)',
+    color: '#a855f7',
     content: `The DASIG Portal is provided exclusively for consortium-related activities including event registration, training enrollment, news access, funding discovery, and member communication. You agree not to use this portal for any unlawful purpose, to transmit harmful content, to attempt unauthorized access, or to misrepresent your identity or institutional affiliation.`,
   },
   {
     title: '3. User Accounts and Roles',
     icon: '👤',
-    grad: 'linear-gradient(135deg,#0f766e,#14b8a6)',
+    color: '#14b8a6',
     content: `Account access is governed by role assignments: Guest (limited public access), Member (full consortium access upon approval), and Admin (system management). You are responsible for maintaining the confidentiality of your account credentials. Any activity occurring under your account is your responsibility. Report unauthorized access immediately to admin@dasig.ph.`,
   },
   {
     title: '4. Membership and Institutional Data',
     icon: '🏛️',
-    grad: 'linear-gradient(135deg,#b45309,#f59e0b)',
+    color: '#f59e0b',
     content: `Membership data submitted through the portal is used solely for consortium administration. Institutional information is verified against CHED and DASIG records. Misrepresentation of institutional affiliation may result in immediate account suspension and reporting to the relevant institution.`,
   },
   {
     title: '5. Intellectual Property',
     icon: '💡',
-    grad: 'linear-gradient(135deg,#be123c,#f43f5e)',
+    color: '#f43f5e',
     content: `All content on the DASIG Portal — including text, graphics, logos, and software — is the property of the DASIG Consortium or its content providers and is protected under applicable intellectual property laws. Research outputs and publications shared through the portal are subject to the DASIG Intellectual Property and Research Output Policy.`,
   },
   {
     title: '6. Data Privacy',
     icon: '🔒',
-    grad: 'linear-gradient(135deg,#065f46,#10b981)',
+    color: '#10b981',
     content: `The DASIG Portal collects personal information in compliance with the Data Privacy Act of 2012 (Republic Act 10173). Personal data is collected only for consortium management purposes and is not shared with third parties without consent. You have the right to access, correct, and request deletion of your personal data. Contact our Data Privacy Officer at privacy@dasig.ph.`,
   },
   {
     title: '7. Disclaimer of Warranties',
     icon: '⚠️',
-    grad: 'linear-gradient(135deg,#0369a1,#0ea5e9)',
+    color: '#0ea5e9',
     content: `The portal is provided "as is" without warranties of any kind. The DASIG Consortium does not warrant that the portal will be uninterrupted, error-free, or free of viruses. We reserve the right to modify, suspend, or discontinue any aspect of the portal at any time without notice.`,
   },
   {
     title: '8. Limitation of Liability',
     icon: '🛡️',
-    grad: 'linear-gradient(135deg,#4c1d95,#8b5cf6)',
+    color: '#8b5cf6',
     content: `The DASIG Consortium shall not be liable for any indirect, incidental, special, or consequential damages arising from the use of or inability to use the portal, including loss of data, institutional reputation, or business opportunities.`,
   },
   {
     title: '9. Modifications to Terms',
     icon: '✏️',
-    grad: 'linear-gradient(135deg,#9a3412,#f97316)',
+    color: '#f97316',
     content: `The DASIG Consortium reserves the right to revise these Terms of Use at any time. Changes will be posted on this page with an updated effective date. Continued use of the portal after changes are posted constitutes acceptance of the revised terms.`,
   },
   {
     title: '10. Governing Law',
     icon: '⚖️',
-    grad: 'linear-gradient(135deg,#1e3a8a,#4f46e5)',
+    color: '#6366f1',
     content: `These Terms of Use are governed by the laws of the Republic of the Philippines. Any disputes arising from the use of this portal shall be resolved under Philippine jurisdiction, with venue in Cebu City, Central Visayas.`,
   },
   {
     title: '11. Contact',
     icon: '📬',
-    grad: 'linear-gradient(135deg,#064e3b,#059669)',
+    color: '#059669',
     content: `For questions about these Terms of Use, contact the DASIG Secretariat at:\nEmail: legal@dasig.ph\nAddress: DASIG Consortium Secretariat, Cebu City, Region VII, Philippines\nBusiness Hours: Monday–Friday, 8:00 AM – 5:00 PM`,
   },
 ];
@@ -78,21 +78,18 @@ const TERMS_CSS = `
   .terms-card {
     border-radius: 18px;
     padding: 22px 24px;
+    background: rgba(15, 23, 42, 0.82);
+    backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     cursor: default;
-    transition: transform 0.22s cubic-bezier(.34,1.56,.64,1), box-shadow 0.22s;
+    transition: transform 0.2s cubic-bezier(.34,1.56,.64,1), box-shadow 0.2s, border-color 0.2s;
     position: relative;
     overflow: hidden;
   }
   .terms-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 16px 40px rgba(0,0,0,0.35);
-  }
-  .terms-card::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%);
-    pointer-events: none;
+    transform: translateY(-3px);
+    box-shadow: 0 16px 40px rgba(0,0,0,0.5);
+    border-color: rgba(255,255,255,0.18);
   }
 `;
 
@@ -135,22 +132,23 @@ export default function TermsPage() {
             {SECTIONS.map((s, i) => (
               <div key={i} className="terms-card"
                 style={{
-                  background: s.grad,
-                  animation: `cardSlide 0.4s ease ${i * 0.05}s both`,
+                  animation: `cardSlide 0.4s ease ${i * 0.04}s both`,
                   gridColumn: i === SECTIONS.length - 1 && SECTIONS.length % 2 !== 0 ? 'span 2' : undefined,
                 }}
               >
-                <div style={{ position:'absolute', bottom:-20, right:-10, fontSize:72, opacity:0.08, lineHeight:1 }}>{s.icon}</div>
+                <div style={{ position:'absolute', bottom:-15, right:-8, fontSize:72, opacity:0.05, lineHeight:1, pointerEvents:'none' }}>{s.icon}</div>
                 <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:12 }}>
                   <div style={{
-                    width:36, height:36, borderRadius:10,
-                    background:'rgba(255,255,255,0.18)',
+                    width:38, height:38, borderRadius:10,
+                    background: `${s.color}18`,
+                    border: `1px solid ${s.color}35`,
+                    color: s.color,
                     display:'flex', alignItems:'center', justifyContent:'center',
                     fontSize:18, flexShrink:0,
                   }}>{s.icon}</div>
-                  <h3 style={{ fontWeight:900, fontSize:14, color:'#fff', margin:0, lineHeight:1.3 }}>{s.title}</h3>
+                  <h3 style={{ fontWeight:900, fontSize:15, color:'#fff', margin:0, lineHeight:1.3 }}>{s.title}</h3>
                 </div>
-                <p style={{ color:'rgba(255,255,255,0.75)', fontSize:12.5, lineHeight:1.85, margin:0, whiteSpace:'pre-line' }}>{s.content}</p>
+                <p style={{ color:'rgba(255,255,255,0.65)', fontSize:13, lineHeight:1.8, margin:0, whiteSpace:'pre-line' }}>{s.content}</p>
               </div>
             ))}
           </div>

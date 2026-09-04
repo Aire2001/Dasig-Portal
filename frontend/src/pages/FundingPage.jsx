@@ -9,15 +9,15 @@ const categories = ['All', 'Scholarship', 'Grant', 'Government Fund', 'Research 
 const statuses   = ['All', 'Open', 'Upcoming', 'Closed'];
 
 const catConfig = {
-  Scholarship:      { grad: 'linear-gradient(135deg,#1e3a8a,#3b82f6)', icon: '🎓' },
-  Grant:            { grad: 'linear-gradient(135deg,#065f46,#10b981)', icon: '💰' },
-  'Government Fund':{ grad: 'linear-gradient(135deg,#b45309,#f59e0b)', icon: '🏛️' },
-  'Research Grant': { grad: 'linear-gradient(135deg,#4c1d95,#8b5cf6)', icon: '🔬' },
+  Scholarship:      { color: '#60a5fa', bg: 'rgba(59,130,246,0.14)', border: 'rgba(59,130,246,0.3)', icon: '🎓' },
+  Grant:            { color: '#34d399', bg: 'rgba(52,211,153,0.14)', border: 'rgba(52,211,153,0.3)', icon: '💰' },
+  'Government Fund':{ color: '#f59e0b', bg: 'rgba(245,158,11,0.14)', border: 'rgba(245,158,11,0.3)', icon: '🏛️' },
+  'Research Grant': { color: '#c084fc', bg: 'rgba(192,132,252,0.14)', border: 'rgba(192,132,252,0.3)', icon: '🔬' },
 };
 
 const statusBadge = {
-  Open:     { bg: 'rgba(16,185,129,0.2)', color: '#34d399', border: 'rgba(16,185,129,0.35)' },
-  Upcoming: { bg: 'rgba(59,130,246,0.2)', color: '#60a5fa', border: 'rgba(59,130,246,0.35)' },
+  Open:     { bg: 'rgba(16,185,129,0.15)', color: '#34d399', border: 'rgba(16,185,129,0.35)' },
+  Upcoming: { bg: 'rgba(59,130,246,0.15)', color: '#60a5fa', border: 'rgba(59,130,246,0.35)' },
   Closed:   { bg: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.4)', border: 'rgba(255,255,255,0.12)' },
 };
 
@@ -29,20 +29,14 @@ const FUNDING_CSS = `
   .fund-card {
     border-radius: 18px; padding: 22px;
     cursor: pointer; position: relative; overflow: hidden;
-    transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
-    border: 1px solid rgba(255,255,255,0.1);
-    background: rgba(15,23,42,0.75);
-    backdrop-filter: blur(12px);
+    transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(15,23,42,0.85);
+    backdrop-filter: blur(14px);
   }
   .fund-card:hover {
     transform: translateY(-3px);
-    border-color: rgba(249,115,22,0.45);
-    box-shadow: 0 16px 38px rgba(0,0,0,0.55);
-  }
-  .fund-card::after {
-    content: ''; position: absolute; inset: 0;
-    background: linear-gradient(135deg, rgba(255,255,255,0.06) 0%, transparent 55%);
-    pointer-events: none;
+    box-shadow: 0 16px 40px rgba(0,0,0,0.6);
   }
   .filter-btn {
     border-radius: 9px; padding: 7px 16px; font-size: 12.5px; font-weight: 700;
@@ -85,10 +79,24 @@ export default function FundingPage() {
             borderRadius: 22, maxWidth: 620, width: '100%', maxHeight: '80vh', overflow: 'auto',
             boxShadow: '0 32px 80px rgba(0,0,0,0.7)',
           }}>
-            <div style={{ background: catConfig[selected.category]?.grad || 'linear-gradient(135deg,#065f46,#10b981)', padding: '26px 30px', position: 'relative', overflow: 'hidden' }}>
-              <div style={{ position: 'absolute', bottom: -20, right: -10, fontSize: 80, opacity: 0.1 }}>{catConfig[selected.category]?.icon || '💰'}</div>
-              <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: 12, marginBottom: 8, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{selected.category} · Deadline: {selected.deadline}</div>
-              <h2 style={{ color: '#fff', fontSize: 22, fontWeight: 900, margin: 0, lineHeight: 1.25 }}>{selected.title}</h2>
+            <div style={{
+              background: 'linear-gradient(135deg,rgba(15,23,42,0.95),rgba(30,41,59,0.95))',
+              borderBottom: '1px solid rgba(255,255,255,0.08)',
+              padding: '24px 28px', position: 'relative', overflow: 'hidden'
+            }}>
+              <div style={{ position: 'absolute', bottom: -20, right: -10, fontSize: 80, opacity: 0.08 }}>{catConfig[selected.category]?.icon || '💰'}</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                <span style={{
+                  background: catConfig[selected.category]?.bg || 'rgba(52,211,153,0.15)',
+                  color: catConfig[selected.category]?.color || '#34d399',
+                  border: `1px solid ${catConfig[selected.category]?.border || 'rgba(52,211,153,0.3)'}`,
+                  borderRadius: 6, padding: '2px 8px', fontSize: 11, fontWeight: 800,
+                }}>
+                  {selected.category}
+                </span>
+                <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12, fontWeight: 600 }}>Deadline: {selected.deadline}</span>
+              </div>
+              <h2 style={{ color: '#fff', fontSize: 20, fontWeight: 900, margin: 0, lineHeight: 1.3 }}>{selected.title}</h2>
             </div>
             <div style={{ padding: '26px 30px' }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 22 }}>
@@ -237,27 +245,68 @@ export default function FundingPage() {
 function FundingCard({ item, index, onClick }) {
   const cfg = catConfig[item.category] || catConfig.Grant;
   const sb  = statusBadge[item.status] || statusBadge.Closed;
+  const [hovered, setHovered] = useState(false);
 
   return (
-    <div className="fund-card"
-      style={{ background: cfg.grad, animation: `cardIn 0.4s ease ${index * 0.06}s both` }}
+    <div
+      className="fund-card"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        background: 'rgba(15,23,42,0.85)',
+        backdropFilter: 'blur(16px)',
+        border: `1.5px solid ${hovered ? cfg.border : 'rgba(255,255,255,0.08)'}`,
+        borderRadius: 18,
+        padding: '24px',
+        position: 'relative',
+        overflow: 'hidden',
+        cursor: 'pointer',
+        boxShadow: hovered ? `0 16px 38px rgba(0,0,0,0.6), 0 0 20px ${cfg.bg}` : '0 4px 20px rgba(0,0,0,0.3)',
+        transform: hovered ? 'translateY(-3px)' : 'none',
+        transition: 'all 0.2s cubic-bezier(.34,1.2,.64,1)',
+        animation: `cardIn 0.4s ease ${index * 0.05}s both`,
+      }}
       onClick={onClick}
     >
-      <div style={{ position: 'absolute', bottom: -16, right: -8, fontSize: 72, opacity: 0.08, lineHeight: 1 }}>{cfg.icon}</div>
+      <div style={{ position: 'absolute', bottom: -12, right: -6, fontSize: 72, opacity: 0.06, lineHeight: 1, pointerEvents: 'none' }}>{cfg.icon}</div>
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
         <span style={{
           background: sb.bg, color: sb.color, border: `1px solid ${sb.border}`,
-          borderRadius: 20, padding: '4px 13px', fontSize: 11.5, fontWeight: 800,
+          borderRadius: 20, padding: '3px 12px', fontSize: 11, fontWeight: 800,
         }}>{item.status}</span>
-        <span style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.7)', fontWeight: 600 }}>Due: {item.deadline}</span>
+        <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: 600 }}>⏰ Due: {item.deadline}</span>
       </div>
 
-      <h3 style={{ fontWeight: 900, fontSize: 16, color: '#fff', lineHeight: 1.3, marginBottom: 8 }}>{item.title}</h3>
-      <div style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.65)', marginBottom: 6 }}>🏛️ {item.provider}</div>
-      {item.amount && <div style={{ fontSize: 14, color: '#fff', fontWeight: 800, marginBottom: 10 }}>💰 {item.amount}</div>}
-      {item.description && <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', lineHeight: 1.65, marginBottom: 14 }}>{item.description.slice(0, 100)}…</p>}
-      <div style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.55)', fontWeight: 700 }}>View details →</div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+        <span style={{ fontSize: 12, fontWeight: 800, color: cfg.color }}>{cfg.icon} {item.category}</span>
+        <span style={{ color: 'rgba(255,255,255,0.2)' }}>•</span>
+        <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>{item.provider}</span>
+      </div>
+
+      <h3 style={{ fontWeight: 900, fontSize: 16, color: '#fff', lineHeight: 1.35, marginBottom: 10 }}>{item.title}</h3>
+
+      {item.amount && (
+        <div style={{
+          display: 'inline-flex', alignItems: 'center', gap: 6,
+          background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.3)',
+          borderRadius: 8, padding: '3px 10px', fontSize: 13, color: '#34d399', fontWeight: 800, marginBottom: 12,
+        }}>
+          <span>💰</span>
+          <span>{item.amount}</span>
+        </div>
+      )}
+
+      {item.description && (
+        <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', lineHeight: 1.65, marginBottom: 14 }}>
+          {item.description.slice(0, 110)}…
+        </p>
+      )}
+
+      <div style={{ fontSize: 12.5, color: '#f97316', fontWeight: 800, display: 'flex', alignItems: 'center', gap: 4 }}>
+        <span>View opportunity details</span>
+        <span>→</span>
+      </div>
     </div>
   );
 }

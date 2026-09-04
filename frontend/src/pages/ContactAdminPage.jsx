@@ -29,7 +29,7 @@ const CSS = `
   }
   .ca-input::placeholder { color:rgba(255,255,255,0.35); }
   .ca-input:focus { border-color:#f97316; background:rgba(255,255,255,0.12); }
-  .ca-input option { background:#1e3a8a; color:#fff; }
+  .ca-input option { background:#0f172a; color:#fff; }
 `;
 
 export default function ContactAdminPage() {

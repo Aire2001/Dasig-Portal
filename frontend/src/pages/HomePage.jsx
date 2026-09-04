@@ -121,7 +121,7 @@ const modules = [
     desc: 'Regional workshop and summit discovery, attendee registration, and calendar sync.',
     icon: '📅',
     color: '#8b5cf6',
-    route: '/events',
+    route: '/programs?tab=events',
   },
   {
     title: 'News & Releases',
@@ -153,7 +153,7 @@ const modules = [
     desc: 'Accredited technical bootcamps and executive leadership development programs.',
     icon: '🎓',
     color: '#ec4899',
-    route: '/training',
+    route: '/programs?tab=training',
   },
   {
     title: 'Partnerships',
@@ -173,7 +173,7 @@ const modules = [
   },
   {
     title: 'Haribon AI Assistant',
-    tag: 'NLP 100% Accuracy',
+    tag: 'Consortium AI',
     desc: 'AI Assistant scoped to DASIG regional knowledge — ask about events, training & policies.',
     icon: '🦅',
     color: '#f97316',
@@ -267,7 +267,7 @@ const ADMIN_MODULES = [
   { title: 'Manage Policies',     desc: 'Upload and maintain consortium governance charters, IP rules, and ethics.', icon: '📋', tab: 'policies',     color: '#f59e0b', countKey: 'policies', countLabel: 'Documents' },
   { title: 'Manage Funding',      desc: 'Post grant calls, DOST scholarships, and monitor research grant deadlines.', icon: '💰', tab: 'funding',      color: '#10b981', countKey: 'funding', countLabel: 'Grant Calls' },
   { title: 'Manage Partnerships', desc: 'Maintain strategic MOUs with government agencies and international universities.', icon: '🤝', tab: 'partnerships', color: '#06b6d4', countKey: 'partnerships', countLabel: 'Active MOUs' },
-  { title: 'Reports & Analytics', desc: 'Inspect Haribon AI accuracy, event seat utilization, and consortium KPIs.',    icon: '📊', tab: 'reports',      color: '#a855f7', countKey: 'accuracy', countLabel: '100% Rate' },
+  { title: 'Reports & Analytics', desc: 'Inspect Haribon AI performance, event seat utilization, and consortium KPIs.',    icon: '📊', tab: 'reports',      color: '#a855f7', countKey: 'accuracy', countLabel: 'Consortium KPIs' },
 ];
 
 const ADMIN_CSS = `
@@ -418,7 +418,7 @@ function AdminHomePage({ navigate, user }) {
                 { label: 'Consortium Events', val: adminStats.events, icon: '📅', color: '#8b5cf6', sub: 'Active Summits' },
                 { label: 'Faculty Training', val: adminStats.training, icon: '🎓', color: '#34d399', sub: 'Capacity Courses' },
                 { label: 'Registered Users', val: adminStats.users, icon: '👥', color: '#60a5fa', sub: 'Members & Guests' },
-                { label: 'AI Accuracy', val: '100%', icon: '🦅', color: '#f97316', sub: 'NLP & Generative' },
+                { label: 'Consortium AI', val: 'Active', icon: '🦅', color: '#f97316', sub: 'Regional NLP' },
               ].map((kpi, idx) => (
                 <div key={idx} style={{
                   background: 'rgba(255,255,255,0.035)', border: '1px solid rgba(255,255,255,0.07)',
@@ -732,7 +732,7 @@ export default function HomePage() {
           {[
             {
               icon: '🦅', title: 'Powered by Haribon AI',
-              desc: 'Our NLP chatbot handles consortium queries with 100% accuracy — scoped to DASIG knowledge. Ask Haribon anything about events, funding, or membership.',
+              desc: 'Our intelligent NLP assistant handles consortium queries scoped directly to official DASIG knowledge. Ask Haribon anything about events, training, funding, or membership.',
               grad: 'linear-gradient(135deg,#000d30,#001d5c)', border: 'rgba(79,70,229,0.25)',
               iconGrad: 'linear-gradient(135deg,rgba(249,115,22,0.25),rgba(225,29,72,0.15))',
             },
