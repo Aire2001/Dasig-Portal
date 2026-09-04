@@ -158,23 +158,19 @@ async function sendEventRegistrationEmail(arg1, arg2, arg3) {
     ref: refCode,
     name: attendee.name || 'Registered Attendee',
     role: attendee.role || 'GUEST',
-    title: event.title || 'DASIG Event',
-    date: dateStr,
-    time: timeStr,
-    venue: venueStr,
-    inst: attendee.institution || '',
-    email: toEmail,
     type: 'event',
+    id: String(event.id || 1),
   });
+  if (attendee.institution) verifyParams.set('inst', attendee.institution.slice(0, 30));
   const verifyUrl = `${PORTAL_PUBLIC_URL}/verify-pass?${verifyParams.toString()}`;
 
   // Generate QR Code PNG buffer for inline CID attachment encoding the live verification URL
   let qrAttachment = null;
   try {
     const qrBuffer = await QRCode.toBuffer(verifyUrl, {
-      width: 260,
-      margin: 2,
-      color: { dark: '#020817', light: '#ffffff' },
+      width: 320,
+      margin: 3,
+      color: { dark: '#000000', light: '#ffffff' },
       errorCorrectionLevel: 'M',
     });
     qrAttachment = {
@@ -342,23 +338,19 @@ async function sendTrainingEnrollmentEmail(arg1, arg2, arg3) {
     ref: refCode,
     name: attendee.name || 'Registered Attendee',
     role: attendee.role || 'GUEST',
-    title: training.title || 'DASIG Training Program',
-    date: dateStr,
-    time: timeStr,
-    venue: venueStr,
-    inst: attendee.institution || '',
-    email: toEmail,
     type: 'training',
+    id: String(training.id || 1),
   });
+  if (attendee.institution) verifyParams.set('inst', attendee.institution.slice(0, 30));
   const verifyUrl = `${PORTAL_PUBLIC_URL}/verify-pass?${verifyParams.toString()}`;
 
   // Generate QR Code PNG buffer for inline CID attachment encoding the live verification URL
   let qrAttachment = null;
   try {
     const qrBuffer = await QRCode.toBuffer(verifyUrl, {
-      width: 260,
-      margin: 2,
-      color: { dark: '#064e3b', light: '#ffffff' },
+      width: 320,
+      margin: 3,
+      color: { dark: '#000000', light: '#ffffff' },
       errorCorrectionLevel: 'M',
     });
     qrAttachment = {

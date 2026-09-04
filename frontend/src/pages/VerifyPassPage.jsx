@@ -1,24 +1,36 @@
 import { useSearchParams, Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import ParticleBackground from '../components/ParticleBackground';
+import { api } from '../api';
 
 export default function VerifyPassPage() {
   const [searchParams] = useSearchParams();
   const [verifiedTime, setVerifiedTime] = useState('');
+  const [itemData, setItemData] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   const refCode = searchParams.get('ref') || 'DSG-PASS-VERIFIED';
   const name    = searchParams.get('name') || 'Registered Attendee';
   const email   = searchParams.get('email') || '';
   const phone   = searchParams.get('phone') || '';
   const role    = (searchParams.get('role') || 'GUEST').toUpperCase();
-  const title   = searchParams.get('title') || 'DASIG Consortium Session';
-  const date    = searchParams.get('date') || 'Scheduled Date';
-  const venue   = searchParams.get('venue') || 'Central Visayas Node / Virtual Hall';
   const inst    = searchParams.get('inst') || '';
-  const type    = searchParams.get('type') || 'event';
-  const time    = searchParams.get('time') || '09:00 – 17:00';
 
-  const isMember = role === 'MEMBER' || role === 'ADMIN';
+  // Extract type & id from query parameters or reference code
+  const paramType = searchParams.get('type');
+  const paramId   = searchParams.get('id');
+
+  const resolvedType = paramType || (refCode.includes('-TRN-') ? 'training' : 'event');
+  const resolvedId = (() => {
+    if (paramId) return paramId;
+    const m = refCode.match(/DSG-\d+-(?:EVT|TRN)-(\d+)-/);
+    return m ? String(parseInt(m[1], 10)) : null;
+  })();
+
+  const rawTitle = searchParams.get('title');
+  const rawDate  = searchParams.get('date');
+  const rawVenue = searchParams.get('venue');
+  const rawTime  = searchParams.get('time');
 
   useEffect(() => {
     const now = new Date();
@@ -32,6 +44,36 @@ export default function VerifyPassPage() {
       second: '2-digit',
     }) + ' PHT');
   }, []);
+
+  // Fetch full program details from database if ID is available
+  useEffect(() => {
+    if (!resolvedId) return;
+    let active = true;
+    setLoading(true);
+    const fetcher = resolvedType === 'training'
+      ? api.training.get(resolvedId)
+      : api.events.get(resolvedId);
+
+    fetcher
+      .then(res => {
+        if (active && res) {
+          setItemData(res.data || res);
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => { active = false; };
+  }, [resolvedId, resolvedType]);
+
+  const title = itemData?.title || rawTitle || (resolvedType === 'training' ? 'DASIG Professional Training Cohort' : 'DASIG Regional Innovation Event');
+  const date  = itemData?.date || itemData?.schedule || rawDate || 'Scheduled 2026 Session';
+  const venue = itemData?.venue || itemData?.org || rawVenue || 'Central Visayas Node / Virtual Hall';
+  const time  = itemData?.start_time ? `${itemData.start_time}${itemData.end_time ? ' – ' + itemData.end_time : ''}` : (itemData?.session_start_time ? `${itemData.session_start_time}${itemData.session_end_time ? ' – ' + itemData.session_end_time : ''}` : (rawTime || '09:00 – 17:00'));
+  const type  = resolvedType;
+  const isMember = role === 'MEMBER' || role === 'ADMIN';
 
   // 1-Click Google Calendar link
   const gcalUrl = (() => {

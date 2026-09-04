@@ -708,7 +708,7 @@ export default function ProgramsPage() {
 /* ═══════════════════════════════════════════════════════════
    DIGITAL E-TICKET & BOARDING PASS HELPERS
 ═══════════════════════════════════════════════════════════ */
-function DynamicQRCode({ value, size = 100 }) {
+function DynamicQRCode({ value, size = 135, onDataUrl }) {
   const [dataUrl, setDataUrl] = useState('');
   const [err, setErr] = useState(false);
 
@@ -716,11 +716,11 @@ function DynamicQRCode({ value, size = 100 }) {
     let active = true;
     if (!value) return;
     QRCode.toDataURL(value, {
-      width: size * 2.5,
-      margin: 1.5,
+      width: Math.max(size * 3, 400), // Super high-res retina buffer for crisp scanning
+      margin: 3,                      // Standard quiet zone for phone cameras
       color: {
-        dark: '#020817',
-        light: '#ffffff',
+        dark: '#000000',             // Deep true black for maximum optical contrast
+        light: '#ffffff',            // Pure white
       },
       errorCorrectionLevel: 'M',
     })
@@ -728,6 +728,7 @@ function DynamicQRCode({ value, size = 100 }) {
         if (active) {
           setDataUrl(url);
           setErr(false);
+          if (onDataUrl) onDataUrl(url);
         }
       })
       .catch(e => {
@@ -735,22 +736,22 @@ function DynamicQRCode({ value, size = 100 }) {
         if (active) setErr(true);
       });
     return () => { active = false; };
-  }, [value, size]);
+  }, [value, size, onDataUrl]);
 
   if (err || !dataUrl) {
     return (
       <div style={{
         width: size,
         height: size,
-        borderRadius: 12,
+        borderRadius: 14,
         background: '#ffffff',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        boxShadow: '0 4px 14px rgba(0,0,0,0.4)',
-        padding: 6,
+        boxShadow: '0 4px 16px rgba(0,0,0,0.4)',
+        padding: 8,
       }}>
-        <div style={{ fontSize: 10, color: '#64748b', fontWeight: 800, textAlign: 'center' }}>
+        <div style={{ fontSize: 11, color: '#64748b', fontWeight: 800, textAlign: 'center' }}>
           {err ? 'QR Error' : 'Generating QR...'}
         </div>
       </div>
@@ -766,11 +767,12 @@ function DynamicQRCode({ value, size = 100 }) {
       style={{
         width: size,
         height: size,
-        borderRadius: 12,
+        borderRadius: 14,
         background: '#ffffff',
-        padding: 5,
+        padding: 6,
         display: 'block',
-        boxShadow: '0 4px 16px rgba(0,0,0,0.4)',
+        boxShadow: '0 6px 20px rgba(0,0,0,0.45)',
+        imageRendering: 'pixelated', // Keep QR edges sharp
       }}
     />
   );
@@ -843,6 +845,10 @@ function DigitalTicketModal({ passData, onClose }) {
   const { item, isTraining, role, name, email, institution, position, refCode } = passData;
   const isMember = role === 'MEMBER' || role === 'ADMIN';
 
+  const [enlargeQr, setEnlargeQr] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
+  const [qrPngUrl, setQrPngUrl] = useState('');
+
   const dateStr = item.date || item.schedule?.split('|')[0]?.trim() || 'Scheduled Session';
   const timeStr = `${item.start_time || item.session_start_time || '09:00'}${item.end_time ? ` – ${item.end_time}` : item.session_end_time ? ` – ${item.session_end_time}` : ' – 17:00'}`;
   const venueStr = item.venue || item.org || 'Central Visayas Node / Online Virtual Hall';
@@ -850,24 +856,36 @@ function DigitalTicketModal({ passData, onClose }) {
   const attendeeInst = institution || '';
 
   const currentOrigin = typeof window !== 'undefined' && window.location ? window.location.origin : 'https://dasig-portal.vercel.app';
-  const verifyQuery = new URLSearchParams({
+  
+  // High-scan short URL (~110 chars): creates huge, bold, chunky QR squares that phone cameras scan in milliseconds
+  const shortQrParams = new URLSearchParams({
     ref: refCode || 'DSG-PASS-VERIFIED',
     name: attendeeName,
     role: role || 'GUEST',
-    title: item.title || 'DASIG Consortium Session',
-    date: dateStr,
-    time: timeStr,
-    venue: venueStr,
-    inst: attendeeInst,
     type: isTraining ? 'training' : 'event',
-    email: email || '',
-  }).toString();
+    id: String(item.id || 1),
+  });
+  if (attendeeInst) shortQrParams.set('inst', attendeeInst.slice(0, 30));
 
-  const localVerifyUrl = `${currentOrigin}/verify-pass?${verifyQuery}`;
-  const publicVerifyUrl = `https://dasig-portal.vercel.app/verify-pass?${verifyQuery}`;
-  const scanQrUrl = (currentOrigin.includes('localhost') || currentOrigin.includes('127.0.0.1'))
-    ? publicVerifyUrl
-    : localVerifyUrl;
+  const scanQrUrl = `https://dasig-portal.vercel.app/verify-pass?${shortQrParams.toString()}`;
+  const localVerifyUrl = `${currentOrigin}/verify-pass?${shortQrParams.toString()}`;
+
+  function copyLink() {
+    navigator.clipboard.writeText(scanQrUrl).then(() => {
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2500);
+    }).catch(() => {});
+  }
+
+  function downloadQr() {
+    if (!qrPngUrl) return;
+    const a = document.createElement('a');
+    a.href = qrPngUrl;
+    a.download = `${(refCode || 'DASIG_Pass').replace(/[^a-zA-Z0-9_-]/g, '_')}_QR.png`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
 
   return (
     <div onClick={onClose} style={{
@@ -1005,33 +1023,90 @@ function DigitalTicketModal({ passData, onClose }) {
         </div>
 
         {/* Ticket Barcode / QR Bottom Stub */}
-        <div style={{ padding: '16px 24px 22px', background: 'rgba(0,0,0,0.25)' }}>
+        <div style={{ padding: '16px 20px 22px', background: 'rgba(0,0,0,0.3)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 14 }}>
-            <div>
-              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', fontWeight: 700, letterSpacing: '0.6px', textTransform: 'uppercase' }}>Ticket Reference No.</div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.45)', fontWeight: 800, letterSpacing: '0.6px', textTransform: 'uppercase' }}>Ticket Reference No.</div>
               <div style={{ fontSize: 15, fontWeight: 900, color: '#fff', letterSpacing: '1px', fontFamily: 'monospace', marginTop: 2 }}>{refCode}</div>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginTop: 4, maxWidth: 220, lineHeight: 1.4 }}>
-                Scan the QR code with any smartphone camera (iOS / Android / Google Lens) to instantly view and verify your admission pass.
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', marginTop: 4, lineHeight: 1.4 }}>
+                Instant admission pass. Point phone camera at QR code or tap to enlarge for quick scanner mode.
+              </div>
+
+              {/* Action Pills */}
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
+                <button
+                  type="button"
+                  onClick={copyLink}
+                  style={{
+                    background: copiedLink ? 'rgba(16,185,129,0.2)' : 'rgba(255,255,255,0.08)',
+                    border: `1px solid ${copiedLink ? 'rgba(16,185,129,0.45)' : 'rgba(255,255,255,0.15)'}`,
+                    color: copiedLink ? '#34d399' : 'rgba(255,255,255,0.9)',
+                    borderRadius: 7, padding: '4px 10px', fontSize: 11, fontWeight: 700,
+                    cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: 4,
+                    transition: 'all .15s',
+                  }}
+                >
+                  {copiedLink ? '✓ Copied!' : '📋 Copy Link'}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={downloadQr}
+                  style={{
+                    background: 'rgba(255,255,255,0.08)',
+                    border: '1px solid rgba(255,255,255,0.15)',
+                    color: 'rgba(255,255,255,0.9)',
+                    borderRadius: 7, padding: '4px 10px', fontSize: 11, fontWeight: 700,
+                    cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: 4,
+                    transition: 'all .15s',
+                  }}
+                >
+                  📥 Save QR
+                </button>
               </div>
             </div>
+
+            {/* QR Card with Click to Enlarge */}
             <div style={{ flexShrink: 0, textAlign: 'center' }}>
-              <a
-                href={localVerifyUrl}
-                target="_blank"
-                rel="noreferrer"
-                title="Scan with phone or click to open pass verification page"
-                style={{ display: 'inline-block', textDecoration: 'none', cursor: 'pointer' }}
+              <div
+                onClick={() => setEnlargeQr(true)}
+                title="Tap to enlarge QR for quick camera scan"
+                style={{
+                  cursor: 'pointer',
+                  display: 'inline-block',
+                  borderRadius: 14,
+                  padding: 4,
+                  background: '#ffffff',
+                  boxShadow: '0 6px 20px rgba(0,0,0,0.5)',
+                  transition: 'transform .15s ease',
+                }}
+                onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.03)'}
+                onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
               >
-                <DynamicQRCode size={100} value={scanQrUrl} />
-              </a>
-              <div style={{ fontSize: 9.5, color: '#93c5fd', fontWeight: 800, marginTop: 5, letterSpacing: '0.4px' }}>
-                📷 Scan with Phone
+                <DynamicQRCode size={125} value={scanQrUrl} onDataUrl={setQrPngUrl} />
+              </div>
+              <div>
+                <button
+                  type="button"
+                  onClick={() => setEnlargeQr(true)}
+                  style={{
+                    marginTop: 6,
+                    background: 'rgba(59,130,246,0.18)',
+                    border: '1px solid rgba(59,130,246,0.4)',
+                    borderRadius: 6, padding: '3px 8px',
+                    fontSize: 10, fontWeight: 800, color: '#93c5fd',
+                    cursor: 'pointer', fontFamily: 'inherit',
+                    display: 'inline-flex', alignItems: 'center', gap: 3,
+                  }}
+                >
+                  🔍 Tap to Enlarge
+                </button>
               </div>
             </div>
           </div>
 
           {/* Direct Pass Verification Test Link */}
-          <div style={{ marginTop: 12, textAlign: 'center' }}>
+          <div style={{ marginTop: 14, textAlign: 'center' }}>
             <a
               href={localVerifyUrl}
               target="_blank"
@@ -1104,6 +1179,126 @@ function DigitalTicketModal({ passData, onClose }) {
             ✓ Done & Return to Programs
           </button>
         </div>
+
+        {/* Fullscreen High-Contrast Camera Scanner Modal */}
+        {enlargeQr && (
+          <div
+            onClick={() => setEnlargeQr(false)}
+            style={{
+              position: 'fixed', inset: 0,
+              background: 'rgba(0,0,0,0.92)',
+              zIndex: 100005,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              padding: 16, backdropFilter: 'blur(16px)',
+              animation: 'modalIn .2s ease-out',
+            }}
+          >
+            <div
+              onClick={e => e.stopPropagation()}
+              style={{
+                background: 'linear-gradient(180deg, #0f172a 0%, #020817 100%)',
+                border: '1.5px solid rgba(59,130,246,0.5)',
+                borderRadius: 24,
+                maxWidth: 420, width: '100%',
+                padding: '24px 20px',
+                textAlign: 'center',
+                boxShadow: '0 30px 90px rgba(0,0,0,0.9), 0 0 45px rgba(59,130,246,0.25)',
+                position: 'relative',
+              }}
+            >
+              {/* Header */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ fontSize: 18 }}>📱</span>
+                  <span style={{ fontSize: 11.5, fontWeight: 900, color: '#93c5fd', letterSpacing: '0.8px', textTransform: 'uppercase' }}>
+                    Camera Scan Mode
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setEnlargeQr(false)}
+                  style={{
+                    background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)',
+                    borderRadius: '50%', width: 28, height: 28, color: '#fff', fontSize: 12,
+                    cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div style={{ fontSize: 17, fontWeight: 900, color: '#fff', marginBottom: 4 }}>
+                Point Smartphone Camera
+              </div>
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', marginBottom: 16, lineHeight: 1.4 }}>
+                Hold your phone camera (iOS / Android / Google Lens) 4–8 inches away from screen.
+              </div>
+
+              {/* Massive High-Contrast QR Code Card */}
+              <div style={{
+                position: 'relative',
+                display: 'inline-block',
+                background: '#ffffff',
+                padding: 16,
+                borderRadius: 20,
+                boxShadow: '0 12px 40px rgba(0,0,0,0.7)',
+                margin: '0 auto',
+              }}>
+                <DynamicQRCode size={240} value={scanQrUrl} />
+              </div>
+
+              <div style={{
+                fontFamily: 'monospace', fontSize: 13.5, fontWeight: 900,
+                color: '#93c5fd', letterSpacing: '1px', marginTop: 14,
+              }}>
+                {refCode}
+              </div>
+
+              {/* Action Buttons in Scanner Mode */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 16 }}>
+                <button
+                  type="button"
+                  onClick={copyLink}
+                  style={{
+                    background: copiedLink ? 'rgba(16,185,129,0.2)' : 'rgba(255,255,255,0.08)',
+                    border: `1px solid ${copiedLink ? 'rgba(16,185,129,0.5)' : 'rgba(255,255,255,0.15)'}`,
+                    color: copiedLink ? '#34d399' : '#fff',
+                    borderRadius: 10, padding: '10px', fontSize: 12, fontWeight: 800,
+                    cursor: 'pointer', fontFamily: 'inherit',
+                  }}
+                >
+                  {copiedLink ? '✓ Copied!' : '📋 Copy Link'}
+                </button>
+                <button
+                  type="button"
+                  onClick={downloadQr}
+                  style={{
+                    background: 'rgba(255,255,255,0.08)',
+                    border: '1px solid rgba(255,255,255,0.15)',
+                    color: '#fff', borderRadius: 10, padding: '10px', fontSize: 12, fontWeight: 800,
+                    cursor: 'pointer', fontFamily: 'inherit',
+                  }}
+                >
+                  📥 Download PNG
+                </button>
+              </div>
+
+              <a
+                href={localVerifyUrl}
+                target="_blank"
+                rel="noreferrer"
+                style={{
+                  display: 'block', marginTop: 10,
+                  background: 'linear-gradient(90deg, #2563eb, #3b82f6)',
+                  color: '#fff', borderRadius: 10, padding: '11px', fontSize: 13, fontWeight: 800,
+                  textDecoration: 'none',
+                }}
+              >
+                🔍 Open Pass Verification Directly →
+              </a>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
