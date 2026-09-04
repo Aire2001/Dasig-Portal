@@ -6,47 +6,101 @@ import HaribonFace from '../components/HaribonFace';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 
-// Renders bot reply text with formatted bullets, numbered lists, and section headers
+// Renders bot reply text with formatted markdown, headings, bullets, numbered lists, and inline code
 function BotText({ text }) {
+  if (!text) return null;
+
+  function renderInline(str) {
+    if (!str) return '';
+    const parts = str.split(/(`[^`]+`|\*\*[^*]+\*\*)/g);
+    return parts.map((part, i) => {
+      if (part.startsWith('`') && part.endsWith('`') && part.length > 2) {
+        return (
+          <code key={i} style={{
+            background: 'rgba(255,255,255,0.08)',
+            color: '#fb923c',
+            border: '1px solid rgba(249,115,22,0.25)',
+            padding: '1.5px 6px',
+            borderRadius: 6,
+            fontSize: '0.88em',
+            fontFamily: 'monospace',
+          }}>
+            {part.slice(1, -1)}
+          </code>
+        );
+      }
+      if (part.startsWith('**') && part.endsWith('**') && part.length > 4) {
+        return <strong key={i} style={{ color: '#fff', fontWeight: 800 }}>{part.slice(2, -2)}</strong>;
+      }
+      return part;
+    });
+  }
+
   const blocks = text.split('\n\n').filter(Boolean);
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       {blocks.map((block, bi) => {
         const lines = block.split('\n').filter(l => l.trim());
         return (
-          <div key={bi} style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+          <div key={bi} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             {lines.map((line, li) => {
               const t = line.trim();
-              // Bullet point
-              if (t.startsWith('•')) {
+
+              // Markdown H3: ### Title
+              if (t.startsWith('### ')) {
                 return (
-                  <div key={li} style={{ display: 'flex', gap: 9, alignItems: 'flex-start' }}>
-                    <span style={{ color: '#f97316', flexShrink: 0, fontSize: 12, marginTop: 3 }}>▸</span>
-                    <span style={{ color: 'rgba(255,255,255,0.88)', lineHeight: 1.6 }}>{t.slice(1).trim()}</span>
+                  <div key={li} style={{ fontWeight: 900, color: '#fff', fontSize: 14.5, marginTop: li > 0 ? 6 : 0, letterSpacing: '-0.2px' }}>
+                    {renderInline(t.slice(4))}
                   </div>
                 );
               }
-              // Numbered list
+
+              // Markdown H2: ## Title
+              if (t.startsWith('## ')) {
+                return (
+                  <div key={li} style={{ fontWeight: 900, color: '#fff', fontSize: 16, marginTop: li > 0 ? 8 : 0, letterSpacing: '-0.3px' }}>
+                    {renderInline(t.slice(3))}
+                  </div>
+                );
+              }
+
+              // Bullet point: • or -
+              if (t.startsWith('•') || t.startsWith('- ')) {
+                const bulletContent = t.startsWith('•') ? t.slice(1).trim() : t.slice(2).trim();
+                return (
+                  <div key={li} style={{ display: 'flex', gap: 9, alignItems: 'flex-start' }}>
+                    <span style={{ color: '#f97316', flexShrink: 0, fontSize: 11, marginTop: 4 }}>▸</span>
+                    <span style={{ color: 'rgba(255,255,255,0.9)', lineHeight: 1.65 }}>{renderInline(bulletContent)}</span>
+                  </div>
+                );
+              }
+
+              // Numbered list: 1. 2.
               if (/^\d+\./.test(t)) {
                 const num = t.match(/^(\d+)\./)[1];
                 const content = t.replace(/^\d+\.\s*/, '');
                 return (
                   <div key={li} style={{ display: 'flex', gap: 9, alignItems: 'flex-start' }}>
-                    <span style={{ color: '#f97316', flexShrink: 0, fontWeight: 800, minWidth: 18, lineHeight: 1.6 }}>{num}.</span>
-                    <span style={{ color: 'rgba(255,255,255,0.88)', lineHeight: 1.6 }}>{content}</span>
+                    <span style={{ color: '#f97316', flexShrink: 0, fontWeight: 800, minWidth: 18, lineHeight: 1.65 }}>{num}.</span>
+                    <span style={{ color: 'rgba(255,255,255,0.9)', lineHeight: 1.65 }}>{renderInline(content)}</span>
                   </div>
                 );
               }
+
               // Section header (short line ending with colon, or starts with emoji)
-              if ((t.endsWith(':') && t.length < 60) || /^[\u{1F300}-\u{1FAFF}]/u.test(t)) {
+              if ((t.endsWith(':') && t.length < 65) || /^[\u{1F300}-\u{1FAFF}]/u.test(t)) {
                 return (
-                  <div key={li} style={{ fontWeight: 800, color: '#fff', fontSize: 13, marginTop: li > 0 ? 4 : 0 }}>
-                    {t}
+                  <div key={li} style={{ fontWeight: 800, color: '#fff', fontSize: 13.5, marginTop: li > 0 ? 4 : 0 }}>
+                    {renderInline(t)}
                   </div>
                 );
               }
+
               return (
-                <div key={li} style={{ color: 'rgba(255,255,255,0.85)', lineHeight: 1.65 }}>{t}</div>
+                <div key={li} style={{ color: 'rgba(255,255,255,0.85)', lineHeight: 1.7 }}>
+                  {renderInline(t)}
+                </div>
               );
             })}
           </div>
@@ -283,10 +337,33 @@ const CHAT_CSS = `
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     user-select: none;
   }
-  .voicemail-card:hover {
-    background: linear-gradient(135deg, rgba(249,115,22,0.18) 0%, rgba(30,58,138,0.20) 100%);
-    border-color: rgba(249,115,22,0.5);
-    box-shadow: 0 6px 20px rgba(249,115,22,0.2), inset 0 1px 0 rgba(255,255,255,0.14);
+  .action-btn.speaking-btn {
+    background: rgba(249,115,22,0.2) !important;
+    border-color: rgba(249,115,22,0.5) !important;
+    color: #fb923c !important;
+  }
+  @keyframes voicePulse {
+    0%, 100% { transform: scale(0.8); opacity: 0.5; }
+    50% { transform: scale(1.3); opacity: 1; }
+  }
+  .voice-dot {
+    width: 4px; height: 4px; border-radius: 50%;
+    background: #f97316; display: inline-block;
+    animation: voicePulse 0.8s infinite ease-in-out;
+  }
+  .starter-card {
+    background: rgba(15,23,42,0.75);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 14px; padding: 14px 16px;
+    cursor: pointer; transition: all 0.2s cubic-bezier(0.34, 1.2, 0.64, 1);
+    display: flex; flex-direction: column; gap: 4px;
+    text-align: left;
+  }
+  .starter-card:hover {
+    background: rgba(15,23,42,0.95);
+    border-color: rgba(249,115,22,0.4);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4), 0 0 16px rgba(249,115,22,0.12);
   }
 `;
 
@@ -1179,101 +1256,32 @@ export default function ChatbotPage() {
                             <HaribonFace size={28} />
                           </div>
                         </div>
-                        <span style={{ fontSize: 12.5, color: '#fff', fontWeight: 800, letterSpacing: '0.2px' }}>Haribon AI</span>
-                        <span style={{ fontSize: 10, background: 'rgba(249,115,22,0.18)', color: '#fb923c', border: '1px solid rgba(249,115,22,0.3)', borderRadius: 5, padding: '1px 6px', fontWeight: 800 }}>NLP</span>
-                        {!msg.matched && msg.matched !== undefined && (
-                          <span style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.35)', fontStyle: 'italic' }}>fuzzy suggestion</span>
-                        )}
+                        <span style={{ fontSize: 13, color: '#fff', fontWeight: 800, letterSpacing: '0.2px' }}>Haribon AI</span>
+                        <span style={{ fontSize: 10, background: 'rgba(249,115,22,0.18)', color: '#fb923c', border: '1px solid rgba(249,115,22,0.3)', borderRadius: 5, padding: '1px 7px', fontWeight: 800 }}>
+                          🧠 High-IQ Assistant
+                        </span>
                       </div>
                     )}
 
                     {/* Message bubble */}
                     <div style={{
-                      maxWidth: '82%', padding: msg.from === 'bot' ? '14px 18px' : '11px 16px',
+                      maxWidth: '82%', padding: msg.from === 'bot' ? '16px 20px' : '12px 18px',
                       borderRadius: 18, fontSize: 13.5,
                       ...(msg.from === 'bot' ? {
-                        background: 'rgba(12,20,38,0.96)',
+                        background: 'rgba(12,20,38,0.92)',
                         borderBottomLeftRadius: 5,
                         border: '1px solid rgba(255,255,255,0.09)',
                         boxShadow: '0 4px 20px rgba(0,0,0,0.35)',
                       } : {
-                        background: 'linear-gradient(135deg,#1e3a8a,#1a56db)',
+                        background: 'linear-gradient(135deg,#f97316,#ea580c)',
                         color: '#fff', borderBottomRightRadius: 5,
-                        boxShadow: '0 4px 16px rgba(30,58,138,0.4)',
+                        boxShadow: '0 4px 16px rgba(249,115,22,0.35)',
                       }),
                     }}>
                       {msg.from === 'bot' ? (
-                        <>
-                          {/* Studio Neural Audio Note Player */}
-                          <div
-                            className="voicemail-card"
-                            onClick={() => speakMessage(i, msg.text)}
-                            style={{ cursor: 'pointer' }}
-                            title="Click to play realistic human voice note"
-                          >
-                            <button
-                              type="button"
-                              onClick={(e) => { e.stopPropagation(); speakMessage(i, msg.text); }}
-                              style={{
-                                width: 28, height: 28, borderRadius: '50%',
-                                background: speakingIdx === i ? 'linear-gradient(135deg, #e11d48, #f43f5e)' : 'linear-gradient(135deg, #f97316, #ea580c)',
-                                border: 'none', color: '#fff', fontSize: 11,
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                cursor: 'pointer', flexShrink: 0,
-                                boxShadow: speakingIdx === i ? '0 0 0 3px rgba(225,29,72,0.35)' : '0 2px 8px rgba(249,115,22,0.45)',
-                                transition: 'all 0.15s ease',
-                              }}
-                            >
-                              {speakingIdx === i ? '⏸' : '▶'}
-                            </button>
-
-                            {/* Soundwave equalizer */}
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 2.5, flex: 1, minWidth: 70, height: 20 }}>
-                              {[6, 12, 18, 10, 15, 20, 8, 14, 19, 11, 16, 22, 13, 8, 17, 21, 12, 16, 9, 14].map((h, bi) => (
-                                <div
-                                  key={bi}
-                                  className={`voicemail-bar${speakingIdx === i ? ' active' : ''}`}
-                                  style={{
-                                    height: speakingIdx === i ? undefined : `${Math.max(4, h * 0.55)}px`,
-                                    animationDelay: `${bi * 0.05}s`
-                                  }}
-                                />
-                              ))}
-                            </div>
-
-                            {/* Natural Voice badge & Speed button */}
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-                              <span style={{ fontSize: 10.5, fontWeight: 800, color: speakingIdx === i ? '#fb923c' : 'rgba(255,255,255,0.7)', letterSpacing: '0.2px' }}>
-                                {speakingIdx === i ? 'Playing Voice…' : '🎙️ Natural Voice'}
-                              </span>
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  const nextSpeed = voiceSpeed === 1.0 ? 1.25 : voiceSpeed === 1.25 ? 0.9 : 1.0;
-                                  setVoiceSpeed(nextSpeed);
-                                  if (speakingIdx === i) speakMessage(i, msg.text, nextSpeed);
-                                }}
-                                style={{
-                                  background: 'rgba(255,255,255,0.08)',
-                                  border: '1px solid rgba(255,255,255,0.15)',
-                                  borderRadius: 5,
-                                  padding: '1px 5px',
-                                  fontSize: 9.5,
-                                  fontWeight: 800,
-                                  color: '#fb923c',
-                                  cursor: 'pointer'
-                                }}
-                                title="Click to toggle playback speed (1.0x, 1.25x, 0.9x)"
-                              >
-                                {voiceSpeed}x
-                              </button>
-                            </div>
-                          </div>
-                          <BotText text={msg.text} />
-                        </>
+                        <BotText text={msg.text} />
                       ) : (
-                        <span style={{ lineHeight: 1.55 }}>{msg.text}</span>
+                        <span style={{ lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{msg.text}</span>
                       )}
                     </div>
 
@@ -1284,7 +1292,7 @@ export default function ChatbotPage() {
                       </div>
                     )}
 
-                    {/* Meta AI Rating, Copy & Read Aloud actions — shown on hover via CSS */}
+                    {/* Modern Action Bar: Copy, Voice Read, Feedback, Retry */}
                     {msg.from === 'bot' && i > 0 && (
                       <div className="msg-actions">
                         <button
@@ -1308,11 +1316,22 @@ export default function ChatbotPage() {
                           {copied === i ? '✓ Copied' : '⧉ Copy'}
                         </button>
                         <button
-                          className={`action-btn${speakingIdx === i ? ' rated-up' : ''}`}
+                          className={`action-btn${speakingIdx === i ? ' speaking-btn' : ''}`}
                           onClick={() => speakMessage(i, msg.text)}
-                          title="Read aloud"
+                          title={speakingIdx === i ? 'Pause voice playback' : 'Listen with high-fidelity voice'}
                         >
-                          {speakingIdx === i ? '⏹ Stop' : '🔊 Read'}
+                          {speakingIdx === i ? (
+                            <>
+                              <span style={{ display: 'inline-flex', gap: 2, alignItems: 'center', marginRight: 3 }}>
+                                <span className="voice-dot" style={{ animationDelay: '0s' }} />
+                                <span className="voice-dot" style={{ animationDelay: '0.2s' }} />
+                                <span className="voice-dot" style={{ animationDelay: '0.4s' }} />
+                              </span>
+                              <span>⏹ Stop Voice</span>
+                            </>
+                          ) : (
+                            <span>🔊 Read Aloud</span>
+                          )}
                         </button>
                         <button
                           className="action-btn"

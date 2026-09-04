@@ -53,39 +53,108 @@ function getGreeting(user) {
   return `Hi, ${first}! I'm Haribon 🦅 — the DASIG AI Assistant.\n\nI can help you in English, Bisaya, or Tagalog. What would you like to know?`;
 }
 
-/* ── Bot-text formatter ───────────────────────────────────────── */
+/* ── Bot-text formatter (Rich Markdown, Headings, Code, Bullets) ─ */
 function WBotText({ text }) {
-  const blocks = (text || '').split('\n\n').filter(Boolean);
+  if (!text) return null;
+
+  function renderInline(str) {
+    if (!str) return '';
+    const parts = str.split(/(`[^`]+`|\*\*[^*]+\*\*)/g);
+    return parts.map((part, i) => {
+      if (part.startsWith('`') && part.endsWith('`') && part.length > 2) {
+        return (
+          <code key={i} style={{
+            background: 'rgba(255,255,255,0.08)',
+            color: '#fb923c',
+            border: '1px solid rgba(249,115,22,0.25)',
+            padding: '1px 5px',
+            borderRadius: 5,
+            fontSize: '0.85em',
+            fontFamily: 'monospace',
+          }}>
+            {part.slice(1, -1)}
+          </code>
+        );
+      }
+      if (part.startsWith('**') && part.endsWith('**') && part.length > 4) {
+        return <strong key={i} style={{ color: '#fff', fontWeight: 800 }}>{part.slice(2, -2)}</strong>;
+      }
+      return part;
+    });
+  }
+
+  const blocks = text.split('\n\n').filter(Boolean);
+
   return (
-    <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
       {blocks.map((block, bi) => {
         const lines = block.split('\n').filter(l => l.trim());
         return (
-          <div key={bi} style={{ display:'flex', flexDirection:'column', gap:2 }}>
+          <div key={bi} style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
             {lines.map((line, li) => {
               const t = line.trim();
-              if (t.startsWith('•') || t.startsWith('-')) {
+
+              // Markdown H3: ### Title
+              if (t.startsWith('### ')) {
                 return (
-                  <div key={li} style={{ display:'flex', gap:7, alignItems:'flex-start' }}>
-                    <span style={{ color:'#f97316', fontSize:10, marginTop:3, flexShrink:0 }}>▸</span>
-                    <span style={{ color:'rgba(255,255,255,0.85)', fontSize:12, lineHeight:1.55 }}>{t.replace(/^[•\-]\s*/, '')}</span>
+                  <div key={li} style={{ fontWeight: 800, color: '#fff', fontSize: 13, marginTop: li > 0 ? 4 : 0 }}>
+                    {renderInline(t.slice(4))}
                   </div>
                 );
               }
+
+              // Markdown H2: ## Title
+              if (t.startsWith('## ')) {
+                return (
+                  <div key={li} style={{ fontWeight: 900, color: '#fff', fontSize: 13.5, marginTop: li > 0 ? 5 : 0 }}>
+                    {renderInline(t.slice(3))}
+                  </div>
+                );
+              }
+
+              // Bullet list: • or -
+              if (t.startsWith('•') || t.startsWith('- ')) {
+                const bulletContent = t.startsWith('•') ? t.slice(1).trim() : t.slice(2).trim();
+                return (
+                  <div key={li} style={{ display: 'flex', gap: 7, alignItems: 'flex-start' }}>
+                    <span style={{ color: '#f97316', flexShrink: 0, fontSize: 10, marginTop: 3 }}>▸</span>
+                    <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: 12, lineHeight: 1.55 }}>
+                      {renderInline(bulletContent)}
+                    </span>
+                  </div>
+                );
+              }
+
+              // Numbered list: 1. 2.
               if (/^\d+\./.test(t)) {
                 const num = t.match(/^(\d+)\./)[1];
-                const body = t.replace(/^\d+\.\s*/, '');
+                const content = t.replace(/^\d+\.\s*/, '');
                 return (
-                  <div key={li} style={{ display:'flex', gap:7, alignItems:'flex-start' }}>
-                    <span style={{ color:'#f97316', fontSize:11, fontWeight:800, flexShrink:0, minWidth:14 }}>{num}.</span>
-                    <span style={{ color:'rgba(255,255,255,0.85)', fontSize:12, lineHeight:1.55 }}>{body}</span>
+                  <div key={li} style={{ display: 'flex', gap: 7, alignItems: 'flex-start' }}>
+                    <span style={{ color: '#f97316', flexShrink: 0, fontWeight: 800, minWidth: 14, fontSize: 11.5, lineHeight: 1.55 }}>
+                      {num}.
+                    </span>
+                    <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: 12, lineHeight: 1.55 }}>
+                      {renderInline(content)}
+                    </span>
                   </div>
                 );
               }
-              if (t.endsWith(':') && t.length < 50) {
-                return <div key={li} style={{ color:'#fff', fontWeight:800, fontSize:12, marginTop: li > 0 ? 3 : 0 }}>{t}</div>;
+
+              // Section header
+              if ((t.endsWith(':') && t.length < 55) || /^[\u{1F300}-\u{1FAFF}]/u.test(t)) {
+                return (
+                  <div key={li} style={{ fontWeight: 800, color: '#fff', fontSize: 12.5, marginTop: li > 0 ? 3 : 0 }}>
+                    {renderInline(t)}
+                  </div>
+                );
               }
-              return <div key={li} style={{ color:'rgba(255,255,255,0.85)', fontSize:12, lineHeight:1.55 }}>{t}</div>;
+
+              return (
+                <div key={li} style={{ color: 'rgba(255,255,255,0.85)', fontSize: 12, lineHeight: 1.55 }}>
+                  {renderInline(t)}
+                </div>
+              );
             })}
           </div>
         );
@@ -155,6 +224,8 @@ const WIDGET_CSS = `
   .w-action-btn.rated-up { background: rgba(16,185,129,0.15); border-color: rgba(16,185,129,0.3); color: #34d399; }
   .w-action-btn.rated-down { background: rgba(225,29,72,0.15); border-color: rgba(225,29,72,0.3); color: #f87171; }
   .w-action-btn.copied { background: rgba(16,185,129,0.15); border-color: rgba(16,185,129,0.3); color: #34d399; }
+  .w-action-btn.speaking { background: rgba(249,115,22,0.2) !important; border-color: rgba(249,115,22,0.4) !important; color: #fb923c !important; }
+  .w-voice-dot { display: inline-block; width: 3px; height: 3px; border-radius: 50%; background: #fb923c; animation: blink 0.9s infinite; }
 `;
 
 const ROLE_BADGE = {
@@ -182,12 +253,15 @@ export default function Chatbot() {
   const [hasReplied, setHasReplied] = useState(false);
   const [ratings, setRatings]   = useState({});
   const [copied, setCopied]     = useState(null);
+  const [speakingIdx, setSpeakingIdx] = useState(null);
   const [listening, setListening] = useState(false);
   const recognitionRef          = useRef(null);
   const msgsRef                 = useRef(null);
 
   // Reset chat when user changes (login/logout)
   useEffect(() => {
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    setSpeakingIdx(null);
     setMessages([{ from:'bot', text: getGreeting(user) }]);
     setEnded(false); setInput(''); setHasReplied(false); setUnread(0);
   }, [user?.id]);
@@ -204,7 +278,12 @@ export default function Chatbot() {
   }, [messages.length, open]);
 
   function openWidget() { setOpen(true); setUnread(0); }
-  function newChat()    { setMessages([{ from:'bot', text: getGreeting(user) }]); setEnded(false); setInput(''); setHasReplied(false); }
+  function newChat() {
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    setSpeakingIdx(null);
+    setMessages([{ from:'bot', text: getGreeting(user) }]);
+    setEnded(false); setInput(''); setHasReplied(false);
+  }
 
   function rateMessage(idx, vote) {
     setRatings(prev => ({ ...prev, [idx]: prev[idx] === vote ? null : vote }));
@@ -216,6 +295,28 @@ export default function Chatbot() {
       setCopied(idx);
       setTimeout(() => setCopied(c => c === idx ? null : c), 2000);
     } catch (_) {}
+  }
+
+  function speakMessage(idx, text) {
+    if (!('speechSynthesis' in window)) return;
+    if (speakingIdx === idx) {
+      window.speechSynthesis.cancel();
+      setSpeakingIdx(null);
+      return;
+    }
+    window.speechSynthesis.cancel();
+    const cleanText = (text || '').replace(/[*_#`[\]()]/g, '');
+    const utter = new SpeechSynthesisUtterance(cleanText);
+    const voices = window.speechSynthesis.getVoices() || [];
+    const best = voices.find(v => /natural|neural|online/i.test(v.name) && /en/i.test(v.lang)) ||
+                 voices.find(v => /google/i.test(v.name) && /en/i.test(v.lang)) ||
+                 voices.find(v => /en[-_]us|en[-_]ph|en[-_]gb/i.test(v.lang));
+    if (best) utter.voice = best;
+    utter.rate = 1.0;
+    utter.onend = () => setSpeakingIdx(null);
+    utter.onerror = () => setSpeakingIdx(null);
+    setSpeakingIdx(idx);
+    window.speechSynthesis.speak(utter);
   }
 
   function toggleVoiceInput() {
@@ -353,6 +454,9 @@ export default function Chatbot() {
               <div style={{ display:'flex', alignItems:'center', gap:7 }}>
                 <span style={{ color:'#fff', fontWeight:900, fontSize:13.5 }}>Haribon</span>
                 <span style={{ color:'#38bdf8', fontSize:11, fontWeight:700 }}>Trilingual AI</span>
+                <span style={{ background: 'rgba(249,115,22,0.18)', color: '#fb923c', border: '1px solid rgba(249,115,22,0.3)', borderRadius: 5, padding: '1px 5px', fontSize: 9.5, fontWeight: 800 }}>
+                  🧠 High-IQ
+                </span>
               </div>
               <div style={{ display:'flex', alignItems:'center', gap:7, marginTop:2 }}>
                 <span style={{ width:6, height:6, borderRadius:'50%', background:'#4ade80', display:'inline-block', boxShadow:'0 0 5px rgba(74,222,128,0.8)' }} />
@@ -428,13 +532,13 @@ export default function Chatbot() {
                       borderRadius:14, fontSize:12,
                       ...(msg.from === 'bot'
                         ? { background:'rgba(20,30,52,0.96)', borderBottomLeftRadius:4, border:'1px solid rgba(255,255,255,0.08)', boxShadow:'0 3px 12px rgba(0,0,0,0.25)' }
-                        : { background:'linear-gradient(135deg,#1e3a8a,#1a56db)', color:'#fff', borderBottomRightRadius:4, boxShadow:'0 3px 12px rgba(30,58,138,0.4)' }
+                        : { background:'linear-gradient(135deg,#f97316,#ea580c)', color:'#fff', borderBottomRightRadius:4, boxShadow:'0 3px 12px rgba(249,115,22,0.35)' }
                       ),
                     }}>
                       {msg.from === 'bot' ? <WBotText text={msg.text} /> : <span style={{ lineHeight:1.55 }}>{msg.text}</span>}
                     </div>
 
-                    {/* Rating & Copy actions for bot messages */}
+                    {/* Rating, Copy & Voice Read actions for bot messages */}
                     {msg.from === 'bot' && i > 0 && (
                       <div className="w-msg-actions">
                         <button
@@ -452,8 +556,27 @@ export default function Chatbot() {
                         <button
                           className={`w-action-btn${copied === i ? ' copied' : ''}`}
                           onClick={() => copyMessage(i, msg.text)}
+                          title="Copy response"
                         >
                           {copied === i ? '✓ Copied' : '⧉'}
+                        </button>
+                        <button
+                          className={`w-action-btn${speakingIdx === i ? ' speaking' : ''}`}
+                          onClick={() => speakMessage(i, msg.text)}
+                          title={speakingIdx === i ? 'Stop voice playback' : 'Read aloud with voice'}
+                        >
+                          {speakingIdx === i ? (
+                            <>
+                              <span style={{ display: 'inline-flex', gap: 1.5, alignItems: 'center', marginRight: 2 }}>
+                                <span className="w-voice-dot" style={{ animationDelay: '0s' }} />
+                                <span className="w-voice-dot" style={{ animationDelay: '0.2s' }} />
+                                <span className="w-voice-dot" style={{ animationDelay: '0.4s' }} />
+                              </span>
+                              <span>⏹</span>
+                            </>
+                          ) : (
+                            <span>🔊</span>
+                          )}
                         </button>
                       </div>
                     )}
