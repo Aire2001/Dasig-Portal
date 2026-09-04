@@ -127,12 +127,16 @@ router.post('/:id/register', verifyToken, async (req, res) => {
     phone: (phone && phone.trim()) || req.user.phone || '',
   };
 
-  // Send confirmation email with QR code and admission details (fire-and-forget)
-  sendEventRegistrationEmail(attendee, ev).catch(err => {
+  // Send confirmation email with QR code and admission details
+  let emailSent = false;
+  try {
+    const info = await sendEventRegistrationEmail(attendee, ev);
+    emailSent = !!info;
+  } catch (err) {
     console.warn('[mailer] Registration email notification error:', err.message);
-  });
+  }
 
-  res.json({ message: 'Registration successful', eventId, enrolled: newCount, total: maxCapacity });
+  res.json({ message: 'Registration successful', eventId, enrolled: newCount, total: maxCapacity, emailSent, attendeeEmail: attendee.email });
 });
 
 // DELETE /api/events/:id/register — cancel registration
@@ -162,12 +166,48 @@ router.delete('/:id/register', verifyToken, async (req, res) => {
   const newCount = typeof realCount === 'number' ? realCount : 0;
   await supabase.from('events').update({ enrolled: newCount }).eq('id', eventId);
 
-  // Send cancellation email (fire-and-forget)
-  sendEventCancellationEmail(req.user, ev).catch(err => {
+  // Send cancellation email
+  let cancellationSent = false;
+  try {
+    const info = await sendEventCancellationEmail(req.user, ev);
+    cancellationSent = !!info;
+  } catch (err) {
     console.warn('[mailer] Cancellation email notification error:', err.message);
-  });
+  }
 
-  res.json({ message: 'Registration cancelled', enrolled: newCount });
+  res.json({ message: 'Registration cancelled', enrolled: newCount, cancellationSent });
+});
+
+// POST /api/events/:id/resend-pass — resend pass to attendee
+router.post('/:id/resend-pass', verifyToken, async (req, res) => {
+  const eventId = Number(req.params.id);
+  const { data: ev } = await supabase.from('events')
+    .select('id,enrolled,total,title,date,venue,organizer,category,description,start_time,end_time')
+    .eq('id', eventId)
+    .single();
+  if (!ev) return res.status(404).json({ error: 'Event not found' });
+
+  const { data: existing } = await supabase.from('event_registrations')
+    .select('id').eq('event_id', eventId).eq('user_id', req.user.id).single();
+  if (!existing) return res.status(400).json({ error: 'You are not registered for this event' });
+
+  const { name, email, phone, institution, position } = req.body || {};
+  const attendee = {
+    name: (name && name.trim()) || req.user.name,
+    email: (email && email.trim()) || req.user.email,
+    role: req.user.role || 'GUEST',
+    institution: (institution && institution.trim()) || req.user.institution || '',
+    position: (position && position.trim()) || req.user.campus || '',
+    phone: (phone && phone.trim()) || req.user.phone || '',
+  };
+
+  try {
+    await sendEventRegistrationEmail(attendee, ev);
+    res.json({ message: `Pass resent successfully to ${attendee.email}`, email: attendee.email });
+  } catch (err) {
+    console.error('[mailer] Resend pass error:', err.message);
+    res.status(500).json({ error: 'Failed to send email pass: ' + err.message });
+  }
 });
 
 // GET /api/events/:id/registrations — list registrations (ADMIN only)

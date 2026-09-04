@@ -21,6 +21,15 @@ const PORTAL_URL = process.env.PORTAL_URL || 'https://dasig-portal.vercel.app';
 const PORTAL_PUBLIC_URL = process.env.PORTAL_PUBLIC_URL || (PORTAL_URL.includes('localhost') ? 'https://dasig-portal.vercel.app' : PORTAL_URL);
 const FROM = `"DASIG Portal" <${process.env.SMTP_USER || 'noreply@dasig.ph'}>`;
 
+// Standard RFC deliverability headers to prevent transactional tickets from landing in Spam/Promotions
+const TRANSACTIONAL_HEADERS = {
+  'X-Priority': '1',
+  'X-MSMail-Priority': 'High',
+  'Importance': 'high',
+  'Auto-Submitted': 'auto-generated',
+  'X-Auto-Response-Suppress': 'OOF, AutoReply',
+};
+
 async function sendPasswordResetEmail(toEmail, resetToken) {
   if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
     // Email not configured — skip silently (token is returned in API response for demo)
@@ -31,10 +40,11 @@ async function sendPasswordResetEmail(toEmail, resetToken) {
   const resetUrl = `${PORTAL_URL}/forgot-password?token=${resetToken}`;
   const transporter = createTransporter();
 
-  await transporter.sendMail({
+  const info = await transporter.sendMail({
     from: FROM,
     to: toEmail,
-    subject: 'DASIG Portal — Password Reset Request',
+    headers: TRANSACTIONAL_HEADERS,
+    subject: '[DASIG Portal] Password Reset Request',
     html: `
       <!DOCTYPE html>
       <html>
@@ -79,6 +89,7 @@ async function sendPasswordResetEmail(toEmail, resetToken) {
     `,
     text: `DASIG Portal — Password Reset\n\nReset your password here:\n${resetUrl}\n\nThis link expires in 1 hour.\n\nIf you did not request this, ignore this email.`,
   });
+  return info;
 }
 
 // Helper to normalize attendee object whether called with (attendeeObj, itemObj) or (email, name, itemObj)
@@ -186,12 +197,13 @@ async function sendEventRegistrationEmail(arg1, arg2, arg3) {
   const portalUrl = `${PORTAL_URL}/programs?tab=events`;
   const transporter = createTransporter();
 
-  await transporter.sendMail({
+  const info = await transporter.sendMail({
     from: FROM,
     to: toEmail,
+    headers: TRANSACTIONAL_HEADERS,
     subject: isMember
-      ? `👑 VIP Member Pass & QR Code — ${event.title}`
-      : `🎟️ Admission Pass & QR Code — ${event.title}`,
+      ? `[DASIG VIP Pass] Admission Pass & Check-In QR — ${event.title}`
+      : `[DASIG Pass] Admission Pass & Check-In QR — ${event.title}`,
     attachments: qrAttachment ? [qrAttachment] : [],
     html: `
       <!DOCTYPE html>
@@ -245,7 +257,7 @@ async function sendEventRegistrationEmail(arg1, arg2, arg3) {
               <a href="${verifyUrl}" target="_blank" style="display:inline-block;text-decoration:none;">
                 ${qrAttachment
                   ? `<img src="cid:ticketqr@dasig" width="160" height="160" alt="Admission QR Code" style="display:block;margin:0 auto;border-radius:12px;border:1px solid #e2e8f0;box-shadow:0 4px 12px rgba(0,0,0,0.08);" />`
-                  : `<img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(verifyUrl)}" width="160" height="160" alt="Admission QR Code" style="display:block;margin:0 auto;border-radius:12px;border:1px solid #e2e8f0;" />`
+                  : `<div style="padding:16px 24px;background:#f1f5f9;border-radius:10px;font-family:monospace;font-weight:700;color:#334155;border:1px dashed #cbd5e1;">Pass Ref: ${refCode}</div>`
                 }
               </a>
               <div class="ticket-ref">${refCode}</div>
@@ -316,7 +328,8 @@ async function sendEventRegistrationEmail(arg1, arg2, arg3) {
     `,
     text: `DASIG PORTAL — OFFICIAL ADMISSION PASS\n\nEvent: ${event.title}\nTicket Ref: ${refCode}\nAttendee: ${attendee.name} (${toEmail})\nDate: ${event.date || 'TBA'}\nVenue: ${event.venue || 'TBA'}\nPass Tier: ${isMember ? 'VIP Consortium Member Pass' : 'Standard Guest Pass'}\n\nVerify Pass: ${verifyUrl}\nAdd to calendar: ${gcalUrl}\nView in portal: ${portalUrl}`,
   });
-  console.log(`[mailer] Sent event registration pass to ${toEmail} (Ref: ${refCode})`);
+  console.log(`[mailer] Sent event registration pass to ${toEmail} (Ref: ${refCode}, ID: ${info.messageId})`);
+  return info;
 }
 
 async function sendTrainingEnrollmentEmail(arg1, arg2, arg3) {
@@ -366,12 +379,13 @@ async function sendTrainingEnrollmentEmail(arg1, arg2, arg3) {
   const portalUrl = `${PORTAL_URL}/programs?tab=training`;
   const transporter = createTransporter();
 
-  await transporter.sendMail({
+  const info = await transporter.sendMail({
     from: FROM,
     to: toEmail,
+    headers: TRANSACTIONAL_HEADERS,
     subject: isMember
-      ? `👑 VIP Member Cohort Pass & QR Code — ${training.title}`
-      : `🎓 Training Cohort Admission Pass & QR Code — ${training.title}`,
+      ? `[DASIG VIP Pass] Training Cohort Pass & Check-In QR — ${training.title}`
+      : `[DASIG Pass] Training Cohort Pass & Check-In QR — ${training.title}`,
     attachments: qrAttachment ? [qrAttachment] : [],
     html: `
       <!DOCTYPE html>
@@ -425,7 +439,7 @@ async function sendTrainingEnrollmentEmail(arg1, arg2, arg3) {
               <a href="${verifyUrl}" target="_blank" style="display:inline-block;text-decoration:none;">
                 ${qrAttachment
                   ? `<img src="cid:ticketqr@dasig" width="160" height="160" alt="Training QR Code" style="display:block;margin:0 auto;border-radius:12px;border:1px solid #bbf7d0;box-shadow:0 4px 12px rgba(0,0,0,0.08);" />`
-                  : `<img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(verifyUrl)}" width="160" height="160" alt="Training QR Code" style="display:block;margin:0 auto;border-radius:12px;border:1px solid #bbf7d0;" />`
+                  : `<div style="padding:16px 24px;background:#f1f5f9;border-radius:10px;font-family:monospace;font-weight:700;color:#334155;border:1px dashed #cbd5e1;">Pass Ref: ${refCode}</div>`
                 }
               </a>
               <div class="ticket-ref">${refCode}</div>
@@ -493,7 +507,8 @@ async function sendTrainingEnrollmentEmail(arg1, arg2, arg3) {
     `,
     text: `DASIG PORTAL — TRAINING ENROLLMENT CONFIRMATION\n\nProgram: ${training.title}\nTicket Ref: ${refCode}\nEnrollee: ${attendee.name} (${toEmail})\nSchedule: ${training.schedule || 'TBA'}\nOrganizer: ${training.org || 'DASIG'}\n\nVerify Pass: ${verifyUrl}\nAdd to calendar: ${gcalUrl}\nView in portal: ${portalUrl}`,
   });
-  console.log(`[mailer] Sent training enrollment pass to ${toEmail} (Ref: ${refCode})`);
+  console.log(`[mailer] Sent training enrollment pass to ${toEmail} (Ref: ${refCode}, ID: ${info.messageId})`);
+  return info;
 }
 
 async function sendEventCancellationEmail(arg1, arg2, arg3) {
@@ -516,10 +531,11 @@ async function sendEventCancellationEmail(arg1, arg2, arg3) {
   const portalUrl = `${PORTAL_URL}/programs?tab=events`;
   const transporter = createTransporter();
 
-  await transporter.sendMail({
+  const info = await transporter.sendMail({
     from: FROM,
     to: toEmail,
-    subject: `❌ Registration Cancelled — ${event.title}`,
+    headers: TRANSACTIONAL_HEADERS,
+    subject: `[DASIG Notice] Registration Cancelled — ${event.title}`,
     html: `
       <!DOCTYPE html>
       <html>
@@ -601,7 +617,8 @@ async function sendEventCancellationEmail(arg1, arg2, arg3) {
     `,
     text: `DASIG PORTAL — REGISTRATION CANCELLED\n\nHi ${attendee.name},\nYour registration for "${event.title}" has been cancelled.\nDate: ${event.date || 'TBA'}\nVenue: ${event.venue || 'TBA'}\nCancelled on: ${cancellationTime} PHT\n\nBrowse other events: ${portalUrl}`,
   });
-  console.log(`[mailer] Sent event cancellation email to ${toEmail}`);
+  console.log(`[mailer] Sent event cancellation email to ${toEmail} (ID: ${info.messageId})`);
+  return info;
 }
 
 async function sendTrainingCancellationEmail(arg1, arg2, arg3) {
@@ -624,10 +641,11 @@ async function sendTrainingCancellationEmail(arg1, arg2, arg3) {
   const portalUrl = `${PORTAL_URL}/programs?tab=training`;
   const transporter = createTransporter();
 
-  await transporter.sendMail({
+  const info = await transporter.sendMail({
     from: FROM,
     to: toEmail,
-    subject: `❌ Enrollment Cancelled — ${training.title}`,
+    headers: TRANSACTIONAL_HEADERS,
+    subject: `[DASIG Notice] Training Enrollment Cancelled — ${training.title}`,
     html: `
       <!DOCTYPE html>
       <html>
@@ -709,7 +727,8 @@ async function sendTrainingCancellationEmail(arg1, arg2, arg3) {
     `,
     text: `DASIG PORTAL — TRAINING ENROLLMENT CANCELLED\n\nHi ${attendee.name},\nYour enrollment in "${training.title}" has been cancelled.\nSchedule: ${training.schedule || 'TBA'}\nOrganizer: ${training.org || 'DASIG'}\nCancelled on: ${cancellationTime} PHT\n\nBrowse training programs: ${portalUrl}`,
   });
-  console.log(`[mailer] Sent training cancellation email to ${toEmail}`);
+  console.log(`[mailer] Sent training cancellation email to ${toEmail} (ID: ${info.messageId})`);
+  return info;
 }
 
 async function sendMembershipApplicationNotification(applicant) {
@@ -719,10 +738,11 @@ async function sendMembershipApplicationNotification(applicant) {
     return;
   }
   const transporter = createTransporter();
-  await transporter.sendMail({
+  const info = await transporter.sendMail({
     from: FROM,
     to: adminEmail,
-    subject: `[DASIG Portal] New Membership Application — ${applicant.name}`,
+    headers: TRANSACTIONAL_HEADERS,
+    subject: `[DASIG Admin] New Membership Application — ${applicant.name}`,
     html: `
       <div style="font-family:'Segoe UI',Arial,sans-serif;background:#f1f5f9;padding:32px 0">
         <div style="background:#fff;max-width:540px;margin:0 auto;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08)">
@@ -746,6 +766,7 @@ async function sendMembershipApplicationNotification(applicant) {
       </div>`,
     text: `New membership application from ${applicant.name} (${applicant.email})\nInstitution: ${applicant.institution}\nTier: ${applicant.tier || 'Tier 2'}\n\nReview at: ${PORTAL_URL}/admin?tab=applications`,
   });
+  return info;
 }
 
 module.exports = { sendPasswordResetEmail, sendEventRegistrationEmail, sendTrainingEnrollmentEmail, sendEventCancellationEmail, sendTrainingCancellationEmail, sendMembershipApplicationNotification };

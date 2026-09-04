@@ -130,12 +130,16 @@ router.post('/:id/enroll', verifyToken, async (req, res) => {
     phone: (phone && phone.trim()) || req.user.phone || '',
   };
 
-  // Send confirmation email with QR code and cohort admission details (fire-and-forget)
-  sendTrainingEnrollmentEmail(attendee, t).catch(err => {
+  // Send confirmation email with QR code and cohort admission details
+  let emailSent = false;
+  try {
+    const info = await sendTrainingEnrollmentEmail(attendee, t);
+    emailSent = !!info;
+  } catch (err) {
     console.warn('[mailer] Training enrollment email notification error:', err.message);
-  });
+  }
 
-  res.json({ message: 'Enrollment successful', trainingId, enrolled: newCount, total: maxCapacity });
+  res.json({ message: 'Enrollment successful', trainingId, enrolled: newCount, total: maxCapacity, emailSent, attendeeEmail: attendee.email });
 });
 
 // DELETE /api/training/:id/enroll — unenroll user
@@ -165,12 +169,48 @@ router.delete('/:id/enroll', verifyToken, async (req, res) => {
   const newCount = typeof realCount === 'number' ? realCount : 0;
   await supabase.from('trainings').update({ enrolled: newCount }).eq('id', trainingId);
 
-  // Send cancellation email (fire-and-forget)
-  sendTrainingCancellationEmail(req.user, t).catch(err => {
+  // Send cancellation email
+  let cancellationSent = false;
+  try {
+    const info = await sendTrainingCancellationEmail(req.user, t);
+    cancellationSent = !!info;
+  } catch (err) {
     console.warn('[mailer] Training cancellation email notification error:', err.message);
-  });
+  }
 
-  res.json({ message: 'Enrollment cancelled', enrolled: newCount });
+  res.json({ message: 'Enrollment cancelled', enrolled: newCount, cancellationSent });
+});
+
+// POST /api/training/:id/resend-pass — resend pass to enrolled attendee
+router.post('/:id/resend-pass', verifyToken, async (req, res) => {
+  const trainingId = Number(req.params.id);
+  const { data: t } = await supabase.from('trainings')
+    .select('id,enrolled,total,title,org,duration,category,level,schedule,session_start_time,session_end_time,description')
+    .eq('id', trainingId)
+    .single();
+  if (!t) return res.status(404).json({ error: 'Training not found' });
+
+  const { data: existing } = await supabase.from('training_enrollments')
+    .select('id').eq('training_id', trainingId).eq('user_id', req.user.id).single();
+  if (!existing) return res.status(400).json({ error: 'You are not enrolled in this training' });
+
+  const { name, email, phone, institution, position } = req.body || {};
+  const attendee = {
+    name: (name && name.trim()) || req.user.name,
+    email: (email && email.trim()) || req.user.email,
+    role: req.user.role || 'GUEST',
+    institution: (institution && institution.trim()) || req.user.institution || '',
+    position: (position && position.trim()) || req.user.campus || '',
+    phone: (phone && phone.trim()) || req.user.phone || '',
+  };
+
+  try {
+    await sendTrainingEnrollmentEmail(attendee, t);
+    res.json({ message: `Pass resent successfully to ${attendee.email}`, email: attendee.email });
+  } catch (err) {
+    console.error('[mailer] Resend pass error:', err.message);
+    res.status(500).json({ error: 'Failed to send email pass: ' + err.message });
+  }
 });
 
 // GET /api/training/:id/enrollments — list enrollments (ADMIN only)

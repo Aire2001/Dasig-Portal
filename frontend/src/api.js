@@ -53,6 +53,7 @@ export const api = {
     markAttendance: (eventId, userId, attended) =>
       request(`/events/${eventId}/attend/${userId}`, { method: 'POST', body: JSON.stringify({ attended }) }),
     markAttendSelf: (id) => request(`/events/${id}/attend-self`, { method: 'POST' }),
+    resendPass: (id, body) => request(`/events/${id}/resend-pass`, { method: 'POST', body: body ? JSON.stringify(body) : undefined }),
   },
   news: {
     list: (params = {}) => {
@@ -79,6 +80,7 @@ export const api = {
     enrollments: (id) => request(`/training/${id}/enrollments`),
     markAttendance: (trainingId, userId, attended) =>
       request(`/training/${trainingId}/attend/${userId}`, { method: 'POST', body: JSON.stringify({ attended }) }),
+    resendPass: (id, body) => request(`/training/${id}/resend-pass`, { method: 'POST', body: body ? JSON.stringify(body) : undefined }),
   },
   members: {
     list: () => request('/members'),

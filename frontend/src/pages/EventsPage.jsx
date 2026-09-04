@@ -220,7 +220,12 @@ export default function EventsPage() {
     if (!fname.trim()) { setFnameErr(true); return; }
     setSubmitting(true);
     try {
-      const res = await api.events.register(formModal.id);
+      const res = await api.events.register(formModal.id, {
+        name: fname,
+        email: user?.email || '',
+        phone,
+        institution,
+      });
       const newEnrolled = res.enrolled ?? formModal.enrolled + 1;
       const updated = { ...formModal, enrolled: newEnrolled };
       setEvents(prev => prev.map(e => e.id === formModal.id ? updated : e));

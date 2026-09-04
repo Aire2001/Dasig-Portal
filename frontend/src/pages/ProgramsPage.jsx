@@ -848,6 +848,26 @@ function DigitalTicketModal({ passData, onClose }) {
   const [enlargeQr, setEnlargeQr] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
   const [qrPngUrl, setQrPngUrl] = useState('');
+  const [resending, setResending] = useState(false);
+  const [resendStatus, setResendStatus] = useState('');
+
+  async function handleResend() {
+    setResending(true);
+    try {
+      if (isTraining) {
+        await api.training.resendPass(item.id, { name, email, institution, position });
+      } else {
+        await api.events.resendPass(item.id, { name, email, institution, position });
+      }
+      setResendStatus('sent');
+      setTimeout(() => setResendStatus(''), 4000);
+    } catch {
+      setResendStatus('err');
+      setTimeout(() => setResendStatus(''), 4000);
+    } finally {
+      setResending(false);
+    }
+  }
 
   const dateStr = item.date || item.schedule?.split('|')[0]?.trim() || 'Scheduled Session';
   const timeStr = `${item.start_time || item.session_start_time || '09:00'}${item.end_time ? ` – ${item.end_time}` : item.session_end_time ? ` – ${item.session_end_time}` : ' – 17:00'}`;
@@ -1012,6 +1032,42 @@ function DigitalTicketModal({ passData, onClose }) {
                 <span style={{ fontSize: 10.5, background: 'rgba(249,115,22,0.12)', color: '#fb923c', border: '1px solid rgba(249,115,22,0.25)', borderRadius: 6, padding: '2px 7px', fontWeight: 700 }}>👑 Member Pass includes Free Certificate</span>
               </>
             )}
+          </div>
+
+          {/* Email dispatch indicator & resend pass control */}
+          <div style={{
+            marginTop: 14, padding: '10px 14px',
+            background: resendStatus === 'sent' ? 'rgba(16,185,129,0.12)' : resendStatus === 'err' ? 'rgba(225,29,72,0.12)' : 'rgba(59,130,246,0.1)',
+            border: `1px solid ${resendStatus === 'sent' ? 'rgba(16,185,129,0.35)' : resendStatus === 'err' ? 'rgba(225,29,72,0.35)' : 'rgba(59,130,246,0.25)'}`,
+            borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10,
+          }}>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: 11.5, fontWeight: 800, color: resendStatus === 'sent' ? '#34d399' : resendStatus === 'err' ? '#f87171' : '#93c5fd', display: 'flex', alignItems: 'center', gap: 5 }}>
+                <span>{resendStatus === 'sent' ? '✓' : '📧'}</span>
+                <span>{resendStatus === 'sent' ? 'Official Pass Sent to Email!' : resendStatus === 'err' ? 'Failed to Resend' : 'Pass & QR Dispatched to Email'}</span>
+              </div>
+              <div style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.65)', marginTop: 2, lineHeight: 1.35 }}>
+                Sent to <strong style={{ color: '#fff' }}>{email || 'your email'}</strong>. (Check <em style={{ color: '#fde047' }}>Updates</em>, <em style={{ color: '#fde047' }}>Promotions</em>, or <em style={{ color: '#fde047' }}>Spam</em> if not in Primary)
+              </div>
+            </div>
+            <button
+              type="button"
+              disabled={resending}
+              onClick={handleResend}
+              style={{
+                flexShrink: 0,
+                background: resendStatus === 'sent' ? 'rgba(16,185,129,0.2)' : 'rgba(255,255,255,0.08)',
+                border: `1px solid ${resendStatus === 'sent' ? 'rgba(16,185,129,0.4)' : 'rgba(255,255,255,0.18)'}`,
+                borderRadius: 8, padding: '5px 11px',
+                fontSize: 11, fontWeight: 700, color: resendStatus === 'sent' ? '#34d399' : '#fff',
+                cursor: resending ? 'default' : 'pointer',
+                opacity: resending ? 0.6 : 1, fontFamily: 'inherit',
+                display: 'inline-flex', alignItems: 'center', gap: 4,
+                transition: 'all .15s',
+              }}
+            >
+              {resending ? 'Sending...' : resendStatus === 'sent' ? '✓ Sent' : '📨 Resend Email'}
+            </button>
           </div>
         </div>
 
