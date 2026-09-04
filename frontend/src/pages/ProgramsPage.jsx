@@ -1625,7 +1625,13 @@ function EventsTab({ user }) {
     if (!fname.trim()) { setFnameErr(true); return; }
     setSub(true);
     try {
-      const res = await api.events.register(formModal.id);
+      const res = await api.events.register(formModal.id, {
+        name: fname,
+        email: email || user?.email || '',
+        phone,
+        institution,
+        position,
+      });
       const updated = { ...formModal, enrolled: res.enrolled ?? formModal.enrolled + 1 };
       setEvents(p => p.map(e => e.id === formModal.id ? updated : e));
       setMyRegs(p => ({ ...p, [formModal.id]: { attended: false } }));
@@ -2163,7 +2169,13 @@ function TrainingTab({ user }) {
     if (!fname.trim()) { setFnameErr(true); return; }
     setSub(true);
     try {
-      const res = await api.training.enroll(formModal.id);
+      const res = await api.training.enroll(formModal.id, {
+        name: fname,
+        email: email || user?.email || '',
+        phone,
+        institution,
+        position,
+      });
       const upd = { ...formModal, enrolled: res.enrolled ?? formModal.enrolled + 1 };
       setTrainings(p => p.map(t => t.id === formModal.id ? upd : t));
       setMyEnr(p => ({ ...p, [formModal.id]: true }));

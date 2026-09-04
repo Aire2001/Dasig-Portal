@@ -89,7 +89,10 @@ router.delete('/:id', verifyToken, requireRole('ADMIN'), async (req, res) => {
 // POST /api/training/:id/enroll — enroll user
 router.post('/:id/enroll', verifyToken, async (req, res) => {
   const trainingId = Number(req.params.id);
-  const { data: t } = await supabase.from('trainings').select('enrolled,total,title,org,duration,category,level,schedule').eq('id', trainingId).single();
+  const { data: t } = await supabase.from('trainings')
+    .select('id,enrolled,total,title,org,duration,category,level,schedule,session_start_time,session_end_time,description')
+    .eq('id', trainingId)
+    .single();
   if (!t) return res.status(404).json({ error: 'Training not found' });
 
   // Count real enrollments from database
@@ -116,8 +119,19 @@ router.post('/:id/enroll', verifyToken, async (req, res) => {
   const newCount = currentEnrolled + 1;
   await supabase.from('trainings').update({ enrolled: newCount }).eq('id', trainingId);
 
-  // Send confirmation email (fire-and-forget — never blocks the response)
-  sendTrainingEnrollmentEmail(req.user.email, req.user.name, t).catch(err => {
+  // Extract attendee info from submission body or authenticated user
+  const { name, email, phone, institution, position } = req.body || {};
+  const attendee = {
+    name: (name && name.trim()) || req.user.name,
+    email: (email && email.trim()) || req.user.email,
+    role: req.user.role || 'GUEST',
+    institution: (institution && institution.trim()) || req.user.institution || '',
+    position: (position && position.trim()) || req.user.campus || '',
+    phone: (phone && phone.trim()) || req.user.phone || '',
+  };
+
+  // Send confirmation email with QR code and cohort admission details (fire-and-forget)
+  sendTrainingEnrollmentEmail(attendee, t).catch(err => {
     console.warn('[mailer] Training enrollment email notification error:', err.message);
   });
 
@@ -128,7 +142,9 @@ router.post('/:id/enroll', verifyToken, async (req, res) => {
 router.delete('/:id/enroll', verifyToken, async (req, res) => {
   const trainingId = Number(req.params.id);
   const { data: t } = await supabase.from('trainings')
-    .select('enrolled,total,title,org,duration,level,schedule,category').eq('id', trainingId).single();
+    .select('id,enrolled,total,title,org,duration,level,schedule,category,session_start_time,session_end_time,description')
+    .eq('id', trainingId)
+    .single();
   if (!t) return res.status(404).json({ error: 'Training not found' });
 
   // Check enrollment exists first — Supabase DELETE silently succeeds with 0 rows
@@ -150,7 +166,7 @@ router.delete('/:id/enroll', verifyToken, async (req, res) => {
   await supabase.from('trainings').update({ enrolled: newCount }).eq('id', trainingId);
 
   // Send cancellation email (fire-and-forget)
-  sendTrainingCancellationEmail(req.user.email, req.user.name, t).catch(err => {
+  sendTrainingCancellationEmail(req.user, t).catch(err => {
     console.warn('[mailer] Training cancellation email notification error:', err.message);
   });
 

@@ -1,4 +1,5 @@
 const nodemailer = require('nodemailer');
+const QRCode = require('qrcode');
 
 // Creates a transporter using SMTP settings from environment variables.
 // For Gmail: enable 2FA and create an App Password at myaccount.google.com/apppasswords
@@ -78,222 +79,609 @@ async function sendPasswordResetEmail(toEmail, resetToken) {
   });
 }
 
-async function sendEventRegistrationEmail(toEmail, userName, event) {
-  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) return;
+// Helper to normalize attendee object whether called with (attendeeObj, itemObj) or (email, name, itemObj)
+function resolveAttendee(arg1, arg2, arg3) {
+  if (typeof arg1 === 'object' && arg1 !== null) {
+    return {
+      attendee: {
+        name: arg1.name || 'Valued Attendee',
+        email: arg1.email || '',
+        role: arg1.role || 'GUEST',
+        institution: arg1.institution || arg1.campus || '',
+        position: arg1.position || arg1.campus || '',
+        phone: arg1.phone || '',
+      },
+      item: arg2 || {},
+    };
+  }
+  return {
+    attendee: {
+      name: arg2 || 'Valued Attendee',
+      email: arg1 || '',
+      role: (arg3 && arg3.role) || 'GUEST',
+      institution: (arg3 && arg3.institution) || '',
+      position: '',
+      phone: '',
+    },
+    item: arg3 || {},
+  };
+}
+
+// Generate a 1-click Google Calendar URL for inclusion in confirmation emails
+function getGoogleCalendarLink(title, dateStr, startTime, endTime, venue, description) {
+  try {
+    const base = 'https://www.google.com/calendar/render?action=TEMPLATE';
+    const yMatch = (dateStr || '').match(/\b(\d{4})\b/);
+    const yr = yMatch ? yMatch[1] : '2026';
+    const months = { Jan:'01',Feb:'02',Mar:'03',Apr:'04',May:'05',Jun:'06',Jul:'07',Aug:'08',Sep:'09',Oct:'10',Nov:'11',Dec:'12' };
+    const mMatch = (dateStr || '').match(/([A-Z][a-z]{2})\s+(\d+)/);
+
+    let datesParam = '';
+    if (mMatch && months[mMatch[1]]) {
+      const mo = months[mMatch[1]];
+      const da = String(mMatch[2]).padStart(2, '0');
+      const stNum = (startTime || '').match(/(\d+):(\d+)/);
+      const enNum = (endTime || '').match(/(\d+):(\d+)/);
+      const stHour = stNum ? String(stNum[1]).padStart(2, '0') + String(stNum[2]).padStart(2, '0') + '00' : '010000';
+      const enHour = enNum ? String(enNum[1]).padStart(2, '0') + String(enNum[2]).padStart(2, '0') + '00' : '090000';
+      datesParam = `&dates=${yr}${mo}${da}T${stHour}Z/${yr}${mo}${da}T${enHour}Z`;
+    }
+    const params = new URLSearchParams({
+      text: title || 'DASIG Consortium Event',
+      location: venue || 'Region VII / Central Visayas',
+      details: `${description || ''}\n\nOfficial admission pass confirmed via DASIG Regional Portal: ${PORTAL_URL}`,
+    });
+    return `${base}&${params.toString()}${datesParam}`;
+  } catch {
+    return 'https://calendar.google.com';
+  }
+}
+
+async function sendEventRegistrationEmail(arg1, arg2, arg3) {
+  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+    console.warn('[mailer] SMTP not configured — skipping event registration email');
+    return;
+  }
+  const { attendee, item: event } = resolveAttendee(arg1, arg2, arg3);
+  const toEmail = attendee.email;
+  if (!toEmail) return;
+
+  const isMember = attendee.role === 'MEMBER' || attendee.role === 'ADMIN';
+  const refCode = `DSG-2026-EVT-${String(event.id || 1).padStart(4, '0')}-${(attendee.name || 'GST').replace(/[^a-zA-Z0-9]/g, '').slice(0, 4).toUpperCase()}`;
+
+  // Generate QR Code PNG buffer for inline CID attachment
+  let qrAttachment = null;
+  try {
+    const qrPayload = JSON.stringify({
+      portal: 'DASIG',
+      type: 'EVENT',
+      id: event.id,
+      ref: refCode,
+      attendee: attendee.name,
+      tier: isMember ? 'VIP_MEMBER' : 'GUEST',
+    });
+    const qrBuffer = await QRCode.toBuffer(qrPayload, {
+      width: 220,
+      margin: 2,
+      color: { dark: '#020817', light: '#ffffff' },
+    });
+    qrAttachment = {
+      filename: 'ticket-qr.png',
+      content: qrBuffer,
+      cid: 'ticketqr@dasig',
+    };
+  } catch (err) {
+    console.warn('[mailer] Failed to generate event QR buffer:', err.message);
+  }
+
+  const gcalUrl = getGoogleCalendarLink(event.title, event.date, event.start_time, event.end_time, event.venue, event.description);
+  const portalUrl = `${PORTAL_URL}/programs?tab=events`;
   const transporter = createTransporter();
+
   await transporter.sendMail({
     from: FROM,
     to: toEmail,
-    subject: `✅ Registration Confirmed — ${event.title}`,
+    subject: isMember
+      ? `👑 VIP Member Pass & QR Code — ${event.title}`
+      : `🎟️ Admission Pass & QR Code — ${event.title}`,
+    attachments: qrAttachment ? [qrAttachment] : [],
     html: `
-      <!DOCTYPE html><html><head><meta charset="utf-8">
-      <style>
-        body{font-family:'Segoe UI',Arial,sans-serif;background:#f1f5f9;margin:0;padding:32px 0;}
-        .card{background:#fff;max-width:520px;margin:0 auto;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);}
-        .header{background:linear-gradient(135deg,#001d5c,#1a56db 55%,#4f46e5);padding:36px 32px;text-align:center;}
-        .header h1{color:#fff;margin:0 0 6px;font-size:24px;font-weight:900;}
-        .header p{color:rgba(255,255,255,0.65);margin:0;font-size:13px;}
-        .body{padding:32px;}
-        .body p{line-height:1.7;font-size:14px;color:#334155;margin:0 0 12px;}
-        .badge{display:inline-block;background:#eff6ff;color:#1e40af;border-radius:20px;padding:4px 12px;font-size:12px;font-weight:700;margin-bottom:20px;}
-        .details{background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:20px 24px;margin:20px 0;}
-        .row{display:flex;align-items:flex-start;gap:12px;padding:8px 0;border-bottom:1px solid #f1f5f9;}
-        .row:last-child{border-bottom:none;}
-        .row-icon{font-size:18px;width:24px;flex-shrink:0;}
-        .row-label{font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px;}
-        .row-val{font-size:14px;color:#1e293b;font-weight:600;}
-        .btn{display:block;text-align:center;background:linear-gradient(90deg,#f97316,#e11d48);color:#fff !important;text-decoration:none;border-radius:10px;padding:14px 24px;font-weight:700;font-size:15px;margin:24px 0;}
-        .footer{text-align:center;padding:20px;font-size:11px;color:#94a3b8;border-top:1px solid #f1f5f9;}
-      </style></head><body>
-      <div class="card">
-        <div class="header">
-          <div style="font-size:44px;margin-bottom:10px;">🎉</div>
-          <h1>You're Registered!</h1>
-          <p>DASIG Portal · Region VII Consortium</p>
-        </div>
-        <div class="body">
-          <p>Hi <strong>${userName}</strong>,</p>
-          <p>Your registration has been confirmed. Here are your event details:</p>
-          <span class="badge">${event.category || 'Event'}</span>
-          <div class="details">
-            <div class="row"><span class="row-icon">📋</span><div><div class="row-label">Event</div><div class="row-val">${event.title}</div></div></div>
-            <div class="row"><span class="row-icon">📅</span><div><div class="row-label">Date</div><div class="row-val">${event.date || 'TBA'}</div></div></div>
-            ${event.venue ? `<div class="row"><span class="row-icon">📍</span><div><div class="row-label">Venue</div><div class="row-val">${event.venue}</div></div></div>` : ''}
-            ${event.organizer ? `<div class="row"><span class="row-icon">🏛️</span><div><div class="row-label">Organizer</div><div class="row-val">${event.organizer}</div></div></div>` : ''}
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: #0b1329; margin: 0; padding: 30px 12px; }
+          .container { max-width: 540px; margin: 0 auto; background: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 16px 40px rgba(0,0,0,0.3); }
+          .header { background: linear-gradient(135deg, #001233 0%, #0f172a 50%, #1e3a8a 100%); padding: 32px 28px; text-align: center; color: #ffffff; }
+          .header-brand { font-size: 11px; font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase; color: #93c5fd; margin-bottom: 8px; }
+          .header h1 { font-size: 22px; font-weight: 900; margin: 0 0 6px; line-height: 1.3; }
+          .header-sub { font-size: 13px; color: rgba(255,255,255,0.7); margin: 0; }
+          .badge-tier { display: inline-block; padding: 5px 14px; border-radius: 20px; font-size: 11.5px; font-weight: 900; letter-spacing: 0.5px; margin-top: 14px; }
+          .body { padding: 28px 26px; color: #1e293b; }
+          .greeting { font-size: 15px; line-height: 1.6; color: #334155; margin-bottom: 20px; }
+          .qr-box { background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 16px; padding: 20px; text-align: center; margin: 20px 0; }
+          .ticket-ref { font-family: 'Courier New', Courier, monospace; font-size: 15px; font-weight: 900; color: #0f172a; letter-spacing: 1px; margin-top: 10px; }
+          .info-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+          .info-table td { padding: 10px 0; border-bottom: 1px solid #f1f5f9; vertical-align: top; }
+          .info-label { font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; width: 110px; }
+          .info-value { font-size: 13.5px; font-weight: 700; color: #0f172a; }
+          .perks-card { background: ${isMember ? '#ecfdf5' : '#f8fafc'}; border: 1px solid ${isMember ? '#a7f3d0' : '#e2e8f0'}; border-radius: 12px; padding: 14px 16px; margin: 18px 0; font-size: 12px; color: ${isMember ? '#065f46' : '#475569'}; line-height: 1.6; }
+          .btn-primary { display: block; text-align: center; background: linear-gradient(90deg, #f97316 0%, #ea580c 100%); color: #ffffff !important; text-decoration: none; border-radius: 12px; padding: 13px 20px; font-weight: 800; font-size: 14px; margin: 10px 0; box-shadow: 0 4px 12px rgba(249,115,22,0.3); }
+          .btn-secondary { display: block; text-align: center; background: #0f172a; color: #ffffff !important; text-decoration: none; border-radius: 12px; padding: 13px 20px; font-weight: 800; font-size: 14px; margin: 10px 0; }
+          .footer { background: #f8fafc; text-align: center; padding: 20px 24px; font-size: 11px; color: #94a3b8; border-top: 1px solid #e2e8f0; line-height: 1.6; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <div class="header-brand">🦅 DASIG REGIONAL CONSORTIUM (REGION VII)</div>
+            <h1>Official Admission Pass</h1>
+            <p class="header-sub">${event.title}</p>
+            <div class="badge-tier" style="background:${isMember ? '#059669' : '#1e40af'};color:#ffffff;">
+              ${isMember ? '👑 VIP CONSORTIUM MEMBER PASS' : '👤 STANDARD GUEST ATTENDEE PASS'}
+            </div>
           </div>
-          <p style="font-size:13px;color:#64748b;">Please bring this confirmation to the event. Attendance will be recorded by the DASIG administrator.</p>
-          <a href="${PORTAL_URL}/programs?tab=events" class="btn">View Event Details →</a>
+          <div class="body">
+            <div class="greeting">
+              Dear <strong>${attendee.name}</strong>,<br>
+              Your registration is officially confirmed! Below is your digital admission pass and check-in QR code.
+            </div>
+
+            <!-- QR Code Ticket Stub -->
+            <div class="qr-box">
+              <div style="font-size:11px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:12px;">
+                Rapid Check-In Barcode / QR
+              </div>
+              ${qrAttachment
+                ? `<img src="cid:ticketqr@dasig" width="160" height="160" alt="Admission QR Code" style="display:block;margin:0 auto;border-radius:10px;border:1px solid #e2e8f0;" />`
+                : `<img src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(refCode)}" width="160" height="160" alt="Admission QR Code" style="display:block;margin:0 auto;border-radius:10px;border:1px solid #e2e8f0;" />`
+              }
+              <div class="ticket-ref">${refCode}</div>
+              <div style="font-size:11px;color:#94a3b8;margin-top:6px;">
+                Scan this QR code upon arrival at the venue desk or present ticket reference for rapid credential verification.
+              </div>
+            </div>
+
+            <!-- Attendee & Event Metadata -->
+            <table class="info-table">
+              <tr>
+                <td class="info-label">Attendee</td>
+                <td class="info-value">${attendee.name}</td>
+              </tr>
+              <tr>
+                <td class="info-label">Email</td>
+                <td class="info-value">${toEmail}</td>
+              </tr>
+              ${attendee.institution ? `<tr><td class="info-label">Institution</td><td class="info-value">${attendee.institution}</td></tr>` : ''}
+              <tr>
+                <td class="info-label">Date</td>
+                <td class="info-value">📅 ${event.date || 'TBA'}</td>
+              </tr>
+              <tr>
+                <td class="info-label">Hours</td>
+                <td class="info-value">🕐 ${event.start_time || '09:00'}${event.end_time ? ` – ${event.end_time}` : ' – 17:00'}</td>
+              </tr>
+              <tr>
+                <td class="info-label">Venue</td>
+                <td class="info-value">📍 ${event.venue || 'Central Visayas Node / Virtual Hall'}</td>
+              </tr>
+              <tr>
+                <td class="info-label">Organizer</td>
+                <td class="info-value">🏛️ ${event.organizer || 'DASIG Consortium'}</td>
+              </tr>
+            </table>
+
+            <!-- Perks Summary -->
+            <div class="perks-card">
+              ${isMember ? `
+                <div style="font-weight:800;color:#065f46;margin-bottom:4px;">👑 VIP Consortium Member Privileges Active:</div>
+                • Guaranteed priority reserved slot.<br>
+                • Complimentary official certificate of participation.<br>
+                • Full access to session toolkit, slides & replay archives.
+              ` : `
+                <div style="font-weight:800;color:#334155;margin-bottom:4px;">👤 Standard Public Pass:</div>
+                General admission pass confirmed. Need verified certificates, free masterclasses, and priority seats? <a href="${PORTAL_URL}/membership" style="color:#ea580c;font-weight:800;text-decoration:none;">Apply for Consortium Membership →</a>
+              `}
+            </div>
+
+            <!-- Action Buttons -->
+            <a href="${gcalUrl}" target="_blank" class="btn-primary">📅 Add to Google Calendar</a>
+            <a href="${portalUrl}" target="_blank" class="btn-secondary">🎟️ View Digital Pass in DASIG Portal</a>
+          </div>
+          <div class="footer">
+            DASIG Regional Higher Education Innovation Consortium · Region VII<br>
+            Cebu Institute of Technology – University · IT332 Capstone Project<br>
+            This is an automated admission pass — please present this message at check-in.
+          </div>
         </div>
-        <div class="footer">DASIG Portal · Cebu Institute of Technology – University · IT332 Capstone<br>This is an automated message — please do not reply.</div>
-      </div>
-      </body></html>
+      </body>
+      </html>
     `,
-    text: `Hi ${userName},\n\nYour registration for "${event.title}" is confirmed!\n\nDate: ${event.date || 'TBA'}\nVenue: ${event.venue || 'TBA'}\nOrganizer: ${event.organizer || 'DASIG'}\n\nView event: ${PORTAL_URL}/programs?tab=events`,
+    text: `DASIG PORTAL — OFFICIAL ADMISSION PASS\n\nEvent: ${event.title}\nTicket Ref: ${refCode}\nAttendee: ${attendee.name} (${toEmail})\nDate: ${event.date || 'TBA'}\nVenue: ${event.venue || 'TBA'}\nPass Tier: ${isMember ? 'VIP Consortium Member Pass' : 'Standard Guest Pass'}\n\nAdd to calendar: ${gcalUrl}\nView pass: ${portalUrl}`,
   });
+  console.log(`[mailer] Sent event registration pass to ${toEmail} (Ref: ${refCode})`);
 }
 
-async function sendTrainingEnrollmentEmail(toEmail, userName, training) {
-  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) return;
+async function sendTrainingEnrollmentEmail(arg1, arg2, arg3) {
+  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+    console.warn('[mailer] SMTP not configured — skipping training enrollment email');
+    return;
+  }
+  const { attendee, item: training } = resolveAttendee(arg1, arg2, arg3);
+  const toEmail = attendee.email;
+  if (!toEmail) return;
+
+  const isMember = attendee.role === 'MEMBER' || attendee.role === 'ADMIN';
+  const refCode = `DSG-2026-TRN-${String(training.id || 1).padStart(4, '0')}-${(attendee.name || 'GST').replace(/[^a-zA-Z0-9]/g, '').slice(0, 4).toUpperCase()}`;
+
+  // Generate QR Code PNG buffer for inline CID attachment
+  let qrAttachment = null;
+  try {
+    const qrPayload = JSON.stringify({
+      portal: 'DASIG',
+      type: 'TRAINING',
+      id: training.id,
+      ref: refCode,
+      attendee: attendee.name,
+      tier: isMember ? 'VIP_MEMBER' : 'GUEST',
+    });
+    const qrBuffer = await QRCode.toBuffer(qrPayload, {
+      width: 220,
+      margin: 2,
+      color: { dark: '#064e3b', light: '#ffffff' },
+    });
+    qrAttachment = {
+      filename: 'training-qr.png',
+      content: qrBuffer,
+      cid: 'ticketqr@dasig',
+    };
+  } catch (err) {
+    console.warn('[mailer] Failed to generate training QR buffer:', err.message);
+  }
+
+  const gcalUrl = getGoogleCalendarLink(training.title, training.schedule, training.session_start_time, training.session_end_time, training.org, training.description);
+  const portalUrl = `${PORTAL_URL}/programs?tab=training`;
   const transporter = createTransporter();
+
   await transporter.sendMail({
     from: FROM,
     to: toEmail,
-    subject: `✅ Enrollment Confirmed — ${training.title}`,
+    subject: isMember
+      ? `👑 VIP Member Cohort Pass & QR Code — ${training.title}`
+      : `🎓 Training Cohort Admission Pass & QR Code — ${training.title}`,
+    attachments: qrAttachment ? [qrAttachment] : [],
     html: `
-      <!DOCTYPE html><html><head><meta charset="utf-8">
-      <style>
-        body{font-family:'Segoe UI',Arial,sans-serif;background:#f1f5f9;margin:0;padding:32px 0;}
-        .card{background:#fff;max-width:520px;margin:0 auto;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);}
-        .header{background:linear-gradient(135deg,#064e3b,#059669 55%,#0891b2);padding:36px 32px;text-align:center;}
-        .header h1{color:#fff;margin:0 0 6px;font-size:24px;font-weight:900;}
-        .header p{color:rgba(255,255,255,0.65);margin:0;font-size:13px;}
-        .body{padding:32px;}
-        .body p{line-height:1.7;font-size:14px;color:#334155;margin:0 0 12px;}
-        .badge{display:inline-block;border-radius:20px;padding:4px 12px;font-size:12px;font-weight:700;margin-bottom:20px;background:#ecfdf5;color:#065f46;}
-        .details{background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:20px 24px;margin:20px 0;}
-        .row{display:flex;align-items:flex-start;gap:12px;padding:8px 0;border-bottom:1px solid #f1f5f9;}
-        .row:last-child{border-bottom:none;}
-        .row-icon{font-size:18px;width:24px;flex-shrink:0;}
-        .row-label{font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px;}
-        .row-val{font-size:14px;color:#1e293b;font-weight:600;}
-        .btn{display:block;text-align:center;background:linear-gradient(90deg,#059669,#0891b2);color:#fff !important;text-decoration:none;border-radius:10px;padding:14px 24px;font-weight:700;font-size:15px;margin:24px 0;}
-        .footer{text-align:center;padding:20px;font-size:11px;color:#94a3b8;border-top:1px solid #f1f5f9;}
-      </style></head><body>
-      <div class="card">
-        <div class="header">
-          <div style="font-size:44px;margin-bottom:10px;">🎓</div>
-          <h1>Enrollment Confirmed!</h1>
-          <p>DASIG Portal · Professional Development</p>
-        </div>
-        <div class="body">
-          <p>Hi <strong>${userName}</strong>,</p>
-          <p>You are now enrolled in the following training program:</p>
-          <span class="badge">${training.category || 'Training'}</span>
-          <div class="details">
-            <div class="row"><span class="row-icon">📚</span><div><div class="row-label">Program</div><div class="row-val">${training.title}</div></div></div>
-            <div class="row"><span class="row-icon">🏛️</span><div><div class="row-label">Organizer</div><div class="row-val">${training.org}</div></div></div>
-            <div class="row"><span class="row-icon">⏱️</span><div><div class="row-label">Duration</div><div class="row-val">${training.duration}</div></div></div>
-            <div class="row"><span class="row-icon">📊</span><div><div class="row-label">Level</div><div class="row-val">${training.level}</div></div></div>
-            ${training.schedule ? `<div class="row"><span class="row-icon">📅</span><div><div class="row-label">Start Date</div><div class="row-val">${training.schedule}</div></div></div>` : ''}
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: #042f2e; margin: 0; padding: 30px 12px; }
+          .container { max-width: 540px; margin: 0 auto; background: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 16px 40px rgba(0,0,0,0.3); }
+          .header { background: linear-gradient(135deg, #064e3b 0%, #059669 50%, #0d9488 100%); padding: 32px 28px; text-align: center; color: #ffffff; }
+          .header-brand { font-size: 11px; font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase; color: #a7f3d0; margin-bottom: 8px; }
+          .header h1 { font-size: 22px; font-weight: 900; margin: 0 0 6px; line-height: 1.3; }
+          .header-sub { font-size: 13px; color: rgba(255,255,255,0.8); margin: 0; }
+          .badge-tier { display: inline-block; padding: 5px 14px; border-radius: 20px; font-size: 11.5px; font-weight: 900; letter-spacing: 0.5px; margin-top: 14px; }
+          .body { padding: 28px 26px; color: #1e293b; }
+          .greeting { font-size: 15px; line-height: 1.6; color: #334155; margin-bottom: 20px; }
+          .qr-box { background: #f0fdf4; border: 1.5px solid #bbf7d0; border-radius: 16px; padding: 20px; text-align: center; margin: 20px 0; }
+          .ticket-ref { font-family: 'Courier New', Courier, monospace; font-size: 15px; font-weight: 900; color: #064e3b; letter-spacing: 1px; margin-top: 10px; }
+          .info-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+          .info-table td { padding: 10px 0; border-bottom: 1px solid #f1f5f9; vertical-align: top; }
+          .info-label { font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; width: 110px; }
+          .info-value { font-size: 13.5px; font-weight: 700; color: #0f172a; }
+          .perks-card { background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 12px; padding: 14px 16px; margin: 18px 0; font-size: 12px; color: #065f46; line-height: 1.6; }
+          .btn-primary { display: block; text-align: center; background: linear-gradient(90deg, #059669 0%, #0d9488 100%); color: #ffffff !important; text-decoration: none; border-radius: 12px; padding: 13px 20px; font-weight: 800; font-size: 14px; margin: 10px 0; box-shadow: 0 4px 12px rgba(5,150,105,0.3); }
+          .btn-secondary { display: block; text-align: center; background: #0f172a; color: #ffffff !important; text-decoration: none; border-radius: 12px; padding: 13px 20px; font-weight: 800; font-size: 14px; margin: 10px 0; }
+          .footer { background: #f8fafc; text-align: center; padding: 20px 24px; font-size: 11px; color: #94a3b8; border-top: 1px solid #e2e8f0; line-height: 1.6; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <div class="header-brand">🦅 DASIG PROFESSIONAL DEVELOPMENT COHORT</div>
+            <h1>Training Admission Pass</h1>
+            <p class="header-sub">${training.title}</p>
+            <div class="badge-tier" style="background:#0f172a;color:#34d399;border:1px solid #059669;">
+              ${isMember ? '👑 VIP MEMBER COHORT PASS' : '🎓 PUBLIC TRAINING ENROLLMENT'}
+            </div>
           </div>
-          <p style="font-size:13px;color:#64748b;">A certificate of completion will be issued by the organizing agency upon finishing the program.</p>
-          <a href="${PORTAL_URL}/programs?tab=training" class="btn">View Training Details →</a>
+          <div class="body">
+            <div class="greeting">
+              Dear <strong>${attendee.name}</strong>,<br>
+              You are officially enrolled in this professional training program! Below are your cohort admission pass and check-in QR code.
+            </div>
+
+            <!-- QR Code Ticket Stub -->
+            <div class="qr-box">
+              <div style="font-size:11px;font-weight:800;color:#065f46;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:12px;">
+                Cohort Check-In Barcode / QR
+              </div>
+              ${qrAttachment
+                ? `<img src="cid:ticketqr@dasig" width="160" height="160" alt="Training QR Code" style="display:block;margin:0 auto;border-radius:10px;border:1px solid #bbf7d0;" />`
+                : `<img src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(refCode)}" width="160" height="160" alt="Training QR Code" style="display:block;margin:0 auto;border-radius:10px;border:1px solid #bbf7d0;" />`
+              }
+              <div class="ticket-ref">${refCode}</div>
+              <div style="font-size:11px;color:#047857;margin-top:6px;">
+                Present this QR code for electronic attendance tracking and certificate qualification.
+              </div>
+            </div>
+
+            <!-- Program Metadata -->
+            <table class="info-table">
+              <tr>
+                <td class="info-label">Enrollee</td>
+                <td class="info-value">${attendee.name}</td>
+              </tr>
+              <tr>
+                <td class="info-label">Email</td>
+                <td class="info-value">${toEmail}</td>
+              </tr>
+              ${attendee.institution ? `<tr><td class="info-label">Institution</td><td class="info-value">${attendee.institution}</td></tr>` : ''}
+              <tr>
+                <td class="info-label">Schedule</td>
+                <td class="info-value">📅 ${training.schedule || 'Scheduled Session'}</td>
+              </tr>
+              <tr>
+                <td class="info-label">Hours</td>
+                <td class="info-value">🕐 ${training.session_start_time || '09:00'}${training.session_end_time ? ` – ${training.session_end_time}` : ' – 17:00'}</td>
+              </tr>
+              <tr>
+                <td class="info-label">Duration</td>
+                <td class="info-value">⏱️ ${training.duration || 'Full Module'}</td>
+              </tr>
+              <tr>
+                <td class="info-label">Organizer</td>
+                <td class="info-value">🏛️ ${training.org || 'Central Visayas Agency'}</td>
+              </tr>
+              <tr>
+                <td class="info-label">Level</td>
+                <td class="info-value">📊 ${training.level || 'Professional'}</td>
+              </tr>
+            </table>
+
+            <!-- Certificate Notice -->
+            <div class="perks-card">
+              <div style="font-weight:800;color:#065f46;margin-bottom:4px;">🎖️ Certificate Completion Tracking:</div>
+              Your attendance and module completion will be logged. A verified certificate of completion and digital badge will be issued upon finishing all required cohort sessions.
+            </div>
+
+            <!-- Action Buttons -->
+            <a href="${gcalUrl}" target="_blank" class="btn-primary">📅 Add to Google Calendar</a>
+            <a href="${portalUrl}" target="_blank" class="btn-secondary">🎓 View Training in DASIG Portal</a>
+          </div>
+          <div class="footer">
+            DASIG Regional Higher Education Innovation Consortium · Region VII<br>
+            Cebu Institute of Technology – University · IT332 Capstone Project<br>
+            Automated cohort enrollment notification — please keep for your records.
+          </div>
         </div>
-        <div class="footer">DASIG Portal · Cebu Institute of Technology – University · IT332 Capstone<br>This is an automated message — please do not reply.</div>
-      </div>
-      </body></html>
+      </body>
+      </html>
     `,
-    text: `Hi ${userName},\n\nYou are now enrolled in "${training.title}"!\n\nOrganizer: ${training.org}\nDuration: ${training.duration}\nLevel: ${training.level}\n${training.schedule ? 'Start Date: ' + training.schedule + '\n' : ''}\nView training: ${PORTAL_URL}/programs?tab=training`,
+    text: `DASIG PORTAL — TRAINING ENROLLMENT CONFIRMATION\n\nProgram: ${training.title}\nTicket Ref: ${refCode}\nEnrollee: ${attendee.name} (${toEmail})\nSchedule: ${training.schedule || 'TBA'}\nOrganizer: ${training.org || 'DASIG'}\n\nAdd to calendar: ${gcalUrl}\nView training: ${portalUrl}`,
   });
+  console.log(`[mailer] Sent training enrollment pass to ${toEmail} (Ref: ${refCode})`);
 }
 
-async function sendEventCancellationEmail(toEmail, userName, event) {
-  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) return;
+async function sendEventCancellationEmail(arg1, arg2, arg3) {
+  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+    console.warn('[mailer] SMTP not configured — skipping event cancellation email');
+    return;
+  }
+  const { attendee, item: event } = resolveAttendee(arg1, arg2, arg3);
+  const toEmail = attendee.email;
+  if (!toEmail) return;
+
+  const cancellationTime = new Date().toLocaleString('en-US', {
+    timeZone: 'Asia/Manila',
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+  const portalUrl = `${PORTAL_URL}/programs?tab=events`;
   const transporter = createTransporter();
+
   await transporter.sendMail({
     from: FROM,
     to: toEmail,
     subject: `❌ Registration Cancelled — ${event.title}`,
     html: `
-      <!DOCTYPE html><html><head><meta charset="utf-8">
-      <style>
-        body{font-family:'Segoe UI',Arial,sans-serif;background:#f1f5f9;margin:0;padding:32px 0;}
-        .card{background:#fff;max-width:520px;margin:0 auto;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);}
-        .header{background:linear-gradient(135deg,#9f1239,#e11d48);padding:36px 32px;text-align:center;}
-        .header h1{color:#fff;margin:0 0 6px;font-size:24px;font-weight:900;}
-        .header p{color:rgba(255,255,255,0.7);margin:0;font-size:13px;}
-        .body{padding:32px;}
-        .body p{line-height:1.7;font-size:14px;color:#334155;margin:0 0 12px;}
-        .details{background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:20px 24px;margin:20px 0;}
-        .row{display:flex;align-items:flex-start;gap:12px;padding:8px 0;border-bottom:1px solid #f1f5f9;}
-        .row:last-child{border-bottom:none;}
-        .row-icon{font-size:18px;width:24px;flex-shrink:0;}
-        .row-label{font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px;}
-        .row-val{font-size:14px;color:#1e293b;font-weight:600;}
-        .notice{background:#fff1f2;border:1px solid #fecdd3;border-radius:10px;padding:14px 16px;margin-top:16px;}
-        .notice p{color:#9f1239;font-size:13px;margin:0;line-height:1.6;}
-        .btn{display:block;text-align:center;background:linear-gradient(90deg,#f97316,#e11d48);color:#fff !important;text-decoration:none;border-radius:10px;padding:14px 24px;font-weight:700;font-size:15px;margin:24px 0;}
-        .footer{text-align:center;padding:20px;font-size:11px;color:#94a3b8;border-top:1px solid #f1f5f9;}
-      </style></head><body>
-      <div class="card">
-        <div class="header">
-          <div style="font-size:44px;margin-bottom:10px;">❌</div>
-          <h1>Registration Cancelled</h1>
-          <p>DASIG Portal · Region VII Consortium</p>
-        </div>
-        <div class="body">
-          <p>Hi <strong>${userName}</strong>,</p>
-          <p>Your registration for the following event has been <strong>cancelled</strong>. Your slot has been returned to the available pool.</p>
-          <div class="details">
-            <div class="row"><span class="row-icon">📋</span><div><div class="row-label">Event</div><div class="row-val">${event.title}</div></div></div>
-            <div class="row"><span class="row-icon">📅</span><div><div class="row-label">Date</div><div class="row-val">${event.date || 'TBA'}</div></div></div>
-            ${event.venue ? `<div class="row"><span class="row-icon">📍</span><div><div class="row-label">Venue</div><div class="row-val">${event.venue}</div></div></div>` : ''}
-            ${event.organizer ? `<div class="row"><span class="row-icon">🏛️</span><div><div class="row-label">Organizer</div><div class="row-val">${event.organizer}</div></div></div>` : ''}
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: #180509; margin: 0; padding: 30px 12px; }
+          .container { max-width: 540px; margin: 0 auto; background: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 16px 40px rgba(0,0,0,0.3); }
+          .header { background: linear-gradient(135deg, #881337 0%, #be123c 50%, #0f172a 100%); padding: 32px 28px; text-align: center; color: #ffffff; }
+          .header-brand { font-size: 11px; font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase; color: #fecdd3; margin-bottom: 8px; }
+          .header h1 { font-size: 22px; font-weight: 900; margin: 0 0 6px; line-height: 1.3; }
+          .header-sub { font-size: 13px; color: rgba(255,255,255,0.8); margin: 0; }
+          .body { padding: 28px 26px; color: #1e293b; }
+          .cancel-box { background: #fff1f2; border: 1.5px solid #fecdd3; border-radius: 14px; padding: 16px 18px; margin: 18px 0; }
+          .info-table { width: 100%; border-collapse: collapse; margin: 18px 0; }
+          .info-table td { padding: 9px 0; border-bottom: 1px solid #f1f5f9; vertical-align: top; }
+          .info-label { font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; width: 120px; }
+          .info-value { font-size: 13.5px; font-weight: 700; color: #0f172a; }
+          .btn { display: block; text-align: center; background: #0f172a; color: #ffffff !important; text-decoration: none; border-radius: 12px; padding: 13px 20px; font-weight: 800; font-size: 14px; margin: 20px 0 10px; }
+          .footer { background: #f8fafc; text-align: center; padding: 20px 24px; font-size: 11px; color: #94a3b8; border-top: 1px solid #e2e8f0; line-height: 1.6; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <div class="header-brand">🦅 DASIG REGIONAL CONSORTIUM (REGION VII)</div>
+            <h1>Registration Cancelled</h1>
+            <p class="header-sub">${event.title}</p>
           </div>
-          <div class="notice"><p>If you cancelled by mistake, you may re-register through the DASIG Portal — subject to available slots.</p></div>
-          <a href="${PORTAL_URL}/programs" class="btn">Browse Events Again →</a>
+          <div class="body">
+            <p style="font-size:15px;line-height:1.6;color:#334155;margin-top:0;">
+              Hi <strong>${attendee.name}</strong>,
+            </p>
+            <p style="font-size:14px;line-height:1.6;color:#475569;">
+              This confirms that your registration for the event below has been <strong>successfully cancelled</strong>.
+            </p>
+
+            <div class="cancel-box">
+              <div style="font-weight:800;color:#9f1239;font-size:13px;display:flex;align-items:center;gap:6px;">
+                <span>✓</span> Reserved Slot Released
+              </div>
+              <div style="font-size:12px;color:#881337;margin-top:4px;line-height:1.5;">
+                Your seat has been released back to the consortium pool for other attendees. Your digital pass and check-in QR code have been deactivated.
+              </div>
+            </div>
+
+            <table class="info-table">
+              <tr>
+                <td class="info-label">Event</td>
+                <td class="info-value">${event.title}</td>
+              </tr>
+              <tr>
+                <td class="info-label">Scheduled Date</td>
+                <td class="info-value">📅 ${event.date || 'TBA'}</td>
+              </tr>
+              ${event.venue ? `<tr><td class="info-label">Venue</td><td class="info-value">📍 ${event.venue}</td></tr>` : ''}
+              ${event.organizer ? `<tr><td class="info-label">Organizer</td><td class="info-value">🏛️ ${event.organizer}</td></tr>` : ''}
+              <tr>
+                <td class="info-label">Cancelled On</td>
+                <td class="info-value">${cancellationTime} PHT</td>
+              </tr>
+            </table>
+
+            <p style="font-size:13px;color:#64748b;line-height:1.6;">
+              If you cancelled by mistake or your schedule opens up, you may browse upcoming events and re-register at any time.
+            </p>
+
+            <a href="${portalUrl}" class="btn">Browse Available Events →</a>
+          </div>
+          <div class="footer">
+            DASIG Regional Higher Education Innovation Consortium · Region VII<br>
+            Cebu Institute of Technology – University · IT332 Capstone Project<br>
+            This is an automated cancellation notice.
+          </div>
         </div>
-        <div class="footer">DASIG Portal · Cebu Institute of Technology – University · IT332 Capstone<br>This is an automated message — please do not reply.</div>
-      </div>
-      </body></html>
+      </body>
+      </html>
     `,
-    text: `Hi ${userName},\n\nYour registration for "${event.title}" has been cancelled.\n\nDate: ${event.date || 'TBA'}\nVenue: ${event.venue || 'TBA'}\n\nIf this was a mistake, you can re-register at: ${PORTAL_URL}/programs`,
+    text: `DASIG PORTAL — REGISTRATION CANCELLED\n\nHi ${attendee.name},\nYour registration for "${event.title}" has been cancelled.\nDate: ${event.date || 'TBA'}\nVenue: ${event.venue || 'TBA'}\nCancelled on: ${cancellationTime} PHT\n\nBrowse other events: ${portalUrl}`,
   });
+  console.log(`[mailer] Sent event cancellation email to ${toEmail}`);
 }
 
-async function sendTrainingCancellationEmail(toEmail, userName, training) {
-  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) return;
+async function sendTrainingCancellationEmail(arg1, arg2, arg3) {
+  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+    console.warn('[mailer] SMTP not configured — skipping training cancellation email');
+    return;
+  }
+  const { attendee, item: training } = resolveAttendee(arg1, arg2, arg3);
+  const toEmail = attendee.email;
+  if (!toEmail) return;
+
+  const cancellationTime = new Date().toLocaleString('en-US', {
+    timeZone: 'Asia/Manila',
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+  const portalUrl = `${PORTAL_URL}/programs?tab=training`;
   const transporter = createTransporter();
+
   await transporter.sendMail({
     from: FROM,
     to: toEmail,
     subject: `❌ Enrollment Cancelled — ${training.title}`,
     html: `
-      <!DOCTYPE html><html><head><meta charset="utf-8">
-      <style>
-        body{font-family:'Segoe UI',Arial,sans-serif;background:#f1f5f9;margin:0;padding:32px 0;}
-        .card{background:#fff;max-width:520px;margin:0 auto;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);}
-        .header{background:linear-gradient(135deg,#7f1d1d,#dc2626);padding:36px 32px;text-align:center;}
-        .header h1{color:#fff;margin:0 0 6px;font-size:24px;font-weight:900;}
-        .header p{color:rgba(255,255,255,0.7);margin:0;font-size:13px;}
-        .body{padding:32px;}
-        .body p{line-height:1.7;font-size:14px;color:#334155;margin:0 0 12px;}
-        .details{background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:20px 24px;margin:20px 0;}
-        .row{display:flex;align-items:flex-start;gap:12px;padding:8px 0;border-bottom:1px solid #f1f5f9;}
-        .row:last-child{border-bottom:none;}
-        .row-icon{font-size:18px;width:24px;flex-shrink:0;}
-        .row-label{font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px;}
-        .row-val{font-size:14px;color:#1e293b;font-weight:600;}
-        .notice{background:#fff1f2;border:1px solid #fecdd3;border-radius:10px;padding:14px 16px;margin-top:16px;}
-        .notice p{color:#9f1239;font-size:13px;margin:0;line-height:1.6;}
-        .btn{display:block;text-align:center;background:linear-gradient(90deg,#059669,#0891b2);color:#fff !important;text-decoration:none;border-radius:10px;padding:14px 24px;font-weight:700;font-size:15px;margin:24px 0;}
-        .footer{text-align:center;padding:20px;font-size:11px;color:#94a3b8;border-top:1px solid #f1f5f9;}
-      </style></head><body>
-      <div class="card">
-        <div class="header">
-          <div style="font-size:44px;margin-bottom:10px;">❌</div>
-          <h1>Enrollment Cancelled</h1>
-          <p>DASIG Portal · Professional Development</p>
-        </div>
-        <div class="body">
-          <p>Hi <strong>${userName}</strong>,</p>
-          <p>Your enrollment in the following training program has been <strong>cancelled</strong>. Your slot has been returned to the available pool.</p>
-          <div class="details">
-            <div class="row"><span class="row-icon">📚</span><div><div class="row-label">Program</div><div class="row-val">${training.title}</div></div></div>
-            <div class="row"><span class="row-icon">🏛️</span><div><div class="row-label">Organizer</div><div class="row-val">${training.org}</div></div></div>
-            <div class="row"><span class="row-icon">⏱️</span><div><div class="row-label">Duration</div><div class="row-val">${training.duration}</div></div></div>
-            <div class="row"><span class="row-icon">📊</span><div><div class="row-label">Level</div><div class="row-val">${training.level}</div></div></div>
-            ${training.schedule ? `<div class="row"><span class="row-icon">📅</span><div><div class="row-label">Schedule</div><div class="row-val">${training.schedule}</div></div></div>` : ''}
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: #180509; margin: 0; padding: 30px 12px; }
+          .container { max-width: 540px; margin: 0 auto; background: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 16px 40px rgba(0,0,0,0.3); }
+          .header { background: linear-gradient(135deg, #881337 0%, #be123c 50%, #0f172a 100%); padding: 32px 28px; text-align: center; color: #ffffff; }
+          .header-brand { font-size: 11px; font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase; color: #fecdd3; margin-bottom: 8px; }
+          .header h1 { font-size: 22px; font-weight: 900; margin: 0 0 6px; line-height: 1.3; }
+          .header-sub { font-size: 13px; color: rgba(255,255,255,0.8); margin: 0; }
+          .body { padding: 28px 26px; color: #1e293b; }
+          .cancel-box { background: #fff1f2; border: 1.5px solid #fecdd3; border-radius: 14px; padding: 16px 18px; margin: 18px 0; }
+          .info-table { width: 100%; border-collapse: collapse; margin: 18px 0; }
+          .info-table td { padding: 9px 0; border-bottom: 1px solid #f1f5f9; vertical-align: top; }
+          .info-label { font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; width: 120px; }
+          .info-value { font-size: 13.5px; font-weight: 700; color: #0f172a; }
+          .btn { display: block; text-align: center; background: #0f172a; color: #ffffff !important; text-decoration: none; border-radius: 12px; padding: 13px 20px; font-weight: 800; font-size: 14px; margin: 20px 0 10px; }
+          .footer { background: #f8fafc; text-align: center; padding: 20px 24px; font-size: 11px; color: #94a3b8; border-top: 1px solid #e2e8f0; line-height: 1.6; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <div class="header-brand">🦅 DASIG PROFESSIONAL DEVELOPMENT</div>
+            <h1>Cohort Enrollment Cancelled</h1>
+            <p class="header-sub">${training.title}</p>
           </div>
-          <div class="notice"><p>If you cancelled by mistake, you may re-enroll through the DASIG Portal — subject to available slots.</p></div>
-          <a href="${PORTAL_URL}/programs?tab=training" class="btn">Browse Training Programs →</a>
+          <div class="body">
+            <p style="font-size:15px;line-height:1.6;color:#334155;margin-top:0;">
+              Hi <strong>${attendee.name}</strong>,
+            </p>
+            <p style="font-size:14px;line-height:1.6;color:#475569;">
+              This confirms that your enrollment in the training program below has been <strong>successfully cancelled</strong>.
+            </p>
+
+            <div class="cancel-box">
+              <div style="font-weight:800;color:#9f1239;font-size:13px;display:flex;align-items:center;gap:6px;">
+                <span>✓</span> Training Seat Released
+              </div>
+              <div style="font-size:12px;color:#881337;margin-top:4px;line-height:1.5;">
+                Your seat has been released back to the pool. Your cohort check-in QR code has been cancelled.
+              </div>
+            </div>
+
+            <table class="info-table">
+              <tr>
+                <td class="info-label">Program</td>
+                <td class="info-value">${training.title}</td>
+              </tr>
+              <tr>
+                <td class="info-label">Schedule</td>
+                <td class="info-value">📅 ${training.schedule || 'Scheduled Session'}</td>
+              </tr>
+              ${training.org ? `<tr><td class="info-label">Organizer</td><td class="info-value">🏛️ ${training.org}</td></tr>` : ''}
+              ${training.duration ? `<tr><td class="info-label">Duration</td><td class="info-value">⏱️ ${training.duration}</td></tr>` : ''}
+              <tr>
+                <td class="info-label">Cancelled On</td>
+                <td class="info-value">${cancellationTime} PHT</td>
+              </tr>
+            </table>
+
+            <p style="font-size:13px;color:#64748b;line-height:1.6;">
+              If you cancelled by mistake, you may explore our catalogue of upcoming programs and enroll again at any time.
+            </p>
+
+            <a href="${portalUrl}" class="btn">Browse Training Programs →</a>
+          </div>
+          <div class="footer">
+            DASIG Regional Higher Education Innovation Consortium · Region VII<br>
+            Cebu Institute of Technology – University · IT332 Capstone Project<br>
+            This is an automated cancellation notice.
+          </div>
         </div>
-        <div class="footer">DASIG Portal · Cebu Institute of Technology – University · IT332 Capstone<br>This is an automated message — please do not reply.</div>
-      </div>
-      </body></html>
+      </body>
+      </html>
     `,
-    text: `Hi ${userName},\n\nYour enrollment in "${training.title}" has been cancelled.\n\nOrganizer: ${training.org}\nDuration: ${training.duration}\n\nIf this was a mistake, you can re-enroll at: ${PORTAL_URL}/programs?tab=training`,
+    text: `DASIG PORTAL — TRAINING ENROLLMENT CANCELLED\n\nHi ${attendee.name},\nYour enrollment in "${training.title}" has been cancelled.\nSchedule: ${training.schedule || 'TBA'}\nOrganizer: ${training.org || 'DASIG'}\nCancelled on: ${cancellationTime} PHT\n\nBrowse training programs: ${portalUrl}`,
   });
+  console.log(`[mailer] Sent training cancellation email to ${toEmail}`);
 }
 
 async function sendMembershipApplicationNotification(applicant) {

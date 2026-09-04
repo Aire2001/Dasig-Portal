@@ -86,7 +86,10 @@ router.delete('/:id', verifyToken, requireRole('ADMIN'), async (req, res) => {
 // POST /api/events/:id/register — register user for event
 router.post('/:id/register', verifyToken, async (req, res) => {
   const eventId = Number(req.params.id);
-  const { data: ev } = await supabase.from('events').select('enrolled,total,title,date,venue,organizer,category').eq('id', eventId).single();
+  const { data: ev } = await supabase.from('events')
+    .select('id,enrolled,total,title,date,venue,organizer,category,description,start_time,end_time')
+    .eq('id', eventId)
+    .single();
   if (!ev) return res.status(404).json({ error: 'Event not found' });
 
   // Count real registrations from database
@@ -113,8 +116,19 @@ router.post('/:id/register', verifyToken, async (req, res) => {
   const newCount = currentEnrolled + 1;
   await supabase.from('events').update({ enrolled: newCount }).eq('id', eventId);
 
-  // Send confirmation email (fire-and-forget — never blocks the response)
-  sendEventRegistrationEmail(req.user.email, req.user.name, ev).catch(err => {
+  // Extract attendee info from submission body or authenticated user
+  const { name, email, phone, institution, position } = req.body || {};
+  const attendee = {
+    name: (name && name.trim()) || req.user.name,
+    email: (email && email.trim()) || req.user.email,
+    role: req.user.role || 'GUEST',
+    institution: (institution && institution.trim()) || req.user.institution || '',
+    position: (position && position.trim()) || req.user.campus || '',
+    phone: (phone && phone.trim()) || req.user.phone || '',
+  };
+
+  // Send confirmation email with QR code and admission details (fire-and-forget)
+  sendEventRegistrationEmail(attendee, ev).catch(err => {
     console.warn('[mailer] Registration email notification error:', err.message);
   });
 
@@ -125,7 +139,9 @@ router.post('/:id/register', verifyToken, async (req, res) => {
 router.delete('/:id/register', verifyToken, async (req, res) => {
   const eventId = Number(req.params.id);
   const { data: ev } = await supabase.from('events')
-    .select('enrolled,total,title,date,venue,organizer,category').eq('id', eventId).single();
+    .select('id,enrolled,total,title,date,venue,organizer,category,description,start_time,end_time')
+    .eq('id', eventId)
+    .single();
   if (!ev) return res.status(404).json({ error: 'Event not found' });
 
   // Check registration exists first — Supabase DELETE silently succeeds with 0 rows
@@ -147,7 +163,7 @@ router.delete('/:id/register', verifyToken, async (req, res) => {
   await supabase.from('events').update({ enrolled: newCount }).eq('id', eventId);
 
   // Send cancellation email (fire-and-forget)
-  sendEventCancellationEmail(req.user.email, req.user.name, ev).catch(err => {
+  sendEventCancellationEmail(req.user, ev).catch(err => {
     console.warn('[mailer] Cancellation email notification error:', err.message);
   });
 
