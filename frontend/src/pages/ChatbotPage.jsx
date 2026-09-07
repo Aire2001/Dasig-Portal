@@ -8,11 +8,12 @@ import { useAuth } from '../context/AuthContext';
 
 // Renders bot reply text with formatted markdown, headings, bullets, numbered lists, and inline code
 function BotText({ text }) {
+  const navigate = useNavigate();
   if (!text) return null;
 
   function renderInline(str) {
     if (!str) return '';
-    const parts = str.split(/(`[^`]+`|\*\*[^*]+\*\*)/g);
+    const parts = str.split(/(`[^`]+`|\*\*[^*]+\*\*|\[[^\]]+\]\([^)]+\)|\*[^*]+\*)/g);
     return parts.map((part, i) => {
       if (part.startsWith('`') && part.endsWith('`') && part.length > 2) {
         return (
@@ -31,6 +32,22 @@ function BotText({ text }) {
       }
       if (part.startsWith('**') && part.endsWith('**') && part.length > 4) {
         return <strong key={i} style={{ color: '#fff', fontWeight: 800 }}>{part.slice(2, -2)}</strong>;
+      }
+      // Markdown link: [label](url) — internal app paths navigate via the
+      // router instead of a full page reload; external URLs open in a new tab.
+      const linkMatch = /^\[([^\]]+)\]\(([^)]+)\)$/.exec(part);
+      if (linkMatch) {
+        const [, label, href] = linkMatch;
+        const isInternal = href.startsWith('/');
+        const linkStyle = { color: '#fb923c', fontWeight: 700, textDecoration: 'underline', cursor: 'pointer' };
+        return isInternal ? (
+          <a key={i} href={href} onClick={e => { e.preventDefault(); navigate(href); }} style={linkStyle}>{label}</a>
+        ) : (
+          <a key={i} href={href} target="_blank" rel="noopener noreferrer" style={linkStyle}>{label}</a>
+        );
+      }
+      if (part.startsWith('*') && part.endsWith('*') && part.length > 2) {
+        return <em key={i} style={{ fontStyle: 'italic' }}>{part.slice(1, -1)}</em>;
       }
       return part;
     });
