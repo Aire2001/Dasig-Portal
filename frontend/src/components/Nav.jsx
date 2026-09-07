@@ -94,7 +94,7 @@ export default function Nav() {
   const DEFAULT_NOTIFS = [
     { id: 1, title: 'Regional AI Summit 2026', msg: 'Registration slots are currently open.', time: '10m ago', unread: true, path: '/programs?tab=events', category: 'Summit' },
     { id: 2, title: 'DOST SETUP Grant Opportunity', msg: 'Funding call open for Region VII HEIs.', time: '2h ago', unread: true, path: '/funding', category: 'Grant' },
-    { id: 3, title: 'Membership Status Active', msg: 'Consortium access verified for all 9 modules.', time: '1d ago', unread: false, path: '/membership', category: 'Member' },
+    { id: 3, title: 'Membership Status Active', msg: 'Consortium access verified for all 9 modules.', time: '1d ago', unread: false, path: '/membership', category: 'Member', membersOnly: true },
     { id: 4, title: 'CIT-U Research Innovation Forum', msg: 'Call for papers submitted for review.', time: '2d ago', unread: false, path: '/programs?tab=events', category: 'Research' },
   ];
 
@@ -114,7 +114,14 @@ export default function Nav() {
     } catch {}
   }, [notifList]);
 
-  const unreadCount = notifList.filter(n => n.unread).length;
+  // "Membership Status Active" claims verified consortium access — showing
+  // it to a signed-out guest (or a not-yet-approved member) told them
+  // something false about their own account. Everyone else's notifications
+  // (event/grant announcements) are fine for guests to see.
+  const isMemberOrAdmin = user && (user.role === 'MEMBER' || user.role === 'ADMIN');
+  const visibleNotifs = notifList.filter(n => !n.membersOnly || isMemberOrAdmin);
+
+  const unreadCount = visibleNotifs.filter(n => n.unread).length;
 
   function markAllRead() {
     setNotifList(prev => prev.map(n => ({ ...n, unread: false })));
@@ -571,7 +578,7 @@ export default function Nav() {
                   {/* Filter Pills */}
                   <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
                     {[
-                      { key: 'all', label: `All (${notifList.length})` },
+                      { key: 'all', label: `All (${visibleNotifs.length})` },
                       { key: 'unread', label: `Unread (${unreadCount})` },
                     ].map(f => (
                       <button
@@ -592,7 +599,7 @@ export default function Nav() {
 
                   {/* List */}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 320, overflowY: 'auto' }}>
-                    {notifList
+                    {visibleNotifs
                       .filter(n => notifFilter === 'all' || n.unread)
                       .map(n => (
                         <div
@@ -647,7 +654,7 @@ export default function Nav() {
                           </div>
                         </div>
                       ))}
-                    {notifList.filter(n => notifFilter === 'all' || n.unread).length === 0 && (
+                    {visibleNotifs.filter(n => notifFilter === 'all' || n.unread).length === 0 && (
                       <div style={{ textAlign: 'center', padding: '24px 0', color: 'rgba(255,255,255,0.4)', fontSize: 12.5 }}>
                         ✨ No unread notifications
                       </div>
