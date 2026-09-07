@@ -36,12 +36,22 @@ export default function CommandPalette({ isOpen, onClose }) {
 
   const allItems = user?.role === 'ADMIN' ? [...MODULE_ITEMS, ...ADMIN_ITEMS] : MODULE_ITEMS;
 
+  // Plain substring matching rejected a query like "policy" against a title
+  // like "Consortium Policies" (singular vs. plural doesn't share a
+  // substring), so a natural search term for a module already on screen
+  // came back "No matches found". Loosely stem both sides (drop a trailing
+  // "ies"→"y" or a trailing "s") before comparing so common singular/plural
+  // variants still match.
+  const stem = s => s.toLowerCase().replace(/ies\b/g, 'y').replace(/s\b/g, '');
+  const matches = (haystack, needle) =>
+    haystack.toLowerCase().includes(needle.toLowerCase()) || stem(haystack).includes(stem(needle));
+
   const filtered = query.trim() === ''
     ? allItems
     : allItems.filter(item =>
-        item.title.toLowerCase().includes(query.toLowerCase()) ||
-        item.desc.toLowerCase().includes(query.toLowerCase()) ||
-        item.category.toLowerCase().includes(query.toLowerCase())
+        matches(item.title, query) ||
+        matches(item.desc, query) ||
+        matches(item.category, query)
       );
 
   useEffect(() => {
