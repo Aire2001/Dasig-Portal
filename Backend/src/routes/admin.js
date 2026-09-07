@@ -249,17 +249,42 @@ router.get('/reports/training', async (req, res) => {
   });
 });
 
+// Turns a ?from=/?to= value into an ISO instant, or null when absent/unparseable.
+// A bare calendar date (YYYY-MM-DD) carries no time, so widen it to cover the
+// whole day rather than silently clipping at midnight.
+function parseRangeBound(value, endOfDay) {
+  if (!value) return null;
+  const raw = String(value).trim();
+  const iso = /^\d{4}-\d{2}-\d{2}$/.test(raw)
+    ? `${raw}T${endOfDay ? '23:59:59.999' : '00:00:00.000'}Z`
+    : raw;
+  const parsed = new Date(iso);
+  return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString();
+}
+
 // GET /api/admin/reports/chatbot — chatbot intent accuracy metrics
+// Optional ?from= and ?to= (ISO instants, or bare YYYY-MM-DD dates) scope every
+// figure to a window. Without this the accuracy rate is computed over the whole
+// life of the table, so months of internal development traffic sit in the same
+// denominator as a formal validation run and dilute the reported number. The
+// applied range is echoed back so the UI can label the figures honestly.
 router.get('/reports/chatbot', async (req, res) => {
+  const from = parseRangeBound(req.query.from, false);
+  const to   = parseRangeBound(req.query.to, true);
+
+  const withinRange = query => {
+    let q = query;
+    if (from) q = q.gte('created_at', from);
+    if (to)   q = q.lte('created_at', to);
+    return q;
+  };
+
   const [logsResult, unmatchedResult] = await Promise.all([
-    supabase.from('chatbot_logs')
-      .select('matched, intent, created_at')
+    withinRange(supabase.from('chatbot_logs').select('matched, intent, created_at'))
       .order('created_at', { ascending: false }),
-    supabase.from('chatbot_logs')
-      .select('message, created_at')
-      .eq('matched', false)
+    withinRange(supabase.from('chatbot_logs').select('message, created_at').eq('matched', false))
       .order('created_at', { ascending: false })
-      .limit(20),
+      .limit(50),
   ]);
 
   if (logsResult.error) return res.status(500).json({ error: logsResult.error.message });
@@ -279,6 +304,9 @@ router.get('/reports/chatbot', async (req, res) => {
     matched,
     unmatched: total - matched,
     accuracy,
+    range: { from, to },
+    firstQueryAt: data.length ? data[data.length - 1].created_at : null,
+    lastQueryAt: data.length ? data[0].created_at : null,
     topIntents: Object.entries(intentCounts)
       .sort((a, b) => b[1] - a[1])
       .slice(0, 10)

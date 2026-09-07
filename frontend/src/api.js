@@ -141,7 +141,12 @@ export const api = {
     renewals: () => request('/admin/renewals'),
     reportEvents: () => request('/admin/reports/events'),
     reportTraining: () => request('/admin/reports/training'),
-    reportChatbot: () => request('/admin/reports/chatbot'),
+    // params: { from, to } — ISO instants that scope the metrics to a window
+    // (e.g. a validation period), so all-time dev traffic doesn't skew them.
+    reportChatbot: (params = {}) => {
+      const q = new URLSearchParams(Object.fromEntries(Object.entries(params).filter(([,v]) => v)));
+      return request(`/admin/reports/chatbot${q.toString() ? '?' + q : ''}`);
+    },
   },
   chatbot: {
     send: (message) => request('/chatbot/message', { method: 'POST', body: JSON.stringify({ message }) }),

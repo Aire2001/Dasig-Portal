@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../api';
@@ -2973,6 +2973,19 @@ function PartnershipsTab({ showToast }) {
 /* ═══════════════════════════════════════════════════════════════════
    REPORTS
 ═══════════════════════════════════════════════════════════════════ */
+/* A <input type="date"> gives a local calendar date with no time. Convert it to
+   the ISO instant at the very start / very end of that day *in the viewer's own
+   timezone*, so a window covers the days the admin actually picked rather than
+   the UTC days that happen to overlap them. */
+function localDayToISO(date, endOfDay) {
+  if (!date) return '';
+  const d = new Date(`${date}T${endOfDay ? '23:59:59.999' : '00:00:00.000'}`);
+  return Number.isNaN(d.getTime()) ? '' : d.toISOString();
+}
+
+const toDateInput = d =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
 function ReportsTab({ showToast }) {
   const [chatbot, setChatbot]   = useState(null);
   const [evRep, setEvRep]       = useState(null);
@@ -2981,16 +2994,39 @@ function ReportsTab({ showToast }) {
   const [loading, setLoading]   = useState(true);
   const [refreshing, setRef]    = useState(false);
   const [lastFetched, setLast]  = useState(null);
+  // Chatbot metrics are cumulative over the life of the portal. For a formal
+  // validation run the figures that matter are the ones from that run's own
+  // dates, so the window below scopes them instead of reporting all-time totals
+  // diluted by internal development traffic.
+  const [from, setFrom]         = useState('');
+  const [to, setTo]             = useState('');
+  const firstLoad               = useRef(true);
 
   const load = useCallback((isRefresh = false) => {
     if (isRefresh) setRef(true); else setLoading(true);
-    Promise.all([api.admin.reportChatbot(), api.admin.reportEvents(), api.admin.reportTraining(), api.admin.stats()])
+    Promise.all([
+      api.admin.reportChatbot({ from: localDayToISO(from, false), to: localDayToISO(to, true) }),
+      api.admin.reportEvents(),
+      api.admin.reportTraining(),
+      api.admin.stats(),
+    ])
       .then(([c,e,t,s]) => { setChatbot(c); setEvRep(e); setTrRep(t); setStatsData(s); setLast(new Date()); })
       .catch(() => showToast('Failed to load reports', false))
       .finally(() => { setLoading(false); setRef(false); });
-  }, []);
+  }, [from, to]);
 
-  useEffect(() => { load(); }, [load]);
+  // Changing the window refetches, but as an inline refresh — swapping in the
+  // full-page loader would unmount the date inputs mid-edit.
+  useEffect(() => { load(!firstLoad.current); firstLoad.current = false; }, [load]);
+
+  const isScoped = Boolean(from || to);
+  const applyPreset = days => {
+    if (!days) { setFrom(''); setTo(''); return; }
+    const start = new Date();
+    start.setDate(start.getDate() - (days - 1));
+    setFrom(toDateInput(start));
+    setTo(toDateInput(new Date()));
+  };
 
   if (loading) return <Loading />;
 
@@ -3008,6 +3044,39 @@ function ReportsTab({ showToast }) {
         </div>
       } />
 
+      {/* Chatbot metrics window — scopes accuracy to a validation period */}
+      <div style={{ display:'flex', flexWrap:'wrap', alignItems:'center', gap:10, background:'rgba(255,255,255,0.03)', border:`1px solid ${isScoped ? 'rgba(129,140,248,0.35)' : 'rgba(255,255,255,0.08)'}`, borderRadius:14, padding:'12px 16px', marginBottom:18 }}>
+        <span style={{ fontSize:12, fontWeight:800, color:'rgba(255,255,255,0.55)', textTransform:'uppercase', letterSpacing:'.6px' }}>
+          🗓 Chatbot metrics window
+        </span>
+        <input type="date" value={from} max={to || undefined} onChange={e => setFrom(e.target.value)}
+          className="ap-input" style={{ width:'auto', padding:'6px 10px', fontSize:12.5, colorScheme:'dark' }} />
+        <span style={{ fontSize:12, color:'rgba(255,255,255,0.35)' }}>to</span>
+        <input type="date" value={to} min={from || undefined} onChange={e => setTo(e.target.value)}
+          className="ap-input" style={{ width:'auto', padding:'6px 10px', fontSize:12.5, colorScheme:'dark' }} />
+        {[{ label:'Last 7 days', days:7 }, { label:'Last 30 days', days:30 }, { label:'All time', days:0 }].map(p => (
+          <button key={p.label} onClick={() => applyPreset(p.days)} className="ap-btn ap-btn-ghost" style={{ padding:'6px 11px', fontSize:12 }}>
+            {p.label}
+          </button>
+        ))}
+        <span style={{ marginLeft:'auto', fontSize:12, fontWeight:700, color: isScoped ? '#a5b4fc' : 'rgba(255,255,255,0.4)' }}>
+          {isScoped
+            ? `${chatbot?.total || 0} queries in window`
+            : `All-time · ${chatbot?.total || 0} queries since launch`}
+        </span>
+      </div>
+
+      {!isScoped && (
+        <div style={{ display:'flex', alignItems:'flex-start', gap:10, background:'rgba(245,158,11,0.07)', border:'1px solid rgba(245,158,11,0.25)', borderRadius:12, padding:'11px 15px', marginBottom:18, fontSize:12.5, lineHeight:1.5, color:'rgba(255,255,255,0.7)' }}>
+          <span style={{ fontSize:14, lineHeight:1.2 }}>⚠️</span>
+          <span>
+            These chatbot figures cover <strong style={{ color:'#fcd34d' }}>every query ever logged</strong>, including internal
+            development and testing traffic. Set a window above before quoting accuracy as a result for a specific
+            evaluation or reporting period.
+          </span>
+        </div>
+      )}
+
       <SectionKPIs items={[
         { label: 'AI Accuracy Rate', value: `${chatbot?.accuracy || 0}%`, icon: '🦅', color: accColor },
         { label: 'Total Inquiries', value: chatbot?.total || 0, icon: '💬', color: '#818cf8' },
@@ -3017,8 +3086,16 @@ function ReportsTab({ showToast }) {
 
       {/* Chatbot accuracy panel */}
       <div style={{ background:'rgba(79,70,229,0.07)', border:'1px solid rgba(79,70,229,0.2)', borderRadius:16, padding:'22px 24px', marginBottom:22 }}>
-        <div style={{ fontSize:13, fontWeight:800, color:'rgba(255,255,255,0.6)', textTransform:'uppercase', letterSpacing:'.6px', marginBottom:16 }}>
-          🦅 Haribon NLP — Intent Recognition Accuracy
+        <div style={{ display:'flex', flexWrap:'wrap', alignItems:'baseline', gap:10, marginBottom:16 }}>
+          <span style={{ fontSize:13, fontWeight:800, color:'rgba(255,255,255,0.6)', textTransform:'uppercase', letterSpacing:'.6px' }}>
+            🦅 Haribon NLP — Intent Recognition Accuracy
+          </span>
+          {/* Say plainly which queries these numbers were computed from. */}
+          <span style={{ fontSize:11.5, color:'rgba(255,255,255,0.4)' }}>
+            {chatbot?.firstQueryAt
+              ? `covering ${new Date(chatbot.firstQueryAt).toLocaleDateString()} – ${new Date(chatbot.lastQueryAt).toLocaleDateString()}`
+              : 'no queries in this range'}
+          </span>
         </div>
         <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:12, marginBottom:18 }}>
           {[
