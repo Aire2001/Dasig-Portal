@@ -395,6 +395,39 @@ const CHAT_CSS = `
     transform: translateY(-2px);
     box-shadow: 0 8px 24px rgba(0,0,0,0.4), 0 0 16px rgba(249,115,22,0.12);
   }
+
+  @media (max-width: 768px) {
+    .chat-header-bar {
+      flex-direction: column !important;
+      align-items: stretch !important;
+      gap: 12px !important;
+    }
+    .chat-header-actions {
+      margin-left: 0 !important;
+      justify-content: flex-start !important;
+      width: 100% !important;
+    }
+    .chat-main-container {
+      flex-direction: column !important;
+    }
+    .chat-history-sidebar {
+      width: 100% !important;
+      max-height: 250px !important;
+    }
+    .chat-bubble-user {
+      max-width: 92% !important;
+    }
+    .chat-bubble-bot {
+      max-width: 95% !important;
+    }
+    .chat-quick-grid {
+      grid-template-columns: 1fr !important;
+    }
+    .chat-msgs-area {
+      height: 400px !important;
+      padding: 16px 14px !important;
+    }
+  }
 `;
 
 function formatTime(d) {
@@ -1055,7 +1088,7 @@ export default function ChatbotPage() {
           <div style={{ maxWidth: 1080, margin: '0 auto' }}>
 
             {/* Status bar */}
-            <div style={{
+            <div className="chat-header-bar" style={{
               display: 'flex', alignItems: 'center', gap: 12, marginBottom: 18,
               background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
               borderRadius: 14, padding: '12px 18px', flexWrap: 'wrap',
@@ -1089,7 +1122,7 @@ export default function ChatbotPage() {
                   </div>
                 </div>
               )}
-              <div style={{ marginLeft: 'auto', display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+              <div className="chat-header-actions" style={{ marginLeft: 'auto', display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                 <button
                   onClick={() => setAutoVoicemail(!autoVoicemail)}
                   style={{
@@ -1185,11 +1218,11 @@ export default function ChatbotPage() {
             )}
 
             {/* ── 2-Column Chat & History Container ── */}
-            <div style={{ display: 'flex', gap: 16, alignItems: 'stretch' }}>
+            <div className="chat-main-container" style={{ display: 'flex', gap: 16, alignItems: 'stretch' }}>
 
               {/* Left Column: Chat History Sidebar */}
               {showHistory && (
-                <aside style={{
+                <aside className="chat-history-sidebar" style={{
                   width: 260, background: 'rgba(10,16,32,0.85)',
                   backdropFilter: 'blur(12px)',
                   border: '1px solid rgba(255,255,255,0.08)',
@@ -1291,7 +1324,7 @@ export default function ChatbotPage() {
                 boxShadow: '0 20px 60px rgba(0,0,0,0.4)',
               }}>
                 {/* Messages area */}
-                <div ref={msgsContainerRef} onScroll={handleScroll} style={{ height: 460, overflowY: 'auto', padding: ended ? 0 : '24px 24px 16px', display: 'flex', flexDirection: 'column', gap: ended ? 0 : 14, position: 'relative' }}>
+                <div ref={msgsContainerRef} className="chat-msgs-area" onScroll={handleScroll} style={{ height: 460, overflowY: 'auto', padding: ended ? 0 : '24px 24px 16px', display: 'flex', flexDirection: 'column', gap: ended ? 0 : 14, position: 'relative' }}>
                 {/* Jump to bottom button */}
                 {!ended && !atBottom && (
                   <div style={{ position: 'sticky', bottom: 8, zIndex: 5, display: 'flex', justifyContent: 'center', pointerEvents: 'none' }}>
@@ -1367,7 +1400,7 @@ export default function ChatbotPage() {
                     )}
 
                     {/* Message bubble */}
-                    <div style={{
+                    <div className={msg.from === 'bot' ? 'chat-bubble-bot' : 'chat-bubble-user'} style={{
                       maxWidth: '82%', padding: msg.from === 'bot' ? '16px 20px' : '12px 18px',
                       borderRadius: 18, fontSize: 13.5,
                       ...(msg.from === 'bot' ? {
@@ -1588,7 +1621,7 @@ export default function ChatbotPage() {
                       </button>
                     ))}
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px,1fr))', gap: 9 }}>
+                  <div className="chat-quick-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px,1fr))', gap: 9 }}>
                     {(CATEGORIZED_CHIPS[activeCat] || CATEGORIZED_CHIPS.ALL).map(({ label, q }) => (
                       <button key={label} className="chip-btn" onClick={() => send(q)} disabled={thinking}>{label}</button>
                     ))}

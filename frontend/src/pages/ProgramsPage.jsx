@@ -1080,8 +1080,8 @@ function DigitalTicketModal({ passData, onClose }) {
 
         {/* Ticket Barcode / QR Bottom Stub */}
         <div style={{ padding: '16px 20px 22px', background: 'rgba(0,0,0,0.3)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 14 }}>
-            <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 14, flexWrap: 'wrap' }}>
+            <div style={{ flex: '1 1 200px', minWidth: 0 }}>
               <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.45)', fontWeight: 800, letterSpacing: '0.6px', textTransform: 'uppercase' }}>Ticket Reference No.</div>
               <div style={{ fontSize: 15, fontWeight: 900, color: '#fff', letterSpacing: '1px', fontFamily: 'monospace', marginTop: 2 }}>{refCode}</div>
               <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', marginTop: 4, lineHeight: 1.4 }}>
@@ -1123,7 +1123,7 @@ function DigitalTicketModal({ passData, onClose }) {
             </div>
 
             {/* QR Card with Click to Enlarge */}
-            <div style={{ flexShrink: 0, textAlign: 'center' }}>
+            <div style={{ flexShrink: 0, textAlign: 'center', margin: '0 auto' }}>
               <div
                 onClick={() => setEnlargeQr(true)}
                 title="Tap to enlarge QR for quick camera scan"

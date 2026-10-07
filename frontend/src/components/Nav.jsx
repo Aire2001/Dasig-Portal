@@ -38,6 +38,49 @@ const NAV_CSS = `
   /* Active page — persistent orange underline */
   .nav-link.active { color:#f97316 !important; background: rgba(249,115,22,0.08); }
   .nav-link.active::after { width: 70% !important; }
+
+  .desktop-nav-links {
+    display: flex;
+    gap: 2px;
+    align-items: center;
+  }
+  .mobile-menu-btn {
+    display: none;
+  }
+  .mobile-drawer {
+    display: none;
+  }
+
+  @media (max-width: 860px) {
+    .desktop-nav-links {
+      display: none !important;
+    }
+    .mobile-menu-btn {
+      display: inline-flex !important;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 9px;
+      width: 36px;
+      height: 36px;
+      color: #fff;
+      font-size: 19px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .mobile-menu-btn:hover {
+      background: rgba(249,115,22,0.18);
+      border-color: rgba(249,115,22,0.4);
+      color: #fb923c;
+    }
+    .mobile-drawer {
+      display: block !important;
+    }
+    .govph-subtext {
+      display: none !important;
+    }
+  }
 `;
 
 const navLinks = [
@@ -87,9 +130,14 @@ export default function Nav() {
   const [notifOpen, setNotifOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [cmdOpen, setCmdOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [logoutConfirm, setLogoutConfirm] = useState(false);
   const [welcome, setWelcome] = useState(null);   // {name, role} | null
   const welcomeTimer = useRef(null);
+
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [location.pathname, location.search]);
 
   const DEFAULT_NOTIFS = [
     { id: 1, title: 'Regional AI Summit 2026', msg: 'Registration slots are currently open.', time: '10m ago', unread: true, path: '/programs?tab=events', category: 'Summit' },
@@ -395,7 +443,7 @@ export default function Nav() {
           </div>
 
           {/* ── Nav Links ── */}
-          <div style={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+          <div className="desktop-nav-links">
             {navLinks.map(link => {
               const active = !link.highlight && isActive(link.to);
               return (
@@ -472,6 +520,15 @@ export default function Nav() {
 
           {/* ── Actions & Auth area ── */}
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            {/* Mobile Hamburger Menu Toggle */}
+            <button
+              className="mobile-menu-btn"
+              onClick={() => setMobileMenuOpen(o => !o)}
+              title="Toggle Navigation Menu"
+              aria-label="Toggle navigation menu"
+            >
+              {mobileMenuOpen ? '✕' : '☰'}
+            </button>
             {/* Quick Command Palette trigger */}
             <button
               onClick={() => setCmdOpen(true)}
@@ -832,6 +889,166 @@ export default function Nav() {
           </div>
 
         </div>
+
+        {/* Mobile Navigation Drawer */}
+        {mobileMenuOpen && (
+          <div className="mobile-drawer" style={{
+            position: 'absolute', top: '100%', left: 0, right: 0,
+            background: 'linear-gradient(180deg, #050b1d 0%, #030712 100%)',
+            borderBottom: '1px solid rgba(249,115,22,0.3)',
+            boxShadow: '0 24px 60px rgba(0,0,0,0.9)',
+            padding: '16px 20px 24px',
+            animation: 'dropIn 0.2s ease',
+            zIndex: 9999,
+            maxHeight: 'calc(100vh - 80px)',
+            overflowY: 'auto',
+          }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {/* Search Shortcut */}
+              <button
+                onClick={() => { setMobileMenuOpen(false); setCmdOpen(true); }}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 10,
+                  background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)',
+                  borderRadius: 12, padding: '10px 14px', color: 'rgba(255,255,255,0.7)',
+                  fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left',
+                }}
+              >
+                <span>🔍</span>
+                <span>Search Portal (Ctrl + K)</span>
+              </button>
+
+              <div style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '.6px', margin: '8px 4px 2px' }}>
+                Main Navigation
+              </div>
+
+              {navLinks.map(link => {
+                const active = !link.highlight && isActive(link.to);
+                return (
+                  <button
+                    key={link.label}
+                    onClick={() => { navigate(link.to); setMobileMenuOpen(false); }}
+                    style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                      background: active ? 'rgba(249,115,22,0.16)' : link.highlight ? 'rgba(249,115,22,0.08)' : 'rgba(255,255,255,0.03)',
+                      border: `1px solid ${active ? 'rgba(249,115,22,0.4)' : link.highlight ? 'rgba(249,115,22,0.25)' : 'rgba(255,255,255,0.06)'}`,
+                      borderRadius: 12, padding: '11px 16px',
+                      color: active || link.highlight ? '#fb923c' : 'rgba(255,255,255,0.85)',
+                      fontSize: 13.5, fontWeight: active || link.highlight ? 800 : 600,
+                      cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left',
+                    }}
+                  >
+                    <span>{link.label}</span>
+                    {active && <span style={{ fontSize: 11, color: '#f97316' }}>● Active</span>}
+                  </button>
+                );
+              })}
+
+              <div style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '.6px', margin: '10px 4px 2px' }}>
+                Consortium Modules
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                {moreLinks.map(link => {
+                  const active = location.pathname.startsWith(link.to);
+                  return (
+                    <button
+                      key={link.label}
+                      onClick={() => { navigate(link.to); setMobileMenuOpen(false); }}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: 6,
+                        background: active ? 'rgba(249,115,22,0.16)' : 'rgba(255,255,255,0.03)',
+                        border: `1px solid ${active ? 'rgba(249,115,22,0.4)' : 'rgba(255,255,255,0.06)'}`,
+                        borderRadius: 10, padding: '10px 12px',
+                        color: active ? '#fb923c' : 'rgba(255,255,255,0.75)',
+                        fontSize: 12.5, fontWeight: active ? 800 : 600,
+                        cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left',
+                      }}
+                    >
+                      {link.label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Mobile Auth Actions */}
+              <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', marginTop: 10, paddingTop: 12 }}>
+                {user ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '4px 6px' }}>
+                      <div style={{ width: 32, height: 32, borderRadius: 9, background: 'linear-gradient(135deg,#f97316,#e11d48)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 900, fontSize: 12 }}>
+                        {(user.name || 'U').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()}
+                      </div>
+                      <div>
+                        <div style={{ color: '#fff', fontSize: 13, fontWeight: 800 }}>{user.name}</div>
+                        <div style={{ color: roleColors[user.role]?.color || '#f97316', fontSize: 11, fontWeight: 700 }}>
+                          {roleLabel[user.role] || user.role}
+                        </div>
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <button
+                        onClick={() => { navigate('/profile'); setMobileMenuOpen(false); }}
+                        style={{
+                          flex: 1, padding: '9px', borderRadius: 10,
+                          background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)',
+                          color: '#fff', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+                        }}
+                      >
+                        Profile
+                      </button>
+                      {user.role === 'ADMIN' && (
+                        <button
+                          onClick={() => { navigate('/admin'); setMobileMenuOpen(false); }}
+                          style={{
+                            flex: 1, padding: '9px', borderRadius: 10,
+                            background: 'rgba(225,29,72,0.18)', border: '1px solid rgba(225,29,72,0.35)',
+                            color: '#fca5a5', fontSize: 12.5, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit',
+                          }}
+                        >
+                          Admin Panel
+                        </button>
+                      )}
+                      <button
+                        onClick={() => { setMobileMenuOpen(false); handleLogout(); }}
+                        style={{
+                          padding: '9px 14px', borderRadius: 10,
+                          background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.25)',
+                          color: '#f87171', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+                        }}
+                      >
+                        Logout
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button
+                      onClick={() => { navigate('/login'); setMobileMenuOpen(false); }}
+                      style={{
+                        flex: 1, padding: '11px', borderRadius: 10,
+                        background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)',
+                        color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+                      }}
+                    >
+                      Log in
+                    </button>
+                    <button
+                      onClick={() => { navigate('/login'); setMobileMenuOpen(false); }}
+                      style={{
+                        flex: 1, padding: '11px', borderRadius: 10,
+                        background: 'linear-gradient(90deg,#f97316,#e11d48)', border: 'none',
+                        color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit',
+                      }}
+                    >
+                      Register free →
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </nav>
 
       {/* Global Command Palette modal */}

@@ -256,6 +256,18 @@ const WIDGET_CSS = `
   .w-action-btn.copied { background: rgba(16,185,129,0.15); border-color: rgba(16,185,129,0.3); color: #34d399; }
   .w-action-btn.speaking { background: rgba(249,115,22,0.2) !important; border-color: rgba(249,115,22,0.4) !important; color: #fb923c !important; }
   .w-voice-dot { display: inline-block; width: 3px; height: 3px; border-radius: 50%; background: #fb923c; animation: blink 0.9s infinite; }
+
+  @media (max-width: 480px) {
+    .w-chat-container {
+      bottom: 74px !important;
+      right: 8px !important;
+      left: 8px !important;
+      width: auto !important;
+      max-width: calc(100vw - 16px) !important;
+      max-height: calc(100vh - 86px) !important;
+      border-radius: 18px !important;
+    }
+  }
 `;
 
 const ROLE_BADGE = {
@@ -534,7 +546,7 @@ export default function Chatbot() {
 
       {/* ── Chat window ── */}
       {open && (
-        <div style={{
+        <div className="w-chat-container" style={{
           position:'fixed', bottom:88, right:20, width:380,
           borderRadius:22, overflow:'hidden',
           background:'linear-gradient(180deg,#0b1120,#040a1a)',
