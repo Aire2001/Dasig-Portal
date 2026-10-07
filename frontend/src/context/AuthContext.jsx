@@ -23,6 +23,7 @@ export function AuthProvider({ children }) {
     } else {
       localStorage.removeItem(USER_KEY);
       localStorage.removeItem(TOKEN_KEY);
+      sessionStorage.removeItem('dasig_welcome');
     }
     setUser(u);
   }
@@ -72,8 +73,14 @@ export function AuthProvider({ children }) {
     applyUser(next);
   }
 
-  function logout() {
-    applyUser(null);
+  async function logout() {
+    try {
+      await api.auth.logout();
+    } catch (_) {
+      // Ignore server-side logout errors; the client session should still be cleared.
+    } finally {
+      applyUser(null);
+    }
   }
 
   return (

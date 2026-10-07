@@ -90,6 +90,11 @@ router.post('/register', async (req, res) => {
   res.status(201).json({ token, user: safeUser });
 });
 
+// POST /api/auth/logout — clear client-side session state
+router.post('/logout', (req, res) => {
+  res.json({ message: 'Logged out successfully' });
+});
+
 // GET /api/auth/me — get current user profile
 router.get('/me', verifyToken, (req, res) => {
   const { password_hash, ...safeUser } = req.user;

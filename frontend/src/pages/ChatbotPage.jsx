@@ -7,9 +7,9 @@ import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 
 // Renders bot reply text with formatted markdown, headings, bullets, numbered lists, and inline code
-function BotText({ text }) {
+function BotText({ text, isStreaming = false }) {
   const navigate = useNavigate();
-  if (!text) return null;
+  if (!text && !isStreaming) return null;
 
   function renderInline(str) {
     if (!str) return '';
@@ -123,6 +123,19 @@ function BotText({ text }) {
           </div>
         );
       })}
+      {isStreaming && (
+        <span style={{
+          display: 'inline-block',
+          width: 8,
+          height: 16,
+          background: 'linear-gradient(180deg,#f97316,#ea580c)',
+          marginLeft: 4,
+          verticalAlign: 'text-bottom',
+          animation: 'blink 0.75s infinite',
+          borderRadius: 2,
+          boxShadow: '0 0 10px rgba(249,115,22,0.9)',
+        }} />
+      )}
     </div>
   );
 }
@@ -570,32 +583,113 @@ export default function ChatbotPage() {
 
   const msgsEnd = useRef(null);
   const inputRef = useRef(null);
+  const streamIntervalRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (streamIntervalRef.current) clearInterval(streamIntervalRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     msgsEnd.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, thinking]);
 
-  async function send(text) {
+  function streamBotResponse(botTemplate, fullReply) {
+    if (streamIntervalRef.current) {
+      clearInterval(streamIntervalRef.current);
+      streamIntervalRef.current = null;
+    }
+
+    if (!fullReply) {
+      setMessages(prev => [...prev, { ...botTemplate, text: '', isStreaming: false }]);
+      return;
+    }
+
+    // Append initial bot message in streaming state
+    setMessages(prev => [...prev, { ...botTemplate, text: '', isStreaming: true }]);
+
+    let currentLength = 0;
+    const step = Math.max(3, Math.ceil(fullReply.length / 50));
+    streamIntervalRef.current = setInterval(() => {
+      currentLength += step;
+      if (currentLength >= fullReply.length) {
+        clearInterval(streamIntervalRef.current);
+        streamIntervalRef.current = null;
+        setMessages(prev => {
+          const next = [...prev];
+          const lastIdx = next.length - 1;
+          if (lastIdx >= 0 && next[lastIdx].from === 'bot') {
+            next[lastIdx] = { ...next[lastIdx], text: fullReply, isStreaming: false };
+          }
+          if (autoVoicemail) {
+            setTimeout(() => speakMessage(lastIdx, fullReply), 200);
+          }
+          return next;
+        });
+      } else {
+        const slice = fullReply.slice(0, currentLength);
+        setMessages(prev => {
+          const next = [...prev];
+          const lastIdx = next.length - 1;
+          if (lastIdx >= 0 && next[lastIdx].from === 'bot') {
+            next[lastIdx] = { ...next[lastIdx], text: slice, isStreaming: true };
+          }
+          return next;
+        });
+      }
+    }, 20);
+  }
+
+  async function send(text, isRegenerate = false) {
     const trimmed = (text || input).trim();
     if (!trimmed || thinking) return;
+
+    if (streamIntervalRef.current) {
+      clearInterval(streamIntervalRef.current);
+      streamIntervalRef.current = null;
+      setMessages(prev => {
+        const next = [...prev];
+        const lastIdx = next.length - 1;
+        if (lastIdx >= 0 && next[lastIdx].from === 'bot' && next[lastIdx].isStreaming) {
+          next[lastIdx] = { ...next[lastIdx], isStreaming: false };
+        }
+        return next;
+      });
+    }
+
     setInput('');
+    if (inputRef.current) inputRef.current.style.height = 'auto';
     setSuggestions([]);
     setResumed(false);
-    const userMsg = { from: 'user', text: trimmed, time: new Date() };
-    setMessages(prev => [...prev, userMsg]);
+
+    if (!isRegenerate) {
+      const userMsg = { from: 'user', text: trimmed, time: new Date() };
+      setMessages(prev => [...prev, userMsg]);
+    }
     setThinking(true);
 
+    // Prepare multi-turn history payload
+    const historyPayload = messages
+      .filter(m => m.text)
+      .slice(-8)
+      .map(m => ({
+        role: m.from === 'user' ? 'user' : 'assistant',
+        content: m.text,
+      }));
+
     try {
-      const res = await api.chatbot.send(trimmed);
+      const res = await api.chatbot.send(trimmed, historyPayload);
       const newTotal = totalAsked + 1;
       const newMatched = totalMatched + (res.matched ? 1 : 0);
       setTotalAsked(newTotal);
       setTotalMatched(newMatched);
       setMatchRate(Math.round((newMatched / newTotal) * 100));
       setHasReplied(true);
-      const botMsg = {
+      setThinking(false);
+
+      const botTemplate = {
         from: 'bot',
-        text: res.reply,
         intent: res.intent,
         matched: res.matched,
         followups: res.followups || [],
@@ -603,20 +697,16 @@ export default function ChatbotPage() {
         navigate_to: res.navigate_to || null,
         time: new Date(),
       };
-      setMessages(prev => {
-        const next = [...prev, botMsg];
-        if (autoVoicemail) {
-          setTimeout(() => speakMessage(next.length - 1, res.reply), 200);
-        }
-        return next;
-      });
+
+      streamBotResponse(botTemplate, res.reply);
     } catch (err) {
       console.warn('[chatbot] Backend offline or waking up, using Client High-IQ Synthesis:', err);
       const fallback = resolveClientHighIQ(trimmed);
       setHasReplied(true);
-      const botMsg = {
+      setThinking(false);
+
+      const botTemplate = {
         from: 'bot',
-        text: fallback.reply,
         intent: fallback.intent,
         matched: true,
         followups: fallback.followups || [],
@@ -624,15 +714,9 @@ export default function ChatbotPage() {
         navigate_to: fallback.navigate_to || null,
         time: new Date(),
       };
-      setMessages(prev => {
-        const next = [...prev, botMsg];
-        if (autoVoicemail) {
-          setTimeout(() => speakMessage(next.length - 1, fallback.reply), 200);
-        }
-        return next;
-      });
+
+      streamBotResponse(botTemplate, fallback.reply);
     } finally {
-      setThinking(false);
       setTimeout(() => inputRef.current?.focus(), 50);
     }
   }
@@ -919,7 +1003,9 @@ export default function ChatbotPage() {
     if (thinking || idx <= 0) return;
     for (let i = idx - 1; i >= 0; i--) {
       if (messages[i].from === 'user') {
-        send(messages[i].text);
+        const userPrompt = messages[i].text;
+        setMessages(prev => prev.slice(0, i + 1));
+        send(userPrompt, true);
         break;
       }
     }
@@ -1296,7 +1382,7 @@ export default function ChatbotPage() {
                       }),
                     }}>
                       {msg.from === 'bot' ? (
-                        <BotText text={msg.text} />
+                        <BotText text={msg.text} isStreaming={msg.isStreaming} />
                       ) : (
                         <span style={{ lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{msg.text}</span>
                       )}
@@ -1310,7 +1396,7 @@ export default function ChatbotPage() {
                     )}
 
                     {/* Modern Action Bar: Copy, Voice Read, Feedback, Retry */}
-                    {msg.from === 'bot' && i > 0 && (
+                    {msg.from === 'bot' && i > 0 && !msg.isStreaming && (
                       <div className="msg-actions">
                         <button
                           className={`action-btn${ratings[i] === 'up' ? ' rated-up' : ''}`}
@@ -1362,7 +1448,7 @@ export default function ChatbotPage() {
                     )}
 
                     {/* Did you mean? suggestions when unmatched */}
-                    {msg.from === 'bot' && i === messages.length - 1 && !thinking && msg.matched === false && msg.suggestions?.length > 0 && (
+                    {msg.from === 'bot' && i === messages.length - 1 && !thinking && !msg.isStreaming && msg.matched === false && msg.suggestions?.length > 0 && (
                       <div style={{ marginTop: 10, padding: '12px 16px', background: 'rgba(249,115,22,0.07)', border: '1px solid rgba(249,115,22,0.22)', borderRadius: 12, maxWidth: '84%' }}>
                         <div style={{ fontSize: 11, fontWeight: 800, color: '#fb923c', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '.5px' }}>
                           💡 Did you mean one of these?
@@ -1383,7 +1469,7 @@ export default function ChatbotPage() {
                     )}
 
                     {/* Follow-up suggestions + In-Chat Direct Navigation Card — only on last bot message */}
-                    {msg.from === 'bot' && i === messages.length - 1 && !thinking && (
+                    {msg.from === 'bot' && i === messages.length - 1 && !thinking && !msg.isStreaming && (
                       <div style={{ marginTop: 10, maxWidth: '84%', display: 'flex', flexDirection: 'column', gap: 10 }}>
                         {msg.navigate_to && (() => {
                           const card = NAV_CARD_INFO[msg.navigate_to] || { icon: '🚀', title: 'Open Portal Page', desc: 'Click to view related module details' };

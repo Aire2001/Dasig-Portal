@@ -54,9 +54,9 @@ function getGreeting(user) {
 }
 
 /* ── Bot-text formatter (Rich Markdown, Headings, Code, Bullets) ─ */
-function WBotText({ text, onNavigate }) {
+function WBotText({ text, onNavigate, isStreaming = false }) {
   const navigate = useNavigate();
-  if (!text) return null;
+  if (!text && !isStreaming) return null;
 
   function renderInline(str) {
     if (!str) return '';
@@ -176,6 +176,19 @@ function WBotText({ text, onNavigate }) {
           </div>
         );
       })}
+      {isStreaming && (
+        <span style={{
+          display: 'inline-block',
+          width: 7,
+          height: 14,
+          background: 'linear-gradient(180deg,#f97316,#ea580c)',
+          marginLeft: 3,
+          verticalAlign: 'text-bottom',
+          animation: 'blink 0.75s infinite',
+          borderRadius: 2,
+          boxShadow: '0 0 8px rgba(249,115,22,0.9)',
+        }} />
+      )}
     </div>
   );
 }
@@ -274,6 +287,13 @@ export default function Chatbot() {
   const [listening, setListening] = useState(false);
   const recognitionRef          = useRef(null);
   const msgsRef                 = useRef(null);
+  const streamIntervalRef       = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (streamIntervalRef.current) clearInterval(streamIntervalRef.current);
+    };
+  }, []);
 
   // Reset chat when user changes (login/logout)
   useEffect(() => {
@@ -368,37 +388,108 @@ export default function Chatbot() {
     }
   }
 
+  function streamBotResponse(botTemplate, fullReply) {
+    if (streamIntervalRef.current) {
+      clearInterval(streamIntervalRef.current);
+      streamIntervalRef.current = null;
+    }
+
+    if (!fullReply) {
+      setMessages(prev => [...prev, { ...botTemplate, text: '', isStreaming: false }]);
+      return;
+    }
+
+    setMessages(prev => [...prev, { ...botTemplate, text: '', isStreaming: true }]);
+
+    let currentLength = 0;
+    const step = Math.max(3, Math.ceil(fullReply.length / 45));
+    streamIntervalRef.current = setInterval(() => {
+      currentLength += step;
+      if (currentLength >= fullReply.length) {
+        clearInterval(streamIntervalRef.current);
+        streamIntervalRef.current = null;
+        setMessages(prev => {
+          const next = [...prev];
+          const lastIdx = next.length - 1;
+          if (lastIdx >= 0 && next[lastIdx].from === 'bot') {
+            next[lastIdx] = { ...next[lastIdx], text: fullReply, isStreaming: false };
+          }
+          return next;
+        });
+      } else {
+        const slice = fullReply.slice(0, currentLength);
+        setMessages(prev => {
+          const next = [...prev];
+          const lastIdx = next.length - 1;
+          if (lastIdx >= 0 && next[lastIdx].from === 'bot') {
+            next[lastIdx] = { ...next[lastIdx], text: slice, isStreaming: true };
+          }
+          return next;
+        });
+      }
+    }, 20);
+  }
+
   async function send(text) {
     const t = (text || input).trim();
     if (!t || thinking) return;
+
+    if (streamIntervalRef.current) {
+      clearInterval(streamIntervalRef.current);
+      streamIntervalRef.current = null;
+      setMessages(prev => {
+        const next = [...prev];
+        const lastIdx = next.length - 1;
+        if (lastIdx >= 0 && next[lastIdx].from === 'bot' && next[lastIdx].isStreaming) {
+          next[lastIdx] = { ...next[lastIdx], isStreaming: false };
+        }
+        return next;
+      });
+    }
+
     setInput('');
     setMessages(prev => [...prev, { from:'user', text:t }]);
     setThinking(true);
+
+    const historyPayload = messages
+      .filter(m => m.text)
+      .slice(-8)
+      .map(m => ({
+        role: m.from === 'user' ? 'user' : 'assistant',
+        content: m.text,
+      }));
+
     try {
-      const res = await api.chatbot.send(t);
+      const res = await api.chatbot.send(t, historyPayload);
       setHasReplied(true);
-      setMessages(prev => [...prev, {
-        from:'bot',
-        text: res.reply,
+      setThinking(false);
+
+      const botTemplate = {
+        from: 'bot',
         followups: res.followups || [],
         navigate_to: res.navigate_to || null,
         matched: res.matched,
         suggestions: res.suggestions || [],
-      }]);
+      };
+
+      streamBotResponse(botTemplate, res.reply);
     } catch (err) {
       console.warn('[chatbot-widget] Backend unavailable, using client synthesis:', err);
       const fallback = resolveClientHighIQ(t);
       setHasReplied(true);
-      setMessages(prev => [...prev, {
+      setThinking(false);
+
+      const botTemplate = {
         from: 'bot',
-        text: fallback.reply,
         followups: fallback.followups || [],
         navigate_to: fallback.navigate_to || null,
         matched: true,
         suggestions: [],
-      }]);
+      };
+
+      streamBotResponse(botTemplate, fallback.reply);
     } finally {
-      setThinking(false);
+      setTimeout(() => msgsRef.current && (msgsRef.current.scrollTop = msgsRef.current.scrollHeight), 50);
     }
   }
 
@@ -552,11 +643,11 @@ export default function Chatbot() {
                         : { background:'linear-gradient(135deg,#f97316,#ea580c)', color:'#fff', borderBottomRightRadius:4, boxShadow:'0 3px 12px rgba(249,115,22,0.35)' }
                       ),
                     }}>
-                      {msg.from === 'bot' ? <WBotText text={msg.text} onNavigate={() => setOpen(false)} /> : <span style={{ lineHeight:1.55 }}>{msg.text}</span>}
+                      {msg.from === 'bot' ? <WBotText text={msg.text} onNavigate={() => setOpen(false)} isStreaming={msg.isStreaming} /> : <span style={{ lineHeight:1.55 }}>{msg.text}</span>}
                     </div>
 
                     {/* Rating, Copy & Voice Read actions for bot messages */}
-                    {msg.from === 'bot' && i > 0 && (
+                    {msg.from === 'bot' && i > 0 && !msg.isStreaming && (
                       <div className="w-msg-actions">
                         <button
                           className={`w-action-btn${ratings[i] === 'up' ? ' rated-up' : ''}`}
@@ -599,7 +690,7 @@ export default function Chatbot() {
                     )}
 
                     {/* Related suggestions when no intent match found */}
-                    {i === messages.length - 1 && msg.from === 'bot' && !ended && msg.matched === false && msg.suggestions?.length > 0 && (
+                    {i === messages.length - 1 && msg.from === 'bot' && !ended && !msg.isStreaming && msg.matched === false && msg.suggestions?.length > 0 && (
                       <div style={{ marginTop: 8, padding: '8px 10px', background: 'rgba(249,115,22,0.07)', border: '1px solid rgba(249,115,22,0.18)', borderRadius: 10, maxWidth: '92%' }}>
                         <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(249,115,22,0.8)', marginBottom: 5, textTransform: 'uppercase', letterSpacing: '.4px' }}>💡 Did you mean?</div>
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
@@ -613,7 +704,7 @@ export default function Chatbot() {
                     )}
 
                     {/* Navigate CTA + follow-up chips — last bot message only */}
-                    {msg.from === 'bot' && i === messages.length - 1 && !thinking && (
+                    {msg.from === 'bot' && i === messages.length - 1 && !thinking && !msg.isStreaming && (
                       <div style={{ marginTop:7, maxWidth:'92%', display:'flex', flexDirection:'column', gap:7 }}>
                         {msg.navigate_to && (
                           <button className="w-nav-btn" onClick={() => { navigate(msg.navigate_to); setOpen(false); }}>

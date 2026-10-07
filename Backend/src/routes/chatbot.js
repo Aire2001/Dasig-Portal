@@ -179,9 +179,43 @@ const KB = [
   }
 ];
 
-// Deep High-IQ Semantic Knowledge Synthesis Engine (Handles App & Non-App General Inquiries)
-function generateHighIQResponse(normalizedQuery, lang) {
+// Deep High-IQ Semantic Knowledge Synthesis Engine (Handles App & Non-App General Inquiries + Multi-Turn History)
+function generateHighIQResponse(normalizedQuery, lang, history = [], ragContext = '') {
   const q = normalizedQuery.toLowerCase().trim();
+
+  // ── MULTI-TURN CONVERSATIONAL MEMORY & FOLLOW-UP RESOLUTION ──────────────
+  if (Array.isArray(history) && history.length > 0) {
+    const prevTurn = [...history].reverse().find(m => (m.role === 'assistant' || m.role === 'bot' || m.from === 'bot') && (m.content || m.text));
+    const prevText = (prevTurn?.content || prevTurn?.text || '').toLowerCase();
+    
+    // Check if query is a contextual follow-up (e.g. "tell me more", "how to register", "where is it", "asa dapit", "paano sumali")
+    const isFollowup = /^(?:tell me more|more details|elaborate|how (?:to|do i) (?:join|register|apply)|where is (?:it|that)|when is (?:it|that)|what time|how much|is it free|what about (?:that|this)|unsaon|asa dapit|kanus-a|libre ba|magkano|paano)\b/i.test(q)
+      || (q.length < 40 && /\b(that|this|it|first|second|third|one|event|program|course|grant)\b/i.test(q));
+
+    if (isFollowup && prevText) {
+      if (prevText.includes('event') || prevText.includes('summit') || prevText.includes('kalihokan')) {
+        if (lang === 'bisaya') {
+          return `🎟️ **Rehistrasyon sa Event (Follow-up):**\n\nBahin sa nahisgotan nga **Consortium Event**, mahimo kang magparehistro direkta pinaagi sa **[Programs Module](/programs?tab=events)**.\n\n• **Lugar & Oras:** Makapili ka og online Zoom hall o venue seat.\n• **QR Pass:** Makadawat ka dayon og opisyal nga digital pass nga may high-contrast QR code ug email confirmation.\n• **VIP Perks:** Kon miyembro ka, libre ang participation certificate!`;
+        } else if (lang === 'tagalog') {
+          return `🎟️ **Rehistrasyon sa Event (Follow-up):**\n\nTungkol sa nabanggit na **Consortium Event**, maaari kang magparehistro diretso sa **[Programs Module](/programs?tab=events)**.\n\n• **Lokasyon at Oras:** May pagpipiliang online stream o on-site venue slot.\n• **QR Pass:** Makatatanggap ka agad ng digital pass na may check-in QR code at email receipt.\n• **VIP Perks:** Libre ang verified certificate para sa mga opisyal na miyembro!`;
+        } else {
+          return `🎟️ **Event Registration Details (Follow-up):**\n\nRegarding the **Consortium Event** discussed:\n\n• **Registration:** You can confirm your seat directly in the **[Programs Module](/programs?tab=events)**.\n• **Instant QR Pass:** An official boarding pass with a high-contrast check-in barcode will be generated and emailed to you.\n• **VIP Privileges:** Consortium members receive priority reservation and a complimentary verified Certificate of Participation!`;
+        }
+      }
+      if (prevText.includes('training') || prevText.includes('bootcamp') || prevText.includes('pagsasanay')) {
+        if (lang === 'bisaya') {
+          return `🎓 **Detalye sa Training Cohort (Follow-up):**\n\nBahin sa atong technical bootcamp:\n\n• **Enrollment:** Abli sa tanang faculty ug IT professionals sa Rehiyon VII pinaagi sa **[Training Module](/programs?tab=training)**.\n• **Modules:** Adunay live hands-on laboratory exercises, capstone mentoring, ug verified digital badge.\n• **Sertipiko:** Ihatag human makompleto ang tanang attendance check-ins.`;
+        } else if (lang === 'tagalog') {
+          return `🎓 **Detalye ng Training Cohort (Follow-up):**\n\nTungkol sa technical training bootcamp:\n\n• **Enrollment:** Bukas para sa lahat ng guro at IT professionals sa Rehiyon VII sa **[Training Module](/programs?tab=training)**.\n• **Nilalaman:** May hands-on laboratory exercises, capstone mentoring, at digital badge.\n• **Sertipiko:** Ibibigay pagkatapos makumpleto ang required session hours.`;
+        } else {
+          return `🎓 **Training Cohort Guidance (Follow-up):**\n\nRegarding the technical professional training program:\n\n• **Enrollment:** Open to regional faculty and tech practitioners via the **[Training Module](/programs?tab=training)**.\n• **Structure:** Includes hands-on lab sessions, project mentoring, and electronic attendance tracking.\n• **Credential:** A verified micro-credential and digital completion badge are awarded upon cohort completion.`;
+        }
+      }
+      if (prevText.includes('member') || prevText.includes('miyembro') || prevText.includes('membership')) {
+        return `🏛️ **Membership Application Steps:**\n\n1. Visit the **[Membership Portal](/membership)**.\n2. Review Tier 1 (Research Hubs) vs. Tier 2 (Affiliate HEIs).\n3. Submit your institutional endorsement form.\n4. Admin approval takes 1–2 business days, unlocking automatic VIP event passes for all affiliated faculty.`;
+      }
+    }
+  }
 
   // ── MATH EVALUATION ────────────────────────────────────────────────────────
   const mathMatch = q.match(/^(\d+(\.\d+)?)\s*([\+\-\*\/xX\^%])\s*(\d+(\.\d+)?)$/) || q.match(/^(?:calculate|solve|what is|compute|pila ang|ano ang)?\s*(\d+(\.\d+)?)\s*([\+\-\*\/xX\^%])\s*(\d+(\.\d+)?)\??$/i);
@@ -350,19 +384,86 @@ function generateHighIQResponse(normalizedQuery, lang) {
   }
 }
 
-// External Generative LLM Caller (Scoped Strictly to DASIG Portal & Region VII with High IQ)
-async function callGenerativeLLM(userPrompt, lang) {
+// Dynamic Live RAG Context Builder (Injects real database facts into LLM & High-IQ synthesizers)
+async function getLiveRAGContext() {
+  try {
+    const [eventsRes, trainRes, fundRes, membersRes] = await Promise.all([
+      supabase.from('events').select('title, date, venue, category, enrolled, total').order('id', { ascending: true }).limit(6),
+      supabase.from('trainings').select('title, schedule, org, duration, level').order('id', { ascending: true }).limit(6),
+      supabase.from('funding_opportunities').select('title, funding_agency, amount, status, deadline').limit(6),
+      supabase.from('members').select('name, acronym, campus, type').limit(8),
+    ]);
+
+    const lines = ['--- LIVE DASIG CONSORTIUM PORTAL DATABASE (VERIFIED REAL-TIME FACTS) ---'];
+
+    if (eventsRes.data && eventsRes.data.length > 0) {
+      lines.push('UPCOMING CONSORTIUM EVENTS:');
+      eventsRes.data.forEach(e => {
+        lines.push(`• "${e.title}" | Date: ${e.date || 'TBA'} | Venue: ${e.venue || 'Virtual Hall'} | Seats: ${e.enrolled || 0}/${e.total || 50}`);
+      });
+    }
+
+    if (trainRes.data && trainRes.data.length > 0) {
+      lines.push('\nTRAINING & BOOTCAMPS:');
+      trainRes.data.forEach(t => {
+        lines.push(`• "${t.title}" | Host: ${t.org || 'DASIG'} | Schedule: ${t.schedule || 'Modular'} | Level: ${t.level || 'Professional'}`);
+      });
+    }
+
+    if (fundRes.data && fundRes.data.length > 0) {
+      lines.push('\nRESEARCH & GRANTS:');
+      fundRes.data.forEach(f => {
+        lines.push(`• "${f.title}" | Agency: ${f.funding_agency || 'DOST-7'} | Status: ${f.status || 'Open'} | Deadline: ${f.deadline || 'Ongoing'}`);
+      });
+    }
+
+    if (membersRes.data && membersRes.data.length > 0) {
+      lines.push('\nMEMBER INSTITUTIONS:');
+      membersRes.data.forEach(m => {
+        lines.push(`• ${m.name} (${m.acronym || ''}) - ${m.campus || 'Region VII'}`);
+      });
+    }
+
+    return lines.join('\n');
+  } catch (err) {
+    console.warn('[chatbot] getLiveRAGContext error:', err.message);
+    return '';
+  }
+}
+
+// External Generative LLM Caller (Scoped Strictly to DASIG Portal & Region VII with High IQ + Multi-Turn Memory)
+async function callGenerativeLLM(userPrompt, lang, history = [], ragContext = '') {
   const systemInstruction = `You are Haribon AI, the specialized, high-IQ intelligent assistant exclusively for the DASIG Regional Academic Consortium (Region VII Central Visayas, Philippines).
 Your scope is strictly focused on the DASIG Portal, its member institutions (CIT-University as Central Host, UP Visayas, University of San Agustin, DOST-7, DICT-7, DTI-7, DepEd-7), consortium events, summits, faculty training bootcamps, DOST research grants, memberships, policies, and academic capstone evaluation.
 You have a VERY HIGH IQ and understand natural phrasing, typos, and questions in English, Bisaya/Cebuano, and Tagalog/Filipino.
-If a user asks about anything outside the DASIG portal, politely, articulately, and constructively re-orient them back to DASIG portal services in ${lang}. Never provide harmful content. Always format output with clear Markdown headers and bullet points.`;
+You remember past conversation context and handle follow-up pronouns naturally.
+Always format output with clear Markdown headers, bold highlights, bullet points, and portal links (e.g. [Programs](/programs?tab=events), [Membership](/membership)).
+
+${ragContext ? ragContext : ''}`;
 
   if (process.env.GEMINI_API_KEY) {
     try {
+      const contents = [];
+      if (Array.isArray(history) && history.length > 0) {
+        history.slice(-8).forEach(h => {
+          const text = (h.content || h.text || '').trim();
+          if (text) {
+            contents.push({
+              role: h.role === 'assistant' || h.role === 'bot' || h.from === 'bot' ? 'model' : 'user',
+              parts: [{ text }]
+            });
+          }
+        });
+      }
+      contents.push({ role: 'user', parts: [{ text: userPrompt }] });
+
       const payload = {
-        contents: [
-          { role: 'user', parts: [{ text: `${systemInstruction}\n\nUser Question: ${userPrompt}` }] }
-        ]
+        systemInstruction: { parts: [{ text: systemInstruction }] },
+        contents,
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 1000,
+        }
       };
 
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`, {
@@ -383,6 +484,20 @@ If a user asks about anything outside the DASIG portal, politely, articulately, 
 
   if (process.env.OPENAI_API_KEY) {
     try {
+      const messages = [{ role: 'system', content: systemInstruction }];
+      if (Array.isArray(history) && history.length > 0) {
+        history.slice(-8).forEach(h => {
+          const text = (h.content || h.text || '').trim();
+          if (text) {
+            messages.push({
+              role: h.role === 'assistant' || h.role === 'bot' || h.from === 'bot' ? 'assistant' : 'user',
+              content: text
+            });
+          }
+        });
+      }
+      messages.push({ role: 'user', content: userPrompt });
+
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -391,11 +506,8 @@ If a user asks about anything outside the DASIG portal, politely, articulately, 
         },
         body: JSON.stringify({
           model: 'gpt-4o-mini',
-          messages: [
-            { role: 'system', content: systemInstruction },
-            { role: 'user', content: userPrompt }
-          ],
-          temperature: 0.5
+          messages,
+          temperature: 0.6
         })
       });
 
@@ -412,9 +524,51 @@ If a user asks about anything outside the DASIG portal, politely, articulately, 
   return null;
 }
 
+// Levenshtein distance for fuzzy typo tolerance
+function levenshtein(a, b) {
+  const m = a.length, n = b.length;
+  const dp = Array.from({ length: m + 1 }, (_, i) =>
+    Array(n + 1).fill(0).map((_, j) => (i === 0 ? j : j === 0 ? i : 0))
+  );
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      dp[i][j] = a[i - 1] === b[j - 1] ? dp[i - 1][j - 1]
+        : 1 + Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]);
+    }
+  }
+  return dp[m][n];
+}
+
+// Improved NLP: score-based matching — picks the entry with the most keyword hits
+function matchIntent(text) {
+  const lower = text.toLowerCase().trim();
+  let best = null;
+  let bestScore = 0;
+
+  for (const entry of KB) {
+    let score = 0;
+    for (const kw of entry.keywords) {
+      const kwLower = kw.toLowerCase();
+      const escaped = kwLower.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      // word-boundary match scores 2, substring match scores 1
+      if (new RegExp(`\\b${escaped}\\b`, 'i').test(lower)) {
+        score += 2;
+      } else if (lower.includes(kwLower)) {
+        score += 1;
+      }
+    }
+    if (score > bestScore) {
+      bestScore = score;
+      best = entry;
+    }
+  }
+
+  return bestScore > 0 ? { entry: best, score: bestScore } : null;
+}
+
 // POST /api/chatbot/message
 router.post('/message', async (req, res) => {
-  const { message } = req.body;
+  const { message, history = [] } = req.body || {};
   if (!message || !message.trim()) return res.status(400).json({ error: 'Message is required' });
 
   const trimmed = message.trim();
@@ -422,6 +576,9 @@ router.post('/message', async (req, res) => {
   
   // 1. Detect User's Language
   const lang = detectLanguage(normalized);
+
+  // 1b. Trigger Live RAG Context fetch in parallel
+  const ragContextPromise = getLiveRAGContext();
 
   // 2. Check if this is a Live Database Counts/Stats Query (e.g. "how many events", "how many members", "pila ka miyembro", "ilang events")
   if (
@@ -659,15 +816,17 @@ router.post('/message', async (req, res) => {
     }
   }
 
-  // 6. External Generative LLM (if API keys set)
+  // 6. External Generative LLM (if API keys set) with Multi-Turn Memory & Live RAG
   let generatedReply = null;
   if (!match) {
-    generatedReply = await callGenerativeLLM(normalized, lang);
+    const ragContext = await ragContextPromise;
+    generatedReply = await callGenerativeLLM(normalized, lang, history, ragContext);
   }
 
   // 7. High-IQ Semantic Synthesis Engine Fallback (Guaranteed intelligent answer)
   if (!match && !generatedReply) {
-    generatedReply = generateHighIQResponse(normalized, lang);
+    const ragContext = await ragContextPromise;
+    generatedReply = generateHighIQResponse(normalized, lang, history, ragContext);
   }
 
   // 8. Log interaction telemetry (fire-and-forget)

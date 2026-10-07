@@ -26,6 +26,7 @@ export const api = {
       request('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }),
     register: (body) =>
       request('/auth/register', { method: 'POST', body: JSON.stringify(body) }),
+    logout: () => request('/auth/logout', { method: 'POST' }),
     me: () => request('/auth/me'),
     updateProfile: (body) =>
       request('/auth/profile', { method: 'PUT', body: JSON.stringify(body) }),
@@ -149,7 +150,7 @@ export const api = {
     },
   },
   chatbot: {
-    send: (message) => request('/chatbot/message', { method: 'POST', body: JSON.stringify({ message }) }),
+    send: (message, history = []) => request('/chatbot/message', { method: 'POST', body: JSON.stringify({ message, history }) }),
     intents: () => request('/chatbot/intents'),
     tts: (text, voice = 'Adam') => {
       const BASE_URL = import.meta.env.VITE_API_URL || 'https://dasig-portal.onrender.com/api';
