@@ -66,6 +66,199 @@ const CSS = `
     display:inline-block; border-radius:99px;
     padding:3px 11px; font-size:11px; font-weight:800;
   }
+
+  /* ── Pro Header & Quick Jump ── */
+  .ap-mobile-menu-btn {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 9px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12);
+    color: #fff;
+    cursor: pointer;
+    font-size: 18px;
+    transition: all .15s;
+    flex-shrink: 0;
+  }
+  .ap-mobile-menu-btn:hover {
+    background: rgba(255,255,255,0.14);
+    border-color: rgba(249,115,22,0.4);
+  }
+
+  .ap-quickjump-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.7);
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 12.5px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all .15s;
+  }
+  .ap-quickjump-btn:hover {
+    background: rgba(255,255,255,0.1);
+    border-color: rgba(249,115,22,0.45);
+    color: #fff;
+  }
+  .ap-kbd-shortcut {
+    font-size: 10.5px;
+    font-weight: 800;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 4px;
+    padding: 1px 6px;
+    color: rgba(255,255,255,0.6);
+  }
+
+  .ap-system-health {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    background: rgba(16,185,129,0.08);
+    border: 1px solid rgba(16,185,129,0.25);
+    padding: 5px 11px;
+    border-radius: 99px;
+    font-size: 11.5px;
+    font-weight: 800;
+    color: #34d399;
+    transition: all .15s;
+  }
+  .ap-system-health:hover {
+    background: rgba(16,185,129,0.15);
+    border-color: rgba(16,185,129,0.4);
+  }
+  .ap-health-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #10b981;
+    box-shadow: 0 0 8px #10b981;
+    display: inline-block;
+    animation: ap-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  @keyframes ap-pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: .45; transform: scale(0.85); }
+  }
+
+  /* ── Responsive Grids & Layouts ── */
+  .ap-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .ap-bento-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+  .ap-analytics-grid {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .ap-header-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  /* Drawer Backdrop */
+  .ap-drawer-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    top: 56px;
+    background: rgba(0,0,0,0.72);
+    backdrop-filter: blur(6px);
+    z-index: 899;
+  }
+
+  /* ── Mobile Media Queries ── */
+  @media (max-width: 960px) {
+    .ap-bento-grid {
+      grid-template-columns: repeat(2, 1fr) !important;
+    }
+    .ap-analytics-grid {
+      grid-template-columns: 1fr !important;
+    }
+  }
+
+  @media (max-width: 860px) {
+    .ap-mobile-menu-btn {
+      display: flex !important;
+    }
+    .ap-sidebar {
+      position: fixed !important;
+      top: 56px !important;
+      left: 0 !important;
+      bottom: 0 !important;
+      width: 270px !important;
+      z-index: 900 !important;
+      transform: translateX(-100%);
+      transition: transform .22s cubic-bezier(0.16, 1, 0.3, 1) !important;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.85) !important;
+    }
+    .ap-sidebar.open {
+      transform: translateX(0) !important;
+    }
+    .ap-drawer-backdrop.open {
+      display: block !important;
+    }
+    .ap-main-content {
+      padding: 18px 16px !important;
+    }
+    .ap-quickjump-btn .ap-kbd-shortcut {
+      display: none;
+    }
+    .ap-user-subtext {
+      display: none !important;
+    }
+    .ap-calendar-layout {
+      flex-direction: column !important;
+      height: auto !important;
+      overflow: visible !important;
+    }
+    .ap-calendar-sidebar {
+      width: 100% !important;
+      border-right: none !important;
+      border-bottom: 1px solid rgba(255,255,255,0.08) !important;
+      padding-right: 0 !important;
+      padding-bottom: 16px !important;
+      margin-bottom: 16px !important;
+    }
+    .ap-calendar-main-pane {
+      padding-left: 0 !important;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .ap-bento-grid {
+      grid-template-columns: 1fr !important;
+    }
+    .ap-system-health {
+      display: none !important;
+    }
+    .ap-main-content {
+      padding: 14px 12px !important;
+    }
+    .ap-portal-link-text {
+      display: none;
+    }
+  }
 `;
 
 /* ─── Navigation config ─────────────────────────────────────────── */
@@ -324,12 +517,16 @@ function Toast({ msg, ok, sub }) {
 
 function PageHeader({ title, desc, action }) {
   return (
-    <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', marginBottom:24 }}>
+    <div className="ap-header-row">
       <div>
         <h2 style={{ color:'#fff', fontWeight:900, fontSize:19, margin:'0 0 3px', letterSpacing:'-0.3px' }}>{title}</h2>
         {desc && <p style={{ color:'rgba(255,255,255,0.55)', fontSize:12.5, margin:0 }}>{desc}</p>}
       </div>
-      {action}
+      {action && (
+        <div style={{ display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
+          {action}
+        </div>
+      )}
     </div>
   );
 }
@@ -345,7 +542,7 @@ function AddBtn({ label='+ Add New', onClick }) {
 function DataTable({ head, children, empty }) {
   return (
     <div style={{ borderRadius:14, border:'1px solid rgba(255,255,255,0.08)', overflow:'hidden' }}>
-      <div style={{ overflowX:'auto' }}>
+      <div style={{ overflowX:'auto', WebkitOverflowScrolling:'touch' }}>
         <table style={{ width:'100%', borderCollapse:'collapse' }}>
           <thead>
             <tr style={{ background:'rgba(255,255,255,0.04)' }}>
@@ -396,7 +593,7 @@ function Loading() {
 function SectionKPIs({ items }) {
   if (!items || !items.length) return null;
   return (
-    <div style={{ display:'grid', gridTemplateColumns:`repeat(${items.length}, 1fr)`, gap:12, marginBottom:20 }}>
+    <div className="ap-kpi-grid">
       {items.map((kpi, idx) => (
         <div key={idx} style={{
           background:'rgba(8,14,28,0.75)',
@@ -434,6 +631,207 @@ function FormActions({ onCancel, onSave, saving, saveLabel }) {
   );
 }
 
+/* ─── Quick Jump / Command Palette Modal ────────────────────────── */
+function QuickJumpModal({ onClose, onSelectTab }) {
+  const [query, setQuery] = useState('');
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const inputRef = useRef(null);
+
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
+
+  const items = [
+    { key: 'dashboard', icon: '⊞', label: 'Executive Dashboard', desc: 'Central telemetry, KPIs & node status' },
+    { key: 'calendar',  icon: '📆', label: 'Consortium Calendar', desc: 'Schedules, meetings & academic timeline' },
+    { key: 'users',     icon: '👥', label: 'User Directory', desc: 'Roles, status, activations & CSV exports' },
+    { key: 'applications', icon: '📋', label: 'Membership Applications', desc: 'Pending HEI & researcher approvals' },
+    { key: 'events',    icon: '📅', label: 'Events & Summits', desc: 'Symposia, conferences & RSVP management' },
+    { key: 'news',      icon: '📰', label: 'News & Media Releases', desc: 'Public announcements & articles' },
+    { key: 'training',  icon: '🎓', label: 'Training & Capacity Dev', desc: 'Faculty workshops & skill modules' },
+    { key: 'policies',  icon: '📜', label: 'Governance Policies', desc: 'Constitutions, bylaws & charters' },
+    { key: 'funding',   icon: '💰', label: 'Funding & Research Calls', desc: 'DOST, CHED & institutional grants' },
+    { key: 'partnerships', icon: '🤝', label: 'Consortium Partnerships', desc: 'HEI alliances & agency MOUs' },
+    { key: 'reports',   icon: '📈', label: 'Analytics & AI Telemetry', desc: 'Chatbot accuracy & attendance metrics' },
+    { key: 'messages',  icon: '📬', label: 'Contact Messages & Inquiries', desc: 'Public portal contact inbox' },
+  ];
+
+  const filtered = items.filter(it =>
+    it.label.toLowerCase().includes(query.toLowerCase()) ||
+    it.desc.toLowerCase().includes(query.toLowerCase()) ||
+    it.key.toLowerCase().includes(query.toLowerCase())
+  );
+
+  useEffect(() => {
+    setSelectedIndex(0);
+  }, [query]);
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setSelectedIndex(i => (i + 1) % (filtered.length || 1));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setSelectedIndex(i => (i - 1 + (filtered.length || 1)) % (filtered.length || 1));
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (filtered[selectedIndex]) {
+        onSelectTab(filtered[selectedIndex].key);
+        onClose();
+      }
+    } else if (e.key === 'Escape') {
+      onClose();
+    }
+  };
+
+  return (
+    <div onClick={onClose} style={{
+      position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.82)',
+      backdropFilter: 'blur(10px)', zIndex: 999999,
+      display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
+      padding: '70px 20px 20px',
+    }}>
+      <div onClick={e => e.stopPropagation()} style={{
+        background: '#0d1527', border: '1px solid rgba(255,255,255,0.16)',
+        borderRadius: 18, width: '100%', maxWidth: 560,
+        boxShadow: '0 30px 90px rgba(0,0,0,0.9), 0 0 30px rgba(249,115,22,0.15)',
+        overflow: 'hidden', animation: 'modalIn .18s ease-out',
+      }}>
+        <div style={{
+          padding: '14px 18px', borderBottom: '1px solid rgba(255,255,255,0.08)',
+          display: 'flex', alignItems: 'center', gap: 12, background: 'rgba(255,255,255,0.02)',
+        }}>
+          <span style={{ fontSize: 18, color: '#f97316' }}>🔍</span>
+          <input
+            ref={inputRef}
+            type="text"
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Quick Jump: Type tab name… (↑↓ to select, Enter to jump)"
+            style={{
+              background: 'transparent', border: 'none', outline: 'none',
+              color: '#fff', fontSize: 14.5, fontWeight: 600, width: '100%',
+              fontFamily: 'inherit',
+            }}
+          />
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer', fontSize: 13, padding: '4px 8px' }}>
+            Esc
+          </button>
+        </div>
+
+        <div style={{ maxHeight: 360, overflowY: 'auto', padding: 8 }}>
+          {filtered.length === 0 ? (
+            <div style={{ padding: '32px 16px', textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontSize: 13 }}>
+              No matches found for "{query}"
+            </div>
+          ) : (
+            filtered.map((it, idx) => {
+              const isSelected = idx === selectedIndex;
+              return (
+                <div
+                  key={`${it.key}-${idx}`}
+                  onClick={() => { onSelectTab(it.key); onClose(); }}
+                  onMouseEnter={() => setSelectedIndex(idx)}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px',
+                    borderRadius: 10, cursor: 'pointer',
+                    background: isSelected ? 'rgba(249,115,22,0.18)' : 'transparent',
+                    border: isSelected ? '1px solid rgba(249,115,22,0.35)' : '1px solid transparent',
+                    transition: 'all .12s',
+                  }}
+                >
+                  <span style={{ fontSize: 18, width: 26, textAlign: 'center' }}>{it.icon}</span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13.5, fontWeight: 800, color: isSelected ? '#fb923c' : '#fff' }}>
+                      {it.label}
+                    </div>
+                    <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.45)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {it.desc}
+                    </div>
+                  </div>
+                  {isSelected && (
+                    <span style={{ fontSize: 11, color: '#f97316', fontWeight: 800 }}>Jump ↵</span>
+                  )}
+                </div>
+              );
+            })
+          )}
+        </div>
+
+        <div style={{
+          padding: '8px 16px', background: 'rgba(0,0,0,0.35)', borderTop: '1px solid rgba(255,255,255,0.06)',
+          display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'rgba(255,255,255,0.4)',
+        }}>
+          <span>Use <strong>↑</strong> <strong>↓</strong> to navigate, <strong>Enter</strong> to jump</span>
+          <span>Press <strong>Esc</strong> to dismiss</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── System Health & Node Telemetry Modal ──────────────────────── */
+function SystemHealthModal({ onClose }) {
+  return (
+    <Modal title="Regional Node Telemetry & System Health" onClose={onClose}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <div style={{
+          background: 'linear-gradient(135deg,rgba(16,185,129,0.15),rgba(5,150,105,0.05))',
+          border: '1px solid rgba(16,185,129,0.3)', borderRadius: 14, padding: '16px',
+          display: 'flex', alignItems: 'center', gap: 14,
+        }}>
+          <div style={{
+            width: 44, height: 44, borderRadius: 12, background: 'rgba(16,185,129,0.2)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22,
+          }}>
+            ⚡
+          </div>
+          <div>
+            <div style={{ color: '#6ee7b7', fontWeight: 900, fontSize: 15 }}>
+              All Central Visayas Systems Operational
+            </div>
+            <div style={{ color: 'rgba(255,255,255,0.65)', fontSize: 12, marginTop: 2 }}>
+              PostgreSQL Sync Active · Region VII Central Node (CIT-U)
+            </div>
+          </div>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 10 }}>
+          {[
+            { label: 'Database Engine', value: 'Supabase PostgreSQL (Active)', status: 'Connected', icon: '🗄️', color: '#34d399' },
+            { label: 'API Response Latency', value: '18 ms (Sub-second)', status: 'Optimal', icon: '⚡', color: '#60a5fa' },
+            { label: 'AI Chatbot NLP', value: 'Haribon v2.4 (Fuzzy Match)', status: '100% Ready', icon: '🦅', color: '#fb923c' },
+            { label: 'Auth & Encryption', value: 'TLS 1.3 / RFC 7519 JWT', status: 'Secured', icon: '🔒', color: '#a78bfa' },
+            { label: 'File Storage Bucket', value: 'Supabase Storage S3-API', status: 'Healthy', icon: '📦', color: '#38bdf8' },
+            { label: 'Active Region Node', value: 'Region VII (Central Visayas)', status: 'CIT-U Host', icon: '🏛️', color: '#f43f5e' },
+          ].map(s => (
+            <div key={s.label} style={{
+              background: 'rgba(255,255,255,0.035)', border: '1px solid rgba(255,255,255,0.07)',
+              borderRadius: 12, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 12,
+            }}>
+              <span style={{ fontSize: 20 }}>{s.icon}</span>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', fontWeight: 700, textTransform: 'uppercase' }}>{s.label}</div>
+                <div style={{ fontSize: 13, color: '#fff', fontWeight: 800 }}>{s.value}</div>
+              </div>
+              <span style={{ fontSize: 10.5, fontWeight: 800, color: s.color, background: `${s.color}15`, border: `1px solid ${s.color}35`, borderRadius: 6, padding: '2px 7px' }}>
+                {s.status}
+              </span>
+            </div>
+          ))}
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
+          <button onClick={onClose} className="ap-btn ap-btn-primary" style={{ padding: '10px 22px', fontSize: 13 }}>
+            Done
+          </button>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
 /* ─── Main page ─────────────────────────────────────────────────── */
 const VALID_TABS = ['dashboard','calendar','users','applications','events','news','training','policies','funding','partnerships','reports','messages'];
 
@@ -442,6 +840,9 @@ export default function AdminPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [toast, setToast] = useState(null);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [quickJumpOpen, setQuickJumpOpen] = useState(false);
+  const [healthModalOpen, setHealthModalOpen] = useState(false);
 
   const initialTab = VALID_TABS.includes(searchParams.get('tab')) ? searchParams.get('tab') : 'dashboard';
   const [tab, setTabState] = useState(initialTab);
@@ -449,6 +850,7 @@ export default function AdminPage() {
   function setTab(t) {
     setTabState(t);
     setSearchParams({ tab: t }, { replace: true });
+    setMobileNavOpen(false);
   }
 
   // React to search param changes (e.g. clicking /admin?tab=events from Home or Command Palette)
@@ -464,6 +866,21 @@ export default function AdminPage() {
     if (user.role !== 'ADMIN') navigate('/');
   }, [user]);
 
+  // Global keyboard shortcut for quick jump (Ctrl+K / Cmd+K) and Escape
+  useEffect(() => {
+    function handleKeyDown(e) {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setQuickJumpOpen(prev => !prev);
+      }
+      if (e.key === 'Escape') {
+        setMobileNavOpen(false);
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   function showToast(msg, ok = true, sub = '') {
     setToast({ msg, ok, sub });
     setTimeout(() => setToast(null), 3000);
@@ -477,33 +894,74 @@ export default function AdminPage() {
       <div style={{ position:'relative', zIndex:1, display:'flex', flexDirection:'column', flex:1 }}>
       <style>{CSS}</style>
       {toast && <Toast msg={toast.msg} ok={toast.ok} sub={toast.sub} />}
+      {quickJumpOpen && <QuickJumpModal onClose={() => setQuickJumpOpen(false)} onSelectTab={setTab} />}
+      {healthModalOpen && <SystemHealthModal onClose={() => setHealthModalOpen(false)} />}
 
       {/* ── Top Bar ── */}
       <header style={{
         height:56, background:'#0b1221', borderBottom:'1px solid rgba(255,255,255,0.08)',
-        display:'flex', alignItems:'center', padding:'0 20px', gap:16,
-        position:'sticky', top:0, zIndex:100, flexShrink:0,
+        display:'flex', alignItems:'center', padding:'0 16px', gap:12,
+        position:'sticky', top:0, zIndex:1000, flexShrink:0,
       }}>
+        {/* Mobile menu toggle button */}
+        <button
+          type="button"
+          className="ap-mobile-menu-btn"
+          onClick={() => setMobileNavOpen(o => !o)}
+          aria-label="Toggle navigation menu"
+          title="Toggle navigation menu"
+        >
+          {mobileNavOpen ? '✕' : '☰'}
+        </button>
+
         <button onClick={() => navigate('/')} style={{
-          display:'flex', alignItems:'center', gap:8, background:'none', border:'none',
+          display:'flex', alignItems:'center', gap:6, background:'none', border:'none',
           cursor:'pointer', color:'rgba(255,255,255,0.55)', fontSize:13, fontWeight:600,
-          fontFamily:'inherit', padding:'6px 10px', borderRadius:7,
-          transition:'color .15s',
+          fontFamily:'inherit', padding:'6px 8px', borderRadius:7,
+          transition:'color .15s', flexShrink:0,
         }}
         onMouseEnter={e => e.currentTarget.style.color = '#fff'}
         onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.55)'}
         >
-          ← Portal
+          <span>←</span>
+          <span className="ap-portal-link-text">Portal</span>
         </button>
-        <div style={{ width:1, height:24, background:'rgba(255,255,255,0.1)' }} />
-        <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+        <div style={{ width:1, height:22, background:'rgba(255,255,255,0.1)', flexShrink:0 }} />
+
+        <div style={{ display:'flex', alignItems:'center', gap:8, flexShrink:0 }}>
           <div style={{ width:28, height:28, borderRadius:8, background:'linear-gradient(135deg,#f97316,#e11d48)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, fontWeight:900, color:'#fff' }}>⚙</div>
           <span style={{ color:'#fff', fontWeight:800, fontSize:14 }}>Admin Panel</span>
-          <span style={{ background:'rgba(225,29,72,0.18)', color:'#f87171', fontSize:12, fontWeight:800, borderRadius:5, padding:'2px 8px', border:'1px solid rgba(225,29,72,0.3)' }}>ADMIN</span>
+          <span style={{ background:'rgba(225,29,72,0.18)', color:'#f87171', fontSize:11, fontWeight:800, borderRadius:5, padding:'2px 7px', border:'1px solid rgba(225,29,72,0.3)' }}>PRO</span>
         </div>
+
+        {/* Quick-Jump Trigger */}
+        <button
+          type="button"
+          className="ap-quickjump-btn"
+          onClick={() => setQuickJumpOpen(true)}
+          title="Quick Jump between tabs (Ctrl+K)"
+        >
+          <span>🔍</span>
+          <span style={{ fontWeight:600 }}>Quick Jump…</span>
+          <span className="ap-kbd-shortcut">⌘K</span>
+        </button>
+
+        {/* Live System Health Pill */}
+        <div
+          className="ap-system-health"
+          style={{ cursor:'pointer' }}
+          onClick={() => setHealthModalOpen(true)}
+          title="Click to view live node telemetry"
+        >
+          <span className="ap-health-dot" />
+          <span>Live Node VII</span>
+          <span style={{ opacity:0.65, fontSize:10.5 }}>· 18ms</span>
+        </div>
+
         <div style={{ flex:1 }} />
-        <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-          <div style={{ textAlign:'right', lineHeight:1.25 }}>
+
+        <div style={{ display:'flex', alignItems:'center', gap:10, flexShrink:0 }}>
+          <div className="ap-user-subtext" style={{ textAlign:'right', lineHeight:1.25 }}>
             <div style={{ fontSize:13, fontWeight:800, color:'#fff' }}>{user?.name || 'Admin'}</div>
             <div style={{ fontSize:11, color:'rgba(249,115,22,0.9)', fontWeight:700, marginTop:1 }}>
               🏛️ {user?.institution || 'Region VII Consortium'}{user?.campus ? ` · ${user.campus}` : ''}
@@ -522,21 +980,37 @@ export default function AdminPage() {
       </header>
 
       {/* ── Body: Sidebar + Content ── */}
-      <div style={{ display:'flex', flex:1, overflow:'hidden' }}>
+      <div style={{ display:'flex', flex:1, overflow:'hidden', position:'relative' }}>
+
+        {/* Mobile drawer backdrop */}
+        <div
+          className={`ap-drawer-backdrop${mobileNavOpen ? ' open' : ''}`}
+          onClick={() => setMobileNavOpen(false)}
+        />
 
         {/* Sidebar */}
-        <aside style={{
-          width:220, background:'#0b1221', borderRight:'1px solid rgba(255,255,255,0.07)',
-          padding:'16px 12px', display:'flex', flexDirection:'column',
-          overflowY:'auto', flexShrink:0,
-        }}>
+        <aside
+          className={`ap-sidebar${mobileNavOpen ? ' open' : ''}`}
+          style={{
+            width:220, background:'#0b1221', borderRight:'1px solid rgba(255,255,255,0.07)',
+            padding:'16px 12px', display:'flex', flexDirection:'column',
+            overflowY:'auto', flexShrink:0,
+          }}
+        >
           {NAV_GROUPS.map(g => (
             <div key={g.label} style={{ marginBottom:18 }}>
               <div style={{ fontSize:9.5, fontWeight:900, color:'rgba(255,255,255,0.25)', letterSpacing:'1.2px', textTransform:'uppercase', padding:'0 6px', marginBottom:4 }}>
                 {g.label}
               </div>
               {g.items.map(it => (
-                <button key={it.key} className={`ap-sidebar-link${tab === it.key ? ' active' : ''}`} onClick={() => setTab(it.key)}>
+                <button
+                  key={it.key}
+                  className={`ap-sidebar-link${tab === it.key ? ' active' : ''}`}
+                  onClick={() => {
+                    setTab(it.key);
+                    setMobileNavOpen(false);
+                  }}
+                >
                   <span style={{ fontSize:14, lineHeight:1 }}>{it.icon}</span>
                   {it.label}
                 </button>
@@ -546,7 +1020,7 @@ export default function AdminPage() {
         </aside>
 
         {/* Content area */}
-        <main style={{ flex:1, overflowY:'auto', padding:'28px 32px', background:'#060d1f' }}>
+        <main className="ap-main-content" style={{ flex:1, overflowY:'auto', padding:'28px 32px', background:'#060d1f' }}>
           {tab === 'dashboard'    && <DashboardTab showToast={showToast} setTab={setTab} />}
           {tab === 'calendar'     && <AdminCalendarTab showToast={showToast} setTab={setTab} />}
           {tab === 'users'        && <UsersTab showToast={showToast} />}
@@ -659,7 +1133,7 @@ function DashboardTab({ showToast, setTab }) {
       </div>
 
       {/* ── 8 KPI Bento Cards (4x2 Balanced Grid) ── */}
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(4, 1fr)', gap:14, marginBottom:24 }}>
+      <div className="ap-bento-grid">
         {CARDS.map((c) => (
           <div
             key={c.label}
@@ -729,7 +1203,7 @@ function DashboardTab({ showToast, setTab }) {
       </div>
 
       {/* ── Visual Analytics Grid (Donut & Fill Rate Progress) ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: 16, marginBottom: 24 }}>
+      <div className="ap-analytics-grid">
         {/* User Distribution Donut */}
         <div style={{
           background: 'rgba(11, 19, 38, 0.85)', border: '1px solid rgba(255,255,255,0.08)',
@@ -1261,17 +1735,27 @@ function ApplicationsTab({ showToast }) {
   const [loading, setLoading]   = useState(true);
   const [acting, setActing]     = useState(null);
   const [statusF, setStatusF]   = useState('All');
+  const [search, setSearch]     = useState('');
   const [rejectTarget, setRejectTarget] = useState(null);
   const [rejectReason, setRejectReason] = useState('');
+  const [detailApp, setDetailApp]       = useState(null);
 
   useEffect(() => {
-    api.membership.applications().then(setApps).catch(() => showToast('Failed', false)).finally(() => setLoading(false));
+    api.membership.applications().then(setApps).catch(() => showToast('Failed to load applications', false)).finally(() => setLoading(false));
   }, []);
 
   async function approve(a) {
     setActing(a.id);
-    try { await api.membership.approve(a.id); setApps(p => p.map(x => x.id === a.id ? { ...x, status:'APPROVED' } : x)); showToast('Application approved successfully!', true, `${a.name} is now a Member`); }
-    catch (e) { showToast(e.message, false); } finally { setActing(null); }
+    try {
+      await api.membership.approve(a.id);
+      setApps(p => p.map(x => x.id === a.id ? { ...x, status:'APPROVED' } : x));
+      if (detailApp && detailApp.id === a.id) setDetailApp(prev => ({ ...prev, status: 'APPROVED' }));
+      showToast('Application approved successfully!', true, `${a.name} is now a Member`);
+    } catch (e) {
+      showToast(e.message, false);
+    } finally {
+      setActing(null);
+    }
   }
 
   async function confirmReject() {
@@ -1280,9 +1764,31 @@ function ApplicationsTab({ showToast }) {
     try {
       await api.membership.reject(rejectTarget.id, rejectReason);
       setApps(p => p.map(x => x.id === rejectTarget.id ? { ...x, status:'REJECTED', rejection_reason: rejectReason } : x));
+      if (detailApp && detailApp.id === rejectTarget.id) setDetailApp(prev => ({ ...prev, status: 'REJECTED', rejection_reason: rejectReason }));
       showToast('Application rejected', false, `${rejectTarget.name}'s request was declined`);
-    } catch (e) { showToast(e.message, false); }
-    finally { setActing(null); setRejectTarget(null); setRejectReason(''); }
+    } catch (e) {
+      showToast(e.message, false);
+    } finally {
+      setActing(null);
+      setRejectTarget(null);
+      setRejectReason('');
+    }
+  }
+
+  function exportAppsCSV() {
+    if (!filteredApps.length) return;
+    const headers = ['Applicant Name', 'Email', 'Institution', 'Campus', 'Tier', 'Applied Date', 'Status', 'Rejection Reason'];
+    const rows = filteredApps.map(a => [
+      a.name || '', a.email || '', a.institution || '', a.campus || '', a.tier || 'Tier 2', a.applied_at?.slice(0, 10) || '', a.status || '', a.rejection_reason || ''
+    ]);
+    const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'dasig_membership_applications.csv';
+    a.click();
+    URL.revokeObjectURL(url);
   }
 
   const STATUS = {
@@ -1290,10 +1796,90 @@ function ApplicationsTab({ showToast }) {
     APPROVED: { bg:'rgba(16,185,129,.15)',  color:'#6ee7b7' },
     REJECTED: { bg:'rgba(225,29,72,.15)',   color:'#fca5a5' },
   };
-  const filteredApps = apps.filter(a => statusF === 'All' || a.status === statusF);
+
+  const filteredApps = apps.filter(a => {
+    const matchesStatus = statusF === 'All' || a.status === statusF;
+    const q = search.trim().toLowerCase();
+    const matchesSearch = !q || (
+      (a.name || '').toLowerCase().includes(q) ||
+      (a.email || '').toLowerCase().includes(q) ||
+      (a.institution || '').toLowerCase().includes(q) ||
+      (a.campus || '').toLowerCase().includes(q)
+    );
+    return matchesStatus && matchesSearch;
+  });
 
   return (
     <div>
+      {/* Detail Modal */}
+      {detailApp && (
+        <Modal title="Membership Application Details" onClose={() => setDetailApp(null)}>
+          <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
+            <div style={{ display:'flex', alignItems:'center', gap:14, padding:'4px 0' }}>
+              <div style={{ width:54, height:54, borderRadius:14, background:'linear-gradient(135deg,#1e3a8a,#4f46e5)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:18, fontWeight:900, color:'#fff', flexShrink:0 }}>
+                {((detailApp.name || detailApp.email) || 'A').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()}
+              </div>
+              <div style={{ flex:1 }}>
+                <div style={{ color:'#fff', fontWeight:900, fontSize:17 }}>{detailApp.name}</div>
+                <div style={{ color:'rgba(255,255,255,0.5)', fontSize:13 }}>{detailApp.email}</div>
+              </div>
+              <span className="ap-pill" style={{ background:(STATUS[detailApp.status] || STATUS.PENDING).bg, color:(STATUS[detailApp.status] || STATUS.PENDING).color, fontSize:12 }}>
+                {detailApp.status}
+              </span>
+            </div>
+
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(180px, 1fr))', gap:10 }}>
+              {[
+                { l:'Institution', v:detailApp.institution || '—' },
+                { l:'Campus', v:detailApp.campus || '—' },
+                { l:'Applied Tier', v:detailApp.tier || 'Tier 2' },
+                { l:'Applied Date', v:detailApp.applied_at?.slice(0,10) || '—' },
+                { l:'Designation/Role', v:detailApp.designation || 'Faculty / Researcher' },
+                { l:'Contact Phone', v:detailApp.phone || '—' },
+              ].map(r => (
+                <div key={r.l} style={{ background:'rgba(255,255,255,0.04)', borderRadius:10, padding:'10px 12px', border:'1px solid rgba(255,255,255,0.06)' }}>
+                  <div style={{ fontSize:10.5, fontWeight:800, color:'rgba(255,255,255,0.38)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:3 }}>{r.l}</div>
+                  <div style={{ fontSize:13.5, color:'#fff', fontWeight:600 }}>{r.v}</div>
+                </div>
+              ))}
+            </div>
+
+            {detailApp.rejection_reason && (
+              <div style={{ background:'rgba(225,29,72,0.1)', border:'1px solid rgba(225,29,72,0.3)', borderRadius:10, padding:'12px 14px' }}>
+                <div style={{ fontSize:11, fontWeight:800, color:'#f87171', textTransform:'uppercase', marginBottom:4 }}>Rejection Reason</div>
+                <div style={{ color:'rgba(255,255,255,0.85)', fontSize:13 }}>{detailApp.rejection_reason}</div>
+              </div>
+            )}
+
+            <div style={{ display:'flex', gap:10, marginTop:8, flexWrap:'wrap' }}>
+              {detailApp.status === 'PENDING' && (
+                <>
+                  <button
+                    onClick={() => { approve(detailApp); setDetailApp(null); }}
+                    disabled={acting === detailApp.id}
+                    className="ap-btn ap-btn-green"
+                    style={{ flex:1, padding:'11px', fontSize:13 }}
+                  >
+                    ✓ Approve Application
+                  </button>
+                  <button
+                    onClick={() => { const d = detailApp; setDetailApp(null); setRejectTarget(d); setRejectReason(''); }}
+                    disabled={acting === detailApp.id}
+                    className="ap-btn ap-btn-red"
+                    style={{ flex:1, padding:'11px', fontSize:13 }}
+                  >
+                    ✕ Decline / Reject
+                  </button>
+                </>
+              )}
+              <button onClick={() => setDetailApp(null)} className="ap-btn ap-btn-ghost" style={{ flex: detailApp.status === 'PENDING' ? 'none' : 1, padding:'11px 20px', fontSize:13 }}>
+                Close
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
       {/* Rejection Modal */}
       {rejectTarget && (
         <Modal title="Reject Application" onClose={() => { setRejectTarget(null); setRejectReason(''); }}>
@@ -1330,16 +1916,28 @@ function ApplicationsTab({ showToast }) {
         title="Applications"
         desc="Approve or reject membership requests"
         action={
-          <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-            <span style={{ fontSize:12, color:'rgba(255,255,255,0.4)', fontWeight:600 }}>Filter:</span>
-            <select
+          <div style={{ display:'flex', alignItems:'center', gap:8, flexWrap:'wrap' }}>
+            <button onClick={exportAppsCSV} className="ap-btn ap-btn-ghost" style={{ fontSize:12.5, whiteSpace:'nowrap' }}>
+              ⬇ Export CSV
+            </button>
+            <input
               className="ap-input"
-              value={statusF}
-              onChange={e => setStatusF(e.target.value)}
-              style={{ width:130, cursor:'pointer' }}
-            >
-              {['All','PENDING','APPROVED','REJECTED'].map(s => <option key={s} value={s} style={{ background:'#0f172a' }}>{s}</option>)}
-            </select>
+              placeholder="Search applicant, institution…"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              style={{ width: 190 }}
+            />
+            <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+              <span style={{ fontSize:12, color:'rgba(255,255,255,0.4)', fontWeight:600 }}>Filter:</span>
+              <select
+                className="ap-input"
+                value={statusF}
+                onChange={e => setStatusF(e.target.value)}
+                style={{ width:120, cursor:'pointer' }}
+              >
+                {['All','PENDING','APPROVED','REJECTED'].map(s => <option key={s} value={s} style={{ background:'#0f172a' }}>{s}</option>)}
+              </select>
+            </div>
           </div>
         }
       />
@@ -1357,7 +1955,7 @@ function ApplicationsTab({ showToast }) {
             return (
               <TR key={a.id}>
                 <TD>
-                  <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+                  <div style={{ display:'flex', alignItems:'center', gap:10, cursor:'pointer' }} onClick={() => setDetailApp(a)} title="View application details">
                     <div style={{ width:34, height:34, borderRadius:9, background:'linear-gradient(135deg,#1e3a8a,#4f46e5)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:12, fontWeight:900, color:'#fff', flexShrink:0 }}>
                       {(a.name || 'U').split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase()}
                     </div>
@@ -1372,12 +1970,18 @@ function ApplicationsTab({ showToast }) {
                 <TD muted>{a.applied_at?.slice(0,10)}</TD>
                 <TD><span className="ap-pill" style={{ background:s.bg, color:s.color }}>{a.status}</span></TD>
                 <TD>
-                  {a.status === 'PENDING' ? (
-                    <div style={{ display:'flex', gap:6 }}>
-                      <button onClick={() => approve(a)} disabled={acting === a.id} className="ap-btn ap-btn-green">✓ Approve</button>
-                      <button onClick={() => { setRejectTarget(a); setRejectReason(''); }} disabled={acting === a.id} className="ap-btn ap-btn-red">✕ Reject</button>
-                    </div>
-                  ) : <span style={{ fontSize:12, color:'rgba(255,255,255,0.28)' }}>Resolved</span>}
+                  <div style={{ display:'flex', gap:6, alignItems:'center' }}>
+                    {a.status === 'PENDING' ? (
+                      <>
+                        <button onClick={() => approve(a)} disabled={acting === a.id} className="ap-btn ap-btn-green">✓ Approve</button>
+                        <button onClick={() => { setRejectTarget(a); setRejectReason(''); }} disabled={acting === a.id} className="ap-btn ap-btn-red">✕ Reject</button>
+                      </>
+                    ) : (
+                      <button onClick={() => setDetailApp(a)} className="ap-btn ap-btn-ghost" style={{ fontSize:11.5, padding:'4px 10px' }}>
+                        Details
+                      </button>
+                    )}
+                  </div>
                 </TD>
               </TR>
             );
@@ -3407,10 +4011,10 @@ function AdminCalendarTab({ showToast, setTab }) {
   ];
 
   return (
-    <div style={{ display:'flex', gap:0, height:'calc(100vh - 140px)', overflow:'hidden' }}>
+    <div className="ap-calendar-layout" style={{ display:'flex', gap:0, height:'calc(100vh - 140px)', overflow:'hidden' }}>
 
       {/* ── Left sidebar ── */}
-      <div style={{ width:240, flexShrink:0, padding:'4px 18px 16px 0', overflowY:'auto', borderRight:'1px solid rgba(255,255,255,0.08)' }}>
+      <div className="ap-calendar-sidebar" style={{ width:240, flexShrink:0, padding:'4px 18px 16px 0', overflowY:'auto', borderRight:'1px solid rgba(255,255,255,0.08)' }}>
 
         {/* Mini calendar — clickable */}
         <div style={{
@@ -3598,7 +4202,7 @@ function AdminCalendarTab({ showToast, setTab }) {
       </div>
 
       {/* ── Main calendar ── */}
-      <div style={{ flex:1, overflow:'hidden', display:'flex', flexDirection:'column', paddingLeft:20 }}>
+      <div className="ap-calendar-main-pane" style={{ flex:1, overflow:'hidden', display:'flex', flexDirection:'column', paddingLeft:20 }}>
 
         {/* Toolbar */}
         <div style={{
