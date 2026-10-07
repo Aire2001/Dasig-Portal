@@ -170,7 +170,7 @@ export default function FundingPage() {
         <div style={{ maxWidth: 1120, margin: '0 auto' }}>
 
           {/* Stats */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 14, marginBottom: 28 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))', gap: 14, marginBottom: 28 }}>
             {[
               { label: 'Open Opportunities', value: items.filter(i => i.status === 'Open').length,     color: '#34d399', icon: '💰' },
               { label: 'Upcoming Grants',    value: items.filter(i => i.status === 'Upcoming').length, color: '#60a5fa', icon: '⏳' },
@@ -231,7 +231,7 @@ export default function FundingPage() {
               <div style={{ color:'rgba(255,255,255,0.28)', fontSize:13 }}>Try adjusting the category or status filter above</div>
             </div>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 16 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))', gap: 16 }}>
               {items.map((item, i) => <FundingCard key={item.id} item={item} index={i} onClick={() => setSelected(item)} />)}
             </div>
           )}

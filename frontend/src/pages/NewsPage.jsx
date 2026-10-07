@@ -406,7 +406,7 @@ export default function NewsPage() {
             </div>
 
             {loading ? (
-              <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(320px,1fr))', gap:20 }}>
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(min(100%, 300px),1fr))', gap:20 }}>
                 {[...Array(6)].map((_,i) => (
                   <div key={i} style={{ borderRadius:16, overflow:'hidden', background:'rgba(255,255,255,0.03)', height:300 }}>
                     <div style={{ height:170, background:'rgba(255,255,255,0.05)' }} />
@@ -451,7 +451,7 @@ export default function NewsPage() {
                 )}
 
                 {/* ── Article grid ── */}
-                <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(320px,1fr))', gap:20, marginTop: filter === 'All' && activeFeatured ? 20 : 0 }}>
+                <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(min(100%, 300px),1fr))', gap:20, marginTop: filter === 'All' && activeFeatured ? 20 : 0 }}>
                   {(filter === 'All' ? restArticles : displayedArticles).map((a, i) => (
                     <NewsCard
                       key={a.id}

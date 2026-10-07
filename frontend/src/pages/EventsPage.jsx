@@ -595,7 +595,7 @@ export default function EventsPage() {
 
             {/* ── Event Grid ── */}
             {loading ? (
-              <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(340px,1fr))', gap:18 }}>
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(min(100%, 320px),1fr))', gap:18 }}>
                 {[...Array(6)].map((_, i) => (
                   <div key={i} style={{ background:'rgba(255,255,255,0.03)', borderRadius:16, height:240, border:'1px solid rgba(255,255,255,0.06)' }} />
                 ))}
@@ -609,7 +609,7 @@ export default function EventsPage() {
                 </div>
               </div>
             ) : (
-              <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(350px,1fr))', gap:18 }}>
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(min(100%, 320px),1fr))', gap:18 }}>
                 {displayedEvents.map(ev => (
                   <EventCard
                     key={ev.id}

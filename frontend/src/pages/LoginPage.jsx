@@ -49,7 +49,7 @@ export default function LoginPage() {
       minHeight: '100vh',
       background: '#030712',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
-      padding: '32px 24px',
+      padding: 'clamp(20px, 4vw, 32px) clamp(14px, 4vw, 24px)',
       position: 'relative', overflow: 'hidden',
     }}>
       {/* Dynamic Ambient Aurora Glows */}
@@ -82,7 +82,7 @@ export default function LoginPage() {
       {/* ── Dual-Panel Enterprise Gateway Container ── */}
       <div style={{
         width: '100%', maxWidth: 1040,
-        display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))',
+        display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 340px), 1fr))',
         gap: 32, alignItems: 'center',
         position: 'relative', zIndex: 1,
       }}>

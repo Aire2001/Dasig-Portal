@@ -489,7 +489,7 @@ export default function MembershipPage() {
           </div>
 
           {/* Tier info cards — Modern frosted glass style */}
-          <div style={{ marginTop: 24, display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12 }}>
+          <div style={{ marginTop: 24, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 220px), 1fr))', gap: 12 }}>
             {[
               {
                 tier: 'Tier 1', label: 'Full Member', icon: '⭐',

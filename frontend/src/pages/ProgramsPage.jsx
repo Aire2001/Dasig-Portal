@@ -2311,7 +2311,7 @@ function EventsTab({ user }) {
 
       {/* Event cards grid with Register buttons */}
       {!loading && filteredEvents.length > 0 && (
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(300px,1fr))', gap:18 }}>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(min(100%, 290px),1fr))', gap:18 }}>
           {filteredEvents.map((ev, i) => (
             <EvCard
               key={ev.id}
@@ -2836,7 +2836,7 @@ function TrainingTab({ user }) {
 
       {/* Training cards */}
       {!loading && filtered.length > 0 && (
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(300px,1fr))', gap:18 }}>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(min(100%, 290px),1fr))', gap:18 }}>
           {filtered.map((t, idx) => (
             <TrCard
               key={t.id}
@@ -3431,7 +3431,7 @@ function CalendarTab({ user }) {
             </span>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(330px, 1fr))', gap: 14 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 300px), 1fr))', gap: 14 }}>
             {calItems.slice(0, 6).map(it => {
               const isEvent = it._type === 'event';
               const catTheme = {

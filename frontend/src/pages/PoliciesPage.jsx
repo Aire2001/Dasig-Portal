@@ -118,7 +118,7 @@ export default function PoliciesPage() {
           )}
 
           {/* Stats */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 14, marginBottom: 28 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))', gap: 14, marginBottom: 28 }}>
             {[
               { label: 'Public Policies',   value: policies.filter(p => !p.members_only).length, color: '#34d399', icon: '📜' },
               { label: 'Members-Only Acts', value: policies.filter(p => p.members_only).length,  color: '#60a5fa', icon: '🔒' },
@@ -177,7 +177,7 @@ export default function PoliciesPage() {
           ) : policies.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '60px 0', color: 'rgba(255,255,255,0.3)' }}>No policies found.</div>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 16 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))', gap: 16 }}>
               {policies.map((p, i) => {
                 const cfg = catConfig[p.category] || catConfig.Governance;
                 const locked = p.members_only && !isMember;

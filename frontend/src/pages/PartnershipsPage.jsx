@@ -146,7 +146,7 @@ export default function PartnershipsPage() {
         <div style={{ maxWidth: 1120, margin: '0 auto' }}>
 
           {/* Stats */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 14, marginBottom: 28 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))', gap: 14, marginBottom: 28 }}>
             {[
               { label: 'Active Collaborations', value: partnerships.filter(p => p.status === 'Active').length,  color: '#34d399', icon: '🤝' },
               { label: 'Pending Agreements',    value: partnerships.filter(p => p.status === 'Pending').length, color: '#fbbf24', icon: '⏳' },
@@ -190,7 +190,7 @@ export default function PartnershipsPage() {
           ) : partnerships.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '60px 0', color: 'rgba(255,255,255,0.3)' }}>No partnerships found.</div>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 16 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))', gap: 16 }}>
               {partnerships.map((p, i) => <PartnerCard key={p.id} p={p} index={i} onClick={() => setSelected(p)} />)}
             </div>
           )}
