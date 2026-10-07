@@ -267,6 +267,12 @@ const WIDGET_CSS = `
       max-height: calc(100vh - 86px) !important;
       border-radius: 18px !important;
     }
+    .w-launcher-btn {
+      bottom: 16px !important;
+      right: 14px !important;
+      width: 52px !important;
+      height: 52px !important;
+    }
   }
 `;
 
@@ -804,6 +810,7 @@ export default function Chatbot() {
 
       {/* ── Meta AI-style Floating Toggle Button ── */}
       <button
+        className="w-launcher-btn"
         onClick={() => open ? setOpen(false) : openWidget()}
         title="Chat with Haribon AI"
         style={{

@@ -4,8 +4,24 @@
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
-body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; background: #f8fafc; color: #0f172a; }
-#root { width: 100%; min-height: 100vh; }
+html {
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  background: #f8fafc;
+  color: #0f172a;
+  overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
 
 .grad-text { background: linear-gradient(90deg,#f97316,#e11d48); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
 .grad-btn  { background: linear-gradient(90deg,#f97316,#e11d48); }

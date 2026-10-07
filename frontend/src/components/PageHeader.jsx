@@ -8,11 +8,16 @@ export default function PageHeader({ eyebrow, title, backTo }) {
   return (
     <section style={{
       background: 'linear-gradient(135deg,#000d30 0%,#001848 50%,#0f2b66 100%)',
-      padding: '36px 24px 28px',
+      padding: 'clamp(22px, 4vw, 36px) clamp(16px, 4vw, 24px) clamp(18px, 3.5vw, 28px)',
       position: 'relative',
       overflow: 'hidden',
       borderBottom: '1px solid rgba(255,255,255,0.08)',
     }}>
+      <style>{`
+        @media (max-width: 640px) {
+          .page-header-seal { display: none !important; }
+        }
+      `}</style>
       <ParticleBackground density={40} />
       <div style={{
         position: 'absolute', inset: 0,
@@ -49,13 +54,13 @@ export default function PageHeader({ eyebrow, title, backTo }) {
             marginBottom: 6, color: '#f97316',
           }}>{eyebrow}</p>
           <h1 style={{
-            color: '#fff', fontSize: 34, fontWeight: 900,
-            lineHeight: 1.15, letterSpacing: '-0.8px', margin: 0,
+            color: '#fff', fontSize: 'clamp(22px, 5.5vw, 34px)', fontWeight: 900,
+            lineHeight: 1.18, letterSpacing: '-0.8px', margin: 0,
           }}>{title}</h1>
         </div>
 
         {/* Dignified Institutional Seal Badge */}
-        <div style={{
+        <div className="page-header-seal" style={{
           display: 'flex', alignItems: 'center', gap: 14,
           background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
           borderRadius: 16, padding: '12px 18px', backdropFilter: 'blur(10px)',

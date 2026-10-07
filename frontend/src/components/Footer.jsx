@@ -10,6 +10,25 @@ const FOOTER_CSS = `
     text-decoration: none; transition: color 0.18s, padding-left 0.18s;
   }
   .footer-link:hover { color: #f97316; padding-left: 4px; }
+
+  .footer-grid {
+    display: grid;
+    grid-template-columns: 1.8fr 1fr 1fr 1fr;
+    gap: 32px;
+    margin-bottom: 36px;
+  }
+  @media (max-width: 900px) {
+    .footer-grid {
+      grid-template-columns: 1fr 1fr;
+      gap: 28px;
+    }
+  }
+  @media (max-width: 560px) {
+    .footer-grid {
+      grid-template-columns: 1fr;
+      gap: 24px;
+    }
+  }
 `;
 
 /* SVG icons for real social platforms */
@@ -90,13 +109,9 @@ export default function Footer() {
     <>
       <style>{FOOTER_CSS}</style>
       <div style={{ height: 3, background: 'linear-gradient(90deg,#f97316,#e11d48)' }} />
-      <footer style={{ background: '#020817', padding: '48px 24px 26px' }}>
+      <footer style={{ background: '#020817', padding: 'clamp(36px, 5vw, 48px) clamp(16px, 4vw, 24px) 26px' }}>
         <div style={{ maxWidth: 1120, margin: '0 auto' }}>
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: '1.8fr 1fr 1fr 1fr',
-            gap: 32, marginBottom: 36,
-          }}>
+          <div className="footer-grid">
 
             {/* Col 1 — Brand */}
             <div>

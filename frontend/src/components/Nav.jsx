@@ -81,6 +81,18 @@ const NAV_CSS = `
       display: none !important;
     }
   }
+
+  @media (max-width: 600px) {
+    .nav-register-btn {
+      display: none !important;
+    }
+    .nav-user-details {
+      display: none !important;
+    }
+    .govph-agencies {
+      display: none !important;
+    }
+  }
 `;
 
 const navLinks = [
@@ -356,7 +368,7 @@ export default function Nav() {
             <span style={{ color: 'rgba(255,255,255,0.2)' }}>|</span>
             <span style={{ color: 'rgba(255,255,255,0.65)' }}>Region VII Academic &amp; Government Consortium</span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div className="govph-agencies" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <span style={{ color: 'rgba(255,255,255,0.5)' }}>Central Visayas Network</span>
             <span style={{ color: 'rgba(255,255,255,0.2)' }}>•</span>
             <span style={{ color: '#fb923c', fontWeight: 700 }}>DOST · DICT · DTI · DepEd · UPV · USA · CIT-U</span>
@@ -753,7 +765,7 @@ export default function Nav() {
                   </div>
 
                   {/* Name & Role */}
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', textAlign: 'left', lineHeight: 1.15 }}>
+                  <div className="nav-user-details" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', textAlign: 'left', lineHeight: 1.15 }}>
                     <span style={{ color: '#fff', fontWeight: 800, fontSize: 12.5, maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {user.name}
                     </span>
@@ -875,7 +887,7 @@ export default function Nav() {
                 onMouseEnter={e => { e.currentTarget.style.color='#fff'; e.currentTarget.style.borderColor='rgba(255,255,255,0.5)'; }}
                 onMouseLeave={e => { e.currentTarget.style.color='rgba(255,255,255,0.75)'; e.currentTarget.style.borderColor='rgba(255,255,255,0.22)'; }}
                 >Log in</button>
-                <button onClick={() => navigate('/login')} style={{
+                <button className="nav-register-btn" onClick={() => navigate('/login')} style={{
                   background: 'linear-gradient(90deg,#f97316,#e11d48)', color: '#fff',
                   border: 'none', borderRadius: 8, padding: '7px 18px', fontSize: 13, fontWeight: 700,
                   cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.2s',
