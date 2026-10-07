@@ -104,6 +104,64 @@ const HOME_CSS = `
   }
   .news-mini:hover { transform: translateY(-3px); box-shadow: 0 10px 32px rgba(0,0,0,0.35); border-color: rgba(249,115,22,0.35); }
   .news-mini { transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease; }
+
+  @media (max-width: 860px) {
+    .home-hero-grid {
+      grid-template-columns: 1fr !important;
+      gap: 28px !important;
+      text-align: center;
+    }
+    .home-hero-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .home-hero-illustration {
+      margin: 0 auto;
+      max-width: 240px;
+    }
+    .home-stats-bar {
+      display: grid !important;
+      grid-template-columns: 1fr 1fr !important;
+      gap: 14px !important;
+      width: 100% !important;
+    }
+    .home-stats-item {
+      border-right: none !important;
+      padding: 10px !important;
+      text-align: center !important;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .home-cta-card {
+      grid-template-columns: 1fr !important;
+    }
+    .home-cta-left {
+      padding: 32px 20px !important;
+      text-align: center;
+    }
+    .home-cta-actions {
+      justify-content: center !important;
+    }
+    .home-cta-right {
+      border-left: none !important;
+      border-top: 1px solid rgba(255,255,255,0.1) !important;
+      padding: 24px 20px !important;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .home-hero-title {
+      font-size: 34px !important;
+      letter-spacing: -1px !important;
+    }
+    .home-cta-actions {
+      flex-direction: column !important;
+      width: 100% !important;
+    }
+    .home-cta-actions button {
+      width: 100% !important;
+    }
+  }
 `;
 
 const modules = [
@@ -289,6 +347,18 @@ const ADMIN_CSS = `
     transform: translateY(-4px);
     box-shadow: 0 20px 40px rgba(0,0,0,0.6);
   }
+
+  @media (max-width: 860px) {
+    .admin-hero-grid {
+      grid-template-columns: 1fr !important;
+      gap: 28px !important;
+    }
+  }
+  @media (max-width: 480px) {
+    .admin-bento-grid {
+      grid-template-columns: 1fr !important;
+    }
+  }
 `;
 
 function AdminHomePage({ navigate, user }) {
@@ -339,7 +409,7 @@ function AdminHomePage({ navigate, user }) {
         <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(rgba(255,255,255,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.02) 1px,transparent 1px)', backgroundSize: '40px 40px', pointerEvents: 'none' }} />
 
         <div style={{ maxWidth: 1160, margin: '0 auto', position: 'relative', zIndex: 1 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1.3fr) minmax(0,1fr)', gap: 36, alignItems: 'center' }}>
+          <div className="admin-hero-grid" style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1.3fr) minmax(0,1fr)', gap: 36, alignItems: 'center' }}>
             <div>
               {/* Executive Tag */}
               <div style={{
@@ -406,7 +476,7 @@ function AdminHomePage({ navigate, user }) {
             </div>
 
             {/* Quick KPI Bento Grid */}
-            <div style={{
+            <div className="admin-bento-grid" style={{
               background: 'rgba(10, 18, 38, 0.75)',
               backdropFilter: 'blur(16px)',
               border: '1px solid rgba(255,255,255,0.1)',
@@ -624,13 +694,13 @@ export default function HomePage() {
           backgroundImage: 'linear-gradient(rgba(255,255,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.025) 1px,transparent 1px)',
           backgroundSize: '40px 40px', pointerEvents: 'none',
         }} />
-        <div style={{
+        <div className="home-hero-grid" style={{
           maxWidth: 1120, margin: '0 auto',
           display: 'grid', gridTemplateColumns: '1fr 300px',
           gap: 40, alignItems: 'flex-end',
           padding: '64px 0 0', position: 'relative', zIndex: 1,
         }}>
-          <div>
+          <div className="home-hero-content">
             <div style={{
               display: 'inline-flex', alignItems: 'center', gap: 8,
               background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.14)',
@@ -645,7 +715,7 @@ export default function HomePage() {
                 CENTRAL VISAYAS CONSORTIUM · REGION VII · 7 INSTITUTIONS &amp; AGENCIES
               </span>
             </div>
-            <h1 style={{ color: '#fff', fontSize: 50, fontWeight: 900, lineHeight: 1.07, letterSpacing: '-2px', marginBottom: 18 }}>
+            <h1 className="home-hero-title" style={{ color: '#fff', fontSize: 50, fontWeight: 900, lineHeight: 1.07, letterSpacing: '-2px', marginBottom: 18 }}>
               The Smarter Way to{' '}
               <span style={{
                 background: 'linear-gradient(90deg,#f97316,#e11d48)',
@@ -655,7 +725,7 @@ export default function HomePage() {
             <p style={{ color: 'rgba(255,255,255,0.62)', fontSize: 15.5, lineHeight: 1.75, marginBottom: 32, maxWidth: 500 }}>
               DASIG unifies membership, events, funding, training, and governance for CIT-U, UP Visayas, University of San Agustin, DOST, DICT, DTI, and DepEd Region VII — all in one secure, role-based platform.
             </p>
-            <div style={{ display: 'flex', gap: 12, marginBottom: 40 }}>
+            <div style={{ display: 'flex', gap: 12, marginBottom: 40, flexWrap: 'wrap' }}>
               <button onClick={() => navigate('/membership')} style={{
                 background: 'linear-gradient(90deg,#f97316,#e11d48)', color: '#fff',
                 border: 'none', borderRadius: 10, padding: '13px 26px', fontSize: 14.5, fontWeight: 700,
@@ -673,14 +743,14 @@ export default function HomePage() {
               onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.07)'}
               >View all modules</button>
             </div>
-            <div style={{ display: 'flex', borderTop: '1px solid rgba(255,255,255,0.09)', paddingTop: 26 }}>
+            <div className="home-stats-bar" style={{ display: 'flex', borderTop: '1px solid rgba(255,255,255,0.09)', paddingTop: 26 }}>
               {[
                 { v: String(stats.members), l: 'Institutions' },
                 { v: String(stats.events), l: 'Events' },
                 { v: String(stats.trainings), l: 'Programs' },
                 { v: String(stats.news), l: 'Articles' },
               ].map((s, i) => (
-                <div key={i} style={{
+                <div key={i} className="home-stats-item" style={{
                   flex: 1,
                   borderRight: i < 3 ? '1px solid rgba(255,255,255,0.09)' : 'none',
                   padding: i === 0 ? '0 20px 0 0' : '0 20px',
@@ -695,7 +765,7 @@ export default function HomePage() {
               ))}
             </div>
           </div>
-          <div className="haribon-float"><HaribonFull width={280} /></div>
+          <div className="haribon-float home-hero-illustration"><HaribonFull width={280} /></div>
         </div>
       </section>
 
@@ -707,8 +777,8 @@ export default function HomePage() {
         padding: '0 24px',
       }}>
         <div style={{
-          maxWidth: 1120, margin: '0 auto', height: 52,
-          display: 'flex', alignItems: 'center', gap: 14, overflow: 'hidden',
+          maxWidth: 1120, margin: '0 auto', minHeight: 52, padding: '10px 0',
+          display: 'flex', alignItems: 'center', gap: 14, overflowX: 'auto', WebkitOverflowScrolling: 'touch',
         }}>
           <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 12, fontWeight: 800, letterSpacing: '1.2px', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
             Region VII Members
@@ -905,7 +975,7 @@ export default function HomePage() {
 
       {/* ── CTA ── */}
       <section style={{ padding: '8px 24px 80px' }}>
-        <div style={{
+        <div className="home-cta-card" style={{
           background: 'linear-gradient(135deg,#001d5c,#1a56db 55%,#4f46e5)',
           borderRadius: 22, overflow: 'hidden', position: 'relative',
           display: 'grid', gridTemplateColumns: '1fr 1fr',
@@ -914,7 +984,7 @@ export default function HomePage() {
         }}>
           <div style={{ position: 'absolute', width: 380, height: 380, borderRadius: '50%', background: 'radial-gradient(rgba(79,70,229,0.3),transparent 70%)', right: -80, top: -100, pointerEvents: 'none' }} />
           <div style={{ position: 'absolute', width: 280, height: 280, borderRadius: '50%', background: 'radial-gradient(rgba(249,115,22,0.2),transparent 70%)', left: -40, bottom: -60, pointerEvents: 'none' }} />
-          <div style={{ padding: 48, position: 'relative', zIndex: 1 }}>
+          <div className="home-cta-left" style={{ padding: 48, position: 'relative', zIndex: 1 }}>
             <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12.5, fontWeight: 700, letterSpacing: '1px', marginBottom: 10, textTransform: 'uppercase' }}>
               Join Region VII Consortium
             </p>
@@ -924,7 +994,7 @@ export default function HomePage() {
             <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 15, lineHeight: 1.75, marginBottom: 28 }}>
               Register and unlock all nine modules, events, funding, and governance tools. Free to start.
             </p>
-            <div style={{ display: 'flex', gap: 12 }}>
+            <div className="home-cta-actions" style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
               <button onClick={() => navigate('/membership')} style={{
                 background: 'linear-gradient(90deg,#f97316,#e11d48)', color: '#fff',
                 border: 'none', borderRadius: 10, padding: '12px 24px',
@@ -945,7 +1015,7 @@ export default function HomePage() {
               >Contact Admin</button>
             </div>
           </div>
-          <div style={{
+          <div className="home-cta-right" style={{
             borderLeft: '1px solid rgba(255,255,255,0.1)',
             padding: 36, display: 'flex', flexDirection: 'column',
             gap: 10, justifyContent: 'center', position: 'relative', zIndex: 1,

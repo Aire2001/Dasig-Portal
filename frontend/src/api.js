@@ -81,6 +81,7 @@ export const api = {
     enrollments: (id) => request(`/training/${id}/enrollments`),
     markAttendance: (trainingId, userId, attended) =>
       request(`/training/${trainingId}/attend/${userId}`, { method: 'POST', body: JSON.stringify({ attended }) }),
+    markAttendSelf: (id) => request(`/training/${id}/attend-self`, { method: 'POST' }),
     resendPass: (id, body) => request(`/training/${id}/resend-pass`, { method: 'POST', body: body ? JSON.stringify(body) : undefined }),
   },
   members: {
@@ -153,10 +154,9 @@ export const api = {
     send: (message, history = []) => request('/chatbot/message', { method: 'POST', body: JSON.stringify({ message, history }) }),
     intents: () => request('/chatbot/intents'),
     tts: (text, voice = 'Adam') => {
-      const BASE_URL = import.meta.env.VITE_API_URL || 'https://dasig-portal.onrender.com/api';
-      return fetch(`${BASE_URL}/chatbot/tts`, {
+      return fetch(`${BASE}/chatbot/tts`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: headers(),
         body: JSON.stringify({ text, voice }),
       });
     },

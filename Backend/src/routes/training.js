@@ -227,7 +227,7 @@ router.get('/:id/enrollments', verifyToken, requireRole('ADMIN'), async (req, re
 // POST /api/training/:id/attend/:userId — mark attendance (ADMIN only)
 router.post('/:id/attend/:userId', verifyToken, requireRole('ADMIN'), async (req, res) => {
   const trainingId = Number(req.params.id);
-  const userId = Number(req.params.userId);
+  const userId = isNaN(Number(req.params.userId)) ? req.params.userId : Number(req.params.userId);
   const { attended = true } = req.body;
 
   const { data, error } = await supabase.from('training_enrollments')
@@ -239,6 +239,18 @@ router.post('/:id/attend/:userId', verifyToken, requireRole('ADMIN'), async (req
 
   if (error) return res.status(404).json({ error: 'Enrollment not found' });
   res.json({ message: 'Attendance updated', attended: data.attended });
+});
+
+// POST /api/training/:id/attend-self — member marks own attendance
+router.post('/:id/attend-self', verifyToken, async (req, res) => {
+  const { data, error } = await supabase.from('training_enrollments')
+    .update({ attended: true })
+    .eq('training_id', req.params.id)
+    .eq('user_id', req.user.id)
+    .select()
+    .single();
+  if (error) return res.status(404).json({ error: 'Enrollment not found' });
+  res.json({ message: 'Attendance marked', attended: data.attended });
 });
 
 module.exports = router;

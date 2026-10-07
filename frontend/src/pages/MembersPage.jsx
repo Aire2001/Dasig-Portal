@@ -136,6 +136,22 @@ const MEMBERS_CSS = `
     align-items: center;
     gap: 7px;
   }
+
+  @media (max-width: 640px) {
+    .member-modal-overlay {
+      padding: 36px 12px 24px !important;
+    }
+    .member-info-grid {
+      grid-template-columns: 1fr !important;
+    }
+    .member-filter-wrap {
+      flex-direction: column !important;
+      align-items: stretch !important;
+    }
+    .member-search-input {
+      width: 100% !important;
+    }
+  }
 `;
 
 export default function MembersPage() {
@@ -250,7 +266,7 @@ export default function MembersPage() {
           const email = selected.email || info?.email;
           const website = selected.website || info?.website;
           return (
-            <div onClick={() => setSelected(null)} style={{
+            <div className="member-modal-overlay" onClick={() => setSelected(null)} style={{
               position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 999999,
               display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '72px 20px 36px',
               backdropFilter: 'blur(10px)', overflowY: 'auto',
@@ -324,7 +340,7 @@ export default function MembersPage() {
                   )}
 
                   {/* Info grid */}
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 18 }}>
+                  <div className="member-info-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 18 }}>
                     {[
                       { l: 'Abbreviation', v: selected.abbr },
                       { l: 'Type',         v: selected.type },
@@ -455,7 +471,7 @@ export default function MembersPage() {
             </div>
 
             {/* Section heading & Filter Bar */}
-            <div style={{
+            <div className="member-filter-wrap" style={{
               background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)',
               borderRadius: 16, padding: '12px 18px', marginBottom: 28,
               display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12,
@@ -497,6 +513,7 @@ export default function MembersPage() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <input
                   type="text"
+                  className="member-search-input"
                   placeholder="Search institution, campus…"
                   value={search}
                   onChange={e => setSearch(e.target.value)}
@@ -538,7 +555,7 @@ export default function MembersPage() {
                 </button>
               </div>
             ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(320px,1fr))', gap: 20 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(min(100%, 300px),1fr))', gap: 20 }}>
                 {filteredMembers.map((m, i) => (
                   <MemberCard
                     key={m.id}

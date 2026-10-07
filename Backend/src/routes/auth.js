@@ -113,9 +113,9 @@ router.put('/profile', verifyToken, async (req, res) => {
   if (campus     !== undefined) updates.campus = campus;
   if (phone      !== undefined) updates.phone = phone || null;
   if (avatar_url !== undefined) {
-    // Basic validation: must be a data URI or null
-    if (avatar_url && !avatar_url.startsWith('data:image/')) {
-      return res.status(400).json({ error: 'avatar_url must be a base64 image data URI' });
+    // Validation: must be a data URI, http/https URL, or null
+    if (avatar_url && !avatar_url.startsWith('data:image/') && !avatar_url.startsWith('http://') && !avatar_url.startsWith('https://')) {
+      return res.status(400).json({ error: 'avatar_url must be a web image URL or base64 image data URI' });
     }
     updates.avatar_url = avatar_url || null;
   }

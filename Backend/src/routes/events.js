@@ -224,7 +224,7 @@ router.get('/:id/registrations', verifyToken, requireRole('ADMIN'), async (req, 
 // POST /api/events/:id/attend/:userId — mark attendance (ADMIN only)
 router.post('/:id/attend/:userId', verifyToken, requireRole('ADMIN'), async (req, res) => {
   const eventId = Number(req.params.id);
-  const userId = Number(req.params.userId);
+  const userId = isNaN(Number(req.params.userId)) ? req.params.userId : Number(req.params.userId);
   const { attended = true } = req.body;
 
   const { data, error } = await supabase.from('event_registrations')
