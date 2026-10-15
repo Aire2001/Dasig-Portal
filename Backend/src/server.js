@@ -68,5 +68,11 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Internal server error' });
 });
 
+// Safety net (INC-01): log async errors that escape a route instead of letting
+// Node terminate the whole API on an unhandled promise rejection.
+process.on('unhandledRejection', (reason) => {
+  console.error('[server] Unhandled promise rejection:', reason && reason.stack ? reason.stack : reason);
+});
+
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => console.log(`DASIG API running on http://localhost:${PORT}`));
