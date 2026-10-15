@@ -811,7 +811,11 @@ router.post('/message', asyncRoute(async (req, res) => {
   // 5. Cross-Table Semantic Database Search
   if (!match) {
     try {
-      const searchTerms = contentWords(tokenize(normalized)).filter(w => w.length >= 4);
+      // A place name alone does not make a question about DASIG ("weather in Cebu"),
+      // so locations are not used as search terms.
+      const PLACES = new Set(['cebu', 'iloilo', 'bohol', 'negros', 'siquijor', 'visayas', 'philippines', 'pilipinas',
+        'manila', 'davao', 'mandaue', 'lapu', 'talisay', 'tagbilaran', 'dumaguete', 'miagao', 'region', 'rehiyon']);
+      const searchTerms = contentWords(tokenize(normalized)).filter(w => w.length >= 4 && !PLACES.has(w));
       const hasTerm = (txt) => !!txt && searchTerms.some(st => new RegExp(`\\b${st.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'i').test(txt));
       if (searchTerms.length > 0) {
         const [evs, trs, nws, fnd] = await Promise.all([
