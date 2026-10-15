@@ -567,7 +567,75 @@ function matchIntent(text) {
 }
 
 // POST /api/chatbot/message
-router.post('/message', async (req, res) => {
+// ── Helpers restored (INC-01) ────────────────────────────────────────────────
+// detectMonthQuery() and MULTI_FOLLOWUPS were removed in commit 8e6e0e7 while
+// the /message handler still calls them, so every chatbot message threw a
+// ReferenceError and stopped the API. Restored from the version before 8e6e0e7.
+
+// Month detection map (English, Bisaya and Tagalog month names)
+const MONTH_MAP = {
+  january: 'Jan', jan: 'Jan', enero: 'Jan',
+  february: 'Feb', feb: 'Feb', pebrero: 'Feb',
+  march: 'Mar', mar: 'Mar', marso: 'Mar',
+  april: 'Apr', apr: 'Apr', abril: 'Apr',
+  may: 'May', mayo: 'May',
+  june: 'Jun', jun: 'Jun', hunyo: 'Jun',
+  july: 'Jul', jul: 'Jul', hulyo: 'Jul',
+  august: 'Aug', aug: 'Aug', agosto: 'Aug',
+  september: 'Sep', sep: 'Sep', sept: 'Sep', setyembre: 'Sep',
+  october: 'Oct', oct: 'Oct', oktubre: 'Oct',
+  november: 'Nov', nov: 'Nov', nobyembre: 'Nov',
+  december: 'Dec', dec: 'Dec', disyembre: 'Dec'
+};
+
+function detectMonthQuery(text) {
+  if (!text) return null;
+  const words = text.toLowerCase().split(/[^a-z0-9]+/);
+  for (const w of words) {
+    if (MONTH_MAP[w]) {
+      return { token: w, prefix: MONTH_MAP[w], original: w.charAt(0).toUpperCase() + w.slice(1) };
+    }
+  }
+  return null;
+}
+
+// Suggested follow-up questions per language (NFR-USE-06 quick replies)
+const MULTI_FOLLOWUPS = {
+  english: [
+    'What events are coming up?',
+    'How do I become a DASIG member?',
+    'What training programs are available?',
+    'Tell me about research grants & funding',
+    'Who are the member institutions in Region VII?'
+  ],
+  bisaya: [
+    'Unsay mga umaabot nga events?',
+    'Unsaon pag-apil sa DASIG?',
+    'Unsay mga training programs?',
+    'Unsay mga research grants ug funding?',
+    'Kinsay mga miyembro nga unibersidad sa Region VII?'
+  ],
+  tagalog: [
+    'Anong mga events ang paparating?',
+    'Paano sumali sa DASIG?',
+    'Anong training programs ang meron?',
+    'Anong research grants at funding ang bukas?',
+    'Sino-sino ang mga kasaping unibersidad sa Region VII?'
+  ]
+};
+
+// Express 4 does not catch errors thrown inside async handlers; an unhandled
+// rejection then terminates the Node process. Route every async handler through
+// this wrapper so a failure returns HTTP 500 and the API keeps serving others.
+const asyncRoute = (fn) => (req, res, next) => {
+  Promise.resolve(fn(req, res, next)).catch((err) => {
+    console.error('[chatbot] handler error:', err && err.stack ? err.stack : err);
+    if (res.headersSent) return next(err);
+    res.status(500).json({ error: 'The assistant could not answer right now. Please try again.' });
+  });
+};
+
+router.post('/message', asyncRoute(async (req, res) => {
   const { message, history = [] } = req.body || {};
   if (!message || !message.trim()) return res.status(400).json({ error: 'Message is required' });
 
@@ -929,10 +997,10 @@ router.post('/message', async (req, res) => {
     followups: MULTI_FOLLOWUPS[lang],
     navigate_to: PAGE_LINKS[match.intent] || null,
   });
-});
+}));
 
 // POST /api/chatbot/tts — Neural Voice Generation (ElevenLabs + Neural Fallback)
-router.post('/tts', async (req, res) => {
+router.post('/tts', asyncRoute(async (req, res) => {
   const { text, voice = 'Adam' } = req.body;
   if (!text || typeof text !== 'string') {
     return res.status(400).json({ error: 'Text is required for voice generation' });
@@ -1002,7 +1070,7 @@ router.post('/tts', async (req, res) => {
     console.error('[elevenlabs tts] Fetch error:', err.message);
     return res.status(200).json({ fallback: true, text: clean });
   }
-});
+}));
 
 // GET /api/chatbot/intents
 router.get('/intents', (req, res) => {
