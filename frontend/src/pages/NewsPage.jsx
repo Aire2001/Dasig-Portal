@@ -761,7 +761,7 @@ function ArticleReader({ article: a, allArticles = [], isBookmarked, isPlayingAu
           ${(a.content || '').split('\n').filter(Boolean).map(p => `<p>${p}</p>`).join('')}
         </div>
         <div class="footer">
-          Official Publication of Dynamic Academic and Scientific Information Group (DASIG) · Region VII, Philippines
+          Official Publication of Digital Alliance for Sustainable Innovation and Growth (DASIG) · Region VII, Philippines
         </div>
         <script>window.onload=function(){ window.print(); }<\/script>
       </body>

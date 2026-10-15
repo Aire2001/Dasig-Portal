@@ -434,7 +434,7 @@ export default function MembersPage() {
                     WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
                   }}>About the Consortium</div>
                   <h3 style={{ color: '#fff', fontSize: 20, fontWeight: 900, marginBottom: 12, letterSpacing: '-0.3px', lineHeight: 1.3 }}>
-                    DASIG — Dynamic Academic and Scientific Information Group
+                    DASIG — Digital Alliance for Sustainable Innovation and Growth
                   </h3>
                   <p style={{ color: 'rgba(255,255,255,0.62)', fontSize: 13.5, lineHeight: 1.8, marginBottom: 16 }}>
                     DASIG is a Region VII consortium of higher education institutions and government agencies in the Philippines,
