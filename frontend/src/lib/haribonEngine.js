@@ -65,7 +65,7 @@ export const HARIBON_KB = [
     followups: ['Who are the member institutions?', 'How do I join DASIG?', 'What events are coming up?'],
     reply_en: `🏛️ **What is DASIG?**
 
-**DASIG** stands for **Dynamic Academic and Scientific Information Group**. It is the premier regional academic and scientific consortium in **Central Visayas (Region VII)**, Philippines.
+**DASIG** stands for **Digital Alliance for Sustainable Innovation and Growth**. It is the premier regional academic and scientific consortium in **Central Visayas (Region VII)**, Philippines.
 
 ### 🌐 The Regional Consortium Network:
 The consortium unites **7 leading academic and government institutions**:
@@ -86,7 +86,7 @@ The consortium unites **7 leading academic and government institutions**:
 
     reply_ceb: `🏛️ **Unsa ang DASIG?**
 
-Ang **DASIG** nagpasabot og **Dynamic Academic and Scientific Information Group**. Kini ang nangunang rehiyonal nga konsorsyum sa mga unibersidad ug mga ahensya sa gobyerno dinhi sa **Central Visayas (Rehiyon VII)**.
+Ang **DASIG** nagpasabot og **Digital Alliance for Sustainable Innovation and Growth**. Kini ang nangunang rehiyonal nga konsorsyum sa mga unibersidad ug mga ahensya sa gobyerno dinhi sa **Central Visayas (Rehiyon VII)**.
 
 ### 🌐 Ang 7 ka Kasaping Institusyon:
 • **CIT-University** (Cebu City — Central Host Node ug Engineering/IT Hub)
@@ -106,7 +106,7 @@ Ang **DASIG** nagpasabot og **Dynamic Academic and Scientific Information Group*
 
     reply_tgl: `🏛️ **Ano ang DASIG?**
 
-Ang **DASIG** ay nangangahulugang **Dynamic Academic and Scientific Information Group**. Ito ang nangungunang rehiyonal na konsorsyum ng mga unibersidad at ahensya ng pamahalaan sa **Central Visayas (Rehiyon VII)**.
+Ang **DASIG** ay nangangahulugang **Digital Alliance for Sustainable Innovation and Growth**. Ito ang nangungunang rehiyonal na konsorsyum ng mga unibersidad at ahensya ng pamahalaan sa **Central Visayas (Rehiyon VII)**.
 
 ### 🌐 Ang 7 Kasaping Institusyon:
 • **CIT-University** (Cebu City — Central Host Node at Engineering/IT Hub)
