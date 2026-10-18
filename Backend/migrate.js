@@ -4,7 +4,8 @@ const path = require('path');
 
 const sql = fs.readFileSync(path.join(__dirname, 'supabase-migration.sql'), 'utf8');
 const REF = 'ewdydbelhhwszpzknjwm';
-const PASS = '3lvRLZWFnHAK8bPn';
+const PASS = process.env.DB_PASSWORD;
+if (!PASS) throw new Error('Set DB_PASSWORD in the environment before running this script (never commit it).');
 
 const attempts = [
   `postgresql://postgres.${REF}:${PASS}@aws-0-ap-southeast-2.pooler.supabase.com:5432/postgres`,
