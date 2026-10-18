@@ -1,7 +1,9 @@
 const { Client } = require('pg');
 
+if (!process.env.DATABASE_URL) throw new Error('Set DATABASE_URL in the environment before running this script (never commit it).');
+
 const client = new Client({
-  connectionString: 'postgresql://postgres.ewdydbelhhwszpzknjwm:3lvRLZWFnHAK8bPn@aws-1-ap-southeast-2.pooler.supabase.com:5432/postgres',
+  connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false }
 });
 
