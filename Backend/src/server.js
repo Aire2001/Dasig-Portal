@@ -14,6 +14,9 @@ const fundingRoutes     = require('./routes/funding');
 const partnershipsRoutes = require('./routes/partnerships');
 const adminRoutes       = require('./routes/admin');
 const contactRoutes     = require('./routes/contact');
+const supabase          = require('./lib/supabase');
+
+const serverStartTime = Date.now();
 
 const app = express();
 
@@ -61,7 +64,43 @@ app.get('/', (req, res) => res.json({
   ],
 }));
 
-app.get('/api/health', (req, res) => res.json({ status: 'ok', time: new Date().toISOString() }));
+app.get('/api/health', async (req, res) => {
+  const start = Date.now();
+  try {
+    const { count, error } = await supabase
+      .from('users')
+      .select('id', { count: 'exact', head: true });
+
+    const latency = Date.now() - start;
+    if (error) {
+      return res.status(503).json({
+        status: 'degraded',
+        dbStatus: 'error',
+        error: error.message,
+        dbLatencyMs: latency,
+        uptimeSec: Math.floor((Date.now() - serverStartTime) / 1000),
+        time: new Date().toISOString(),
+      });
+    }
+
+    return res.json({
+      status: 'ok',
+      dbStatus: 'connected',
+      dbLatencyMs: latency,
+      uptimeSec: Math.floor((Date.now() - serverStartTime) / 1000),
+      time: new Date().toISOString(),
+    });
+  } catch (err) {
+    return res.status(503).json({
+      status: 'error',
+      dbStatus: 'unreachable',
+      error: err.message,
+      dbLatencyMs: Date.now() - start,
+      uptimeSec: Math.floor((Date.now() - serverStartTime) / 1000),
+      time: new Date().toISOString(),
+    });
+  }
+});
 
 app.use((err, req, res, next) => {
   console.error(err);

@@ -1,0 +1,70 @@
+{
+  "timestamp": "2026-10-28T13:46:57.607Z",
+  "results": [
+    {
+      "scenario": "GET /api/health (Telemetry)",
+      "totalRequests": 25,
+      "concurrency": 5,
+      "successCount": 25,
+      "errorCount": 0,
+      "minMs": 256.67,
+      "avgMs": 659.17,
+      "p95Ms": 1384.86,
+      "maxMs": 1395.57,
+      "throughputReqSec": 7.17,
+      "errorRatePct": 0
+    },
+    {
+      "scenario": "POST /api/chatbot/message (\"what is dasig\")",
+      "totalRequests": 25,
+      "concurrency": 5,
+      "successCount": 25,
+      "errorCount": 0,
+      "minMs": 11.43,
+      "avgMs": 76.76,
+      "p95Ms": 327.7,
+      "maxMs": 327.9,
+      "throughputReqSec": 65.1,
+      "errorRatePct": 0
+    },
+    {
+      "scenario": "POST /api/chatbot/message (Cebuano NLP)",
+      "totalRequests": 25,
+      "concurrency": 5,
+      "successCount": 25,
+      "errorCount": 0,
+      "minMs": 119.68,
+      "avgMs": 396.29,
+      "p95Ms": 957.81,
+      "maxMs": 998.73,
+      "throughputReqSec": 11.58,
+      "errorRatePct": 0
+    },
+    {
+      "scenario": "GET /api/policies (Consortium Charters)",
+      "totalRequests": 25,
+      "concurrency": 5,
+      "successCount": 25,
+      "errorCount": 0,
+      "minMs": 104.61,
+      "avgMs": 173.3,
+      "p95Ms": 324.28,
+      "maxMs": 349.19,
+      "throughputReqSec": 25.77,
+      "errorRatePct": 0
+    },
+    {
+      "scenario": "GET /api/members (Partner HEIs)",
+      "totalRequests": 25,
+      "concurrency": 5,
+      "successCount": 25,
+      "errorCount": 0,
+      "minMs": 110.72,
+      "avgMs": 195.33,
+      "p95Ms": 295.92,
+      "maxMs": 843.69,
+      "throughputReqSec": 20.29,
+      "errorRatePct": 0
+    }
+  ]
+}

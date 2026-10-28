@@ -161,6 +161,7 @@ export const api = {
       });
     },
   },
+  health: () => request('/health'),
   contact: {
     send: (body) => request('/contact', { method: 'POST', body: JSON.stringify(body) }),
     messages: () => request('/contact/messages'),

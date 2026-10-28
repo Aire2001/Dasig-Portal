@@ -772,7 +772,10 @@ function QuickJumpModal({ onClose, onSelectTab }) {
 }
 
 /* ─── System Health & Node Telemetry Modal ──────────────────────── */
-function SystemHealthModal({ onClose }) {
+function SystemHealthModal({ onClose, telemetry = {} }) {
+  const isOk = telemetry.status === 'ok';
+  const latencyDisplay = telemetry.latency !== null ? `${telemetry.latency} ms (Round-Trip)` : 'Measuring...';
+  const dbStatusDisplay = telemetry.dbStatus === 'connected' ? 'Connected' : telemetry.dbStatus === 'error' ? 'Degraded' : 'Checking';
   return (
     <Modal title="Regional Node Telemetry & System Health" onClose={onClose}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -799,8 +802,8 @@ function SystemHealthModal({ onClose }) {
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 10 }}>
           {[
-            { label: 'Database Engine', value: 'Supabase PostgreSQL (Active)', status: 'Connected', icon: '🗄️', color: '#34d399' },
-            { label: 'API Response Latency', value: '18 ms (Sub-second)', status: 'Optimal', icon: '⚡', color: '#60a5fa' },
+            { label: 'Database Engine', value: 'Supabase PostgreSQL', status: dbStatusDisplay, icon: '🗄️', color: telemetry.dbStatus === 'connected' ? '#34d399' : '#f87171' },
+            { label: 'API Response Latency', value: latencyDisplay, status: telemetry.latency !== null ? (telemetry.latency < 250 ? 'Optimal' : 'Normal') : 'Polling', icon: '⚡', color: '#60a5fa' },
             { label: 'AI Chatbot NLP', value: 'Haribon v2.4 (Fuzzy Match)', status: '100% Ready', icon: '🦅', color: '#fb923c' },
             { label: 'Auth & Encryption', value: 'TLS 1.3 / RFC 7519 JWT', status: 'Secured', icon: '🔒', color: '#a78bfa' },
             { label: 'File Storage Bucket', value: 'Supabase Storage S3-API', status: 'Healthy', icon: '📦', color: '#38bdf8' },
@@ -843,6 +846,34 @@ export default function AdminPage() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [quickJumpOpen, setQuickJumpOpen] = useState(false);
   const [healthModalOpen, setHealthModalOpen] = useState(false);
+  const [telemetry, setTelemetry] = useState({ latency: null, dbLatency: null, status: 'checking', dbStatus: 'checking', uptime: null });
+
+  useEffect(() => {
+    let active = true;
+    async function probe() {
+      const t0 = performance.now();
+      try {
+        const res = await api.health();
+        const rtt = Math.round(performance.now() - t0);
+        if (active) {
+          setTelemetry({
+            latency: rtt,
+            dbLatency: res.dbLatencyMs || rtt,
+            status: res.status || 'ok',
+            dbStatus: res.dbStatus || 'connected',
+            uptime: res.uptimeSec || null,
+          });
+        }
+      } catch {
+        if (active) {
+          setTelemetry({ latency: null, dbLatency: null, status: 'offline', dbStatus: 'unreachable', uptime: null });
+        }
+      }
+    }
+    probe();
+    const timer = setInterval(probe, 25000);
+    return () => { active = false; clearInterval(timer); };
+  }, []);
 
   const initialTab = VALID_TABS.includes(searchParams.get('tab')) ? searchParams.get('tab') : 'dashboard';
   const [tab, setTabState] = useState(initialTab);
@@ -895,7 +926,7 @@ export default function AdminPage() {
       <style>{CSS}</style>
       {toast && <Toast msg={toast.msg} ok={toast.ok} sub={toast.sub} />}
       {quickJumpOpen && <QuickJumpModal onClose={() => setQuickJumpOpen(false)} onSelectTab={setTab} />}
-      {healthModalOpen && <SystemHealthModal onClose={() => setHealthModalOpen(false)} />}
+      {healthModalOpen && <SystemHealthModal telemetry={telemetry} onClose={() => setHealthModalOpen(false)} />}
 
       {/* ── Top Bar ── */}
       <header style={{
@@ -955,7 +986,7 @@ export default function AdminPage() {
         >
           <span className="ap-health-dot" />
           <span>Live Node VII</span>
-          <span style={{ opacity:0.65, fontSize:10.5 }}>· 18ms</span>
+          <span style={{ opacity:0.65, fontSize:10.5 }}>· {telemetry.latency !== null ? `${telemetry.latency}ms` : telemetry.status === 'checking' ? '...' : 'Offline'}</span>
         </div>
 
         <div style={{ flex:1 }} />
@@ -1021,7 +1052,7 @@ export default function AdminPage() {
 
         {/* Content area */}
         <main className="ap-main-content" style={{ flex:1, overflowY:'auto', padding:'28px 32px', background:'#060d1f' }}>
-          {tab === 'dashboard'    && <DashboardTab showToast={showToast} setTab={setTab} />}
+          {tab === 'dashboard'    && <DashboardTab showToast={showToast} setTab={setTab} telemetry={telemetry} />}
           {tab === 'calendar'     && <AdminCalendarTab showToast={showToast} setTab={setTab} />}
           {tab === 'users'        && <UsersTab showToast={showToast} />}
           {tab === 'applications' && <ApplicationsTab showToast={showToast} />}
@@ -1043,7 +1074,7 @@ export default function AdminPage() {
 /* ═══════════════════════════════════════════════════════════════════
    DASHBOARD (Executive Command Center)
 ═══════════════════════════════════════════════════════════════════ */
-function DashboardTab({ showToast, setTab }) {
+function DashboardTab({ showToast, setTab, telemetry = {} }) {
   const [stats, setStats]       = useState(null);
   const [renewals, setRenewals] = useState([]);
   const [events, setEvents]     = useState([]);
@@ -1370,7 +1401,7 @@ function DashboardTab({ showToast, setTab }) {
         flexWrap: 'wrap', gap: 12, fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 24
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
-          <span style={{ color: '#34d399', fontWeight: 800 }}>⚡ API Latency: 18ms</span>
+          <span style={{ color: telemetry.status === 'ok' ? '#34d399' : '#f87171', fontWeight: 800 }}>⚡ API Latency: {telemetry.latency !== null ? `${telemetry.latency}ms (Live)` : 'Connecting...'}</span>
           <span>·</span>
           <span style={{ color: '#fb923c', fontWeight: 800 }}>🦅 Haribon AI: 100% Accuracy (Online)</span>
           <span>·</span>

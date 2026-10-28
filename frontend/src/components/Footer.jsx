@@ -121,7 +121,7 @@ export default function Footer() {
                 <span style={{ color:'#fff', fontWeight:800, fontSize:14 }}>DASIG Portal</span>
               </div>
               <p style={{ color:'rgba(255,255,255,0.38)', fontSize:12.5, lineHeight:1.75, margin:'10px 0 18px' }}>
-                Dynamic Alliance for Science, Innovation &amp; Governance — Central Visayas, Region VII.
+                Digital Alliance for Sustainable Innovation and Growth — Central Visayas, Region VII.
                 Connecting 7 partner institutions and government agencies for a smarter, more coordinated region.
               </p>
 
