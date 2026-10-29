@@ -71,7 +71,7 @@ Requirements: Node.js 20.19+ (or 22.12+), npm, and a Supabase project.
 | API | `SUPABASE_URL`, `SUPABASE_SERVICE_KEY` | Database connection (service key stays on the server) |
 | API | `JWT_SECRET` | Signs login tokens |
 | API | `JWT_EXPIRES_ADMIN`, `JWT_EXPIRES_MEMBER` | Token lifetimes (defaults 24h and 7d) |
-| API | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` | Registration and cancellation emails |
+| API | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` | Registration, cancellation and password-reset emails (required: reset codes are sent only by e-mail) |
 | API | `PORTAL_URL`, `PORTAL_PUBLIC_URL`, `ADMIN_EMAIL` | Links in emails and admin contact |
 | API | `PORT` | Defaults to 4000 |
 | API (optional) | `ELEVENLABS_API_KEY` | Audio narration on news and member pages |
@@ -85,7 +85,7 @@ The Vercel and Render projects are owned by the repository owner's account and r
 - **API — Render.** Node web service for `Backend/` (`npm install`, `npm start`). Environment variables are set in the Render dashboard. On the free plan the service sleeps when idle, so the first request after a pause can take up to about a minute.
 - **Database — Supabase.** Schema from `supabase-migration.sql`.
 
-Deployed version: the latest commit on `main`. The test evidence and project documents describe `main` at commit `e3c8e1c` (15 October 2026) and the fixes re-tested since then: a committed database credential removed from two helper scripts (17–18 October, INC-04), and member-only access for the news text and the Funding, Training and Partnership listings (29 October, INC-05 and INC-08). A performance-test script and a database health check were added on 28 October.
+Deployed version: the latest commit on `main`. The test evidence and project documents describe `main` at commit `e3c8e1c` (15 October 2026) and the fixes re-tested since then: a committed database credential removed from two helper scripts (17–18 October, INC-04), member-only access for the news text and the Funding, Training and Partnership listings (29 October, INC-05 and INC-08), and a secure password reset with codes sent by e-mail only (29 October, INC-02 and INC-03). A performance-test script and a database health check were added on 28 October.
 
 ## Access for evaluation
 
