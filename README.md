@@ -85,7 +85,7 @@ The Vercel and Render projects are owned by the repository owner's account and r
 - **API — Render.** Node web service for `Backend/` (`npm install`, `npm start`). Environment variables are set in the Render dashboard. On the free plan the service sleeps when idle, so the first request after a pause can take up to about a minute.
 - **Database — Supabase.** Schema from `supabase-migration.sql`.
 
-Deployed version: the latest commit on `main`. The test evidence and project documents describe `main` at commit `e3c8e1c` (15 October 2026); the later commits of 17 October only add this README and remove a committed database credential from two helper scripts (`Backend/migrate.js`, `Backend/grant.js`).
+Deployed version: the latest commit on `main`. The test evidence and project documents describe `main` at commit `e3c8e1c` (15 October 2026) and the fixes re-tested since then: a committed database credential removed from two helper scripts (17–18 October, INC-04), and member-only access for the news text and the Funding, Training and Partnership listings (29 October, INC-05 and INC-08). A performance-test script and a database health check were added on 28 October.
 
 ## Access for evaluation
 
