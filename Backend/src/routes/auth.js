@@ -8,6 +8,9 @@ const { sendPasswordResetEmail } = require('../lib/mailer');
 
 const router = express.Router();
 const loginAttempts = {};
+// Wrong reset-code attempts per user (INC-02); after MAX_RESET_ATTEMPTS the code is cancelled
+const resetFailures = new Map();
+const MAX_RESET_ATTEMPTS = 5;
 
 function checkBrute(email) {
   const now = Date.now();
@@ -157,13 +160,12 @@ router.post('/forgot-password', async (req, res) => {
   if (!email) return res.status(400).json({ error: 'Email is required' });
 
   const { data: user } = await supabase.from('users').select('id, email').eq('email', email.toLowerCase().trim()).single();
-  if (!user) {
-    // Return friendly message
-    return res.json({ message: 'If that email is registered, a reset code has been sent.', reset_token: '123456' });
-  }
+  // INC-03: the same answer whether or not the email exists, and the code is never returned in the response
+  if (!user) return res.json({ message: 'If that email is registered, a reset code has been sent.' });
 
-  // 6-digit OTP code for easy mobile/desktop entry
-  const token = Math.floor(100000 + Math.random() * 900000).toString();
+  // 6-digit code from a cryptographically secure generator; sent by email only
+  const token = crypto.randomInt(100000, 1000000).toString();
+  resetFailures.delete(user.id);
   const expires = new Date(Date.now() + 60 * 60 * 1000).toISOString(); // 1 hour
 
   await supabase.from('users').update({ reset_token: token, reset_token_expires: expires }).eq('id', user.id);
@@ -171,47 +173,46 @@ router.post('/forgot-password', async (req, res) => {
   // Send real email (fire-and-forget; if SMTP not configured, mailer logs a warning)
   sendPasswordResetEmail(user.email, token).catch(err => console.error('[mailer] send error:', err.message));
 
-  const response = {
-    message: 'If that email is registered, a reset code has been sent.',
-    reset_token: token,
-  };
-  res.json(response);
+  res.json({ message: 'If that email is registered, a reset code has been sent.' });
 });
 
 // POST /api/auth/reset-password — validate token/OTP and set new password
 router.post('/reset-password', async (req, res) => {
   const { token, new_password, email } = req.body;
-  if (!token || !new_password) return res.status(400).json({ error: 'Reset token/code and new password are required' });
+  if (!email || !token || !new_password) return res.status(400).json({ error: 'Email, reset code and new password are required' });
   if (new_password.length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters' });
 
+  // INC-02: no master code. The code must be the one stored for this email, unexpired, and is used once.
   const cleanToken = String(token).trim();
-  let user = null;
-
-  // 1. Try finding user by matching stored reset_token
-  const { data: matchedUser } = await supabase
+  const INVALID = 'Invalid or expired reset code. Please request a new code.';
+  const { data: user } = await supabase
     .from('users')
     .select('id, email, reset_token, reset_token_expires')
-    .eq('reset_token', cleanToken)
+    .eq('email', String(email).toLowerCase().trim())
     .single();
+  if (!user || !user.reset_token) return res.status(400).json({ error: INVALID });
 
-  if (matchedUser) {
-    user = matchedUser;
-  } else if (cleanToken === '123456') {
-    // 2. Demo master OTP fallback
-    if (email) {
-      const { data: u } = await supabase.from('users').select('id, email').eq('email', email.toLowerCase().trim()).single();
-      user = u;
-    } else {
-      const { data: recentUsers } = await supabase.from('users').select('id, email').order('created_at', { ascending: false }).limit(1);
-      if (recentUsers && recentUsers.length > 0) user = recentUsers[0];
+  if (!user.reset_token_expires || new Date(user.reset_token_expires) < new Date()) {
+    await supabase.from('users').update({ reset_token: null, reset_token_expires: null }).eq('id', user.id);
+    resetFailures.delete(user.id);
+    return res.status(400).json({ error: 'Reset code has expired. Please request a new one.' });
+  }
+
+  const stored = Buffer.from(String(user.reset_token));
+  const given = Buffer.from(cleanToken);
+  const matches = stored.length === given.length && crypto.timingSafeEqual(stored, given);
+  if (!matches) {
+    const fails = (resetFailures.get(user.id) || 0) + 1;
+    if (fails >= MAX_RESET_ATTEMPTS) {
+      // Too many wrong guesses: the code is cancelled and a new one must be requested
+      await supabase.from('users').update({ reset_token: null, reset_token_expires: null }).eq('id', user.id);
+      resetFailures.delete(user.id);
+      return res.status(400).json({ error: 'Too many incorrect codes. Please request a new code.' });
     }
+    resetFailures.set(user.id, fails);
+    return res.status(400).json({ error: INVALID });
   }
-
-  if (!user) return res.status(400).json({ error: 'Invalid or expired reset token. Please request a new code.' });
-
-  if (user.reset_token_expires && new Date(user.reset_token_expires) < new Date() && cleanToken !== '123456') {
-    return res.status(400).json({ error: 'Reset token has expired. Please request a new one.' });
-  }
+  resetFailures.delete(user.id);
 
   const password_hash = await bcrypt.hash(new_password, 12);
   const { error } = await supabase
