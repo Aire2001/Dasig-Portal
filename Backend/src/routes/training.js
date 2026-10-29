@@ -6,7 +6,8 @@ const { sendTrainingEnrollmentEmail, sendTrainingCancellationEmail } = require('
 const router = express.Router();
 
 // GET /api/training — list with pagination, category filter, search
-router.get('/', async (req, res) => {
+// Signed-in users only (INC-08): visitors must sign in; registered guests keep access so they can still enrol.
+router.get('/', verifyToken, async (req, res) => {
   const { category, level, search, page = 1, limit = 100 } = req.query;
 
   let query = supabase
