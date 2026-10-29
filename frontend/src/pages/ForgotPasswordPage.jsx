@@ -10,7 +10,7 @@ export default function ForgotPasswordPage() {
   // If ?token= is in the URL (from email link), jump straight to reset step
   const urlToken = searchParams.get('token') || '';
   const [step, setStep] = useState(urlToken ? 'reset' : 'email'); // 'email' | 'reset' | 'done'
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(searchParams.get('email') || '');
   const [token, setToken] = useState('');
   const [tokenInput, setTokenInput] = useState(urlToken);
   const [newPassword, setNewPassword] = useState('');
@@ -30,10 +30,10 @@ export default function ForgotPasswordPage() {
     setFe({});
     setLoading(true);
     try {
-      const data = await api.auth.forgotPassword(email);
-      const resetCode = data.reset_token || '123456';
-      setToken(resetCode);
-      setTokenInput(resetCode);
+      await api.auth.forgotPassword(email);
+      // INC-02/03: the code is sent only by email and is never shown on this page
+      setToken('');
+      setTokenInput('');
       setStep('reset');
     } catch (err) {
       setError(err.message);
@@ -47,7 +47,8 @@ export default function ForgotPasswordPage() {
     setError('');
     const errs = {};
     const effectiveToken = tokenInput.trim() || token.trim();
-    if (!effectiveToken) errs.token = 'Reset code or token is required.';
+    if (!email.trim()) errs.email = 'Email address is required.';
+    if (!effectiveToken) errs.token = 'Reset code is required.';
     if (!newPassword) errs.newPassword = 'New password is required.';
     else if (newPassword.length < 8) errs.newPassword = 'Password must be at least 8 characters.';
     if (!confirmPassword) errs.confirmPassword = 'Please confirm your new password.';
@@ -165,9 +166,15 @@ export default function ForgotPasswordPage() {
                   </div>
                 </div>
               )}
-              <FPField label="Verification Code / Token" value={tokenInput}
+              <div style={{ background: 'rgba(59,130,246,0.12)', border: '1px solid rgba(59,130,246,0.3)', borderRadius: 10, padding: '12px 14px', marginBottom: 16, fontSize: 12.5, color: 'rgba(255,255,255,0.8)', lineHeight: 1.6 }}>
+                If an account exists for this email, a 6-digit reset code has been sent to it. The code expires in 1 hour and can be used once. Check your spam folder if you do not see it.
+              </div>
+              <FPField label="Account Email Address" type="email" value={email}
+                onChange={e => { setEmail(e.target.value); if (fe.email) setFe(p => ({ ...p, email: undefined })); }}
+                placeholder="your.email@institution.ph" error={fe.email} />
+              <FPField label="Reset Code" value={tokenInput}
                 onChange={e => { setTokenInput(e.target.value); if (fe.token) setFe(p => ({ ...p, token: undefined })); }}
-                placeholder="Enter 6-digit code or 123456" error={fe.token} />
+                placeholder="Enter the 6-digit code from the email" error={fe.token} />
               
               <div style={{ position: 'relative' }}>
                 <FPField label="New Password (min. 8 characters)" type={showPassword ? 'text' : 'password'} value={newPassword}
