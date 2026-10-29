@@ -4,8 +4,8 @@ const { verifyToken, optionalAuth, requireRole } = require('../middleware/auth')
 
 const router = express.Router();
 
-// GET /api/partnerships — list (public overview, authenticated members get full details)
-router.get('/', optionalAuth, async (req, res) => {
+// GET /api/partnerships — list (MEMBER/ADMIN only — BR-SP-02, INC-08)
+router.get('/', verifyToken, requireRole('MEMBER', 'ADMIN'), async (req, res) => {
   const { type, search, page = 1, limit = 100 } = req.query;
 
   let query = supabase.from('partnerships').select('*', { count: 'exact' });
