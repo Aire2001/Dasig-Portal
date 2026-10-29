@@ -32,12 +32,12 @@ const TRANSACTIONAL_HEADERS = {
 
 async function sendPasswordResetEmail(toEmail, resetToken) {
   if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
-    // Email not configured — skip silently (token is returned in API response for demo)
+    // Email not configured — the reset code cannot be delivered (it is never returned by the API)
     console.warn('[mailer] SMTP not configured — skipping password reset email');
     return;
   }
 
-  const resetUrl = `${PORTAL_URL}/forgot-password?token=${resetToken}`;
+  const resetUrl = `${PORTAL_URL}/forgot-password?token=${encodeURIComponent(resetToken)}&email=${encodeURIComponent(toEmail)}`;
   const transporter = createTransporter();
 
   const info = await transporter.sendMail({
@@ -73,7 +73,7 @@ async function sendPasswordResetEmail(toEmail, resetToken) {
           </div>
           <div class="body">
             <p>We received a request to reset the password for your DASIG Portal account.</p>
-            <p>Click the button below to set a new password. This link expires in <strong>1 hour</strong>.</p>
+            <p>Your reset code is <strong style="font-size:18px;letter-spacing:2px;">${resetToken}</strong>. Enter it on the Reset Password page, or click the button below. The code expires in <strong>1 hour</strong> and can be used once.</p>
             <a href="${resetUrl}" class="btn">Reset my password →</a>
             <p>If the button doesn't work, copy and paste this link into your browser:</p>
             <div class="token-box">${resetUrl}</div>
@@ -87,7 +87,7 @@ async function sendPasswordResetEmail(toEmail, resetToken) {
       </body>
       </html>
     `,
-    text: `DASIG Portal — Password Reset\n\nReset your password here:\n${resetUrl}\n\nThis link expires in 1 hour.\n\nIf you did not request this, ignore this email.`,
+    text: `DASIG Portal — Password Reset\n\nYour reset code: ${resetToken}\n\nOr reset your password here:\n${resetUrl}\n\nThe code expires in 1 hour and can be used once.\n\nIf you did not request this, ignore this email.`,
   });
   return info;
 }
