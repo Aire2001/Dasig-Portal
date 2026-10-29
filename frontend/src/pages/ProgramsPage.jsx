@@ -2862,7 +2862,19 @@ function TrainingTab({ user }) {
           {filtered.length > 0 && <div style={{ flex:1, height:1, background:'rgba(255,255,255,0.06)' }} />}
         </div>
       )}
-      {!loading && filtered.length === 0 && (
+      {!loading && !user && (
+        <div style={{ textAlign:'center', padding:'60px 0' }}>
+          <div style={{ fontSize:42, marginBottom:14 }}>🔒</div>
+          <div style={{ color:'rgba(255,255,255,0.75)', fontSize:16, fontWeight:800, marginBottom:8 }}>
+            Sign in to see training programs
+          </div>
+          <div style={{ color:'rgba(255,255,255,0.45)', fontSize:13, marginBottom:20 }}>
+            Training programs are listed for signed-in guests and DASIG members.
+          </div>
+          <button onClick={() => navigate('/login')} style={{ background:'linear-gradient(90deg,#f97316,#e11d48)', color:'#fff', border:'none', borderRadius:10, padding:'9px 22px', fontSize:13, fontWeight:700, cursor:'pointer', fontFamily:'inherit' }}>Log in →</button>
+        </div>
+      )}
+      {!loading && user && filtered.length === 0 && (
         <div style={{ textAlign:'center', padding:'60px 0' }}>
           <div style={{ fontSize:42, marginBottom:14 }}>🔍</div>
           <div style={{ color:'rgba(255,255,255,0.55)', fontSize:16, fontWeight:800, marginBottom:8 }}>
@@ -2934,7 +2946,7 @@ function CalendarTab({ user }) {
     if (isRefresh) setRefreshing(true); else setLoading(true);
     Promise.all([
       api.events.list({ limit: 1000 }),
-      api.training.list({ limit: 1000 }),
+      api.training.list({ limit: 1000 }).catch(() => ({ data: [] })), // visitors cannot list trainings (INC-08); still show events
     ]).then(([ev, tr]) => {
       setEvents(Array.isArray(ev) ? ev : (ev?.data || []));
       setTrain(Array.isArray(tr) ? tr : (tr?.data || []));
