@@ -26,7 +26,9 @@ router.get('/', optionalAuth, async (req, res) => {
   const member = isMember(req.user);
   const list = data.map(a => {
     if (a.members_only && !member) {
-      return { ...a, excerpt: 'This article is available to DASIG members only.', locked: true };
+      // INC-05: never send the body of a members-only article to non-members
+      const { content, ...rest } = a;
+      return { ...rest, content: null, excerpt: 'This article is available to DASIG members only.', locked: true };
     }
     return { ...a, locked: false };
   });
