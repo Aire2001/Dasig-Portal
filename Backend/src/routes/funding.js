@@ -22,8 +22,8 @@ function withEffectiveStatus(item) {
   return item;
 }
 
-// GET /api/funding — list funding opportunities (public with optional auth)
-router.get('/', async (req, res) => {
+// GET /api/funding — list funding opportunities (MEMBER/ADMIN only — BR-FM-01, INC-08)
+router.get('/', verifyToken, requireRole('MEMBER', 'ADMIN'), async (req, res) => {
   const { category, search, status, page = 1, limit = 100 } = req.query;
 
   let query = supabase.from('funding_opportunities').select('*');
@@ -48,8 +48,8 @@ router.get('/', async (req, res) => {
   res.json({ data: paged, total, page: Number(page), limit: Number(limit) });
 });
 
-// GET /api/funding/:id
-router.get('/:id', async (req, res) => {
+// GET /api/funding/:id (MEMBER/ADMIN only — BR-FM-01, INC-08)
+router.get('/:id', verifyToken, requireRole('MEMBER', 'ADMIN'), async (req, res) => {
   const { data, error } = await supabase.from('funding_opportunities').select('*').eq('id', req.params.id).single();
   if (error) return res.status(404).json({ error: 'Funding opportunity not found' });
   res.json(withEffectiveStatus(data));
