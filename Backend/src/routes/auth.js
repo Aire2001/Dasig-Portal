@@ -3,7 +3,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const supabase = require('../lib/supabase');
-const { verifyToken } = require('../middleware/auth');
+const { verifyToken, signToken } = require('../middleware/auth');
 const { sendPasswordResetEmail } = require('../lib/mailer');
 
 const router = express.Router();
@@ -58,7 +58,7 @@ router.post('/login', async (req, res) => {
   const expiresIn = user.role === 'ADMIN'
     ? (process.env.JWT_EXPIRES_ADMIN || '24h')
     : (process.env.JWT_EXPIRES_MEMBER || '7d');
-  const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn });
+  const token = signToken(user, expiresIn);
 
   const { password_hash, ...safeUser } = user;
   res.json({ token, user: safeUser });
@@ -88,7 +88,7 @@ router.post('/register', async (req, res) => {
 
   if (error) return res.status(500).json({ error: 'Registration failed' });
 
-  const token = jwt.sign({ id: newUser.id, role: newUser.role }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_MEMBER || '7d' });
+  const token = signToken(newUser, process.env.JWT_EXPIRES_MEMBER || '7d');
   const { password_hash: _, ...safeUser } = newUser;
   res.status(201).json({ token, user: safeUser });
 });
@@ -151,7 +151,12 @@ router.put('/password', verifyToken, async (req, res) => {
   const password_hash = await bcrypt.hash(new_password, 12);
   const { error } = await supabase.from('users').update({ password_hash }).eq('id', req.user.id);
   if (error) return res.status(500).json({ error: 'Password change failed' });
-  res.json({ message: 'Password changed successfully' });
+  // INC-06: older tokens (other devices) stop working; this device gets a fresh token
+  const expiresIn = req.user.role === 'ADMIN'
+    ? (process.env.JWT_EXPIRES_ADMIN || '24h')
+    : (process.env.JWT_EXPIRES_MEMBER || '7d');
+  const token = signToken({ ...req.user, password_hash }, expiresIn);
+  res.json({ message: 'Password changed successfully', token });
 });
 
 // POST /api/auth/forgot-password — generate reset token / OTP
@@ -221,6 +226,7 @@ router.post('/reset-password', async (req, res) => {
     .eq('id', user.id);
 
   if (error) return res.status(500).json({ error: 'Password reset failed' });
+  // INC-06: the new password hash makes every token issued before the reset invalid
   res.json({ message: 'Password reset successfully. You may now log in.' });
 });
 
