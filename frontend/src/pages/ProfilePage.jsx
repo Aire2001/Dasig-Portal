@@ -444,7 +444,9 @@ function SecurityTab({ showToast }) {
     setConfirmOpen(false);
     setSaving(true);
     try {
-      await api.auth.changePassword({ current_password: current, new_password: next });
+      const res = await api.auth.changePassword({ current_password: current, new_password: next });
+      // INC-06: older tokens stop working after a password change; keep this device signed in with the new one
+      if (res && res.token) localStorage.setItem('dasig_token', res.token);
       showToast('Password changed successfully!');
       setCurrent(''); setNext(''); setConfirm(''); setErrors({});
     } catch (err) {
