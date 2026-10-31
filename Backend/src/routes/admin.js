@@ -7,6 +7,10 @@ const router = express.Router();
 // All admin routes require ADMIN role
 router.use(verifyToken, requireRole('ADMIN'));
 
+// INC-07: an admin may not suspend, delete or change the role of their own account
+// (ids are compared as strings: req.params.id is a string, req.user.id may be a number)
+const isSelf = (req) => String(req.params.id) === String(req.user.id);
+
 // GET /api/admin/stats — dashboard overview
 router.get('/stats', async (req, res) => {
   const [users, events, news, trainings, members, applications, policies, funding, partnerships, eventRegs, trainRegs] = await Promise.all([
@@ -113,6 +117,7 @@ router.get('/users/:id', async (req, res) => {
 
 // PATCH /api/admin/users/:id/role — change user role
 router.patch('/users/:id/role', async (req, res) => {
+  if (isSelf(req)) return res.status(400).json({ error: 'You cannot change your own role' });
   const { role } = req.body;
   if (!['ADMIN', 'MEMBER', 'GUEST'].includes(role)) {
     return res.status(400).json({ error: 'Invalid role. Must be ADMIN, MEMBER or GUEST' });
@@ -138,6 +143,7 @@ router.patch('/users/:id/role', async (req, res) => {
 
 // PATCH /api/admin/users/:id/suspend — suspend user
 router.patch('/users/:id/suspend', async (req, res) => {
+  if (isSelf(req)) return res.status(400).json({ error: 'You cannot suspend your own account' });
   const { data, error } = await supabase.from('users')
     .update({ status: 'INACTIVE' }).eq('id', req.params.id)
     .select('id, name, email, role, status').single();
@@ -173,7 +179,7 @@ router.patch('/users/:id', async (req, res) => {
 
 // DELETE /api/admin/users/:id — delete user account
 router.delete('/users/:id', async (req, res) => {
-  if (req.params.id === req.user.id) {
+  if (isSelf(req)) {
     return res.status(400).json({ error: 'Cannot delete your own admin account' });
   }
 
