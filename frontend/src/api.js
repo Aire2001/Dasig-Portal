@@ -16,7 +16,17 @@ function headers(extra = {}) {
 async function request(path, options = {}) {
   const res = await fetch(`${BASE}${path}`, { headers: headers(), ...options });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.error || 'Request failed');
+  if (!res.ok) {
+    // INC-06: the server ended this session (account suspended, password changed or reset) → sign out here too
+    if (data.code === 'SESSION_INVALID' && getToken()) {
+      localStorage.removeItem('dasig_token');
+      localStorage.removeItem('dasig_user');
+      sessionStorage.removeItem('dasig_welcome');
+      // /auth/me runs on every page load and is handled by AuthContext (no redirect from public pages)
+      if (path !== '/auth/me' && !window.location.pathname.startsWith('/login')) window.location.assign('/login');
+    }
+    throw new Error(data.error || 'Request failed');
+  }
   return data;
 }
 
