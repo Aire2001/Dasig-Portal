@@ -71,7 +71,8 @@ Requirements: Node.js 20.19+ (or 22.12+), npm, and a Supabase project.
 | API | `SUPABASE_URL`, `SUPABASE_SERVICE_KEY` | Database connection (service key stays on the server) |
 | API | `JWT_SECRET` | Signs login tokens |
 | API | `JWT_EXPIRES_ADMIN`, `JWT_EXPIRES_MEMBER` | Token lifetimes (defaults 24h and 7d) |
-| API | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` | Registration, cancellation and password-reset emails (required: reset codes are sent only by e-mail) |
+| API | `BREVO_API_KEY`, `MAIL_FROM` | Email through the Brevo HTTPS API (used when `BREVO_API_KEY` is set; `MAIL_FROM` must be a sender verified in Brevo). Use this on Render's free plan, which blocks outgoing SMTP ports. Reset codes are sent only by e-mail |
+| API | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` | Email through SMTP when no Brevo key is set (needs a host that allows outgoing SMTP, e.g. local or a paid Render plan) |
 | API | `PORTAL_URL`, `PORTAL_PUBLIC_URL`, `ADMIN_EMAIL` | Links in emails and admin contact |
 | API | `PORT` | Defaults to 4000 |
 | API (optional) | `ELEVENLABS_API_KEY` | Audio narration on news and member pages |
