@@ -1,10 +1,69 @@
 const nodemailer = require('nodemailer');
+const https = require('https');
 const QRCode = require('qrcode');
 
-// Creates a transporter using SMTP settings from environment variables.
-// For Gmail: enable 2FA and create an App Password at myaccount.google.com/apppasswords
-// Then set SMTP_USER=your@gmail.com and SMTP_PASS=your-app-password in .env
+// Email delivery (two ways):
+// 1. Brevo HTTPS API — used when BREVO_API_KEY is set. Works on Render's free plan, which blocks outgoing SMTP ports.
+//    Set BREVO_API_KEY and MAIL_FROM (a sender address verified in Brevo) in the server environment.
+// 2. SMTP — used otherwise. For Gmail: enable 2FA and create an App Password at myaccount.google.com/apppasswords,
+//    then set SMTP_USER=your@gmail.com and SMTP_PASS=your-app-password in .env
+const USE_BREVO = !!process.env.BREVO_API_KEY;
+const SENDER_EMAIL = process.env.MAIL_FROM || process.env.SMTP_USER || 'noreply@dasig.ph';
+
+function mailConfigured() {
+  return USE_BREVO ? !!process.env.MAIL_FROM : !!(process.env.SMTP_USER && process.env.SMTP_PASS);
+}
+
+// Brevo does not support cid: inline images, so an inline QR code becomes a note; the PNG is still attached.
+function withoutInlineImages(html) {
+  return String(html || '').replace(/<img[^>]*src="cid:[^"]*"[^>]*>/g,
+    '<div style="padding:12px;border:1px dashed #cbd5e1;border-radius:12px;font-size:13px;color:#334155;text-align:center">Your check-in QR code is attached to this email (ticket-qr.png).</div>');
+}
+
+function brevoSend(opts) {
+  const toList = (Array.isArray(opts.to) ? opts.to : String(opts.to).split(','))
+    .map(e => String(e).trim()).filter(Boolean).map(email => ({ email }));
+  const body = {
+    sender: { name: 'DASIG Portal', email: process.env.MAIL_FROM },
+    to: toList,
+    subject: opts.subject,
+    htmlContent: withoutInlineImages(opts.html),
+  };
+  if (opts.text) body.textContent = opts.text;
+  if (opts.replyTo) body.replyTo = { email: String(opts.replyTo) };
+  if (opts.attachments && opts.attachments.length) {
+    body.attachment = opts.attachments.map(a => ({
+      name: a.filename,
+      content: Buffer.isBuffer(a.content) ? a.content.toString('base64') : Buffer.from(String(a.content)).toString('base64'),
+    }));
+  }
+  const payload = JSON.stringify(body);
+  return new Promise((resolve, reject) => {
+    const req = https.request({
+      hostname: 'api.brevo.com', path: '/v3/smtp/email', method: 'POST', timeout: 15000,
+      headers: { 'api-key': process.env.BREVO_API_KEY, 'content-type': 'application/json', accept: 'application/json', 'content-length': Buffer.byteLength(payload) },
+    }, (res) => {
+      let data = '';
+      res.on('data', (c) => { data += c; });
+      res.on('end', () => {
+        if (res.statusCode >= 200 && res.statusCode < 300) {
+          let id = null; try { id = JSON.parse(data).messageId; } catch (_) {}
+          resolve({ messageId: id || 'brevo' });
+        } else {
+          reject(new Error(`Brevo API ${res.statusCode}: ${data.slice(0, 300)}`));
+        }
+      });
+    });
+    req.on('timeout', () => req.destroy(new Error('Brevo API timeout')));
+    req.on('error', reject);
+    req.write(payload);
+    req.end();
+  });
+}
+
+// Returns an object with sendMail(options) — Brevo when configured, otherwise an SMTP transporter.
 function createTransporter() {
+  if (USE_BREVO) return { sendMail: brevoSend };
   return nodemailer.createTransport({
     host: process.env.SMTP_HOST || 'smtp.gmail.com',
     port: Number(process.env.SMTP_PORT) || 587,
@@ -19,7 +78,7 @@ function createTransporter() {
 const PORTAL_URL = process.env.PORTAL_URL || 'https://dasig-portal.vercel.app';
 // For scannable QR codes and mobile devices, use public cloud URL or specified public IP
 const PORTAL_PUBLIC_URL = process.env.PORTAL_PUBLIC_URL || (PORTAL_URL.includes('localhost') ? 'https://dasig-portal.vercel.app' : PORTAL_URL);
-const FROM = `"DASIG Portal" <${process.env.SMTP_USER || 'noreply@dasig.ph'}>`;
+const FROM = `"DASIG Portal" <${SENDER_EMAIL}>`;
 
 // Standard RFC deliverability headers to prevent transactional tickets from landing in Spam/Promotions
 const TRANSACTIONAL_HEADERS = {
@@ -31,9 +90,9 @@ const TRANSACTIONAL_HEADERS = {
 };
 
 async function sendPasswordResetEmail(toEmail, resetToken) {
-  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+  if (!mailConfigured()) {
     // Email not configured — the reset code cannot be delivered (it is never returned by the API)
-    console.warn('[mailer] SMTP not configured — skipping password reset email');
+    console.warn('[mailer] Email not configured — skipping password reset email');
     return;
   }
 
@@ -151,8 +210,8 @@ function getGoogleCalendarLink(title, dateStr, startTime, endTime, venue, descri
 }
 
 async function sendEventRegistrationEmail(arg1, arg2, arg3) {
-  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
-    console.warn('[mailer] SMTP not configured — skipping event registration email');
+  if (!mailConfigured()) {
+    console.warn('[mailer] Email not configured — skipping event registration email');
     return;
   }
   const { attendee, item: event } = resolveAttendee(arg1, arg2, arg3);
@@ -333,8 +392,8 @@ async function sendEventRegistrationEmail(arg1, arg2, arg3) {
 }
 
 async function sendTrainingEnrollmentEmail(arg1, arg2, arg3) {
-  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
-    console.warn('[mailer] SMTP not configured — skipping training enrollment email');
+  if (!mailConfigured()) {
+    console.warn('[mailer] Email not configured — skipping training enrollment email');
     return;
   }
   const { attendee, item: training } = resolveAttendee(arg1, arg2, arg3);
@@ -512,8 +571,8 @@ async function sendTrainingEnrollmentEmail(arg1, arg2, arg3) {
 }
 
 async function sendEventCancellationEmail(arg1, arg2, arg3) {
-  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
-    console.warn('[mailer] SMTP not configured — skipping event cancellation email');
+  if (!mailConfigured()) {
+    console.warn('[mailer] Email not configured — skipping event cancellation email');
     return;
   }
   const { attendee, item: event } = resolveAttendee(arg1, arg2, arg3);
@@ -622,8 +681,8 @@ async function sendEventCancellationEmail(arg1, arg2, arg3) {
 }
 
 async function sendTrainingCancellationEmail(arg1, arg2, arg3) {
-  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
-    console.warn('[mailer] SMTP not configured — skipping training cancellation email');
+  if (!mailConfigured()) {
+    console.warn('[mailer] Email not configured — skipping training cancellation email');
     return;
   }
   const { attendee, item: training } = resolveAttendee(arg1, arg2, arg3);
@@ -732,9 +791,9 @@ async function sendTrainingCancellationEmail(arg1, arg2, arg3) {
 }
 
 async function sendMembershipApplicationNotification(applicant) {
-  const adminEmail = process.env.ADMIN_EMAIL || process.env.SMTP_USER;
-  if (!process.env.SMTP_USER || !process.env.SMTP_PASS || !adminEmail) {
-    console.warn('[mailer] SMTP not configured — skipping membership notification');
+  const adminEmail = process.env.ADMIN_EMAIL || SENDER_EMAIL;
+  if (!mailConfigured() || !adminEmail) {
+    console.warn('[mailer] Email not configured — skipping membership notification');
     return;
   }
   const transporter = createTransporter();
@@ -769,4 +828,4 @@ async function sendMembershipApplicationNotification(applicant) {
   return info;
 }
 
-module.exports = { sendPasswordResetEmail, sendEventRegistrationEmail, sendTrainingEnrollmentEmail, sendEventCancellationEmail, sendTrainingCancellationEmail, sendMembershipApplicationNotification };
+module.exports = { createTransporter, mailConfigured, FROM, SENDER_EMAIL, sendPasswordResetEmail, sendEventRegistrationEmail, sendTrainingEnrollmentEmail, sendEventCancellationEmail, sendTrainingCancellationEmail, sendMembershipApplicationNotification };
