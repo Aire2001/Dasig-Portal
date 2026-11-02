@@ -1,20 +1,11 @@
 const express = require('express');
-const nodemailer = require('nodemailer');
 const supabase = require('../lib/supabase');
 const { verifyToken, requireRole } = require('../middleware/auth');
 
 const router = express.Router();
 const PORTAL_URL = process.env.PORTAL_URL || 'http://localhost:5173';
-const FROM = `"DASIG Portal" <${process.env.SMTP_USER || 'noreply@dasig.ph'}>`;
-
-function createTransporter() {
-  return nodemailer.createTransport({
-    host: process.env.SMTP_HOST || 'smtp.gmail.com',
-    port: Number(process.env.SMTP_PORT) || 587,
-    secure: false,
-    auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
-  });
-}
+// Email goes through the shared mailer (Brevo API when configured, otherwise SMTP)
+const { createTransporter, mailConfigured, FROM, SENDER_EMAIL } = require('../lib/mailer');
 
 // POST /api/contact — send message to admin
 router.post('/', async (req, res) => {
@@ -33,15 +24,15 @@ router.post('/', async (req, res) => {
     console.error('[contact] DB insert error:', err.message);
   }
 
-  // Send non-blocking background emails if SMTP is configured
-  if (process.env.SMTP_USER && process.env.SMTP_PASS) {
+  // Send non-blocking background emails if email is configured (Brevo API or SMTP)
+  if (mailConfigured()) {
     setImmediate(async () => {
       try {
         const transporter = createTransporter();
         // Notify admin
         await transporter.sendMail({
           from: FROM,
-          to: process.env.SMTP_USER,
+          to: process.env.ADMIN_EMAIL || SENDER_EMAIL,
           replyTo: email,
           subject: `[DASIG Portal Contact] ${subject}`,
           html: `
@@ -94,7 +85,7 @@ router.post('/', async (req, res) => {
           text: `Hi ${name},\n\nWe received your message: "${subject}".\nWe'll respond within 1–2 business days.\n\nDASIG Portal`,
         });
       } catch (err) {
-        console.error('[contact] Background SMTP error:', err.message);
+        console.error('[contact] Background email error:', err.message);
       }
     });
   }
