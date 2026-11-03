@@ -1,4 +1,4 @@
-import { api } from '../api';
+import { api } from '../api.js';
 
 export const SUPPORTED_LANGUAGES = [
   { key: 'en',  code: 'en',    flag: '🇺🇸', label: 'US English',            name: 'English',              short: 'EN',  tag: 'English' },
