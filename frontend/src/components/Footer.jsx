@@ -95,7 +95,7 @@ const MEMBER_LINKS = [
 ];
 
 const SUPPORT_LINKS = [
-  { label: 'Help Center',    to: '/'              },
+  { label: 'Help Center (Haribon AI)', to: '/chatbot' },
   { label: 'Contact Admin',  to: '/contact-admin' },
   { label: 'Membership',     to: '/membership'    },
   { label: 'Privacy Policy', to: '/policies'      },

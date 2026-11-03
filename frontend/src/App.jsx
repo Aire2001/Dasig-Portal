@@ -1,4 +1,14 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+
+// Automatically scrolls window to top on route change for seamless navigation
+function ScrollToTop() {
+  const { pathname, search } = useLocation();
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  }, [pathname, search]);
+  return null;
+}
 import { AuthProvider } from './context/AuthContext';
 import Nav from './components/Nav';
 import ColdStartBanner from './components/ColdStartBanner';
@@ -29,6 +39,7 @@ export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
+        <ScrollToTop />
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
