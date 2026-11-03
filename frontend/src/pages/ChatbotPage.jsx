@@ -507,6 +507,29 @@ export default function ChatbotPage() {
     } catch (_) {}
     return [{ from:'bot', text: getLocalizedGreeting(user, initialLang), time: new Date() }];
   });
+  const [input, setInput]             = useState('');
+  const [thinking, setThinking]       = useState(false);
+  const [matchRate, setMatchRate]     = useState(null);
+  const [totalAsked, setTotalAsked]   = useState(0);
+  const [totalMatched, setTotalMatched] = useState(0);
+  const [ended, setEnded]             = useState(false);
+  const [showEndConfirm, setShowEndConfirm] = useState(false);
+  const [hasReplied, setHasReplied]   = useState(() => {
+    try {
+      const saved = sessionStorage.getItem('haribon_resume');
+      return saved ? true : false;
+    } catch { return false; }
+  });
+  const [suggestions, setSuggestions] = useState([]);
+  const [resumed, setResumed]         = useState(() => {
+    try { return !!sessionStorage.getItem('haribon_resume'); } catch { return false; }
+  });
+  const [atBottom, setAtBottom]       = useState(true);
+  const [ratings, setRatings]         = useState({});   // {[msgIndex]: 'up'|'down'}
+  const [copied,  setCopied]          = useState(null);  // message index recently copied
+  const [listening, setListening]     = useState(false);
+  const [autoVoicemail, setAutoVoicemail] = useState(false);
+  const [activeCat, setActiveCat]     = useState('ALL');
   const [translations, setTranslations] = useState({});
   const [translatingIdx, setTranslatingIdx] = useState(null);
   const [showLangMenu, setShowLangMenu] = useState(false);

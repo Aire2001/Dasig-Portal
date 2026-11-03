@@ -330,6 +330,15 @@ export default function Chatbot() {
     }
     return [{ from:'bot', text: getLocalizedGreeting(user, initialLang), time: new Date() }];
   });
+  const [input, setInput]       = useState('');
+  const [thinking, setThinking] = useState(false);
+  const [ended, setEnded]       = useState(false);
+  const [unread, setUnread]     = useState(0);
+  const [hasReplied, setHasReplied] = useState(false);
+  const [ratings, setRatings]   = useState({});
+  const [copied, setCopied]     = useState(null);
+  const [speakingIdx, setSpeakingIdx] = useState(null);
+  const [listening, setListening] = useState(false);
   const [translations, setTranslations] = useState({});
   const [translatingIdx, setTranslatingIdx] = useState(null);
   const [showLangMenu, setShowLangMenu] = useState(false);
