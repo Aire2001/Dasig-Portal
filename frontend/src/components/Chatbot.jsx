@@ -40,6 +40,20 @@ const SLASH_COMMANDS = [
   { cmd: '/clear', label: 'Clear current conversation and reset', q: '__CLEAR__' },
 ];
 
+/* ── Rich navigation card metadata for interactive deep links ─ */
+const NAV_CARD_INFO = {
+  '/events':       { icon: '📅', title: 'Upcoming Events', desc: 'Browse summits, conferences, and technical symposiums' },
+  '/programs':     { icon: '📅', title: 'Consortium Calendar', desc: 'Explore the full schedule and monthly calendar view' },
+  '/training':     { icon: '🎓', title: 'Training & Development', desc: 'Enroll in professional development tracks and workshops' },
+  '/membership':   { icon: '👥', title: 'Institutional Membership', desc: 'Learn about membership tiers and apply for institutional affiliation' },
+  '/policies':     { icon: '📜', title: 'Policies & Governance', desc: 'Review official consortium charters, rules and guidelines' },
+  '/funding':      { icon: '💰', title: 'Funding Opportunities', desc: 'Explore government and research grants from DOST & DICT' },
+  '/partnerships': { icon: '🤝', title: 'Strategic Partnerships', desc: 'Discover collaborative initiatives across Region VII' },
+  '/news':         { icon: '📰', title: 'Press & Announcements', desc: 'Read the latest consortium news, press releases, and updates' },
+  '/members':      { icon: '🏛️', title: 'Member Institutions', desc: 'Explore Region VII universities, campuses and government agencies' },
+  '/admin':        { icon: '🛡️', title: 'Admin Command Center', desc: 'Open executive portal administration and control modules' },
+};
+
 /* ── Role-based quick chips (Trilingual: English, Bisaya, Tagalog) ─ */
 const QUICK_BY_ROLE = {
   GUEST: [
@@ -401,7 +415,10 @@ export default function Chatbot() {
     const cleanText = (text || '').replace(/[*_#`[\]()]/g, '');
     const utter = new SpeechSynthesisUtterance(cleanText);
     const voices = window.speechSynthesis.getVoices() || [];
-    const best = voices.find(v => /natural|neural|online/i.test(v.name) && /en/i.test(v.lang)) ||
+    const isPH = /maayong|salamat|unsa|kinsa|kanus|daghan|kamusta|kumusta|magandang|po|opo|kailan|paano|sumali|miyembro/i.test(cleanText);
+    const phVoice = isPH ? voices.find(v => /fil|tl|ceb|tgl|tagalog/i.test(v.lang) || /filipino|tagalog/i.test(v.name)) : null;
+    const best = phVoice ||
+                 voices.find(v => /natural|neural|online/i.test(v.name) && /en/i.test(v.lang)) ||
                  voices.find(v => /google/i.test(v.name) && /en/i.test(v.lang)) ||
                  voices.find(v => /en[-_]us|en[-_]ph|en[-_]gb/i.test(v.lang));
     if (best) utter.voice = best;
@@ -774,11 +791,45 @@ export default function Chatbot() {
                     {/* Navigate CTA + follow-up chips — last bot message only */}
                     {msg.from === 'bot' && i === messages.length - 1 && !thinking && !msg.isStreaming && (
                       <div style={{ marginTop:7, maxWidth:'92%', display:'flex', flexDirection:'column', gap:7 }}>
-                        {msg.navigate_to && (
-                          <button className="w-nav-btn" onClick={() => { navigate(msg.navigate_to); setOpen(false); }}>
-                            ↗ Open page
-                          </button>
-                        )}
+                        {msg.navigate_to && (() => {
+                          const card = NAV_CARD_INFO[msg.navigate_to] || { icon: '🚀', title: 'Open Portal Page', desc: 'Click to view related module details' };
+                          return (
+                            <div
+                              onClick={() => { navigate(msg.navigate_to); setOpen(false); }}
+                              style={{
+                                background: 'rgba(15,23,42,0.92)',
+                                border: '1px solid rgba(249,115,22,0.35)',
+                                borderRadius: 10, padding: '8px 12px',
+                                cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10,
+                                transition: 'all 0.16s ease',
+                                boxShadow: '0 4px 14px rgba(0,0,0,0.35)',
+                              }}
+                              onMouseEnter={e => {
+                                e.currentTarget.style.borderColor = 'rgba(249,115,22,0.7)';
+                                e.currentTarget.style.transform = 'translateY(-1px)';
+                              }}
+                              onMouseLeave={e => {
+                                e.currentTarget.style.borderColor = 'rgba(249,115,22,0.35)';
+                                e.currentTarget.style.transform = 'none';
+                              }}
+                            >
+                              <div style={{
+                                width: 28, height: 28, borderRadius: 7,
+                                background: 'rgba(249,115,22,0.15)', border: '1px solid rgba(249,115,22,0.35)',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                fontSize: 15, flexShrink: 0,
+                              }}>{card.icon}</div>
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ color: '#fff', fontWeight: 800, fontSize: 11.5 }}>{card.title}</div>
+                                <div style={{ color: 'rgba(255,255,255,0.48)', fontSize: 10, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{card.desc}</div>
+                              </div>
+                              <div style={{ color: '#f97316', fontWeight: 800, fontSize: 11, display: 'flex', alignItems: 'center', gap: 2, flexShrink: 0 }}>
+                                <span>Open</span>
+                                <span>→</span>
+                              </div>
+                            </div>
+                          );
+                        })()}
                         {msg.followups?.length > 0 && (
                           <div style={{ display:'flex', gap:5, flexWrap:'wrap' }}>
                             {msg.followups.slice(0, 3).map(f => (

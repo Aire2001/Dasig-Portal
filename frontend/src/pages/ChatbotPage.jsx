@@ -141,6 +141,41 @@ function BotText({ text, isStreaming = false }) {
   );
 }
 
+// Slash commands for developer/power-user UX
+const SLASH_COMMANDS = [
+  { cmd: '/events', label: 'View upcoming consortium summits & conferences', q: 'What events are coming up in Region VII?' },
+  { cmd: '/training', label: 'View accredited faculty training programs', q: 'What faculty training bootcamps are open for enrollment?' },
+  { cmd: '/grants', label: 'Query open DOST-7 research grants & calls', q: 'What funding opportunities and research grants exist?' },
+  { cmd: '/members', label: 'List partner HEIs (CIT-U, UPV, USA)', q: 'Who are the DASIG member institutions?' },
+  { cmd: '/policies', label: 'Show Data Privacy & IP sharing accords', q: 'What governance policies and charters are active?' },
+  { cmd: '/clear', label: 'Clear current conversation and reset', q: '__CLEAR__' },
+];
+
+// Language-specific quick chips & prompts
+const LANG_QUICK_CHIPS = {
+  en: [
+    { label: '📅 Upcoming Summits', q: 'What events are coming up in Region VII?' },
+    { label: '🎓 Faculty Training', q: 'What training programs are open for enrollment?' },
+    { label: '💰 DOST-7 Research Grants', q: 'What research funding opportunities are available?' },
+    { label: '🏛 Consortium Members', q: 'Who are the DASIG member universities and agencies?' },
+    { label: '📋 Governance Charters', q: 'What policies and IP accords are active?' },
+  ],
+  bis: [
+    { label: '📅 Mga Kalihokan (Events)', q: 'Maayong adlaw! Unsay mga umaabot nga events ug summits sa DASIG?' },
+    { label: '🎓 Libreng Bootcamps', q: 'Unsa ang mga available nga training programs para sa faculty?' },
+    { label: '💰 DOST Panukiduki', q: 'Naa bay available nga research grants gikan sa DOST-7?' },
+    { label: '🏛 Kasaping Unibersidad', q: 'Kinsa ang mga miyembro nga unibersidad sa Central Visayas?' },
+    { label: '🤝 Unsaon Pag-apil', q: 'Unsaon pag-apil o pag-apply sa membership sa konsorsyum?' },
+  ],
+  tgl: [
+    { label: '📅 Paparating na Kaganapan', q: 'Magandang araw! May mga paparating bang event o summit sa DASIG?' },
+    { label: '🎓 Pagsasanay ng Guro', q: 'Ano-anong training bootcamps ang bukas para salihan?' },
+    { label: '💰 DOST Research Grants', q: 'Mayroon bang open research funding para sa unibersidad?' },
+    { label: '🏛 Kasaping Institusyon', q: 'Sino-sino ang mga miyembro ng DASIG consortium?' },
+    { label: '📋 Patakaran at Privacy', q: 'Ano ang mga patakaran sa Data Privacy ng DASIG?' },
+  ],
+};
+
 // Autocomplete suggestions
 const SUGGESTIONS = [
   'What events are coming up?',
@@ -518,6 +553,7 @@ export default function ChatbotPage() {
   const [listening, setListening] = useState(false);
   const [autoVoicemail, setAutoVoicemail] = useState(false);
   const [activeCat, setActiveCat] = useState('ALL');
+  const [activeLang, setActiveLang] = useState('en');
   const recognitionRef = useRef(null);
   const msgsContainerRef              = useRef(null);
 
@@ -679,6 +715,12 @@ export default function ChatbotPage() {
     const trimmed = (text || input).trim();
     if (!trimmed || thinking) return;
 
+    if (trimmed === '/clear' || trimmed === '__CLEAR__') {
+      startNewChat();
+      setInput('');
+      return;
+    }
+
     if (streamIntervalRef.current) {
       clearInterval(streamIntervalRef.current);
       streamIntervalRef.current = null;
@@ -756,7 +798,23 @@ export default function ChatbotPage() {
   }
 
   function onKey(e) {
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      if (input.startsWith('/')) {
+        const matchedCmd = SLASH_COMMANDS.find(s => s.cmd.toLowerCase() === input.trim().toLowerCase())
+          || SLASH_COMMANDS.find(s => s.cmd.toLowerCase().startsWith(input.trim().toLowerCase()));
+        if (matchedCmd) {
+          if (matchedCmd.cmd === '/clear') {
+            startNewChat();
+            setInput('');
+          } else {
+            send(matchedCmd.q);
+          }
+          return;
+        }
+      }
+      send();
+    }
   }
 
   function endChat() {
@@ -829,10 +887,15 @@ export default function ChatbotPage() {
   const [voiceSpeed, setVoiceSpeed]   = useState(1.0);
 
   // Intelligently select the most realistic natural / neural human voice on the system
-  function getBestHumanVoice() {
+  function getBestHumanVoice(isPH = false) {
     if (!window.speechSynthesis) return null;
     const voices = window.speechSynthesis.getVoices() || [];
     if (!voices.length) return null;
+
+    if (isPH) {
+      const phVoice = voices.find(v => /fil|tl|ceb|tgl|tagalog/i.test(v.lang) || /filipino|tagalog/i.test(v.name));
+      if (phVoice) return phVoice;
+    }
 
     // 1. Prioritize Microsoft Natural / Neural voices (Jenny, Guy, Aria, Ryan, Christopher)
     const natural = voices.find(v =>
@@ -923,7 +986,8 @@ export default function ChatbotPage() {
       return;
     }
     const utter = new SpeechSynthesisUtterance(cleanText);
-    const bestVoice = getBestHumanVoice();
+    const isPH = /maayong|salamat|unsa|kinsa|kanus|daghan|kamusta|kumusta|magandang|po|opo|kailan|paano|sumali|miyembro/i.test(cleanText);
+    const bestVoice = getBestHumanVoice(isPH);
     if (bestVoice) utter.voice = bestVoice;
     utter.rate = (speed || 1.0) * 0.96;
     utter.pitch = 1.0;
@@ -1505,6 +1569,34 @@ export default function ChatbotPage() {
               {/* Quick chips & Category Navigator — show until first bot reply arrives */}
               {!ended && !hasReplied && (
                 <div style={{ padding: '0 24px 14px' }}>
+                  {/* Natural Language Switcher */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, flexWrap: 'wrap', gap: 6 }}>
+                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.5px' }}>
+                      🌐 Natural Language / Pinulongan:
+                    </div>
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      {[
+                        { key: 'en', label: '🇺🇸 English' },
+                        { key: 'bis', label: '🇵🇭 Bisaya (Cebuano)' },
+                        { key: 'tgl', label: '🇵🇭 Tagalog (Filipino)' },
+                      ].map(l => (
+                        <button
+                          key={l.key}
+                          onClick={() => { setActiveLang(l.key); setActiveCat('ALL'); }}
+                          style={{
+                            background: activeLang === l.key ? 'rgba(249,115,22,0.22)' : 'rgba(255,255,255,0.04)',
+                            border: `1px solid ${activeLang === l.key ? 'rgba(249,115,22,0.55)' : 'rgba(255,255,255,0.08)'}`,
+                            color: activeLang === l.key ? '#fb923c' : 'rgba(255,255,255,0.65)',
+                            borderRadius: 8, padding: '4px 10px', fontSize: 11.5, fontWeight: 800,
+                            cursor: 'pointer', fontFamily: 'inherit', transition: 'all .14s',
+                          }}
+                        >
+                          {l.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
                   {/* Category Pills Bar */}
                   <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 8, marginBottom: 8 }}>
                     {[
@@ -1532,7 +1624,10 @@ export default function ChatbotPage() {
                     ))}
                   </div>
                   <div className="chat-quick-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px,1fr))', gap: 9 }}>
-                    {(CATEGORIZED_CHIPS[activeCat] || CATEGORIZED_CHIPS.ALL).map(({ label, q }) => (
+                    {(activeCat === 'ALL' && activeLang !== 'en'
+                      ? (LANG_QUICK_CHIPS[activeLang] || LANG_QUICK_CHIPS.en)
+                      : (CATEGORIZED_CHIPS[activeCat] || CATEGORIZED_CHIPS.ALL)
+                    ).map(({ label, q }) => (
                       <button key={label} className="chip-btn" onClick={() => send(q)} disabled={thinking}>{label}</button>
                     ))}
                   </div>
@@ -1547,8 +1642,46 @@ export default function ChatbotPage() {
               }}>
                 {/* Autocomplete dropdown + textarea wrapper */}
                 <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end', position: 'relative' }}>
-                  {/* Autocomplete suggestions dropdown */}
-                  {suggestions.length > 0 && (
+                  {/* Slash command popover */}
+                  {input.startsWith('/') && (
+                    <div style={{
+                      position: 'absolute', bottom: '100%', left: 0, right: 0, marginBottom: 8,
+                      background: 'rgba(10,16,32,0.98)', border: '1px solid rgba(249,115,22,0.4)',
+                      borderRadius: 14, overflow: 'hidden', boxShadow: '0 -16px 48px rgba(0,0,0,0.7)',
+                      zIndex: 20, padding: 6, display: 'flex', flexDirection: 'column', gap: 4,
+                    }}>
+                      <div style={{ fontSize: 11, color: '#fb923c', fontWeight: 800, padding: '4px 10px', textTransform: 'uppercase', letterSpacing: '.5px' }}>
+                        ⚡ Haribon Slash Commands
+                      </div>
+                      {SLASH_COMMANDS.filter(s => s.cmd.startsWith(input.toLowerCase())).map(sc => (
+                        <div
+                          key={sc.cmd}
+                          onClick={() => {
+                            if (sc.cmd === '/clear') {
+                              startNewChat();
+                              setInput('');
+                            } else {
+                              send(sc.q);
+                            }
+                          }}
+                          style={{
+                            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                            padding: '8px 12px', borderRadius: 8, cursor: 'pointer',
+                            background: 'rgba(255,255,255,0.03)',
+                            transition: 'all 0.15s ease',
+                          }}
+                          onMouseEnter={e => e.currentTarget.style.background = 'rgba(249,115,22,0.15)'}
+                          onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.03)'}
+                        >
+                          <span style={{ color: '#fb923c', fontWeight: 900, fontSize: 13 }}>{sc.cmd}</span>
+                          <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: 12 }}>{sc.label}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Autocomplete suggestions dropdown (when not typing slash command) */}
+                  {!input.startsWith('/') && suggestions.length > 0 && (
                     <div style={{ position: 'absolute', bottom: '100%', left: 0, right: 0, marginBottom: 6, background: 'rgba(10,16,32,0.98)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 14, overflow: 'hidden', boxShadow: '0 -16px 48px rgba(0,0,0,0.6)', zIndex: 10 }}>
                       {suggestions.map(s => (
                         <button key={s} onClick={() => { setInput(s); setSuggestions([]); setTimeout(() => inputRef.current?.focus(), 10); }}
@@ -1567,7 +1700,7 @@ export default function ChatbotPage() {
                     value={input}
                     onChange={handleInputChange}
                     onKeyDown={onKey}
-                    placeholder={user ? `Ask Haribon, ${(user.name || 'there').split(' ')[0]}…` : 'Ask Haribon about events, membership, training, policies…'}
+                    placeholder={user ? `Ask Haribon (or type /), ${(user.name || 'there').split(' ')[0]}…` : 'Ask Haribon in English, Bisaya, or Tagalog (type / for commands)…'}
                     disabled={thinking}
                     style={{ maxHeight: 120, overflowY: 'auto' }}
                   />
