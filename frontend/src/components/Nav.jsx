@@ -148,6 +148,28 @@ export default function Nav() {
   const [logoutConfirm, setLogoutConfirm] = useState(false);
   const [welcome, setWelcome] = useState(null);   // {name, role} | null
   const welcomeTimer = useRef(null);
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [canInstall, setCanInstall] = useState(false);
+
+  useEffect(() => {
+    const handlePrompt = (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setCanInstall(true);
+    };
+    window.addEventListener('beforeinstallprompt', handlePrompt);
+    return () => window.removeEventListener('beforeinstallprompt', handlePrompt);
+  }, []);
+
+  const handleInstallPwa = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setCanInstall(false);
+    }
+    setDeferredPrompt(null);
+  };
 
   useEffect(() => {
     setMobileMenuOpen(false);
@@ -611,6 +633,33 @@ export default function Nav() {
             >
               {mobileMenuOpen ? '✕' : '☰'}
             </button>
+            {/* 1-Click PWA App Install Button */}
+            {canInstall && (
+              <button
+                type="button"
+                onClick={handleInstallPwa}
+                style={{
+                  background: 'linear-gradient(90deg, #f97316 0%, #ea580c 100%)',
+                  border: 'none',
+                  borderRadius: 9,
+                  padding: '5px 10px',
+                  color: '#fff',
+                  fontSize: 12,
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  fontFamily: 'inherit',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 5,
+                  boxShadow: '0 2px 10px rgba(249,115,22,0.35)',
+                }}
+                title="Install DASIG Portal onto your computer or phone"
+              >
+                <span>📲</span>
+                <span>Install</span>
+              </button>
+            )}
+
             {/* Quick Command Palette trigger */}
             <button
               onClick={() => setCmdOpen(true)}
