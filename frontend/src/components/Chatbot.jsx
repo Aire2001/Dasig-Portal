@@ -345,7 +345,6 @@ export default function Chatbot() {
   const location     = useLocation();
 
   const role         = user?.role || 'GUEST';
-  const quick        = QUICK_BY_ROLE[role] || QUICK_BY_ROLE.GUEST;
   const rb           = ROLE_BADGE[role] || ROLE_BADGE.GUEST;
 
   // All hooks MUST be declared before any conditional return

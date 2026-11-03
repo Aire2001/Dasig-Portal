@@ -17,7 +17,7 @@ async function request(path, options = {}) {
   let res;
   try {
     res = await fetch(`${BASE}${path}`, { headers: headers(), ...options });
-  } catch (netErr) {
+  } catch {
     throw new Error('Network error: Unable to reach DASIG cloud API. Please check your connection or wait a moment while the cloud node initializes.');
   }
 
@@ -26,14 +26,14 @@ async function request(path, options = {}) {
   if (contentType.includes('application/json')) {
     try {
       data = await res.json();
-    } catch (_) {
+    } catch {
       data = {};
     }
   } else {
     try {
       const text = await res.text();
       data = { error: text?.slice(0, 200) || `HTTP ${res.status} error` };
-    } catch (_) {
+    } catch {
       data = {};
     }
   }
