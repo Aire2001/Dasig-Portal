@@ -1,9 +1,11 @@
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { api } from '../api';
 import SunSeal from './SunSeal';
 import HaribonFace from './HaribonFace';
 import CommandPalette from './CommandPalette';
+import { getUserNotifications, saveUserNotifications } from '../lib/notifications';
 
 const NAV_CSS = `
   @keyframes sealSpin   { from { transform: rotateY(0deg) rotateZ(0deg); } to { transform: rotateY(360deg) rotateZ(15deg); } }
@@ -151,53 +153,121 @@ export default function Nav() {
     setMobileMenuOpen(false);
   }, [location.pathname, location.search]);
 
-  const DEFAULT_NOTIFS = [
-    { id: 1, title: 'Regional AI Summit 2026', msg: 'Registration slots are currently open.', time: '10m ago', unread: true, path: '/programs?tab=events', category: 'Summit' },
-    { id: 2, title: 'DOST SETUP Grant Opportunity', msg: 'Funding call open for Region VII HEIs.', time: '2h ago', unread: true, path: '/funding', category: 'Grant' },
-    { id: 3, title: 'Membership Status Active', msg: 'Consortium access verified for all 9 modules.', time: '1d ago', unread: false, path: '/membership', category: 'Member', membersOnly: true },
-    { id: 4, title: 'CIT-U Research Innovation Forum', msg: 'Call for papers submitted for review.', time: '2d ago', unread: false, path: '/programs?tab=events', category: 'Research' },
-  ];
-
-  const [notifList, setNotifList] = useState(() => {
-    try {
-      const saved = localStorage.getItem('dasig_notifications');
-      return saved ? JSON.parse(saved) : DEFAULT_NOTIFS;
-    } catch {
-      return DEFAULT_NOTIFS;
-    }
-  });
+  const [notifList, setNotifList] = useState(() => getUserNotifications(user?.id || user?.email));
   const [notifFilter, setNotifFilter] = useState('all'); // 'all' | 'unread'
 
-  useEffect(() => {
-    try {
-      localStorage.setItem('dasig_notifications', JSON.stringify(notifList));
-    } catch {}
-  }, [notifList]);
+  // Sync user notifications when user logs in/out or accounts change
+  const reloadNotifs = useCallback(() => {
+    const list = getUserNotifications(user?.id || user?.email);
+    setNotifList(list);
+  }, [user]);
 
-  // "Membership Status Active" claims verified consortium access — showing
-  // it to a signed-out guest (or a not-yet-approved member) told them
-  // something false about their own account. Everyone else's notifications
-  // (event/grant announcements) are fine for guests to see.
+  useEffect(() => {
+    reloadNotifs();
+  }, [reloadNotifs]);
+
+  // Listen for real-time notification events (e.g. password resets, security alerts)
+  useEffect(() => {
+    function handleNotifChange(e) {
+      if (e.detail?.updated) {
+        setNotifList(e.detail.updated);
+      } else {
+        reloadNotifs();
+      }
+    }
+    window.addEventListener('dasig_notification_change', handleNotifChange);
+    return () => window.removeEventListener('dasig_notification_change', handleNotifChange);
+  }, [reloadNotifs]);
+
+  // Poll live events and news to keep the notification center organically updated with real database activity
+  useEffect(() => {
+    let active = true;
+    async function fetchLiveConsortiumUpdates() {
+      try {
+        const [eventsRes, newsRes] = await Promise.allSettled([
+          api.events.list({ limit: 2 }),
+          api.news.list({ limit: 2 }),
+        ]);
+
+        if (!active) return;
+        const liveItems = [];
+
+        if (eventsRes.status === 'fulfilled' && eventsRes.value) {
+          const evList = Array.isArray(eventsRes.value) ? eventsRes.value : (eventsRes.value.data || []);
+          evList.slice(0, 2).forEach(ev => {
+            liveItems.push({
+              id: `live_evt_${ev.id}`,
+              title: ev.title,
+              msg: `${ev.date ? ev.date + ' · ' : ''}Upcoming regional event at ${ev.venue || 'Consortium Hub'}.`,
+              time: 'Active',
+              unread: false,
+              category: 'Event',
+              path: '/programs?tab=events',
+            });
+          });
+        }
+
+        if (newsRes.status === 'fulfilled' && newsRes.value) {
+          const nList = Array.isArray(newsRes.value) ? newsRes.value : (newsRes.value.data || []);
+          nList.slice(0, 1).forEach(nw => {
+            liveItems.push({
+              id: `live_news_${nw.id}`,
+              title: nw.title,
+              msg: nw.summary || nw.content?.slice(0, 75) || 'Read the latest consortium announcement.',
+              time: 'Latest',
+              unread: false,
+              category: 'News',
+              path: '/news',
+            });
+          });
+        }
+
+        if (liveItems.length > 0) {
+          setNotifList(prev => {
+            const existingIds = new Set(prev.map(p => p.id));
+            const newToAdd = liveItems.filter(item => !existingIds.has(item.id));
+            if (!newToAdd.length) return prev;
+            const merged = [...prev, ...newToAdd];
+            saveUserNotifications(user?.id || user?.email, merged);
+            return merged;
+          });
+        }
+      } catch (err) {
+        console.warn('[notifications] Failed to query live announcements:', err);
+      }
+    }
+
+    fetchLiveConsortiumUpdates();
+    return () => { active = false; };
+  }, [user]);
+
   const isMemberOrAdmin = user && (user.role === 'MEMBER' || user.role === 'ADMIN');
   const visibleNotifs = notifList.filter(n => !n.membersOnly || isMemberOrAdmin);
-
   const unreadCount = visibleNotifs.filter(n => n.unread).length;
 
   function markAllRead() {
-    setNotifList(prev => prev.map(n => ({ ...n, unread: false })));
+    const updated = notifList.map(n => ({ ...n, unread: false }));
+    setNotifList(updated);
+    saveUserNotifications(user?.id || user?.email, updated);
   }
 
   function markAllUnread() {
-    setNotifList(prev => prev.map(n => ({ ...n, unread: true })));
+    const updated = notifList.map(n => ({ ...n, unread: true }));
+    setNotifList(updated);
+    saveUserNotifications(user?.id || user?.email, updated);
   }
 
   function toggleNotif(id, e) {
     e.stopPropagation();
-    setNotifList(prev => prev.map(n => n.id === id ? { ...n, unread: !n.unread } : n));
+    const updated = notifList.map(n => n.id === id ? { ...n, unread: !n.unread } : n);
+    setNotifList(updated);
+    saveUserNotifications(user?.id || user?.email, updated);
   }
 
   function handleNotifClick(n) {
-    setNotifList(prev => prev.map(item => item.id === n.id ? { ...item, unread: false } : item));
+    const updated = notifList.map(item => item.id === n.id ? { ...item, unread: false } : item);
+    setNotifList(updated);
+    saveUserNotifications(user?.id || user?.email, updated);
     navigate(n.path);
     setNotifOpen(false);
   }
