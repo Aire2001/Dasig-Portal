@@ -1112,4 +1112,78 @@ router.get('/intents', (req, res) => {
   res.json(KB.map(k => ({ intent: k.intent, sample: k.keywords[0] })));
 });
 
+// Translation in-memory cache
+const translationCache = new Map();
+
+const LANG_CODE_MAP = {
+  en: 'en',
+  bis: 'ceb',
+  ceb: 'ceb',
+  tgl: 'tl',
+  tag: 'tl',
+  tl: 'tl',
+  es: 'es',
+  ja: 'ja',
+  ko: 'ko',
+  zh: 'zh-CN',
+  'zh-cn': 'zh-CN',
+  fr: 'fr',
+  de: 'de',
+  ar: 'ar',
+  ilo: 'ilo',
+  hil: 'hil',
+  it: 'it',
+  id: 'id',
+};
+
+// POST /api/chatbot/translate — Enterprise Multilingual Translation Engine
+router.post('/translate', asyncRoute(async (req, res) => {
+  const { text, targetLang = 'en', sourceLang = 'auto' } = req.body;
+  if (!text || typeof text !== 'string') {
+    return res.status(400).json({ error: 'Text is required for translation' });
+  }
+
+  const cleanText = text.trim();
+  const normalizedTarget = LANG_CODE_MAP[targetLang.toLowerCase()] || targetLang || 'en';
+  const normalizedSource = sourceLang === 'auto' ? 'auto' : (LANG_CODE_MAP[sourceLang.toLowerCase()] || sourceLang || 'auto');
+
+  const cacheKey = `${normalizedSource}:${normalizedTarget}:${cleanText}`;
+  if (translationCache.has(cacheKey)) {
+    return res.json({
+      translatedText: translationCache.get(cacheKey),
+      targetLang: normalizedTarget,
+      cached: true,
+    });
+  }
+
+  try {
+    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${encodeURIComponent(normalizedSource)}&tl=${encodeURIComponent(normalizedTarget)}&dt=t&q=${encodeURIComponent(cleanText)}`;
+    const response = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' } });
+    
+    if (response.ok) {
+      const data = await response.json();
+      if (Array.isArray(data) && Array.isArray(data[0])) {
+        const translated = data[0].map(segment => segment[0]).join('');
+        if (translated && translated.trim()) {
+          if (translationCache.size > 500) translationCache.clear();
+          translationCache.set(cacheKey, translated);
+          return res.json({
+            translatedText: translated,
+            targetLang: normalizedTarget,
+            sourceLang: data[2] || normalizedSource,
+          });
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('[translate] Upstream translation error:', err.message);
+  }
+
+  res.json({
+    translatedText: cleanText,
+    targetLang: normalizedTarget,
+    fallback: true,
+  });
+}));
+
 module.exports = router;

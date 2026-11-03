@@ -185,6 +185,8 @@ export const api = {
   chatbot: {
     send: (message, history = []) => request('/chatbot/message', { method: 'POST', body: JSON.stringify({ message, history }) }),
     intents: () => request('/chatbot/intents'),
+    translate: (text, targetLang = 'en', sourceLang = 'auto') =>
+      request('/chatbot/translate', { method: 'POST', body: JSON.stringify({ text, targetLang, sourceLang }) }),
     tts: (text, voice = 'Adam') => {
       return fetch(`${BASE}/chatbot/tts`, {
         method: 'POST',

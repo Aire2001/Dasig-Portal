@@ -6,6 +6,7 @@ import HaribonFace from '../components/HaribonFace';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { solveClientQuery } from '../lib/haribonEngine';
+import { SUPPORTED_LANGUAGES, getLangByKey, translateMessageText } from '../lib/languages';
 
 // Renders bot reply text with formatted markdown, headings, bullets, numbered lists, and inline code
 function BotText({ text, isStreaming = false }) {
@@ -557,6 +558,9 @@ export default function ChatbotPage() {
   const [autoVoicemail, setAutoVoicemail] = useState(false);
   const [activeCat, setActiveCat] = useState('ALL');
   const [activeLang, setActiveLang] = useState('en');
+  const [translations, setTranslations] = useState({});
+  const [translatingIdx, setTranslatingIdx] = useState(null);
+  const [showLangMenu, setShowLangMenu] = useState(false);
   const recognitionRef = useRef(null);
   const msgsContainerRef              = useRef(null);
 
@@ -880,6 +884,42 @@ export default function ChatbotPage() {
   function jumpToBottom() {
     msgsContainerRef.current?.scrollTo({ top: msgsContainerRef.current.scrollHeight, behavior: 'smooth' });
     setAtBottom(true);
+  }
+
+  async function toggleTranslate(idx, originalText) {
+    const current = translations[idx];
+    if (current?.isShowingTranslated) {
+      setTranslations(prev => ({
+        ...prev,
+        [idx]: { ...prev[idx], isShowingTranslated: false },
+      }));
+      return;
+    }
+
+    if (current?.translatedText && current?.targetLang === activeLang) {
+      setTranslations(prev => ({
+        ...prev,
+        [idx]: { ...prev[idx], isShowingTranslated: true },
+      }));
+      return;
+    }
+
+    setTranslatingIdx(idx);
+    try {
+      const res = await translateMessageText(originalText, activeLang);
+      setTranslations(prev => ({
+        ...prev,
+        [idx]: {
+          translatedText: res,
+          targetLang: activeLang,
+          isShowingTranslated: true,
+        },
+      }));
+    } catch (err) {
+      console.warn('Translation error:', err);
+    } finally {
+      setTranslatingIdx(null);
+    }
   }
 
   function rateMessage(idx, vote) {
@@ -1392,7 +1432,24 @@ export default function ChatbotPage() {
                       }),
                     }}>
                       {msg.from === 'bot' ? (
-                        <BotText text={msg.text} isStreaming={msg.isStreaming} />
+                        <>
+                          {translations[i]?.isShowingTranslated && translations[i]?.translatedText && (
+                            <div style={{
+                              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                              background: 'rgba(249, 115, 22, 0.15)', border: '1px solid rgba(249, 115, 22, 0.35)',
+                              borderRadius: 8, padding: '4px 10px', marginBottom: 10, fontSize: 11, color: '#f97316', fontWeight: 800,
+                            }}>
+                              <span>🌐 Translated to {getLangByKey(translations[i].targetLang).name}</span>
+                              <button
+                                onClick={() => toggleTranslate(i, msg.text)}
+                                style={{ background: 'none', border: 'none', color: '#60a5fa', cursor: 'pointer', padding: 0, fontSize: 11, textDecoration: 'underline', fontWeight: 700 }}
+                              >
+                                Show original
+                              </button>
+                            </div>
+                          )}
+                          <BotText text={translations[i]?.isShowingTranslated && translations[i]?.translatedText ? translations[i].translatedText : msg.text} isStreaming={msg.isStreaming} />
+                        </>
                       ) : (
                         <span style={{ lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{msg.text}</span>
                       )}
@@ -1427,6 +1484,14 @@ export default function ChatbotPage() {
                           title="Copy response"
                         >
                           {copied === i ? '✓ Copied' : '⧉ Copy'}
+                        </button>
+                        <button
+                          className={`action-btn${translations[i]?.isShowingTranslated ? ' active-translate' : ''}`}
+                          onClick={() => toggleTranslate(i, msg.text)}
+                          title={translations[i]?.isShowingTranslated ? 'Revert to original text' : `Translate to ${getLangByKey(activeLang).name}`}
+                          style={translations[i]?.isShowingTranslated ? { color: '#f97316', borderColor: 'rgba(249,115,22,0.4)', background: 'rgba(249,115,22,0.12)' } : undefined}
+                        >
+                          {translatingIdx === i ? '⏳ Translating…' : translations[i]?.isShowingTranslated ? '↩ Original' : '🌐 Translate'}
                         </button>
                         <button
                           className={`action-btn${speakingIdx === i ? ' speaking-btn' : ''}`}
@@ -1573,31 +1638,82 @@ export default function ChatbotPage() {
               {!ended && !hasReplied && (
                 <div style={{ padding: '0 24px 14px' }}>
                   {/* Natural Language Switcher */}
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, flexWrap: 'wrap', gap: 6 }}>
-                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.5px' }}>
-                      🌐 Natural Language / Pinulongan:
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, flexWrap: 'wrap', gap: 6, position: 'relative' }}>
+                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.5px', display: 'flex', alignItems: 'center', gap: 5 }}>
+                      <span>🌐</span> Multilingual AI Engine / Pinulongan:
                     </div>
-                    <div style={{ display: 'flex', gap: 6 }}>
-                      {[
-                        { key: 'en', label: '🇺🇸 English' },
-                        { key: 'bis', label: '🇵🇭 Bisaya (Cebuano)' },
-                        { key: 'tgl', label: '🇵🇭 Tagalog (Filipino)' },
-                      ].map(l => (
+                    <div style={{ display: 'flex', gap: 5, alignItems: 'center', flexWrap: 'wrap' }}>
+                      {SUPPORTED_LANGUAGES.slice(0, 5).map(l => (
                         <button
                           key={l.key}
-                          onClick={() => { setActiveLang(l.key); setActiveCat('ALL'); }}
+                          onClick={() => { setActiveLang(l.key); setActiveCat('ALL'); setShowLangMenu(false); }}
                           style={{
                             background: activeLang === l.key ? 'rgba(249,115,22,0.22)' : 'rgba(255,255,255,0.04)',
                             border: `1px solid ${activeLang === l.key ? 'rgba(249,115,22,0.55)' : 'rgba(255,255,255,0.08)'}`,
-                            color: activeLang === l.key ? '#fb923c' : 'rgba(255,255,255,0.65)',
+                            color: activeLang === l.key ? '#fb923c' : 'rgba(255,255,255,0.7)',
                             borderRadius: 8, padding: '4px 10px', fontSize: 11.5, fontWeight: 800,
                             cursor: 'pointer', fontFamily: 'inherit', transition: 'all .14s',
+                            display: 'flex', alignItems: 'center', gap: 4,
                           }}
                         >
-                          {l.label}
+                          <span>{l.flag}</span>
+                          <span>{l.short}</span>
                         </button>
                       ))}
+
+                      {/* More Languages Dropdown Trigger */}
+                      <button
+                        onClick={() => setShowLangMenu(m => !m)}
+                        style={{
+                          background: showLangMenu || !SUPPORTED_LANGUAGES.slice(0, 5).some(l => l.key === activeLang) ? 'rgba(249,115,22,0.25)' : 'rgba(255,255,255,0.06)',
+                          border: `1px solid ${showLangMenu || !SUPPORTED_LANGUAGES.slice(0, 5).some(l => l.key === activeLang) ? '#f97316' : 'rgba(255,255,255,0.14)'}`,
+                          color: '#fff',
+                          borderRadius: 8, padding: '4px 11px', fontSize: 11.5, fontWeight: 800,
+                          cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 5,
+                        }}
+                      >
+                        <span>{getLangByKey(activeLang).flag}</span>
+                        <span>{getLangByKey(activeLang).short} ({SUPPORTED_LANGUAGES.length}+)</span>
+                        <span style={{ fontSize: 9 }}>{showLangMenu ? '▲' : '▼'}</span>
+                      </button>
                     </div>
+
+                    {/* All Languages Popover Menu */}
+                    {showLangMenu && (
+                      <div style={{
+                        position: 'absolute', bottom: '100%', right: 0, left: 0, marginBottom: 8,
+                        background: 'rgba(11, 19, 41, 0.98)', backdropFilter: 'blur(16px)',
+                        border: '1px solid rgba(249,115,22,0.3)', borderRadius: 14,
+                        padding: 12, boxShadow: '0 16px 40px rgba(0,0,0,0.85)', zIndex: 120,
+                        maxHeight: 220, overflowY: 'auto',
+                      }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, paddingBottom: 6, borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+                          <span style={{ fontSize: 11, fontWeight: 800, color: '#f97316', textTransform: 'uppercase', letterSpacing: '.5px' }}>
+                            Choose Response Language ({SUPPORTED_LANGUAGES.length} Available)
+                          </span>
+                          <button onClick={() => setShowLangMenu(false)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer', fontSize: 14 }}>✕</button>
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 6 }}>
+                          {SUPPORTED_LANGUAGES.map(l => (
+                            <button
+                              key={l.key}
+                              onClick={() => { setActiveLang(l.key); setActiveCat('ALL'); setShowLangMenu(false); }}
+                              style={{
+                                background: activeLang === l.key ? 'rgba(249,115,22,0.25)' : 'rgba(255,255,255,0.04)',
+                                border: `1px solid ${activeLang === l.key ? 'rgba(249,115,22,0.5)' : 'rgba(255,255,255,0.07)'}`,
+                                color: activeLang === l.key ? '#fb923c' : 'rgba(255,255,255,0.8)',
+                                borderRadius: 8, padding: '7px 10px', fontSize: 12, fontWeight: 700,
+                                cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left',
+                                display: 'flex', alignItems: 'center', gap: 8,
+                              }}
+                            >
+                              <span style={{ fontSize: 15 }}>{l.flag}</span>
+                              <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{l.name}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Category Pills Bar */}

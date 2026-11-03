@@ -4,6 +4,7 @@ import HaribonFace from './HaribonFace';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { solveClientQuery } from '../lib/haribonEngine';
+import { SUPPORTED_LANGUAGES, getLangByKey, translateMessageText } from '../lib/languages';
 
 /* ── Language-specific quick chips & prompts ─ */
 const LANG_CHIPS = {
@@ -27,6 +28,22 @@ const LANG_CHIPS = {
     { label: '💰 DOST Research Grants', q: 'Mayroon bang open research funding para sa unibersidad?' },
     { label: '🏛 Kasaping Institusyon', q: 'Sino-sino ang mga miyembro ng DASIG consortium?' },
     { label: '📋 Patakaran at Privacy', q: 'Ano ang mga patakaran sa Data Privacy ng DASIG?' },
+  ],
+  es: [
+    { label: '📅 Eventos de la Región VII', q: '¿Cuáles son los próximos eventos del consorcio?' },
+    { label: '🎓 Capacitación Docente', q: '¿Qué programas de formación están disponibles?' },
+    { label: '🏛 Miembros del Consorcio', q: '¿Quiénes son las universidades e instituciones de DASIG?' },
+    { label: '💰 Becas e Investigación', q: '¿Qué fondos de investigación DOST-7 están abiertos?' },
+  ],
+  ja: [
+    { label: '📅 イベント・サミット', q: '第7地域で予定されているイベントを教えてください。' },
+    { label: '🎓 教員研修プログラム', q: '受講可能なトレーニングプログラムは何ですか？' },
+    { label: '🏛 加盟大学・機関', q: 'DASIGコンソーシアムの加盟メンバーは誰ですか？' },
+  ],
+  zh: [
+    { label: '📅 近期活动与峰会', q: 'DASIG近期有哪些开放的区域学术活动？' },
+    { label: '🎓 教师发展培训', q: '有哪些可报名的专业技能与科研培训？' },
+    { label: '🏛 联盟成员院校', q: 'DASIG联盟包含哪些第7地区的大学与政府机构？' },
   ],
 };
 
@@ -359,7 +376,10 @@ export default function Chatbot() {
   const [copied, setCopied]     = useState(null);
   const [speakingIdx, setSpeakingIdx] = useState(null);
   const [listening, setListening] = useState(false);
-  const [activeLang, setActiveLang] = useState('en'); // 'en' | 'bis' | 'tgl'
+  const [activeLang, setActiveLang] = useState('en');
+  const [translations, setTranslations] = useState({});
+  const [translatingIdx, setTranslatingIdx] = useState(null);
+  const [showLangMenu, setShowLangMenu] = useState(false);
   const [copiedSummary, setCopiedSummary] = useState(false);
   const recognitionRef          = useRef(null);
   const msgsRef                 = useRef(null);
@@ -396,6 +416,42 @@ export default function Chatbot() {
     setSpeakingIdx(null);
     setMessages([{ from:'bot', text: getGreeting(user) }]);
     setEnded(false); setInput(''); setHasReplied(false);
+  }
+
+  async function toggleTranslate(idx, originalText) {
+    const current = translations[idx];
+    if (current?.isShowingTranslated) {
+      setTranslations(prev => ({
+        ...prev,
+        [idx]: { ...prev[idx], isShowingTranslated: false },
+      }));
+      return;
+    }
+
+    if (current?.translatedText && current?.targetLang === activeLang) {
+      setTranslations(prev => ({
+        ...prev,
+        [idx]: { ...prev[idx], isShowingTranslated: true },
+      }));
+      return;
+    }
+
+    setTranslatingIdx(idx);
+    try {
+      const res = await translateMessageText(originalText, activeLang);
+      setTranslations(prev => ({
+        ...prev,
+        [idx]: {
+          translatedText: res,
+          targetLang: activeLang,
+          isShowingTranslated: true,
+        },
+      }));
+    } catch (err) {
+      console.warn('Translation error:', err);
+    } finally {
+      setTranslatingIdx(null);
+    }
   }
 
   function rateMessage(idx, vote) {
@@ -748,7 +804,26 @@ export default function Chatbot() {
                         : { background:'linear-gradient(135deg,#f97316,#ea580c)', color:'#fff', borderBottomRightRadius:4, boxShadow:'0 4px 16px rgba(249,115,22,0.32)' }
                       ),
                     }}>
-                      {msg.from === 'bot' ? <WBotText text={msg.text} onNavigate={() => setOpen(false)} isStreaming={msg.isStreaming} /> : <span style={{ lineHeight:1.55 }}>{msg.text}</span>}
+                      {msg.from === 'bot' ? (
+                        <>
+                          {translations[i]?.isShowingTranslated && translations[i]?.translatedText && (
+                            <div style={{
+                              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                              background: 'rgba(249, 115, 22, 0.15)', border: '1px solid rgba(249, 115, 22, 0.35)',
+                              borderRadius: 7, padding: '3px 8px', marginBottom: 8, fontSize: 10, color: '#f97316', fontWeight: 800,
+                            }}>
+                              <span>🌐 Translated to {getLangByKey(translations[i].targetLang).name}</span>
+                              <button
+                                onClick={() => toggleTranslate(i, msg.text)}
+                                style={{ background: 'none', border: 'none', color: '#60a5fa', cursor: 'pointer', padding: 0, fontSize: 10, textDecoration: 'underline', fontWeight: 700 }}
+                              >
+                                Show original
+                              </button>
+                            </div>
+                          )}
+                          <WBotText text={translations[i]?.isShowingTranslated && translations[i]?.translatedText ? translations[i].translatedText : msg.text} onNavigate={() => setOpen(false)} isStreaming={msg.isStreaming} />
+                        </>
+                      ) : <span style={{ lineHeight:1.55 }}>{msg.text}</span>}
                     </div>
                     {msg.time && (
                       <div style={{
@@ -784,6 +859,14 @@ export default function Chatbot() {
                           title="Copy response"
                         >
                           {copied === i ? '✓ Copied' : '⧉'}
+                        </button>
+                        <button
+                          className={`w-action-btn${translations[i]?.isShowingTranslated ? ' active-translate' : ''}`}
+                          onClick={() => toggleTranslate(i, msg.text)}
+                          title={translations[i]?.isShowingTranslated ? 'Revert to original text' : `Translate to ${getLangByKey(activeLang).name}`}
+                          style={translations[i]?.isShowingTranslated ? { color: '#f97316', borderColor: 'rgba(249,115,22,0.4)', background: 'rgba(249,115,22,0.12)' } : undefined}
+                        >
+                          {translatingIdx === i ? '⏳ Translating…' : translations[i]?.isShowingTranslated ? '↩ Original' : '🌐 Translate'}
                         </button>
                         <button
                           className={`w-action-btn${speakingIdx === i ? ' speaking' : ''}`}
@@ -892,31 +975,82 @@ export default function Chatbot() {
           {/* ── Language Switcher Bar & Quick Prompts ── */}
           {!ended && (
             <div style={{ borderTop:'1px solid rgba(255,255,255,0.06)', background:'rgba(0,0,0,0.2)', padding:'6px 12px' }}>
-              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom: 4 }}>
-                <span style={{ fontSize:10, color:'rgba(255,255,255,0.4)', fontWeight:700, textTransform:'uppercase', letterSpacing:'.5px' }}>
-                  Language / Pinulongan:
+              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom: 4, position: 'relative' }}>
+                <span style={{ fontSize:10, color:'rgba(255,255,255,0.45)', fontWeight:700, textTransform:'uppercase', letterSpacing:'.5px', display:'flex', alignItems:'center', gap:4 }}>
+                  <span>🌐</span> Language:
                 </span>
-                <div style={{ display:'flex', gap:4 }}>
-                  {[
-                    { key:'en', label:'🇺🇸 EN' },
-                    { key:'bis', label:'🇵🇭 BIS' },
-                    { key:'tgl', label:'🇵🇭 TAG' },
-                  ].map(l => (
+                <div style={{ display:'flex', gap:3, alignItems:'center', flexWrap:'wrap' }}>
+                  {SUPPORTED_LANGUAGES.slice(0, 4).map(l => (
                     <button
                       key={l.key}
-                      onClick={() => setActiveLang(l.key)}
+                      onClick={() => { setActiveLang(l.key); setShowLangMenu(false); }}
                       style={{
                         background: activeLang === l.key ? 'rgba(249,115,22,0.22)' : 'rgba(255,255,255,0.04)',
                         border: `1px solid ${activeLang === l.key ? 'rgba(249,115,22,0.5)' : 'rgba(255,255,255,0.08)'}`,
                         color: activeLang === l.key ? '#fb923c' : 'rgba(255,255,255,0.55)',
-                        borderRadius: 6, padding: '2px 7px', fontSize: 10, fontWeight: 800,
-                        cursor: 'pointer', fontFamily: 'inherit',
+                        borderRadius: 6, padding: '2px 6px', fontSize: 9.5, fontWeight: 800,
+                        cursor: 'pointer', fontFamily: 'inherit', display:'flex', alignItems:'center', gap:3,
                       }}
+                      title={l.name}
                     >
-                      {l.label}
+                      <span>{l.flag}</span>
+                      <span>{l.short}</span>
                     </button>
                   ))}
+
+                  <button
+                    onClick={() => setShowLangMenu(m => !m)}
+                    style={{
+                      background: showLangMenu || !SUPPORTED_LANGUAGES.slice(0, 4).some(l => l.key === activeLang) ? 'rgba(249,115,22,0.25)' : 'rgba(255,255,255,0.06)',
+                      border: `1px solid ${showLangMenu || !SUPPORTED_LANGUAGES.slice(0, 4).some(l => l.key === activeLang) ? '#f97316' : 'rgba(255,255,255,0.12)'}`,
+                      color: '#fff',
+                      borderRadius: 6, padding: '2px 7px', fontSize: 9.5, fontWeight: 800,
+                      cursor: 'pointer', fontFamily: 'inherit', display:'flex', alignItems:'center', gap:3,
+                    }}
+                    title="Select from all 14+ languages"
+                  >
+                    <span>{getLangByKey(activeLang).flag}</span>
+                    <span>{getLangByKey(activeLang).short}</span>
+                    <span style={{ fontSize: 8 }}>{showLangMenu ? '▲' : '▼'}</span>
+                  </button>
                 </div>
+
+                {/* All Languages Popover Menu */}
+                {showLangMenu && (
+                  <div style={{
+                    position: 'absolute', bottom: '100%', right: 0, left: 0, marginBottom: 8,
+                    background: 'rgba(11, 19, 41, 0.98)', backdropFilter: 'blur(16px)',
+                    border: '1px solid rgba(249,115,22,0.3)', borderRadius: 12,
+                    padding: 10, boxShadow: '0 12px 36px rgba(0,0,0,0.85)', zIndex: 120,
+                    maxHeight: 190, overflowY: 'auto',
+                  }}>
+                    <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom: 8, paddingBottom: 4, borderBottom:'1px solid rgba(255,255,255,0.08)' }}>
+                      <span style={{ fontSize: 10, fontWeight: 800, color: '#f97316', textTransform: 'uppercase', letterSpacing: '.5px' }}>
+                        All Languages ({SUPPORTED_LANGUAGES.length})
+                      </span>
+                      <button onClick={() => setShowLangMenu(false)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer', fontSize: 12 }}>✕</button>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 5 }}>
+                      {SUPPORTED_LANGUAGES.map(l => (
+                        <button
+                          key={l.key}
+                          onClick={() => { setActiveLang(l.key); setShowLangMenu(false); }}
+                          style={{
+                            background: activeLang === l.key ? 'rgba(249,115,22,0.25)' : 'rgba(255,255,255,0.04)',
+                            border: `1px solid ${activeLang === l.key ? 'rgba(249,115,22,0.5)' : 'rgba(255,255,255,0.07)'}`,
+                            color: activeLang === l.key ? '#fb923c' : 'rgba(255,255,255,0.8)',
+                            borderRadius: 6, padding: '5px 8px', fontSize: 10.5, fontWeight: 700,
+                            cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left',
+                            display: 'flex', alignItems: 'center', gap: 6,
+                          }}
+                        >
+                          <span style={{ fontSize: 13 }}>{l.flag}</span>
+                          <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{l.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {!hasReplied && (
