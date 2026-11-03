@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import Nav from './components/Nav';
 import ColdStartBanner from './components/ColdStartBanner';
+import NetworkStatusToast from './components/NetworkStatusToast';
 import Footer from './components/Footer';
 import Chatbot from './components/Chatbot';
 import HomePage from './pages/HomePage';
@@ -34,6 +35,7 @@ export default function App() {
           <Route path="/*" element={
             <>
               <ColdStartBanner />
+              <NetworkStatusToast />
               <Nav />
               <Routes>
                 <Route path="/"             element={<HomePage />} />
