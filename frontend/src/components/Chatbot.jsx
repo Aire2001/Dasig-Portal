@@ -386,7 +386,7 @@ export default function Chatbot() {
   useEffect(() => {
     if ('speechSynthesis' in window) window.speechSynthesis.cancel();
     setSpeakingIdx(null);
-    setMessages([{ from:'bot', text: getGreeting(user), time: new Date() }]);
+    setMessages([{ from:'bot', text: getLocalizedGreeting(user, activeLang), time: new Date() }]);
     setEnded(false); setInput(''); setHasReplied(false); setUnread(0);
   }, [user?.id]);
 
