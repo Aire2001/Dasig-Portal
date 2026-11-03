@@ -187,11 +187,11 @@ export const api = {
     intents: () => request('/chatbot/intents'),
     translate: (text, targetLang = 'en', sourceLang = 'auto') =>
       request('/chatbot/translate', { method: 'POST', body: JSON.stringify({ text, targetLang, sourceLang }) }),
-    tts: (text, voice = 'Adam') => {
+    tts: (text, lang = 'en', voice = 'Adam') => {
       return fetch(`${BASE}/chatbot/tts`, {
         method: 'POST',
         headers: headers(),
-        body: JSON.stringify({ text, voice }),
+        body: JSON.stringify({ text, lang, voice }),
       });
     },
   },

@@ -1,4 +1,5 @@
 import { getLangByKey } from './languages.js';
+import { api } from '../api.js';
 
 class MultilingualVoicePlayer {
   constructor() {
@@ -19,7 +20,7 @@ class MultilingualVoicePlayer {
     if (this.onStateChange) this.onStateChange(null);
   }
 
-  play(idx, text, langKey = 'en', onStateChange) {
+  async play(idx, text, langKey = 'en', onStateChange) {
     this.onStateChange = onStateChange;
 
     if (this.currentIdx === idx) {
@@ -48,15 +49,37 @@ class MultilingualVoicePlayer {
     const targetCode = (langObj.code || 'en').toLowerCase();
     const targetBcp47 = (langObj.bcp47 || 'en-US').toLowerCase();
 
-    // 1. Try Browser SpeechSynthesis if native voice exists for target language
+    // 1. Try Backend Cloud Neural Audio Proxy (works everywhere, true native accent)
+    try {
+      const res = await api.chatbot.tts(cleanText.slice(0, 300), langObj.code);
+      const contentType = res.headers?.get('content-type') || '';
+      if (res.ok && contentType.includes('audio/mpeg')) {
+        const blob = await res.blob();
+        const audioUrl = URL.createObjectURL(blob);
+        const audio = new Audio(audioUrl);
+        this.audio = audio;
+        audio.onended = () => this.stop();
+        audio.onerror = () => this.fallbackPlay(cleanText, langObj, targetCode, targetBcp47);
+        await audio.play();
+        return;
+      }
+    } catch (_) {
+      // Fallback to client browser audio
+    }
+
+    this.fallbackPlay(cleanText, langObj, targetCode, targetBcp47);
+  }
+
+  fallbackPlay(cleanText, langObj, targetCode, targetBcp47) {
+    // 2. Try Browser SpeechSynthesis if native voice exists for target language
     const voices = (typeof window !== 'undefined' && 'speechSynthesis' in window)
       ? window.speechSynthesis.getVoices() || []
       : [];
 
     const matchedVoice =
       voices.find(v => v.lang && v.lang.toLowerCase() === targetBcp47) ||
-      voices.find(v => v.lang && v.lang.toLowerCase().startsWith(targetCode)) ||
-      voices.find(v => v.lang && v.lang.toLowerCase().includes(targetCode));
+      voices.find(v => v.lang && v.lang.toLowerCase().startsWith(targetCode.slice(0, 2))) ||
+      voices.find(v => v.lang && v.lang.toLowerCase().includes(targetCode.slice(0, 2)));
 
     if (matchedVoice && 'speechSynthesis' in window) {
       const utter = new SpeechSynthesisUtterance(cleanText);
@@ -69,48 +92,36 @@ class MultilingualVoicePlayer {
       return;
     }
 
-    // 2. Play Native Cloud Neural Audio via Google Translate TTS chunks
+    // 3. Direct Google Translate TTS client audio
     const sentences = cleanText.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [cleanText];
-    const queue = sentences.map(s => s.trim()).filter(Boolean);
-    let currentQueueIdx = 0;
+    const segment = (sentences[0] || cleanText).slice(0, 180);
+    const url = `https://translate.googleapis.com/translate_tts?ie=UTF-8&tl=${encodeURIComponent(langObj.code)}&client=tw-ob&q=${encodeURIComponent(segment)}`;
 
-    const playNextChunk = () => {
-      if (currentQueueIdx >= queue.length || this.currentIdx !== idx) {
+    const audio = new Audio(url);
+    this.audio = audio;
+    audio.onended = () => this.stop();
+    audio.onerror = () => {
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        const utter = new SpeechSynthesisUtterance(cleanText);
+        utter.lang = langObj.bcp47 || 'en-US';
+        utter.onend = () => this.stop();
+        utter.onerror = () => this.stop();
+        window.speechSynthesis.speak(utter);
+      } else {
         this.stop();
-        return;
       }
-      const segment = queue[currentQueueIdx].slice(0, 180);
-      currentQueueIdx++;
-      const url = `https://translate.googleapis.com/translate_tts?ie=UTF-8&tl=${encodeURIComponent(langObj.code)}&client=tw-ob&q=${encodeURIComponent(segment)}`;
-
-      const audio = new Audio(url);
-      this.audio = audio;
-      audio.onended = playNextChunk;
-      audio.onerror = () => {
-        if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-          const utter = new SpeechSynthesisUtterance(cleanText);
-          utter.lang = langObj.bcp47 || 'en-US';
-          utter.onend = () => this.stop();
-          utter.onerror = () => this.stop();
-          window.speechSynthesis.speak(utter);
-        } else {
-          this.stop();
-        }
-      };
-      audio.play().catch(() => {
-        if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-          const utter = new SpeechSynthesisUtterance(cleanText);
-          utter.lang = langObj.bcp47 || 'en-US';
-          utter.onend = () => this.stop();
-          utter.onerror = () => this.stop();
-          window.speechSynthesis.speak(utter);
-        } else {
-          this.stop();
-        }
-      });
     };
-
-    playNextChunk();
+    audio.play().catch(() => {
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        const utter = new SpeechSynthesisUtterance(cleanText);
+        utter.lang = langObj.bcp47 || 'en-US';
+        utter.onend = () => this.stop();
+        utter.onerror = () => this.stop();
+        window.speechSynthesis.speak(utter);
+      } else {
+        this.stop();
+      }
+    });
   }
 }
 

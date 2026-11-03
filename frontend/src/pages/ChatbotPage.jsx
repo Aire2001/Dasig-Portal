@@ -725,7 +725,7 @@ export default function ChatbotPage() {
             next[lastIdx] = { ...next[lastIdx], text: fullReply, isStreaming: false };
           }
           if (autoVoicemail) {
-            setTimeout(() => speakMessage(lastIdx, fullReply), 200);
+            setTimeout(() => speakMessage(lastIdx, fullReply, activeLang), 200);
           }
           return next;
         });
@@ -787,7 +787,7 @@ export default function ChatbotPage() {
       }));
 
     try {
-      const res = await api.chatbot.send(trimmed, historyPayload);
+      const res = await api.chatbot.send(trimmed, historyPayload, activeLang);
       const newTotal = totalAsked + 1;
       const newMatched = totalMatched + (res.matched ? 1 : 0);
       setTotalAsked(newTotal);
@@ -795,6 +795,15 @@ export default function ChatbotPage() {
       setMatchRate(Math.round((newMatched / newTotal) * 100));
       setHasReplied(true);
       setThinking(false);
+
+      let replyText = res.reply;
+      if (activeLang !== 'en') {
+        try {
+          replyText = await translateMessageText(res.reply, activeLang);
+        } catch (e) {
+          console.warn('[chatbot-page] Auto-translation to activeLang failed:', e);
+        }
+      }
 
       const botTemplate = {
         from: 'bot',
@@ -806,12 +815,21 @@ export default function ChatbotPage() {
         time: new Date(),
       };
 
-      streamBotResponse(botTemplate, res.reply);
+      streamBotResponse(botTemplate, replyText);
     } catch (err) {
       console.warn('[chatbot] Backend offline or waking up, using Client High-IQ Engine:', err);
       const fallback = solveClientQuery(trimmed, historyPayload, user);
       setHasReplied(true);
       setThinking(false);
+
+      let replyText = fallback.reply;
+      if (activeLang !== 'en') {
+        try {
+          replyText = await translateMessageText(fallback.reply, activeLang);
+        } catch (e) {
+          console.warn('[chatbot-page] Auto-translation to activeLang fallback failed:', e);
+        }
+      }
 
       const botTemplate = {
         from: 'bot',
@@ -823,7 +841,7 @@ export default function ChatbotPage() {
         time: new Date(),
       };
 
-      streamBotResponse(botTemplate, fallback.reply);
+      streamBotResponse(botTemplate, replyText);
     } finally {
       setTimeout(() => inputRef.current?.focus(), 50);
     }

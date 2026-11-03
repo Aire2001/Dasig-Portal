@@ -1036,7 +1036,7 @@ router.post('/message', asyncRoute(async (req, res) => {
 
 // POST /api/chatbot/tts — Neural Voice Generation (ElevenLabs + Neural Fallback)
 router.post('/tts', asyncRoute(async (req, res) => {
-  const { text, voice = 'Adam' } = req.body;
+  const { text, voice = 'Adam', lang = 'en' } = req.body || {};
   if (!text || typeof text !== 'string') {
     return res.status(400).json({ error: 'Text is required for voice generation' });
   }
@@ -1052,6 +1052,20 @@ router.post('/tts', asyncRoute(async (req, res) => {
 
   const apiKey = process.env.ELEVENLABS_API_KEY;
   if (!apiKey) {
+    try {
+      const normalizedLang = LANG_CODE_MAP[lang.toLowerCase()] || lang || 'en';
+      const ttsUrl = `https://translate.googleapis.com/translate_tts?ie=UTF-8&tl=${encodeURIComponent(normalizedLang)}&client=tw-ob&q=${encodeURIComponent(clean.slice(0, 300))}`;
+      const ttsRes = await fetch(ttsUrl, {
+        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' }
+      });
+      if (ttsRes.ok) {
+        res.setHeader('Content-Type', 'audio/mpeg');
+        const buffer = await ttsRes.arrayBuffer();
+        return res.send(Buffer.from(buffer));
+      }
+    } catch (e) {
+      console.warn('[tts] Cloud proxy error:', e);
+    }
     return res.status(200).json({
       fallback: true,
       message: 'No ElevenLabs API key found; using client-side High-Fidelity Neural voice synthesizer',
