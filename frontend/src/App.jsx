@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import Nav from './components/Nav';
+import ColdStartBanner from './components/ColdStartBanner';
 import Footer from './components/Footer';
 import Chatbot from './components/Chatbot';
 import HomePage from './pages/HomePage';
@@ -32,6 +33,7 @@ export default function App() {
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/*" element={
             <>
+              <ColdStartBanner />
               <Nav />
               <Routes>
                 <Route path="/"             element={<HomePage />} />

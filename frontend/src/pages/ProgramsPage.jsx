@@ -10,6 +10,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import PageHeader from '../components/PageHeader';
 import ParticleBackground from '../components/ParticleBackground';
 import { api } from '../api';
+import { addNotification } from '../lib/notifications';
 import { useAuth } from '../context/AuthContext';
 import QRCode from 'qrcode';
 
@@ -1962,6 +1963,14 @@ function EventsTab({ user }) {
       setEvents(p => p.map(e => e.id === formModal.id ? updated : e));
       setMyRegs(p => ({ ...p, [formModal.id]: { attended: false } }));
       const refCode = `DSG-2026-EVT-${String(updated.id).padStart(4, '0')}-${(fname || user?.name || 'GST').replace(/[^a-zA-Z0-9]/g, '').slice(0, 4).toUpperCase()}`;
+      try {
+        addNotification(user?.id || user?.email, {
+          title: '🎟️ Event Registration Confirmed',
+          msg: `You have successfully registered for "${updated.title}". Check-in pass ref: ${refCode}.`,
+          category: 'Event',
+          path: `/verify-pass?ref=${refCode}&title=${encodeURIComponent(updated.title)}&name=${encodeURIComponent(fname)}&type=event`,
+        });
+      } catch (_) {}
       setFormModal(null);
       setTicketModal({
         item: updated,
@@ -2506,6 +2515,14 @@ function TrainingTab({ user }) {
       setTrainings(p => p.map(t => t.id === formModal.id ? upd : t));
       setMyEnr(p => ({ ...p, [formModal.id]: true }));
       const refCode = `DSG-2026-TRN-${String(upd.id).padStart(4, '0')}-${(fname || user?.name || 'GST').replace(/[^a-zA-Z0-9]/g, '').slice(0, 4).toUpperCase()}`;
+      try {
+        addNotification(user?.id || user?.email, {
+          title: '🎓 Training Enrollment Confirmed',
+          msg: `You have enrolled in "${upd.title}". Check-in ref: ${refCode}.`,
+          category: 'Training',
+          path: `/verify-pass?ref=${refCode}&title=${encodeURIComponent(upd.title)}&name=${encodeURIComponent(fname)}&type=training`,
+        });
+      } catch (_) {}
       setFormModal(null);
       setTicketModal({
         item: upd,

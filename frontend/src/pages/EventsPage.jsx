@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import PageHeader from '../components/PageHeader';
 import ParticleBackground from '../components/ParticleBackground';
 import { api } from '../api';
+import { addNotification } from '../lib/notifications';
 import { useAuth } from '../context/AuthContext';
 
 const filters = ['All', 'Summit', 'Workshop', 'Seminar', 'Funding'];
@@ -230,6 +231,14 @@ export default function EventsPage() {
       const updated = { ...formModal, enrolled: newEnrolled };
       setEvents(prev => prev.map(e => e.id === formModal.id ? updated : e));
       setMyRegs(prev => ({ ...prev, [formModal.id]: { attended: false } }));
+      try {
+        addNotification(user?.id || user?.email, {
+          title: '🎟️ Event Registration Confirmed',
+          msg: `Registration confirmed for "${updated.title}". View your digital QR check-in pass.`,
+          category: 'Event',
+          path: `/verify-pass?title=${encodeURIComponent(updated.title)}&name=${encodeURIComponent(fname)}&type=event`,
+        });
+      } catch (_) {}
       setFormModal(null);
       setOkModal({ event: updated, name: fname, phone, institution, email: user?.email || '', role: user?.role || 'GUEST' });
     } catch (err) {

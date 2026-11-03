@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import PageHeader from '../components/PageHeader';
 import ParticleBackground from '../components/ParticleBackground';
 import { api } from '../api';
+import { addNotification } from '../lib/notifications';
 import { useAuth } from '../context/AuthContext';
 
 const STYLES = {
@@ -68,6 +69,14 @@ export default function TrainingPage() {
       const newEnrolled = res.enrolled ?? formModal.enrolled + 1;
       const updated = { ...formModal, enrolled: newEnrolled };
       setTrainings(prev => prev.map(t => t.id === formModal.id ? updated : t));
+      try {
+        addNotification(user?.id || user?.email, {
+          title: '🎓 Training Enrollment Confirmed',
+          msg: `You have successfully enrolled in "${updated.title}". Check-in pass verified.`,
+          category: 'Training',
+          path: `/verify-pass?title=${encodeURIComponent(updated.title)}&name=${encodeURIComponent(fname)}&type=training`,
+        });
+      } catch (_) {}
       setFormModal(null);
       setOkModal({ training: updated, name: fname, phone, institution, email, role: user.role });
     } catch (err) {
