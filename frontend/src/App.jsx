@@ -42,7 +42,9 @@ export default function App() {
         <ScrollToTop />
         <Routes>
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<Navigate to="/login" replace />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ForgotPasswordPage />} />
           <Route path="/*" element={
             <>
               <ColdStartBanner />
@@ -51,9 +53,13 @@ export default function App() {
               <Routes>
                 <Route path="/"             element={<HomePage />} />
                 <Route path="/programs"     element={<ProgramsPage />} />
+                <Route path="/calendar"     element={<Navigate to="/programs?tab=calendar" replace />} />
+                <Route path="/event"        element={<Navigate to="/programs?tab=events" replace />} />
                 <Route path="/events"       element={<Navigate to="/programs?tab=events" replace />} />
                 <Route path="/news"         element={<NewsPage />} />
                 <Route path="/training"     element={<Navigate to="/programs?tab=training" replace />} />
+                <Route path="/trainings"    element={<Navigate to="/programs?tab=training" replace />} />
+                <Route path="/grants"       element={<Navigate to="/funding" replace />} />
                 <Route path="/members"      element={<MembersPage />} />
                 <Route path="/membership"   element={<MembershipPage />} />
                 <Route path="/policies"     element={<PoliciesPage />} />

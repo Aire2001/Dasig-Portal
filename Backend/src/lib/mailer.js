@@ -33,6 +33,7 @@ function brevoSend(opts) {
   };
   if (opts.text) body.textContent = opts.text;
   if (opts.replyTo) body.replyTo = { email: String(opts.replyTo) };
+  if (opts.headers) body.headers = opts.headers;
   if (opts.attachments && opts.attachments.length) {
     body.attachment = opts.attachments.map(a => ({
       name: a.filename,
