@@ -1054,7 +1054,7 @@ router.post('/tts', asyncRoute(async (req, res) => {
   if (!apiKey) {
     try {
       const normalizedLang = LANG_CODE_MAP[lang.toLowerCase()] || lang || 'en';
-      const ttsUrl = `https://translate.googleapis.com/translate_tts?ie=UTF-8&tl=${encodeURIComponent(normalizedLang)}&client=tw-ob&q=${encodeURIComponent(clean.slice(0, 300))}`;
+      const ttsUrl = `https://translate.googleapis.com/translate_tts?ie=UTF-8&tl=${encodeURIComponent(normalizedLang)}&client=tw-ob&q=${encodeURIComponent(clean.slice(0, 500))}`;
       const ttsRes = await fetch(ttsUrl, {
         headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' }
       });
