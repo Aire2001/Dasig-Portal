@@ -724,7 +724,7 @@ router.post('/message', asyncRoute(async (req, res) => {
           intent: 'members_count',
           score: 10,
           language: lang,
-          followups: getSmartFollowups(matchedIntent || intent || best?.intent, lang),
+          followups: getSmartFollowups(match?.intent || 'events', lang),
           navigate_to: '/membership',
           suggestions: []
         });
@@ -746,7 +746,7 @@ router.post('/message', asyncRoute(async (req, res) => {
           intent: 'events_count',
           score: 10,
           language: lang,
-          followups: getSmartFollowups(matchedIntent || intent || best?.intent, lang),
+          followups: getSmartFollowups(match?.intent || 'events', lang),
           navigate_to: '/programs?tab=events',
           suggestions: []
         });
@@ -768,7 +768,7 @@ router.post('/message', asyncRoute(async (req, res) => {
           intent: 'training_count',
           score: 10,
           language: lang,
-          followups: getSmartFollowups(matchedIntent || intent || best?.intent, lang),
+          followups: getSmartFollowups(match?.intent || 'events', lang),
           navigate_to: '/programs?tab=training',
           suggestions: []
         });
@@ -830,7 +830,7 @@ router.post('/message', asyncRoute(async (req, res) => {
           intent: 'events_month',
           score: 10,
           language: lang,
-          followups: getSmartFollowups(matchedIntent || intent || best?.intent, lang),
+          followups: getSmartFollowups(match?.intent || 'events', lang),
           navigate_to: '/programs?tab=events',
           suggestions: []
         });
@@ -897,7 +897,7 @@ router.post('/message', asyncRoute(async (req, res) => {
             intent: 'database_search',
             score: 8.0,
             language: lang,
-            followups: getSmartFollowups(matchedIntent || intent || best?.intent, lang),
+            followups: getSmartFollowups(match?.intent || 'events', lang),
             navigate_to: null,
             suggestions: []
           });
@@ -933,7 +933,7 @@ router.post('/message', asyncRoute(async (req, res) => {
       intent,
       score: 0,
       language: lang,
-      followups: getSmartFollowups(matchedIntent || intent || best?.intent, lang),
+      followups: getSmartFollowups(match?.intent || 'events', lang),
       navigate_to: null,
       suggestions: []
     });
@@ -1029,7 +1029,7 @@ router.post('/message', asyncRoute(async (req, res) => {
     intent: match.intent,
     score: bestScore,
     language: lang,
-    followups: getSmartFollowups(matchedIntent || intent || best?.intent, lang),
+    followups: getSmartFollowups(match?.intent || 'events', lang),
     navigate_to: PAGE_LINKS[match.intent] || null,
   });
 }));
