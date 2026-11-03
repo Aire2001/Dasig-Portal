@@ -4,48 +4,8 @@ import HaribonFace from './HaribonFace';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { solveClientQuery } from '../lib/haribonEngine';
-import { SUPPORTED_LANGUAGES, getLangByKey, translateMessageText } from '../lib/languages';
+import { SUPPORTED_LANGUAGES, getLangByKey, translateMessageText, getLocalizedGreeting, getLocalizedUI, LANG_CHIPS } from '../lib/languages';
 
-/* ── Language-specific quick chips & prompts ─ */
-const LANG_CHIPS = {
-  en: [
-    { label: '📅 Upcoming Summits', q: 'What events are coming up in Region VII?' },
-    { label: '🎓 Faculty Training', q: 'What training programs are open for enrollment?' },
-    { label: '💰 DOST-7 Research Grants', q: 'What research funding opportunities are available?' },
-    { label: '🏛 Consortium Members', q: 'Who are the DASIG member universities and agencies?' },
-    { label: '📋 Governance Charters', q: 'What policies and IP accords are active?' },
-  ],
-  bis: [
-    { label: '📅 Mga Kalihokan (Events)', q: 'Maayong adlaw! Unsay mga umaabot nga events ug summits sa DASIG?' },
-    { label: '🎓 Libreng Bootcamps', q: 'Unsa ang mga available nga training programs para sa faculty?' },
-    { label: '💰 DOST Panukiduki', q: 'Naa bay available nga research grants gikan sa DOST-7?' },
-    { label: '🏛 Kasaping Unibersidad', q: 'Kinsa ang mga miyembro nga unibersidad sa Central Visayas?' },
-    { label: '🤝 Unsaon Pag-apil', q: 'Unsaon pag-apil o pag-apply sa membership sa konsorsyum?' },
-  ],
-  tgl: [
-    { label: '📅 Paparating na Kaganapan', q: 'Magandang araw! May mga paparating bang event o summit sa DASIG?' },
-    { label: '🎓 Pagsasanay ng Guro', q: 'Ano-anong training bootcamps ang bukas para salihan?' },
-    { label: '💰 DOST Research Grants', q: 'Mayroon bang open research funding para sa unibersidad?' },
-    { label: '🏛 Kasaping Institusyon', q: 'Sino-sino ang mga miyembro ng DASIG consortium?' },
-    { label: '📋 Patakaran at Privacy', q: 'Ano ang mga patakaran sa Data Privacy ng DASIG?' },
-  ],
-  es: [
-    { label: '📅 Eventos de la Región VII', q: '¿Cuáles son los próximos eventos del consorcio?' },
-    { label: '🎓 Capacitación Docente', q: '¿Qué programas de formación están disponibles?' },
-    { label: '🏛 Miembros del Consorcio', q: '¿Quiénes son las universidades e instituciones de DASIG?' },
-    { label: '💰 Becas e Investigación', q: '¿Qué fondos de investigación DOST-7 están abiertos?' },
-  ],
-  ja: [
-    { label: '📅 イベント・サミット', q: '第7地域で予定されているイベントを教えてください。' },
-    { label: '🎓 教員研修プログラム', q: '受講可能なトレーニングプログラムは何ですか？' },
-    { label: '🏛 加盟大学・機関', q: 'DASIGコンソーシアムの加盟メンバーは誰ですか？' },
-  ],
-  zh: [
-    { label: '📅 近期活动与峰会', q: 'DASIG近期有哪些开放的区域学术活动？' },
-    { label: '🎓 教师发展培训', q: '有哪些可报名的专业技能与科研培训？' },
-    { label: '🏛 联盟成员院校', q: 'DASIG联盟包含哪些第7地区的大学与政府机构？' },
-  ],
-};
 
 /* ── Slash commands for developer/power-user UX ─ */
 const SLASH_COMMANDS = [
@@ -113,19 +73,6 @@ function formatTime(d) {
   return dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
-function getGreeting(user) {
-  if (!user) {
-    return "Hi! I'm Haribon 🦅 — the DASIG AI Assistant.\n\nI am fluent in **English**, **Bisaya (Cebuano)**, and **Tagalog (Filipino)**.\n\nAsk me anything about events, faculty training, membership, research grants, and governance policies. Pwede kang mangutana sa Bisaya o Tagalog!";
-  }
-  const first = (user.name || '').split(' ')[0];
-  if (user.role === 'ADMIN') {
-    return `Hello, ${first}! I'm Haribon 🦅 — the DASIG AI Assistant.\n\nAs an administrator, I can assist you in English, Bisaya, or Tagalog with portal metrics, event capacities, training courses, and governance management.\n\nUnsay akong ikatabang kanimo karon?`;
-  }
-  if (user.role === 'MEMBER') {
-    return `Welcome back, ${first}! 🦅 I'm Haribon — your DASIG AI Assistant.\n\nYou have full member access. Ask me in English, Bisaya, or Tagalog about upcoming conferences, training enrollments, DOST grants, or governance policies.\n\nHow can I help you today?`;
-  }
-  return `Hi, ${first}! I'm Haribon 🦅 — the DASIG AI Assistant.\n\nI can help you in English, Bisaya, or Tagalog. What would you like to know?`;
-}
 
 /* ── Bot-text formatter (Rich Markdown, Headings, Code, Bullets) ─ */
 function WBotText({ text, onNavigate, isStreaming = false }) {
@@ -366,7 +313,7 @@ export default function Chatbot() {
 
   // All hooks MUST be declared before any conditional return
   const [open, setOpen]         = useState(false);
-  const [messages, setMessages] = useState(() => [{ from:'bot', text: getGreeting(user), time: new Date() }]);
+  const [messages, setMessages] = useState(() => [{ from:'bot', text: getLocalizedGreeting(user, 'en'), time: new Date() }]);
   const [input, setInput]       = useState('');
   const [thinking, setThinking] = useState(false);
   const [ended, setEnded]       = useState(false);
@@ -381,6 +328,50 @@ export default function Chatbot() {
   const [translatingIdx, setTranslatingIdx] = useState(null);
   const [showLangMenu, setShowLangMenu] = useState(false);
   const [copiedSummary, setCopiedSummary] = useState(false);
+  const ui = getLocalizedUI(activeLang, user?.name);
+
+  const handleLanguageChange = async (newLang) => {
+    setActiveLang(newLang);
+    setShowLangMenu(false);
+
+    // 1. Immediately update initial greeting in messages[0]
+    setMessages(prev => {
+      if (!prev || prev.length === 0) return prev;
+      const updated = [...prev];
+      if (updated[0]?.from === 'bot') {
+        updated[0] = {
+          ...updated[0],
+          text: getLocalizedGreeting(user, newLang),
+        };
+      }
+      return updated;
+    });
+
+    // 2. Auto-translate subsequent bot messages into newLang
+    setMessages(currentMsgs => {
+      currentMsgs.forEach(async (m, idx) => {
+        if (idx > 0 && m.from === 'bot' && m.text) {
+          try {
+            setTranslatingIdx(idx);
+            const res = await translateMessageText(m.text, newLang);
+            setTranslations(prev => ({
+              ...prev,
+              [idx]: {
+                translatedText: res,
+                targetLang: newLang,
+                isShowingTranslated: true,
+              }
+            }));
+          } catch (err) {
+            console.warn('Auto translation failed for msg', idx, err);
+          } finally {
+            setTranslatingIdx(null);
+          }
+        }
+      });
+      return currentMsgs;
+    });
+  };
   const recognitionRef          = useRef(null);
   const msgsRef                 = useRef(null);
   const streamIntervalRef       = useRef(null);
@@ -414,7 +405,7 @@ export default function Chatbot() {
   function newChat() {
     if ('speechSynthesis' in window) window.speechSynthesis.cancel();
     setSpeakingIdx(null);
-    setMessages([{ from:'bot', text: getGreeting(user) }]);
+    setMessages([{ from:'bot', text: getLocalizedGreeting(user, activeLang), time: new Date() }]);
     setEnded(false); setInput(''); setHasReplied(false);
   }
 
@@ -611,9 +602,18 @@ export default function Chatbot() {
       }));
 
     try {
-      const res = await api.chatbot.send(t, historyPayload);
+      const res = await api.chatbot.send(t, historyPayload, activeLang);
       setHasReplied(true);
       setThinking(false);
+
+      let replyText = res.reply;
+      if (activeLang !== 'en') {
+        try {
+          replyText = await translateMessageText(res.reply, activeLang);
+        } catch (e) {
+          console.warn('[chatbot] Auto-translation to activeLang failed:', e);
+        }
+      }
 
       const botTemplate = {
         from: 'bot',
@@ -624,12 +624,21 @@ export default function Chatbot() {
         time: new Date(),
       };
 
-      streamBotResponse(botTemplate, res.reply);
+      streamBotResponse(botTemplate, replyText);
     } catch (err) {
       console.warn('[chatbot-widget] Backend unavailable, using client high-IQ engine:', err);
       const fallback = solveClientQuery(t, historyPayload, user);
       setHasReplied(true);
       setThinking(false);
+
+      let replyText = fallback.reply;
+      if (activeLang !== 'en') {
+        try {
+          replyText = await translateMessageText(fallback.reply, activeLang);
+        } catch (e) {
+          console.warn('[chatbot] Auto-translation to activeLang fallback failed:', e);
+        }
+      }
 
       const botTemplate = {
         from: 'bot',
@@ -640,7 +649,7 @@ export default function Chatbot() {
         time: new Date(),
       };
 
-      streamBotResponse(botTemplate, fallback.reply);
+      streamBotResponse(botTemplate, replyText);
     } finally {
       setTimeout(() => msgsRef.current && (msgsRef.current.scrollTop = msgsRef.current.scrollHeight), 50);
     }
@@ -722,7 +731,7 @@ export default function Chatbot() {
                 transition:'all .13s',
               }}
               title="Copy entire chat transcript"
-              >{copiedSummary ? 'Copied ✓' : '📋 Copy'}</button>
+              >{copiedSummary ? ui.copied : ui.copy}</button>
 
               <button onClick={newChat} style={{
                 background:'rgba(255,255,255,0.08)', border:'1px solid rgba(255,255,255,0.18)',
@@ -733,7 +742,7 @@ export default function Chatbot() {
               onMouseEnter={e => e.currentTarget.style.background='rgba(255,255,255,0.18)'}
               onMouseLeave={e => e.currentTarget.style.background='rgba(255,255,255,0.08)'}
               title="Start a fresh chat"
-              >↺ Reset</button>
+              >{ui.reset}</button>
 
               <button onClick={() => {
                 sessionStorage.setItem('haribon_resume', JSON.stringify(messages));
@@ -748,7 +757,7 @@ export default function Chatbot() {
               onMouseEnter={e => e.currentTarget.style.background='rgba(255,255,255,0.22)'}
               onMouseLeave={e => e.currentTarget.style.background='rgba(255,255,255,0.12)'}
               title="Expand to Full Chatbot Page"
-              >Full ↗</button>
+              >{ui.full}</button>
 
               {ended ? (
                 <button onClick={newChat} style={{ background:'rgba(249,115,22,0.2)', border:'1px solid rgba(249,115,22,0.4)', borderRadius:8, padding:'4px 9px', fontSize:10.5, fontWeight:700, color:'#f97316', cursor:'pointer', fontFamily:'inherit' }}>New</button>
@@ -812,7 +821,7 @@ export default function Chatbot() {
                               background: 'rgba(249, 115, 22, 0.15)', border: '1px solid rgba(249, 115, 22, 0.35)',
                               borderRadius: 7, padding: '3px 8px', marginBottom: 8, fontSize: 10, color: '#f97316', fontWeight: 800,
                             }}>
-                              <span>🌐 Translated to {getLangByKey(translations[i].targetLang).name}</span>
+                              <span>🌐 {ui.translatedTo} {getLangByKey(translations[i].targetLang).name}</span>
                               <button
                                 onClick={() => toggleTranslate(i, msg.text)}
                                 style={{ background: 'none', border: 'none', color: '#60a5fa', cursor: 'pointer', padding: 0, fontSize: 10, textDecoration: 'underline', fontWeight: 700 }}
@@ -845,13 +854,13 @@ export default function Chatbot() {
                           className={`w-action-btn${ratings[i] === 'up' ? ' rated-up' : ''}`}
                           onClick={() => rateMessage(i, 'up')}
                         >
-                          👍{ratings[i] === 'up' ? ' Helpful' : ''}
+                          👍{ratings[i] === 'up' ? ` ${ui.helpful}` : ''}
                         </button>
                         <button
                           className={`w-action-btn${ratings[i] === 'down' ? ' rated-down' : ''}`}
                           onClick={() => rateMessage(i, 'down')}
                         >
-                          👎
+                          👎{ratings[i] === 'down' ? ` ${ui.notHelpful}` : ''}
                         </button>
                         <button
                           className={`w-action-btn${copied === i ? ' copied' : ''}`}
@@ -866,7 +875,7 @@ export default function Chatbot() {
                           title={translations[i]?.isShowingTranslated ? 'Revert to original text' : `Translate to ${getLangByKey(activeLang).name}`}
                           style={translations[i]?.isShowingTranslated ? { color: '#f97316', borderColor: 'rgba(249,115,22,0.4)', background: 'rgba(249,115,22,0.12)' } : undefined}
                         >
-                          {translatingIdx === i ? '⏳ Translating…' : translations[i]?.isShowingTranslated ? '↩ Original' : '🌐 Translate'}
+                          {translatingIdx === i ? '⏳ Translating…' : translations[i]?.isShowingTranslated ? ui.original : ui.translate}
                         </button>
                         <button
                           className={`w-action-btn${speakingIdx === i ? ' speaking' : ''}`}
@@ -977,13 +986,13 @@ export default function Chatbot() {
             <div style={{ borderTop:'1px solid rgba(255,255,255,0.06)', background:'rgba(0,0,0,0.2)', padding:'6px 12px' }}>
               <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom: 4, position: 'relative' }}>
                 <span style={{ fontSize:10, color:'rgba(255,255,255,0.45)', fontWeight:700, textTransform:'uppercase', letterSpacing:'.5px', display:'flex', alignItems:'center', gap:4 }}>
-                  <span>🌐</span> Language:
+                  <span>🌐</span> {ui.language}:
                 </span>
                 <div style={{ display:'flex', gap:3, alignItems:'center', flexWrap:'wrap' }}>
                   {SUPPORTED_LANGUAGES.slice(0, 4).map(l => (
                     <button
                       key={l.key}
-                      onClick={() => { setActiveLang(l.key); setShowLangMenu(false); }}
+                      onClick={() => handleLanguageChange(l.key)}
                       style={{
                         background: activeLang === l.key ? 'rgba(249,115,22,0.22)' : 'rgba(255,255,255,0.04)',
                         border: `1px solid ${activeLang === l.key ? 'rgba(249,115,22,0.5)' : 'rgba(255,255,255,0.08)'}`,
@@ -1026,7 +1035,7 @@ export default function Chatbot() {
                   }}>
                     <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom: 8, paddingBottom: 4, borderBottom:'1px solid rgba(255,255,255,0.08)' }}>
                       <span style={{ fontSize: 10, fontWeight: 800, color: '#f97316', textTransform: 'uppercase', letterSpacing: '.5px' }}>
-                        All Languages ({SUPPORTED_LANGUAGES.length})
+                        {ui.allLanguages} ({SUPPORTED_LANGUAGES.length})
                       </span>
                       <button onClick={() => setShowLangMenu(false)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer', fontSize: 12 }}>✕</button>
                     </div>
@@ -1034,7 +1043,7 @@ export default function Chatbot() {
                       {SUPPORTED_LANGUAGES.map(l => (
                         <button
                           key={l.key}
-                          onClick={() => { setActiveLang(l.key); setShowLangMenu(false); }}
+                          onClick={() => handleLanguageChange(l.key)}
                           style={{
                             background: activeLang === l.key ? 'rgba(249,115,22,0.25)' : 'rgba(255,255,255,0.04)',
                             border: `1px solid ${activeLang === l.key ? 'rgba(249,115,22,0.5)' : 'rgba(255,255,255,0.07)'}`,
@@ -1107,7 +1116,7 @@ export default function Chatbot() {
                   value={input}
                   onChange={e => setInput(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && !thinking && send()}
-                  placeholder={user ? `Ask Haribon (or type /), ${(user.name || 'there').split(' ')[0]}…` : 'Ask Haribon (type / for commands)…'}
+                  placeholder={ui.placeholder}
                   disabled={thinking}
                 />
               </div>

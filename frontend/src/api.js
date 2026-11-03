@@ -183,7 +183,7 @@ export const api = {
     },
   },
   chatbot: {
-    send: (message, history = []) => request('/chatbot/message', { method: 'POST', body: JSON.stringify({ message, history }) }),
+    send: (message, history = [], lang = 'en') => request('/chatbot/message', { method: 'POST', body: JSON.stringify({ message, history, lang }) }),
     intents: () => request('/chatbot/intents'),
     translate: (text, targetLang = 'en', sourceLang = 'auto') =>
       request('/chatbot/translate', { method: 'POST', body: JSON.stringify({ text, targetLang, sourceLang }) }),
