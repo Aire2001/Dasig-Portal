@@ -148,7 +148,7 @@ const SLASH_COMMANDS = [
   { cmd: '/events', label: 'View upcoming consortium summits & conferences', q: 'What events are coming up in Region VII?' },
   { cmd: '/training', label: 'View accredited faculty training programs', q: 'What faculty training bootcamps are open for enrollment?' },
   { cmd: '/grants', label: 'Query open DOST-7 research grants & calls', q: 'What funding opportunities and research grants exist?' },
-  { cmd: '/members', label: 'List partner HEIs (CIT-U, UPV, USA)', q: 'Who are the DASIG member institutions?' },
+  { cmd: '/members', label: 'List partner HEIs (CIT-U, UP Cebu, USC)', q: 'Who are the DASIG member institutions?' },
   { cmd: '/policies', label: 'Show Data Privacy & IP sharing accords', q: 'What governance policies and charters are active?' },
   { cmd: '/clear', label: 'Clear current conversation and reset', q: '__CLEAR__' },
 ];

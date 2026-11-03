@@ -185,9 +185,9 @@ const KB = [
       'kinsay mga miyembro', 'mga unibersidad nga miyembro', 'kinsay apil sa dasig', 'listahan sa mga miyembro', 'kinsay mga sakop',
       'sino-sino ang mga miyembro', 'mga kasaping paaralan', 'sino ang kasali sa dasig', 'talaan ng mga miyembro'
     ],
-    reply_en: '🏛️ **DASIG Consortium Member Institutions:**\n• **CIT-University** (Cebu City — Host & Engineering Hub)\n• **UP Visayas** (Marine & Aquatic Sciences, Iloilo/Miagao)\n• **University of San Agustin** (Governance & Ethics, Iloilo)\n• **DOST Region VII** (Science, Technology & Research Grants)\n• **DICT Region VII** (Digital Transformation & ICT Bootcamps)\n• **DTI Region VII** (Trade & MSME Commercialization)\n• **DepEd Region VII** (Basic Education & EdTech)',
-    reply_ceb: '🏛️ **Mga Miyembro sa DASIG Consortium:**\n• **CIT-University** (Cebu City — Host & Engineering Hub)\n• **UP Visayas** (Marine & Aquatic Sciences, Iloilo/Miagao)\n• **University of San Agustin** (Governance & Ethics, Iloilo)\n• **DOST Region VII** (Siyensya, Teknolohiya & Research Grants)\n• **DICT Region VII** (Digital Transformation & ICT Bootcamps)\n• **DTI Region VII** (Patigayon & MSME Commercialization)\n• **DepEd Region VII** (Edukasyon & EdTech)',
-    reply_tgl: '🏛️ **Mga Miyembro ng DASIG Consortium:**\n• **CIT-University** (Cebu City — Host & Engineering Hub)\n• **UP Visayas** (Marine & Aquatic Sciences, Iloilo/Miagao)\n• **University of San Agustin** (Governance & Ethics, Iloilo)\n• **DOST Region VII** (Agham, Teknolohiya & Research Grants)\n• **DICT Region VII** (Digital Transformation & ICT Bootcamps)\n• **DTI Region VII** (Kalakalan & MSME Commercialization)\n• **DepEd Region VII** (Edukasyon & EdTech)',
+    reply_en: '🏛️ **DASIG Consortium Member Institutions (Region VII):**\n• **CIT-University** (Cebu City — Host Node & Engineering Hub)\n• **UP Cebu** (Lahug, Cebu City — Computing, IT & Environmental Innovation)\n• **University of San Carlos (USC)** (Cebu City — Science, Engineering & Research Excellence)\n• **DOST Region VII** (Science, Technology & Research Grants)\n• **DICT Region VII** (Digital Transformation & ICT Bootcamps)\n• **DTI Region VII** (Trade & MSME Commercialization)\n• **DepEd Region VII** (Basic Education & EdTech)',
+    reply_ceb: '🏛️ **Mga Miyembro sa DASIG Consortium (Rehiyon VII):**\n• **CIT-University** (Cebu City — Host Node & Engineering Hub)\n• **UP Cebu** (Information Technology & Environmental Science)\n• **University of San Carlos (USC)** (Science, Engineering & Research Excellence)\n• **DOST Region VII** (Siyensya, Teknolohiya & Research Grants)\n• **DICT Region VII** (Digital Transformation & ICT Bootcamps)\n• **DTI Region VII** (Patigayon & MSME Commercialization)\n• **DepEd Region VII** (Edukasyon & EdTech)',
+    reply_tgl: '🏛️ **Mga Miyembro ng DASIG Consortium (Rehiyon VII):**\n• **CIT-University** (Cebu City — Host Node & Engineering Hub)\n• **UP Cebu** (Information Technology & Environmental Science)\n• **University of San Carlos (USC)** (Science, Engineering & Research Excellence)\n• **DOST Region VII** (Agham, Teknolohiya & Research Grants)\n• **DICT Region VII** (Digital Transformation & ICT Bootcamps)\n• **DTI Region VII** (Kalakalan & MSME Commercialization)\n• **DepEd Region VII** (Edukasyon & EdTech)',
   },
   {
     intent: 'events',
@@ -429,12 +429,24 @@ function generateHighIQResponse(normalizedQuery, lang, history = [], ragContext 
     }
   }
 
-  if (q.includes('up cebu') || q.includes('upv') || q.includes('up visayas') || q.includes('university of the philippines cebu')) {
-    return `🌊 **University of the Philippines Visayas (UPV):**\n\nUPV is a premier national research university in Western Visayas (Miagao & Iloilo City) specializing in **Marine Science, Fisheries, and Coastal Resource Management**.\n\n• **Consortium Role:** Leads marine and environmental research initiatives, climate adaptation frameworks, and biodiversity protection across Visayas.`;
+  if (q.includes('up cebu') || q.includes('university of the philippines cebu') || q.includes('upc') || q.includes('upv')) {
+    if (lang === 'bisaya') {
+      return `🎓 **University of the Philippines Cebu (UP Cebu):**\n\nAng **UP Cebu** maoy nanguna nga nasudnong unibersidad sa Central Visayas nga nahimutang sa Lahug, Cebu City.\n\n• **Eksperto:** Computer Science, Data Science, Environmental Informatics, ug Design Innovation.\n• **Papel sa DASIG:** Nanguna sa panukiduki sa digital technology, environmental sustainability, ug high-performance computing.\n• **Website:** [upcebu.edu.ph](https://www.upcebu.edu.ph) · **Location:** Gorordo Ave, Lahug, Cebu City.`;
+    } else if (lang === 'tagalog') {
+      return `🎓 **University of the Philippines Cebu (UP Cebu):**\n\nAng **UP Cebu** ay ang pangunahing pambansang unibersidad sa Central Visayas na matatagpuan sa Lahug, Cebu City.\n\n• **Kadalubhasaan:** Computer Science, Data Science, Environmental Informatics, at Design Innovation.\n• **Tungkulin sa DASIG:** Nangunguna sa pananaliksik sa digital technology, environmental sustainability, at computing.\n• **Website:** [upcebu.edu.ph](https://www.upcebu.edu.ph) · **Lokasyon:** Gorordo Ave, Lahug, Cebu City.`;
+    } else {
+      return `🎓 **University of the Philippines Cebu (UP Cebu):**\n\n**UP Cebu** is a constituent university of the University of the Philippines System located in Lahug, Cebu City, serving as a pillar of academic and computing excellence in Region VII.\n\n• **Core Strengths:** Computer Science, Data Science, Environmental Informatics, Fine Arts, and Management.\n• **Consortium Role:** Leads research in applied computing, environmental modeling, open data policies, and digital humanities.\n• **Website:** [upcebu.edu.ph](https://www.upcebu.edu.ph) · **Location:** Gorordo Ave, Lahug, Cebu City.`;
+    }
   }
 
-  if (q.includes('usc') || q.includes('san carlos') || q.includes('university of san carlos') || q.includes('san agustin')) {
-    return `🏛️ **University of San Agustin (USa):**\n\nEstablished in 1904 in Iloilo City, USa is a distinguished Augustinian Catholic university and key DASIG academic partner leading in **Institutional Governance, Pharmacy & Health Sciences, Law, and Research Ethics**.`;
+  if (q.includes('usc') || q.includes('san carlos') || q.includes('university of san carlos')) {
+    if (lang === 'bisaya') {
+      return `🏛️ **University of San Carlos (USC):**\n\nGitukod niadtong 1595 sa Cebu City, ang **USC** usa sa pinakadaan ug pinakadungganong unibersidad sa Pilipinas.\n\n• **Eksperto:** Natural Sciences, Engineering, Pharmacy, Business, ug Research Ethics.\n• **Papel sa DASIG:** Nangulo sa collaborative research publications, biotechnology, ug institutional governance sa Central Visayas.\n• **Website:** [usc.edu.ph](https://www.usc.edu.ph) · **Campuses:** Talamban, Downtown, Cebu City.`;
+    } else if (lang === 'tagalog') {
+      return `🏛️ **University of San Carlos (USC):**\n\nItinatag noong 1595 sa Cebu City, ang **USC** ay isa sa pinakamatatanda at prestihiyosong unibersidad sa bansa.\n\n• **Kadalubhasaan:** Natural Sciences, Engineering, Pharmacy, Business, at Research Ethics.\n• **Tungkulin sa DASIG:** Nangunguna sa collaborative research, biotechnology, at institutional governance sa Rehiyon VII.\n• **Website:** [usc.edu.ph](https://www.usc.edu.ph) · **Kampus:** Talamban, Downtown, Cebu City.`;
+    } else {
+      return `🏛️ **University of San Carlos (USC):**\n\nTracing its roots to 1595 in Cebu City, the **University of San Carlos (USC)** is one of the oldest and most distinguished Catholic research universities in the Philippines.\n\n• **Core Strengths:** Natural Sciences, Chemical & Civil Engineering, Pharmacy, Law, and Interdisciplinary Research.\n• **Consortium Role:** Anchors advanced laboratory research, scientific peer reviews, biotechnology initiatives, and governance frameworks.\n• **Website:** [usc.edu.ph](https://www.usc.edu.ph) · **Campuses:** Talamban, Downtown, Cebu City.`;
+    }
   }
 
   if (q.includes('dost') || q.includes('proposal') || q.includes('grant') || q.includes('research funding') || q.includes('pondo')) {
@@ -811,11 +823,11 @@ router.post('/message', asyncRoute(async (req, res) => {
       if (normalized.includes('member') || normalized.includes('user') || normalized.includes('tawo') || normalized.includes('miyembro')) {
         let reply = '';
         if (lang === 'bisaya') {
-          reply = `👥 **Mga Miyembro ug tiggamit sa DASIG:**\n\nAdunay **${totalUsers} ka rehistradong miyembro ug tiggamit** sa DASIG Regional Academic Consortium gikan sa lain-laing unibersidad (CIT-U, UPV, USA) ug ahensya sa Rehiyon VII.\n\n👉 *Mahimo kang mo-apply sa [Membership Module](/membership)!*`;
+          reply = `👥 **Mga Miyembro ug tiggamit sa DASIG:**\n\nAdunay **${totalUsers} ka rehistradong miyembro ug tiggamit** sa DASIG Regional Academic Consortium gikan sa lain-laing unibersidad (CIT-U, UP Cebu, USC) ug ahensya sa Rehiyon VII.\n\n👉 *Mahimo kang mo-apply sa [Membership Module](/membership)!*`;
         } else if (lang === 'tagalog') {
-          reply = `👥 **Mga Miyembro at gumagamit ng DASIG:**\n\nMayroong **${totalUsers} rehistradong miyembro at gumagamit** sa DASIG Regional Academic Consortium mula sa iba't ibang unibersidad (CIT-U, UPV, USA) at ahensya sa Rehiyon VII.\n\n👉 *Maaari kang mag-aplay sa [Membership Module](/membership)!*`;
+          reply = `👥 **Mga Miyembro at gumagamit ng DASIG:**\n\nMayroong **${totalUsers} rehistradong miyembro at gumagamit** sa DASIG Regional Academic Consortium mula sa iba't ibang unibersidad (CIT-U, UP Cebu, USC) at ahensya sa Rehiyon VII.\n\n👉 *Maaari kang mag-aplay sa [Membership Module](/membership)!*`;
         } else {
-          reply = `👥 **DASIG Consortium Membership Metrics:**\n\nThere are currently **${totalUsers} registered users and members** across partner universities (CIT-U, UPV, USA) and government agencies in Region VII.\n\n👉 *You can apply or view criteria in the [Membership Module](/membership)!*`;
+          reply = `👥 **DASIG Consortium Membership Metrics:**\n\nThere are currently **${totalUsers} registered users and members** across partner universities (CIT-U, UP Cebu, USC) and government agencies in Region VII.\n\n👉 *You can apply or view criteria in the [Membership Module](/membership)!*`;
         }
 
         return res.json({

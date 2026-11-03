@@ -193,10 +193,10 @@ The consortium comprises 7 premier higher education institutions and regional go
 
 1. **CIT-University (Cebu City)** — *Central Host Node & Engineering Hub*
    Leads portal technical infrastructure, AI engineering, and inter-HEI technology transfer.
-2. **UP Visayas (Miagao & Iloilo City)** — *Marine & Aquatic Research Node*
-   Leads fisheries, coastal ecology, climate resilience, and environmental sciences.
-3. **University of San Carlos (Iloilo City)** — *Institutional Governance Node*
-   Leads academic ethics, pharmacy & health research, and institutional policy design.
+2. **UP Cebu (Lahug, Cebu City)** — *Computing, IT & Environmental Innovation Node*
+   Leads computing research, environmental informatics, climate modeling, and data science.
+3. **University of San Carlos (Cebu City)** — *Science, Engineering & Research Excellence Node*
+   Leads natural sciences, engineering, biotechnology, institutional ethics, and peer-reviewed publishing.
 4. **DOST Region VII** — *Science & Research Funding Agency*
    Provides Grants-In-Aid (GIA), research instrumentation, and laboratory access.
 5. **DICT Region VII** — *Digital Transformation Agency*
@@ -213,8 +213,8 @@ The consortium comprises 7 premier higher education institutions and regional go
 Adunay 7 ka nangunang unibersidad ug ahensya sa gobyerno sa atong network:
 
 1. **CIT-University (Cebu City)** — Central Host Node, Engineering & Computer Science.
-2. **UP Visayas** — Marine Science, Fisheries, ug Environmental Protection.
-3. **University of San Carlos (Iloilo)** — Governance, Pharmacy, ug Research Ethics.
+2. **UP Cebu** — Computer Science, Environmental Informatics, ug Data Science.
+3. **University of San Carlos (USC, Cebu)** — Natural Sciences, Engineering, ug Research Ethics.
 4. **DOST Region VII** — Grants-In-Aid ug pinansyal nga pondo sa panukiduki.
 5. **DICT Region VII** — Digital Transformation, AI bootcamps, ug cybersecurity.
 6. **DTI Region VII** — Patigayon ug pagpamaligya sa mga teknolohiya (commercialization).
@@ -227,8 +227,8 @@ Adunay 7 ka nangunang unibersidad ug ahensya sa gobyerno sa atong network:
 Binubuo ito ng 7 nangungunang unibersidad at ahensya ng pamahalaan:
 
 1. **CIT-University (Cebu City)** — Central Host Node, Engineering & Computer Science.
-2. **UP Visayas** — Marine Science, Fisheries, at Environmental Protection.
-3. **University of San Carlos (Iloilo)** — Governance, Pharmacy, at Research Ethics.
+2. **UP Cebu** — Computer Science, Environmental Informatics, at Data Science.
+3. **University of San Carlos (USC, Cebu)** — Natural Sciences, Engineering, at Research Ethics.
 4. **DOST Region VII** — Grants-In-Aid at pondo para sa pananaliksik.
 5. **DICT Region VII** — Digital Transformation, AI bootcamps, at cybersecurity.
 6. **DTI Region VII** — Kalakalan at pagsasapamilihan ng teknolohiya (commercialization).
@@ -482,7 +482,7 @@ All DASIG operations adhere strictly to Philippine statutory frameworks and acad
 2. **Consortium Intellectual Property (IP) Sharing Accord:**
    Ensures researchers and originating HEIs retain full ownership of their patents and inventions developed under consortium grants.
 3. **Open Science & Inter-HEI Data Governance Charter:**
-   Governs ethical dataset exchange among partner universities (CIT-U, UPV, USA).
+   Governs ethical dataset exchange among partner universities (CIT-U, UP Cebu, USC).
 
 👉 *Download and inspect complete policy documents in the **[Policies Module](/policies)**!*`,
 
@@ -491,7 +491,7 @@ All DASIG operations adhere strictly to Philippine statutory frameworks and acad
 Ang tanang operasyon sa konsorsyum nagsunod sa balaod sa Pilipinas:
 • **Data Privacy Act of 2012 (RA 10173):** Protektado ug naka-encrypt ang imong personal nga impormasyon subay sa National Privacy Commission.
 • **Intellectual Property (IP) Agreement:** Ang mga unibersidad ug mananaliksik nagpabilin nga tag-iya sa ilang mga imbensyon ug research.
-• **Open Science Charter:** Hapsay nga pagtinabangay sa datos tali sa CIT-U, UPV, ug USA.
+• **Open Science Charter:** Hapsay nga pagtinabangay sa datos tali sa CIT-U, UP Cebu, ug USC.
 
 👉 *Basaha ang mga dokumento sa **[Policies Module](/policies)**!*`,
 
@@ -500,7 +500,7 @@ Ang tanang operasyon sa konsorsyum nagsunod sa balaod sa Pilipinas:
 Sumusunod ang lahat ng operasyon sa mga batas ng Pilipinas:
 • **Data Privacy Act of 2012 (RA 10173):** Protektado at naka-encrypt ang iyong personal na datos ayon sa National Privacy Commission.
 • **Intellectual Property (IP) Accord:** Ang mananaliksik at unibersidad ang mananatiling may-ari ng kanilang mga imbensyon at pananaliksik.
-• **Open Science Charter:** Maayos na pagbabahagi ng datos sa pagitan ng CIT-U, UPV, at USA.
+• **Open Science Charter:** Maayos na pagbabahagi ng datos sa pagitan ng CIT-U, UP Cebu, at USC.
 
 👉 *Basahin ang mga buong patakaran sa **[Policies Module](/policies)**!*`
   },
@@ -559,7 +559,7 @@ Ano ang nais mong alamin ngayon? 🚀`
 I am **Haribon AI** 🦅, your intelligent assistant. I am fluent in **English**, **Bisaya (Cebuano)**, and **Tagalog (Filipino)**.
 
 How can I help you today? You can ask me about:
-• 🏛️ **DASIG Consortium:** Our mission and 7 member institutions (CIT-U, UPV, USA).
+• 🏛️ **DASIG Consortium:** Our mission and 7 member institutions (CIT-U, UP Cebu, USC).
 • 📅 **Events & Summits:** Schedules and instant registration with QR passes.
 • 🎓 **Faculty Development:** Certified training bootcamps.
 • 💰 **Research Grants:** Open DOST-7 funding calls.
@@ -745,7 +745,7 @@ export function solveClientQuery(query, history = [], user = null) {
   // 4. Region VII / Cebu Geography
   if (q.includes('cebu') || q.includes('region vii') || q.includes('central visayas') || q.includes('bohol')) {
     return {
-      reply: `🇵🇭 **Region VII (Central Visayas) Academic Hub:**\n\n**Central Visayas** encompasses Cebu, Bohol, Negros Oriental, and Siquijor. It is the premier educational and IT-BPM center of the southern Philippines, anchored by the **DASIG Consortium** with host node **CIT-University** in Cebu City collaborating with UP Visayas, University of San Carlos, DOST-7, DICT-7, DTI-7, and DepEd-7.`,
+      reply: `🇵🇭 **Region VII (Central Visayas) Academic Hub:**\n\n**Central Visayas** encompasses Cebu, Bohol, Negros Oriental, and Siquijor. It is the premier educational and IT-BPM center of the southern Philippines, anchored by the **DASIG Consortium** with host node **CIT-University** in Cebu City collaborating with UP Cebu, University of San Carlos (USC), DOST-7, DICT-7, DTI-7, and DepEd-7.`,
       intent: 'geography',
       navigate_to: '/members',
       followups: ['Who are the member institutions?', 'What events are coming up?'],
@@ -786,9 +786,9 @@ export function solveClientQuery(query, history = [], user = null) {
   // 6. Intelligent Cognitive Synthesis Fallback (Authoritative & Contextual)
   let fallbackReply = '';
   if (lang === 'bisaya') {
-    fallbackReply = `🦅 **Haribon AI — Kaalam sa Konsorsyum:**\n\nNakasabot ko sa imong pangutana bahin sa **"${raw}"**.\n\nIsip opisyal nga virtual assistant sa **DASIG Regional Consortium (Central Visayas)**, makahatag ko og tabang sa mga mosunod:\n\n• 🏛️ **Mahitungod sa DASIG:** Konsorsyum sa CIT-U, UPV, USA, DOST, ug DICT.\n• 📅 **Events & Summits:** Mga eskedyul ug rehistrasyon sa [Programs Module](/programs?tab=events).\n• 🎓 **Faculty Bootcamps:** Pagsasanay sa AI, Web, ug panukiduki.\n• 💰 **Research Grants:** Mga pondo gikan sa DOST-7.\n• 👥 **Membership:** Pag-apil isip opisyal nga miyembro sa [Membership](/membership).\n\n💡 *Unsay partikular nga bahin ang gusto nimong masayran?*`;
+    fallbackReply = `🦅 **Haribon AI — Kaalam sa Konsorsyum:**\n\nNakasabot ko sa imong pangutana bahin sa **"${raw}"**.\n\nIsip opisyal nga virtual assistant sa **DASIG Regional Consortium (Central Visayas)**, makahatag ko og tabang sa mga mosunod:\n\n• 🏛️ **Mahitungod sa DASIG:** Konsorsyum sa CIT-U, UP Cebu, USC, DOST, ug DICT.\n• 📅 **Events & Summits:** Mga eskedyul ug rehistrasyon sa [Programs Module](/programs?tab=events).\n• 🎓 **Faculty Bootcamps:** Pagsasanay sa AI, Web, ug panukiduki.\n• 💰 **Research Grants:** Mga pondo gikan sa DOST-7.\n• 👥 **Membership:** Pag-apil isip opisyal nga miyembro sa [Membership](/membership).\n\n💡 *Unsay partikular nga bahin ang gusto nimong masayran?*`;
   } else if (lang === 'tagalog') {
-    fallbackReply = `🦅 **Haribon AI — Talino ng Konsorsyum:**\n\nNauunawaan ko ang iyong katanungan tungkol sa **"${raw}"**.\n\nBilang opisyal na virtual assistant ng **DASIG Regional Consortium (Central Visayas)**, maaari kitang gabayan sa mga sumusunod:\n\n• 🏛️ **Tungkol sa DASIG:** Konsorsyum ng CIT-U, UPV, USA, DOST, at DICT.\n• 📅 **Events & Summits:** Iskedyul at pagpaparehistro sa [Programs Module](/programs?tab=events).\n• 🎓 **Faculty Bootcamps:** Pagsasanay sa AI, Web, at pananaliksik.\n• 💰 **Research Grants:** Pondo at tulong pinansyal mula sa DOST-7.\n• 👥 **Membership:** Pagsali bilang opisyal na miyembro sa [Membership](/membership).\n\n💡 *Aling bahagi ang nais mong buksan ngayon?*`;
+    fallbackReply = `🦅 **Haribon AI — Talino ng Konsorsyum:**\n\nNauunawaan ko ang iyong katanungan tungkol sa **"${raw}"**.\n\nBilang opisyal na virtual assistant ng **DASIG Regional Consortium (Central Visayas)**, maaari kitang gabayan sa mga sumusunod:\n\n• 🏛️ **Tungkol sa DASIG:** Konsorsyum ng CIT-U, UP Cebu, USC, DOST, at DICT.\n• 📅 **Events & Summits:** Iskedyul at pagpaparehistro sa [Programs Module](/programs?tab=events).\n• 🎓 **Faculty Bootcamps:** Pagsasanay sa AI, Web, at pananaliksik.\n• 💰 **Research Grants:** Pondo at tulong pinansyal mula sa DOST-7.\n• 👥 **Membership:** Pagsali bilang opisyal na miyembro sa [Membership](/membership).\n\n💡 *Aling bahagi ang nais mong buksan ngayon?*`;
   } else {
     fallbackReply = `🦅 **Haribon AI — Consortium Intelligence:**\n\nI processed your inquiry regarding **"${raw}"**.\n\nAs the intelligent assistant for the **DASIG Regional Academic Consortium (Region VII)**, I can directly guide you across our core modules:\n\n• 🏛️ **About DASIG:** Our mission and 7 partner institutions (CIT-U, UP Cebu, USC, CTU, DOST-7, DICT-7, DTI-7, DepEd-7).\n• 📅 **Events & Summits:** Live schedules and instant QR seat booking in the **[Programs Module](/programs?tab=events)**.\n• 🎓 **Faculty Development:** Certified bootcamps and verifiable digital micro-credentials.\n• 💰 **Research Funding:** DOST-7 Grants-In-Aid (GIA) and collaborative funding calls.\n• 👥 **Institutional Membership:** Elevating privileges in the **[Membership Portal](/membership)**.\n\n💡 *Which specific area would you like to explore?*`;
   }

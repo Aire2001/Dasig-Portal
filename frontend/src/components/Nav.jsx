@@ -463,7 +463,7 @@ export default function Nav() {
           <div className="govph-agencies" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <span style={{ color: 'rgba(255,255,255,0.5)' }}>Central Visayas Network</span>
             <span style={{ color: 'rgba(255,255,255,0.2)' }}>•</span>
-            <span style={{ color: '#fb923c', fontWeight: 700 }}>DOST · DICT · DTI · DepEd · UPV · USA · CIT-U</span>
+            <span style={{ color: '#fb923c', fontWeight: 700 }}>DOST · DICT · DTI · DepEd · UP Cebu · USC · CIT-U</span>
           </div>
         </div>
       </div>

@@ -188,12 +188,13 @@ const trainings = [
 ];
 
 const members = [
-  { id: 1, abbr: 'UP',    full: 'University of the Philippines',                    campus: 'UP Visayas',  type: 'State University'   },
-  { id: 2, abbr: 'USa',   full: 'University of San Agustin',                        campus: 'Iloilo City', type: 'Private University' },
-  { id: 3, abbr: 'DOST',  full: 'Department of Science & Technology',               campus: 'Region VII',  type: 'Government Agency'  },
-  { id: 4, abbr: 'DICT',  full: 'Department of Information & Communications Technology', campus: 'Region VII', type: 'Government Agency' },
-  { id: 5, abbr: 'DTI',   full: 'Department of Trade & Industry',                   campus: 'Region VII',  type: 'Government Agency'  },
-  { id: 6, abbr: 'DepEd', full: 'Department of Education',                          campus: 'Region VII',  type: 'Government Agency'  },
+  { id: 1, abbr: 'CIT-U', full: 'Cebu Institute of Technology - University', campus: 'N. Bacalso Ave, Cebu City', type: 'Private University' },
+  { id: 2, abbr: 'UP',    full: 'University of the Philippines Cebu', campus: 'Lahug, Cebu City', type: 'State University' },
+  { id: 3, abbr: 'USC',   full: 'University of San Carlos', campus: 'Talamban & Downtown, Cebu City', type: 'Private University' },
+  { id: 4, abbr: 'DOST',  full: 'Department of Science & Technology', campus: 'Region VII', type: 'Government Agency' },
+  { id: 5, abbr: 'DICT',  full: 'Department of Information & Communications Technology', campus: 'Region VII', type: 'Government Agency' },
+  { id: 6, abbr: 'DTI',   full: 'Department of Trade & Industry', campus: 'Region VII', type: 'Government Agency' },
+  { id: 7, abbr: 'DepEd', full: 'Department of Education', campus: 'Region VII', type: 'Government Agency' },
 ];
 
 const membershipApplications = [];
@@ -206,7 +207,7 @@ const chatbotKB = [
   { keywords: ['news','announcement','policy','update'], reply: 'Check the News page for the latest consortium announcements. Members get exclusive access to the Updated Membership Renewal Guidelines for AY 2026–2027.' },
   { keywords: ['login','log in','sign in','password','account'], reply: 'Click "Log in" in the top navigation. Use your registered email and password. Contact your institutional admin if you have trouble accessing your account.' },
   { keywords: ['haribon','ai','chatbot','assistant'], reply: "I'm Haribon 🦅, the DASIG AI Assistant powered by NLP. I can answer questions about events, funding, membership, training, and consortium news. What would you like to know?" },
-  { keywords: ['region','visayas','cebu','iloilo'], reply: 'DASIG serves Central Visayas (Region VII) — connecting UP Visayas, University of San Agustin, DOST VII, DICT VII, DTI VII, and DepEd VII under one unified platform.' },
+  { keywords: ['region','visayas','cebu','iloilo'], reply: 'DASIG serves Central Visayas (Region VII) — connecting CIT-University, UP Cebu, University of San Carlos (USC), DOST VII, DICT VII, DTI VII, and DepEd VII under one unified platform.' },
   { keywords: ['contact','admin','support','help'], reply: 'For support, contact your institutional administrator or email the DASIG Consortium office. You can also reach out via the Members page for institution-specific contacts.' },
   { keywords: ['partner','partnership','collaboration'], reply: 'DASIG maintains strategic partnerships with academic institutions, government agencies, and industry partners. The Partnerships module is available to Tier 1 members.' },
 ];
