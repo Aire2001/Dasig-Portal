@@ -347,6 +347,12 @@ export default function Chatbot() {
       return updated;
     });
 
+    setTranslations(prev => {
+      const next = { ...prev };
+      delete next[0];
+      return next;
+    });
+
     // 2. Auto-translate subsequent bot messages into newLang
     setMessages(currentMsgs => {
       currentMsgs.forEach(async (m, idx) => {

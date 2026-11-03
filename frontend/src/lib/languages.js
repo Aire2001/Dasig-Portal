@@ -1,23 +1,23 @@
 import { api } from '../api';
 
 export const SUPPORTED_LANGUAGES = [
-  { key: 'en',  code: 'en',    flag: '🇺🇸', label: 'US EN',  name: 'English',              short: 'EN',  tag: 'English' },
-  { key: 'bis', code: 'ceb',   flag: '🇵🇭', label: 'PH BIS', name: 'Bisaya (Cebuano)',     short: 'BIS', tag: 'Cebuano' },
-  { key: 'tgl', code: 'tl',    flag: '🇵🇭', label: 'PH TAG', name: 'Tagalog (Filipino)',    short: 'TAG', tag: 'Filipino' },
-  { key: 'es',  code: 'es',    flag: '🇪🇸', label: 'ES ESP', name: 'Español (Spanish)',     short: 'ES',  tag: 'Spanish' },
-  { key: 'ja',  code: 'ja',    flag: '🇯🇵', label: 'JP JPN', name: '日本語 (Japanese)',      short: 'JA',  tag: 'Japanese' },
-  { key: 'ko',  code: 'ko',    flag: '🇰🇷', label: 'KR KOR', name: '한국어 (Korean)',        short: 'KO',  tag: 'Korean' },
-  { key: 'zh',  code: 'zh-CN', flag: '🇨🇳', label: 'CN CHN', name: '中文 (Chinese)',         short: 'ZH',  tag: 'Chinese' },
-  { key: 'fr',  code: 'fr',    flag: '🇫🇷', label: 'FR FRA', name: 'Français (French)',      short: 'FR',  tag: 'French' },
-  { key: 'de',  code: 'de',    flag: '🇩🇪', label: 'DE DEU', name: 'Deutsch (German)',       short: 'DE',  tag: 'German' },
-  { key: 'ar',  code: 'ar',    flag: '🇸🇦', label: 'SA ARB', name: 'العربية (Arabic)',      short: 'AR',  tag: 'Arabic' },
-  { key: 'ilo', code: 'ilo',   flag: '🇵🇭', label: 'PH ILO', name: 'Ilokano',               short: 'ILO', tag: 'Ilokano' },
-  { key: 'hil', code: 'hil',   flag: '🇵🇭', label: 'PH HIL', name: 'Hiligaynon (Ilonggo)',  short: 'HIL', tag: 'Hiligaynon' },
-  { key: 'it',  code: 'it',    flag: '🇮🇹', label: 'IT ITA', name: 'Italiano (Italian)',     short: 'IT',  tag: 'Italian' },
-  { key: 'id',  code: 'id',    flag: '🇮🇩', label: 'ID IND', name: 'Bahasa Indonesia',      short: 'ID',  tag: 'Indonesian' },
+  { key: 'en',  code: 'en',    flag: '🇺🇸', label: 'US English',            name: 'English',              short: 'EN',  tag: 'English' },
+  { key: 'bis', code: 'ceb',   flag: '🇵🇭', label: 'PH Bisaya (Cebuano)',   name: 'Bisaya (Cebuano)',     short: 'BIS', tag: 'Cebuano' },
+  { key: 'tgl', code: 'tl',    flag: '🇵🇭', label: 'PH Tagalog (Filipino)',  name: 'Tagalog (Filipino)',    short: 'TAG', tag: 'Filipino' },
+  { key: 'es',  code: 'es',    flag: '🇪🇸', label: 'ES Español (Spanish)',   name: 'Español (Spanish)',     short: 'ES',  tag: 'Spanish' },
+  { key: 'ja',  code: 'ja',    flag: '🇯🇵', label: 'JP 日本語 (Japanese)',    name: '日本語 (Japanese)',      short: 'JA',  tag: 'Japanese' },
+  { key: 'ko',  code: 'ko',    flag: '🇰🇷', label: 'KR 한국어 (Korean)',      name: '한국어 (Korean)',        short: 'KO',  tag: 'Korean' },
+  { key: 'zh',  code: 'zh-CN', flag: '🇨🇳', label: 'CN 中文 (Chinese)',       name: '中文 (Chinese)',         short: 'ZH',  tag: 'Chinese' },
+  { key: 'fr',  code: 'fr',    flag: '🇫🇷', label: 'FR Français (French)',    name: 'Français (French)',      short: 'FR',  tag: 'French' },
+  { key: 'de',  code: 'de',    flag: '🇩🇪', label: 'DE Deutsch (German)',     name: 'Deutsch (German)',       short: 'DE',  tag: 'German' },
+  { key: 'ar',  code: 'ar',    flag: '🇸🇦', label: 'SA العربية (Arabic)',    name: 'العربية (Arabic)',      short: 'AR',  tag: 'Arabic' },
+  { key: 'ilo', code: 'ilo',   flag: '🇵🇭', label: 'PH Ilokano',             name: 'Ilokano',               short: 'ILO', tag: 'Ilokano' },
+  { key: 'hil', code: 'hil',   flag: '🇵🇭', label: 'PH Hiligaynon (Ilonggo)',name: 'Hiligaynon (Ilonggo)',  short: 'HIL', tag: 'Hiligaynon' },
+  { key: 'it',  code: 'it',    flag: '🇮🇹', label: 'IT Italiano (Italian)',   name: 'Italiano (Italian)',     short: 'IT',  tag: 'Italian' },
+  { key: 'id',  code: 'id',    flag: '🇮🇩', label: 'ID Bahasa Indonesia',    name: 'Bahasa Indonesia',      short: 'ID',  tag: 'Indonesian' },
 ];
 
-export const PRIMARY_LANG_KEYS = ['en', 'bis', 'tgl', 'es', 'ja', 'zh'];
+export const PRIMARY_LANG_KEYS = ['en', 'bis', 'tgl', 'es', 'ja', 'id'];
 
 export function getLangByKey(key) {
   if (!key) return SUPPORTED_LANGUAGES[0];
@@ -57,20 +57,68 @@ export function getLocalizedGreeting(user, langKey = 'en') {
       }
       return `Magandang araw, ${first || 'kaibigan'}! 🦅 Ako si Haribon — ang AI assistant ng DASIG Consortium (Rehiyon VII).\n\nHanda akong sumagot sa wikang Filipino tungkol sa events, training, at research grants.\n\nAno po ang nais mong malaman?`;
 
+    case 'id':
+      if (role === 'ADMIN') {
+        return `Halo, ${first || 'Administrator'}! 🦅 Saya Haribon — Asisten AI DASIG Anda.\n\nSebagai pengelola portal, saya siap membantu Anda menganalisis metrik sistem, kapasitas acara, program pelatihan, dan manajemen tata kelola konsorsium.\n\nAda yang bisa saya bantu hari ini?`;
+      }
+      if (role === 'MEMBER') {
+        return `Selamat datang kembali, ${first || 'Anggota'}! 🦅 Saya Haribon — Asisten AI DASIG Anda.\n\nAnda memiliki akses penuh sebagai anggota. Tanyakan kepada saya tentang konferensi mendatang di Wilayah VII, pendaftaran pelatihan dosen, hibah penelitian DOST, atau kebijakan tata kelola.\n\nAda yang bisa saya bantu hari ini?`;
+      }
+      return `Halo, ${first || 'Tamu'}! 🦅 Saya Haribon — Asisten AI Konsorsium DASIG (Wilayah VII Central Visayas).\n\nSilakan tanyakan tentang acara regional, pelatihan dosen, keanggotaan institusi, dan hibah penelitian.\n\nApa yang ingin Anda ketahui hari ini?`;
+
     case 'ja':
+      if (role === 'ADMIN') {
+        return `管理者様、お疲れ様です！🦅 私はDASIG AIアシスタントのHaribonです。\n\nポータルメトリクス、イベント定員、教員研修コース、コンソーシアムガバナンスの管理を支援します。\n\nどのようなサポートが必要でしょうか？`;
+      }
       return `おかえりなさい、${first || 'メンバー'}さん！🦅 私はDASIG AIアシスタントのHaribonです。\n\n第7地域の今後のカンファレンス、教員研修プログラム、DOST研究助成金、ガバナンス方針について日本語でお答えします。\n\n本日はどのようなご用件でしょうか？`;
 
+    case 'ko':
+      if (role === 'ADMIN') {
+        return `안녕하세요, ${first || '관리자'}님! 🦅 저는 DASIG AI 어시스턴트 Haribon입니다。\n\n포털 지표, 행사 수용 인원, 교수 연수 과정 및 컨소시엄 거버넌스 관리를 지원해 드립니다。\n\n오늘 어떤 업무를 도와드릴까요?`;
+      }
+      return `다시 오신 것을 환영합니다, ${first || '회원'}님! 🦅 저는 DASIG AI 어시스턴트 Haribon입니다。\n\nRegion VII 학술 컨퍼런스, 교수진 교육 프로그램, DOST 연구 지원금 및 거버넌스 정책에 대해 언제든 문의하세요。\n\n오늘 어떤 도움이 필요하신가요?`;
+
     case 'zh':
+      if (role === 'ADMIN') {
+        return `您好，${first || '管理员'}！🦅 我是Haribon——您的DASIG智能助手。\n\n作为系统管理员，我可以协助您查看门户指标、活动名额容量、培训课程进度以及联盟治理政策。\n\n今天有什么可以帮您的？`;
+      }
       return `欢迎回来，${first || '会员'}！🦅 我是Haribon——您的DASIG智能助手。\n\n您可以向我咨询关于第7地区学术峰会、教师专业培训报名、DOST科研资助及联盟政策。\n\n今天有什么我可以协助您的吗？`;
 
-    case 'ko':
-      return `다시 오신 것을 환영합니다, ${first || '회원'}님! 🦅 저는 DASIG AI 어시스턴트 Haribon입니다.\n\nRegion VII 학술 컨퍼런스, 교수진 교육 프로그램, DOST 연구 지원금 및 거버넌스 정책에 대해 언제든 문의하세요.\n\n오늘 어떤 도움이 필요하신가요?`;
-
     case 'fr':
+      if (role === 'ADMIN') {
+        return `Bonjour, ${first || 'Administrateur'} ! 🦅 Je suis Haribon — votre assistant IA DASIG.\n\nEn tant qu'administrateur, je peux vous aider avec les métriques du portail, les jauges d'événements, les formations et la gouvernance.\n\nQue puis-je faire pour vous aujourd'hui ?`;
+      }
       return `Bienvenue à nouveau, ${first || 'Membre'} ! 🦅 Je suis Haribon — votre assistant IA DASIG.\n\nPosez-moi vos questions sur les conférences régionales, formations, subventions de recherche DOST et politiques académiques.\n\nComment puis-je vous aider aujourd'hui ?`;
 
     case 'de':
+      if (role === 'ADMIN') {
+        return `Hallo, ${first || 'Administrator'}! 🦅 Ich bin Haribon — Ihr DASIG KI-Assistent.\n\nAls Administrator unterstütze ich Sie bei Portal-Metriken, Teilnehmerkapazitäten, Schulungskursen und Governance-Verwaltung.\n\nWas kann ich heute für Sie tun?`;
+      }
       return `Willkommen zurück, ${first || 'Mitglied'}! 🦅 Ich bin Haribon — Ihr DASIG KI-Assistent.\n\nFragen Sie mich nach anstehenden Region VII Konferenzen, Schulungsprogrammen, DOST-Forschungsstipendien oder Richtlinien.\n\nWie kann ich Ihnen heute helfen?`;
+
+    case 'ar':
+      if (role === 'ADMIN') {
+        return `مرحباً، ${first || 'المسؤول'}! 🦅 أنا هاريبون — مساعدك الذكي في DASIG.\n\nبصفتك مسؤولاً، يمكنني مساعدتك في مؤشرات المنصة، وطاقة استيعاب الفعاليات، والدورات التدريبية وإدارة الحوكمة.\n\nكيف يمكنني خدمتك اليوم؟`;
+      }
+      return `مرحباً بعودتك، ${first || 'العضو'}! 🦅 أنا هاريبون — مساعدك الذكي في اتحاد DASIG.\n\nلديك حق الوصول الكامل كعضو معتمد. يمكنك سؤالي عن المؤتمرات الإقليمية القادمة، والتسجيل في الدورات التدريبية، ومنح الأبحاث DOST، وسياسات الحوكمة.\n\nكيف يمكنني مساعدتك اليوم؟`;
+
+    case 'it':
+      if (role === 'ADMIN') {
+        return `Ciao, ${first || 'Amministratore'}! 🦅 Sono Haribon — il tuo assistente IA DASIG.\n\nCome amministratore, posso assisterti con le metriche del portale, la capienza degli eventi, i corsi di formazione e la governance.\n\nCome posso esserti utile oggi?`;
+      }
+      return `Bentornato, ${first || 'Membro'}! 🦅 Sono Haribon — il tuo assistente IA DASIG.\n\nHai accesso completo come membro. Chiedimi informazioni su conferenze imminenti nella Regione VII, iscrizioni ai corsi di formazione, borse di ricerca DOST o politiche di governance.\n\nCome posso aiutarti oggi?`;
+
+    case 'ilo':
+      if (role === 'ADMIN') {
+        return `Naimbag nga aldaw, ${first || 'Admin'}! 🦅 Siak ni Haribon — ti katulongam iti DASIG AI.\n\nKas administrador, makatulongak kadagiti bilang ti portal, kapasidad ti aktibidad, kurso ti panagsanay, ken panangidaulo ti konsorsium.\n\nAnia ti maitulongko kenka ita?`;
+      }
+      return `Naimbag a panagsubli, ${first || 'Kameng'}! 🦅 Siak ni Haribon — ti katulongam iti DASIG AI.\n\nAddaan ka iti naan-anay nga access kas kameng. Saludsodem kaniak ti maipapan kadagiti sumaruno a komperensia, panagpalista iti panagsanay, DOST research grants, wenno paglintegan ti konsorsium.\n\nKasanoka a matulongan ita nga aldaw?`;
+
+    case 'hil':
+      if (role === 'ADMIN') {
+        return `Maayong adlaw, ${first || 'Admin'}! 🦅 Ako si Haribon — ang imo kaupod sa DASIG AI.\n\nBilang tagdumala, makabulig ako sa mga numero sang portal, kapasidad sang mga buluhaton, kurso sa paghanas, kag pagdumala.\n\nAno ang akon mabulig sa imo subong?`;
+      }
+      return `Maayong pagbalik, ${first || 'Miyembro'}! 🦅 Ako si Haribon — ang imo kaupod sa DASIG AI.\n\nMay bug-os ka nga access bilang miyembro. Pamangkutan ako parte sa mga maabot nga komperensya sa Rehiyon VII, pagpa-enroll sa training, DOST research grants, ukon mga pagsulundan sang konsorsyum.\n\nAno ang akon mabulig sa imo subong?`;
 
     default: // 'en'
       if (role === 'ADMIN') {
@@ -154,6 +202,23 @@ export function getLocalizedUI(langKey = 'en', userName = '') {
       helpful: 'Nakatulong',
       notHelpful: 'Hindi nakatulong',
     },
+    id: {
+      placeholder: first ? `Tanyakan pada Haribon (atau ketik /), ${first}...` : 'Tanyakan apa saja kepada Haribon (atau ketik /)...',
+      copy: '📋 Salin',
+      copied: '✓ Disalin',
+      reset: '↺ Reset',
+      full: 'Layar Penuh ↗',
+      language: 'Bahasa',
+      allLanguages: 'Semua Bahasa',
+      translate: '🌐 Terjemahkan',
+      original: '↩ Asli',
+      translatedTo: 'Diterjemahkan ke',
+      showOriginal: 'Lihat teks asli',
+      stopVoice: '⏹ Hentikan Suara',
+      readAloud: '🔊 Dengarkan Suara',
+      helpful: 'Membantu',
+      notHelpful: 'Kurang membantu',
+    },
     ja: {
       placeholder: first ? `Haribonに質問（/ を入力）、${first}さん...` : 'Haribonに何でも質問してください（/ を入力）...',
       copy: '📋 コピー',
@@ -171,23 +236,6 @@ export function getLocalizedUI(langKey = 'en', userName = '') {
       helpful: '役に立った',
       notHelpful: '役に立たなかった',
     },
-    zh: {
-      placeholder: first ? `向Haribon提问（或输入 /），${first}...` : '向Haribon提问任何问题（或输入 /）...',
-      copy: '📋 复制',
-      copied: '✓ 已复制',
-      reset: '↺ 重置',
-      full: '全屏 ↗',
-      language: '语言',
-      allLanguages: '所有语言',
-      translate: '🌐 翻译',
-      original: '↩ 原文',
-      translatedTo: '已翻译为',
-      showOriginal: '查看原文',
-      stopVoice: '⏹ 停止播放',
-      readAloud: '🔊 朗读回答',
-      helpful: '有帮助',
-      notHelpful: '无帮助',
-    },
     ko: {
       placeholder: first ? `Haribon에 질문 (/ 입력), ${first}님...` : 'Haribon에 질문하세요 (/ 입력)...',
       copy: '📋 복사',
@@ -204,6 +252,23 @@ export function getLocalizedUI(langKey = 'en', userName = '') {
       readAloud: '🔊 음성 읽기',
       helpful: '도움됨',
       notHelpful: '도움안됨',
+    },
+    zh: {
+      placeholder: first ? `向Haribon提问（或输入 /），${first}...` : '向Haribon提问任何问题（或输入 /）...',
+      copy: '📋 复制',
+      copied: '✓ 已复制',
+      reset: '↺ 重置',
+      full: '全屏 ↗',
+      language: '语言',
+      allLanguages: '所有语言',
+      translate: '🌐 翻译',
+      original: '↩ 原文',
+      translatedTo: '已翻译为',
+      showOriginal: '查看原文',
+      stopVoice: '⏹ 停止播放',
+      readAloud: '🔊 朗读回答',
+      helpful: '有帮助',
+      notHelpful: '无帮助',
     },
     fr: {
       placeholder: first ? `Demandez à Haribon (ou tapez /), ${first}...` : 'Posez une question à Haribon (ou tapez /)...',
@@ -239,6 +304,74 @@ export function getLocalizedUI(langKey = 'en', userName = '') {
       helpful: 'Hilfreich',
       notHelpful: 'Nicht hilfreich',
     },
+    ar: {
+      placeholder: first ? `اسأل هاريبون (أو اكتب /)، ${first}...` : 'اسأل هاريبون أي سؤال (أو اكتب /)...',
+      copy: '📋 نسخ',
+      copied: '✓ تم النسخ',
+      reset: '↺ إعادة ضبط',
+      full: 'ملء الشاشة ↗',
+      language: 'اللغة',
+      allLanguages: 'جميع اللغات',
+      translate: '🌐 ترجمة',
+      original: '↩ النص الأصلي',
+      translatedTo: 'مترجم إلى',
+      showOriginal: 'عرض الأصل',
+      stopVoice: '⏹ إيقاف الصوت',
+      readAloud: '🔊 قراءة صوتية',
+      helpful: 'مفيد',
+      notHelpful: 'غير مفيد',
+    },
+    it: {
+      placeholder: first ? `Chiedi a Haribon (o digita /), ${first}...` : 'Chiedi a Haribon qualsiasi cosa (o digita /)...',
+      copy: '📋 Copia',
+      copied: '✓ Copiato',
+      reset: '↺ Reimposta',
+      full: 'Schermo intero ↗',
+      language: 'Lingua',
+      allLanguages: 'Tutte le lingue',
+      translate: '🌐 Traduci',
+      original: '↩ Originale',
+      translatedTo: 'Tradotto in',
+      showOriginal: 'Mostra originale',
+      stopVoice: '⏹ Interrompi',
+      readAloud: '🔊 Ascolta',
+      helpful: 'Utile',
+      notHelpful: 'Non utile',
+    },
+    ilo: {
+      placeholder: first ? `Saludsodem ken ni Haribon (wenno i-type /), ${first}...` : 'Saludsodem ken ni Haribon (wenno i-type /)...',
+      copy: '📋 Kopiaem',
+      copied: '✓ Nakopian',
+      reset: '↺ I-reset',
+      full: 'Pno a Screen ↗',
+      language: 'Pagsasao',
+      allLanguages: 'Amin a Pagsasao',
+      translate: '🌐 Ipatarus',
+      original: '↩ Kasisigud',
+      translatedTo: 'Naipatarus iti',
+      showOriginal: 'Ipakita ti kasisigud',
+      stopVoice: '⏹ Isardeng',
+      readAloud: '🔊 Denggen',
+      helpful: 'Makatulong',
+      notHelpful: 'Saan a makatulong',
+    },
+    hil: {
+      placeholder: first ? `Pamangkuta si Haribon (ukon i-type ang /), ${first}...` : 'Pamangkuta si Haribon sang bisan ano (ukon i-type ang /)...',
+      copy: '📋 Kopyaha',
+      copied: '✓ Nakopya',
+      reset: '↺ I-reset',
+      full: 'Tibuok Screen ↗',
+      language: 'Hambal',
+      allLanguages: 'Tanan nga Hambal',
+      translate: '🌐 Badbasa',
+      original: '↩ Orihinal',
+      translatedTo: 'Ginbadbad sa',
+      showOriginal: 'Ipakita ang orihinal',
+      stopVoice: '⏹ Untata',
+      readAloud: '🔊 Pamatian',
+      helpful: 'Makatabang',
+      notHelpful: 'Wala nagbulig',
+    },
   };
   return map[langKey] || map.en;
 }
@@ -271,6 +404,12 @@ export const LANG_CHIPS = {
     { label: '🏛 Miembros del Consorcio', q: '¿Quiénes son las universidades e instituciones de DASIG?' },
     { label: '💰 Becas e Investigación', q: '¿Qué fondos de investigación DOST-7 están abiertos?' },
   ],
+  id: [
+    { label: '📅 Agenda Acara Region VII', q: 'Apa saja acara dan konferensi mendatang di Wilayah VII?' },
+    { label: '🎓 Pelatihan Dosen & Tenaga Pendidik', q: 'Program pelatihan apa saja yang sedang dibuka untuk pendaftaran?' },
+    { label: '🏛 Universitas Anggota Konsorsium', q: 'Siapa saja institusi dan universitas anggota DASIG?' },
+    { label: '💰 Hibah Riset DOST-7', q: 'Peluang pendanaan riset apa saja yang tersedia untuk akademisi?' },
+  ],
   ja: [
     { label: '📅 イベント・サミット', q: '第7地域で予定されているイベントを教えてください。' },
     { label: '🎓 教員研修プログラム', q: '受講可能なトレーニングプログラムは何ですか？' },
@@ -300,6 +439,30 @@ export const LANG_CHIPS = {
     { label: '🎓 Dozenten-Fortbildung', q: 'Welche Schulungsprogramme stehen zur Anmeldung offen?' },
     { label: '🏛 Verbundmitglieder', q: 'Welche Universitäten gehören dem DASIG-Konsortium an?' },
     { label: '💰 DOST-Forschungsstipendien', q: 'Welche Fördermöglichkeiten für Forschung gibt es?' },
+  ],
+  ar: [
+    { label: '📅 المؤتمرات القادمة', q: 'ما هي المؤتمرات والفعاليات القادمة في المنطقة السابعة؟' },
+    { label: '🎓 تدريب أعضاء التدريس', q: 'ما هي برامج تدريب وتطوير أعضاء هيئة التدريس المتاحة؟' },
+    { label: '🏛 الجامعات الأعضاء', q: 'من هي الجامعات والمؤسسات الأعضاء في اتحاد DASIG؟' },
+    { label: '💰 منح أبحاث DOST', q: 'ما هي فرص التمويل ومنح الأبحاث المفتوحة حالياً؟' },
+  ],
+  it: [
+    { label: '📅 Prossimi Vertici', q: 'Quali eventi sono in programma nella Regione VII?' },
+    { label: '🎓 Formazione Docenti', q: 'Quali programmi di formazione sono aperti alle iscrizioni?' },
+    { label: '🏛 Membri del Consorzio', q: 'Quali sono le università e istituzioni partner di DASIG?' },
+    { label: '💰 Borse di Ricerca DOST', q: 'Quali opportunità di finanziamento della ricerca sono attive?' },
+  ],
+  ilo: [
+    { label: '📅 Sumaruno nga Pasamak', q: 'Ania dagiti sumaruno nga aktibidad ken kumperensia iti Rehion VII?' },
+    { label: '🎓 Panagsanay dagiti Manursuro', q: 'Ania dagiti silulukat a kurso ti panagsanay para iti mannursuro?' },
+    { label: '🏛 Kameng nga Unibersidad', q: 'Siasino dagiti kameng nga unibersidad iti Central Visayas?' },
+    { label: '💰 DOST Research Grants', q: 'Kasanomi ti makaala ti tulong-pinansial iti panagsukimat manipud DOST?' },
+  ],
+  hil: [
+    { label: '📅 Mga Maabot nga Kahiwatan', q: 'Ano ang mga maabot nga mga summit kag kumperensya sa Rehiyon VII?' },
+    { label: '🎓 Paghanas sang Manunudlo', q: 'Ano ang mga training programs nga pwede salid-an sang mga manunudlo?' },
+    { label: '🏛 Miyembro nga Unibersidad', q: 'Sin-o ang mga miyembro nga unibersidad sang DASIG?' },
+    { label: '💰 DOST Pondo sa Panukiduki', q: 'Ano ang mga pondo kag grants para sa panukiduki sang DOST-7?' },
   ],
 };
 
