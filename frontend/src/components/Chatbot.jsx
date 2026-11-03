@@ -379,7 +379,6 @@ export default function Chatbot() {
             }
           }));
         } catch (err) {
-          console.warn('Auto translation failed for msg', idx, err);
         } finally {
           setTranslatingIdx(null);
         }
@@ -453,7 +452,6 @@ export default function Chatbot() {
         },
       }));
     } catch (err) {
-      console.warn('Translation error:', err);
     } finally {
       setTranslatingIdx(null);
     }
@@ -605,7 +603,6 @@ export default function Chatbot() {
         try {
           replyText = await translateMessageText(res.reply, activeLang);
         } catch (e) {
-          console.warn('[chatbot] Auto-translation to activeLang failed:', e);
         }
       }
 
@@ -620,7 +617,6 @@ export default function Chatbot() {
 
       streamBotResponse(botTemplate, replyText);
     } catch (err) {
-      console.warn('[chatbot-widget] Backend unavailable, using client high-IQ engine:', err);
       const fallback = solveClientQuery(t, historyPayload, user);
       setHasReplied(true);
       setThinking(false);
@@ -630,7 +626,6 @@ export default function Chatbot() {
         try {
           replyText = await translateMessageText(fallback.reply, activeLang);
         } catch (e) {
-          console.warn('[chatbot] Auto-translation to activeLang fallback failed:', e);
         }
       }
 

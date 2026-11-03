@@ -733,7 +733,6 @@ function DynamicQRCode({ value, size = 135, onDataUrl }) {
         }
       })
       .catch(e => {
-        console.warn('QR generation error:', e);
         if (active) setErr(true);
       });
     return () => { active = false; };

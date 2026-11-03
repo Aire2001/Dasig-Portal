@@ -255,7 +255,6 @@ export default function Nav() {
           });
         }
       } catch (err) {
-        console.warn('[notifications] Failed to query live announcements:', err);
       }
     }
 

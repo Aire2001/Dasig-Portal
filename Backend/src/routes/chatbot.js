@@ -554,7 +554,6 @@ async function getLiveRAGContext() {
 
     return lines.join('\n');
   } catch (err) {
-    console.warn('[chatbot] getLiveRAGContext error:', err.message);
     return '';
   }
 }
@@ -606,7 +605,6 @@ ${ragContext ? ragContext : ''}`;
         if (text) return text;
       }
     } catch (err) {
-      console.warn('[chatbot] Gemini API error:', err.message);
     }
   }
 
@@ -645,7 +643,6 @@ ${ragContext ? ragContext : ''}`;
         if (text) return text;
       }
     } catch (err) {
-      console.warn('[chatbot] OpenAI API error:', err.message);
     }
   }
 
@@ -886,7 +883,6 @@ router.post('/message', asyncRoute(async (req, res) => {
         });
       }
     } catch (err) {
-      console.warn('[chatbot] Stats query error:', err.message);
     }
   }
 
@@ -948,7 +944,6 @@ router.post('/message', asyncRoute(async (req, res) => {
         });
       }
     } catch (err) {
-      console.warn('[chatbot] Month query error:', err.message);
     }
   }
 
@@ -1016,7 +1011,6 @@ router.post('/message', asyncRoute(async (req, res) => {
         }
       }
     } catch (err) {
-      console.warn('[chatbot] Cross-table search error:', err.message);
     }
   }
 
@@ -1037,7 +1031,7 @@ router.post('/message', asyncRoute(async (req, res) => {
       : OUT_OF_SCOPE[lang] || OUT_OF_SCOPE.english;
 
     Promise.resolve(supabase.from('chatbot_logs').insert({ message: normalized, matched: inDomain, intent }))
-      .catch(err => console.warn('[chatbot] Log error:', err.message));
+      .catch(() => {});
 
     return res.json({
       reply,
@@ -1058,7 +1052,7 @@ router.post('/message', asyncRoute(async (req, res) => {
       matched: true,
       intent: match.intent,
     })
-  ).catch(err => console.warn('[chatbot] Log error:', err.message));
+  ).catch(() => {});
 
   // 9. Select Knowledge Base Reply
   let reply = match.reply_en;
@@ -1123,7 +1117,6 @@ router.post('/message', asyncRoute(async (req, res) => {
       }
     }
   } catch (err) {
-    console.warn('[chatbot] DB enrichment error:', err.message);
   }
 
   // 11. Navigation Target Mapping
@@ -1219,7 +1212,6 @@ router.post('/tts', asyncRoute(async (req, res) => {
         return res.send(fullAudio);
       }
     } catch (e) {
-      console.warn('[tts] Cloud proxy error:', e);
     }
     return res.status(200).json({
       fallback: true,
@@ -1259,7 +1251,6 @@ router.post('/tts', asyncRoute(async (req, res) => {
 
     if (!response.ok) {
       const errText = await response.text();
-      console.warn('[elevenlabs tts] API returned error:', response.status, errText);
       return res.status(200).json({ fallback: true, text: clean });
     }
 

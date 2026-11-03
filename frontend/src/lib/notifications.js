@@ -24,7 +24,6 @@ export function getUserNotifications(userId) {
       if (Array.isArray(parsed) && parsed.length > 0) return parsed;
     }
   } catch (err) {
-    console.warn('[notifications] Failed to read from storage:', err);
   }
 
   // Initial welcome notification for new/first-time users

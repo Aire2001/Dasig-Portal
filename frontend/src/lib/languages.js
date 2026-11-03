@@ -513,7 +513,6 @@ export async function translateMessageText(text, targetLangKey = 'en') {
       return res.translatedText;
     }
   } catch (apiErr) {
-    console.warn('[translateMessageText] Backend proxy failed:', apiErr);
   }
 
   return text;

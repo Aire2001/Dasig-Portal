@@ -97,7 +97,6 @@ export default function ForgotPasswordPage() {
       try {
         recordSecurityAlert(cleanEmail, 'Password Reset');
       } catch (alertErr) {
-        console.warn('[security] Failed to record security notification:', alertErr);
       }
 
       setStep('done');
