@@ -632,6 +632,45 @@ const MULTI_FOLLOWUPS = {
   ]
 };
 
+const INTENT_FOLLOWUPS = {
+  events: {
+    english: ['How do I get my ticket QR pass?', 'Are certificates provided for attendees?', 'What are the summit schedules?'],
+    bisaya: ['Unsaon pagkuha sa akong ticket QR code?', 'Libre ba ang certificate sa pagtambong?', 'Kanus-a ang eskedyul sa mga summit?'],
+    tagalog: ['Paano kukunin ang QR ticket pass?', 'Libre ba ang certificate ng pagdalo?', 'Kailan ang iskedyul ng mga summit?']
+  },
+  training: {
+    english: ['What are the prerequisites for enrollment?', 'Do participants receive certificates of completion?', 'Tell me about the Full-Stack Bootcamp'],
+    bisaya: ['Unsa ang mga rekisitos para makasulod?', 'Makadawat ba og certificate of completion?', 'Sultihi ko bahin sa Full-Stack Bootcamp'],
+    tagalog: ['Ano ang kailangan para makasali sa training?', 'May Certificate of Completion ba pagkatapos?', 'Ikuwento ang Full-Stack Web Bootcamp']
+  },
+  funding: {
+    english: ['What is the DOST Grants-In-Aid funding limit?', 'How do partner HEIs submit joint grant proposals?', 'When is the next scholarship deadline?'],
+    bisaya: ['Pila ang pondo sa DOST-7 Grants-In-Aid?', 'Unsaon pagsumite og joint research proposal?', 'Kanus-a ang deadline sa mga scholarships?'],
+    tagalog: ['Magkano ang pondo sa DOST Grants-In-Aid?', 'Paano magsumite ng joint research proposal?', 'Kailan ang deadline ng scholarship application?']
+  },
+  membership: {
+    english: ['What is the difference between Tier 1 and Tier 2?', 'What are the institutional accreditation requirements?', 'How do I apply for consortium membership?'],
+    bisaya: ['Unsay kalainan sa Tier 1 ug Tier 2 membership?', 'Unsa ang mga rekisitos sa akreditasyon?', 'Unsaon pag-aplay sa konsorsyum?'],
+    tagalog: ['Ano ang kaibahan ng Tier 1 at Tier 2?', 'Ano ang mga kailangan para sa akreditasyon?', 'Paano mag-aplay sa pagka-miyembro?']
+  },
+  policies: {
+    english: ['What is the Data Privacy Policy under RA 10173?', 'How are Intellectual Property rights protected?', 'Who can access members-only policies?'],
+    bisaya: ['Unsa ang patakaran sa Data Privacy sa DASIG?', 'Unsaon pagpanalipod sa Intellectual Property?', 'Kinsa ang makabasa sa mga pribadong polisiya?'],
+    tagalog: ['Ano ang patakaran sa Data Privacy ng DASIG?', 'Paano pinoprotektahan ang Intellectual Property?', 'Sino ang may access sa members-only na dokumento?']
+  }
+};
+
+function getSmartFollowups(intent, lang) {
+  const normLang = ['bisaya', 'tagalog'].includes(lang) ? lang : 'english';
+  if (intent) {
+    const key = Object.keys(INTENT_FOLLOWUPS).find(k => intent.toLowerCase().includes(k));
+    if (key && INTENT_FOLLOWUPS[key][normLang]) {
+      return INTENT_FOLLOWUPS[key][normLang];
+    }
+  }
+  return MULTI_FOLLOWUPS[normLang] || MULTI_FOLLOWUPS.english;
+}
+
 // Express 4 does not catch errors thrown inside async handlers; an unhandled
 // rejection then terminates the Node process. Route every async handler through
 // this wrapper so a failure returns HTTP 500 and the API keeps serving others.
@@ -685,7 +724,7 @@ router.post('/message', asyncRoute(async (req, res) => {
           intent: 'members_count',
           score: 10,
           language: lang,
-          followups: MULTI_FOLLOWUPS[lang],
+          followups: getSmartFollowups(matchedIntent || intent || best?.intent, lang),
           navigate_to: '/membership',
           suggestions: []
         });
@@ -707,7 +746,7 @@ router.post('/message', asyncRoute(async (req, res) => {
           intent: 'events_count',
           score: 10,
           language: lang,
-          followups: MULTI_FOLLOWUPS[lang],
+          followups: getSmartFollowups(matchedIntent || intent || best?.intent, lang),
           navigate_to: '/programs?tab=events',
           suggestions: []
         });
@@ -729,7 +768,7 @@ router.post('/message', asyncRoute(async (req, res) => {
           intent: 'training_count',
           score: 10,
           language: lang,
-          followups: MULTI_FOLLOWUPS[lang],
+          followups: getSmartFollowups(matchedIntent || intent || best?.intent, lang),
           navigate_to: '/programs?tab=training',
           suggestions: []
         });
@@ -791,7 +830,7 @@ router.post('/message', asyncRoute(async (req, res) => {
           intent: 'events_month',
           score: 10,
           language: lang,
-          followups: MULTI_FOLLOWUPS[lang],
+          followups: getSmartFollowups(matchedIntent || intent || best?.intent, lang),
           navigate_to: '/programs?tab=events',
           suggestions: []
         });
@@ -858,7 +897,7 @@ router.post('/message', asyncRoute(async (req, res) => {
             intent: 'database_search',
             score: 8.0,
             language: lang,
-            followups: MULTI_FOLLOWUPS[lang],
+            followups: getSmartFollowups(matchedIntent || intent || best?.intent, lang),
             navigate_to: null,
             suggestions: []
           });
@@ -894,7 +933,7 @@ router.post('/message', asyncRoute(async (req, res) => {
       intent,
       score: 0,
       language: lang,
-      followups: MULTI_FOLLOWUPS[lang],
+      followups: getSmartFollowups(matchedIntent || intent || best?.intent, lang),
       navigate_to: null,
       suggestions: []
     });
@@ -990,7 +1029,7 @@ router.post('/message', asyncRoute(async (req, res) => {
     intent: match.intent,
     score: bestScore,
     language: lang,
-    followups: MULTI_FOLLOWUPS[lang],
+    followups: getSmartFollowups(matchedIntent || intent || best?.intent, lang),
     navigate_to: PAGE_LINKS[match.intent] || null,
   });
 }));

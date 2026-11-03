@@ -1,3 +1,42 @@
+
+const INTENT_FOLLOWUPS = {
+  events: {
+    english: ['How do I get my ticket QR pass?', 'Are certificates provided for attendees?', 'What are the summit schedules?'],
+    bisaya: ['Unsaon pagkuha sa akong ticket QR code?', 'Libre ba ang certificate sa pagtambong?', 'Kanus-a ang eskedyul sa mga summit?'],
+    tagalog: ['Paano kukunin ang QR ticket pass?', 'Libre ba ang certificate ng pagdalo?', 'Kailan ang iskedyul ng mga summit?']
+  },
+  training: {
+    english: ['What are the prerequisites for enrollment?', 'Do participants receive certificates of completion?', 'Tell me about the Full-Stack Bootcamp'],
+    bisaya: ['Unsa ang mga rekisitos para makasulod?', 'Makadawat ba og certificate of completion?', 'Sultihi ko bahin sa Full-Stack Bootcamp'],
+    tagalog: ['Ano ang kailangan para makasali sa training?', 'May Certificate of Completion ba pagkatapos?', 'Ikuwento ang Full-Stack Web Bootcamp']
+  },
+  funding: {
+    english: ['What is the DOST Grants-In-Aid funding limit?', 'How do partner HEIs submit joint grant proposals?', 'When is the next scholarship deadline?'],
+    bisaya: ['Pila ang pondo sa DOST-7 Grants-In-Aid?', 'Unsaon pagsumite og joint research proposal?', 'Kanus-a ang deadline sa mga scholarships?'],
+    tagalog: ['Magkano ang pondo sa DOST Grants-In-Aid?', 'Paano magsumite ng joint research proposal?', 'Kailan ang deadline ng scholarship application?']
+  },
+  membership: {
+    english: ['What is the difference between Tier 1 and Tier 2?', 'What are the institutional accreditation requirements?', 'How do I apply for consortium membership?'],
+    bisaya: ['Unsay kalainan sa Tier 1 ug Tier 2 membership?', 'Unsa ang mga rekisitos sa akreditasyon?', 'Unsaon pag-aplay sa konsorsyum?'],
+    tagalog: ['Ano ang kaibahan ng Tier 1 at Tier 2?', 'Ano ang mga kailangan para sa akreditasyon?', 'Paano mag-aplay sa pagka-miyembro?']
+  },
+  policies: {
+    english: ['What is the Data Privacy Policy under RA 10173?', 'How are Intellectual Property rights protected?', 'Who can access members-only policies?'],
+    bisaya: ['Unsa ang patakaran sa Data Privacy sa DASIG?', 'Unsaon pagpanalipod sa Intellectual Property?', 'Kinsa ang makabasa sa mga pribadong polisiya?'],
+    tagalog: ['Ano ang patakaran sa Data Privacy ng DASIG?', 'Paano pinoprotektahan ang Intellectual Property?', 'Sino ang may access sa members-only na dokumento?']
+  }
+};
+
+export function getLocalizedFollowups(intent, lang) {
+  const normLang = ['bisaya', 'tagalog'].includes(lang) ? lang : 'english';
+  if (intent) {
+    const key = Object.keys(INTENT_FOLLOWUPS).find(k => intent.toLowerCase().includes(k));
+    if (key && INTENT_FOLLOWUPS[key][normLang]) {
+      return INTENT_FOLLOWUPS[key][normLang];
+    }
+  }
+  return INTENT_FOLLOWUPS.events[normLang];
+}
 // 🦅 Haribon AI — High-IQ Trilingual Knowledge Base & Cognitive Reasoning Engine
 // Fluent in English, Bisaya (Cebuano), and Tagalog (Filipino).
 // Operates standalone in client-side or backend environments.
@@ -641,7 +680,7 @@ export function solveClientQuery(query, history = [], user = null) {
       reply,
       intent: bestEntry.intent,
       navigate_to: bestEntry.navigate_to || null,
-      followups: bestEntry.followups || ['What is DASIG?', 'What events are coming up?'],
+      followups: getLocalizedFollowups(bestEntry.intent, lang),
       suggestions: [],
       language: lang
     };
