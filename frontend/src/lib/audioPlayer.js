@@ -118,7 +118,7 @@ class MultilingualVoicePlayer {
     }
 
     const langObj = getLangByKey(resolvedLangKey);
-    const targetCode = (langObj.code || 'en').toLowerCase();
+    const targetCode = (langObj.ttsCode || langObj.code || 'en').toLowerCase();
     const targetBcp47 = (langObj.bcp47 || 'en-US').toLowerCase();
 
     // 1. Try Browser SpeechSynthesis if native matching voice exists AND text is brief (< 150 chars)
@@ -160,7 +160,7 @@ class MultilingualVoicePlayer {
       chunkIndex++;
 
       try {
-        const res = await api.chatbot.tts(segment, langObj.code);
+        const res = await api.chatbot.tts(segment, langObj.ttsCode || langObj.code);
         const contentType = res.headers?.get('content-type') || '';
         if (res.ok && contentType.includes('audio/mpeg') && !this.isCancelled) {
           const blob = await res.blob();
@@ -182,7 +182,7 @@ class MultilingualVoicePlayer {
 
       if (this.isCancelled) return;
 
-      const directUrl = `https://translate.googleapis.com/translate_tts?ie=UTF-8&tl=${encodeURIComponent(langObj.code)}&client=tw-ob&q=${encodeURIComponent(segment)}`;
+      const directUrl = `https://translate.googleapis.com/translate_tts?ie=UTF-8&tl=${encodeURIComponent(langObj.ttsCode || langObj.code)}&client=tw-ob&q=${encodeURIComponent(segment)}`;
       const audio = new Audio(directUrl);
       audio.playbackRate = speed || 1.0;
       this.audio = audio;

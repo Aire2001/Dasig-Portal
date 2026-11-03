@@ -7,6 +7,29 @@ const router = express.Router();
 // Translation in-memory cache and Language Code Map
 const translationCache = new Map();
 
+// Audio TTS Language Map (routes regional PH dialects to Philippine phonetic voice 'tl')
+const TTS_LANG_MAP = {
+  en: 'en',
+  bis: 'tl',
+  ceb: 'tl',
+  tgl: 'tl',
+  tag: 'tl',
+  tl: 'tl',
+  fil: 'tl',
+  es: 'es',
+  ja: 'ja',
+  ko: 'ko',
+  zh: 'zh-CN',
+  'zh-cn': 'zh-CN',
+  fr: 'fr',
+  de: 'de',
+  ar: 'ar',
+  ilo: 'tl',
+  hil: 'tl',
+  it: 'it',
+  id: 'id',
+};
+
 const LANG_CODE_MAP = {
   en: 'en',
   bis: 'ceb',
@@ -1137,7 +1160,7 @@ router.post('/tts', asyncRoute(async (req, res) => {
   const apiKey = process.env.ELEVENLABS_API_KEY;
   if (!apiKey) {
     try {
-      const normalizedLang = LANG_CODE_MAP[lang.toLowerCase()] || lang || 'en';
+      const normalizedLang = TTS_LANG_MAP[lang.toLowerCase()] || LANG_CODE_MAP[lang.toLowerCase()] || lang || 'en';
       const rawParts = clean.split(/([。！？!?\n]+|[.][\s]+)/).filter(Boolean);
       const chunks = [];
       let buf = '';
