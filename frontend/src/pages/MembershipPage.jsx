@@ -109,40 +109,161 @@ function CertificateModal({ user, status, onClose }) {
 }
 
 const INSTITUTION_OPTIONS = [
+  // ── Cebu Province (Region VII) ──
   {
-    name: 'Cebu Institute of Technology - University',
+    name: 'Cebu Institute of Technology – University (CIT-U)',
     campuses: ['Main Campus, N. Bacalso Ave, Cebu City'],
   },
   {
-    name: 'University of the Philippines Visayas',
-    campuses: ['Miagao Main Campus, Iloilo', 'Iloilo City Campus', 'Tacloban College'],
+    name: 'University of the Philippines Cebu (UP Cebu)',
+    campuses: [
+      'Lahug Main Campus, Gorordo Ave, Cebu City',
+      'SRP Innovation Campus, South Road Properties, Cebu City',
+    ],
   },
   {
-    name: 'University of San Agustin',
-    campuses: ['Main Campus, Gen. Luna St, Iloilo City'],
+    name: 'University of San Carlos (USC)',
+    campuses: [
+      'Talamban Campus, Gov. M. Cuenco Ave, Cebu City',
+      'Downtown Campus, P. del Rosario St, Cebu City',
+      'South Campus, J. Alcantara St, Cebu City',
+    ],
   },
   {
-    name: 'Department of Science and Technology (DOST)',
-    campuses: ['DOST Region VII Regional Office, Sudlon, Lahug, Cebu City', 'DOST Bohol PSTO, Tagbilaran City', 'DOST Negros Oriental PSTO, Dumaguete City', 'DOST Siquijor PSTO'],
+    name: 'Cebu Technological University (CTU)',
+    campuses: [
+      'Main Campus, M.J. Cuenco Ave, Cebu City',
+      'Argao Campus, Southern Cebu',
+      'Tuburan Campus, Western Cebu',
+      'Danao Campus, Northern Cebu',
+      'Carmen Campus, Northern Cebu',
+      'Barili Campus, Southern Cebu',
+    ],
   },
   {
-    name: 'Department of Information and Communications Technology (DICT)',
-    campuses: ['DICT Region VII Office, Cebu City', 'DICT Bohol Provincial Office', 'DICT Negros Oriental Office'],
+    name: 'Cebu Normal University (CNU)',
+    campuses: [
+      'Main Campus, Osmeña Blvd, Cebu City',
+      'Balamban Campus, Cebu',
+      'Medellin Campus, Cebu',
+    ],
   },
   {
-    name: 'Department of Trade and Industry (DTI)',
-    campuses: ['DTI Region VII Regional Office, Cebu City', 'DTI Cebu Provincial Office', 'DTI Bohol Provincial Office'],
+    name: 'University of San Jose - Recoletos (USJ-R)',
+    campuses: [
+      'Main Campus, Magallanes St, Cebu City',
+      'Basak Campus, N. Bacalso Ave, Cebu City',
+      'Balamban Campus, Cebu',
+    ],
   },
   {
-    name: 'Department of Education (DepEd)',
-    campuses: ['DepEd Region VII Regional Office, Sudlon, Lahug, Cebu City'],
+    name: 'University of the Visayas (UV)',
+    campuses: [
+      'Main Campus, Colon St, Cebu City',
+      'Mandaue City Campus, Cebu',
+      'Toledo City Campus, Cebu',
+    ],
+  },
+
+  // ── Bohol Province (Region VII) ──
+  {
+    name: 'Bohol Island State University (BISU)',
+    campuses: [
+      'Main Campus, CPG Ave, Tagbilaran City, Bohol',
+      'Balilihan Campus, Bohol',
+      'Calape Campus, Bohol',
+      'Clarin Campus, Bohol',
+      'Bilar Campus, Bohol',
+      'Candijay Campus, Bohol',
+    ],
   },
   {
-    name: 'Other Higher Education Institution / Agency',
-    campuses: ['Other Campus / Custom City'],
+    name: 'Holy Name University (HNU)',
+    campuses: ['Main Campus, Janssen Heights, Dampas, Tagbilaran City, Bohol'],
+  },
+  {
+    name: 'University of Bohol (UB)',
+    campuses: ['Main Campus, Maria Clara St, Tagbilaran City, Bohol'],
+  },
+
+  // ── Negros Oriental Province (Region VII) ──
+  {
+    name: 'Silliman University (SU)',
+    campuses: ['Main Campus, Hibbard Ave, Dumaguete City, Negros Oriental'],
+  },
+  {
+    name: 'Negros Oriental State University (NORSU)',
+    campuses: [
+      'Main Campus I & II, Kagawasan Ave, Dumaguete City',
+      'Bais City Campuses I & II, Negros Oriental',
+      'Bayawan-Santa Catalina Campus, Negros Oriental',
+      'Guihulngan City Campus, Negros Oriental',
+      'Siaton Campus, Negros Oriental',
+      'Mabinay Campus, Negros Oriental',
+    ],
+  },
+  {
+    name: 'Foundation University (FU)',
+    campuses: ['Main Campus, Dr. Miciano Rd, Dumaguete City, Negros Oriental'],
+  },
+
+  // ── Siquijor Province (Region VII) ──
+  {
+    name: 'Siquijor State College (SSC)',
+    campuses: [
+      'Main Campus, Larena, Siquijor',
+      'Lazi Satellite Campus, Siquijor',
+    ],
+  },
+
+  // ── Regional Government Agencies (Region VII - Central Visayas) ──
+  {
+    name: 'Department of Science and Technology (DOST Region VII)',
+    campuses: [
+      'Regional Office VII, Sudlon, Lahug, Cebu City',
+      'Bohol Provincial S&T Office (PSTO), Tagbilaran City',
+      'Negros Oriental PSTO, Dumaguete City',
+      'Siquijor PSTO, Larena, Siquijor',
+    ],
+  },
+  {
+    name: 'Department of Information and Communications Technology (DICT Region VII)',
+    campuses: [
+      'Regional Office VII, Cebu City',
+      'DICT Bohol Provincial Office, Tagbilaran City',
+      'DICT Negros Oriental Provincial Office, Dumaguete City',
+      'DICT Siquijor Provincial Office, Siquijor',
+    ],
+  },
+  {
+    name: 'Department of Trade and Industry (DTI Region VII)',
+    campuses: [
+      'Regional Office VII, Cebu City',
+      'DTI Cebu Provincial Office, Cebu City',
+      'DTI Bohol Provincial Office, Tagbilaran City',
+      'DTI Negros Oriental Provincial Office, Dumaguete City',
+      'DTI Siquijor Provincial Office, Siquijor',
+    ],
+  },
+  {
+    name: 'Commission on Higher Education (CHED Region VII)',
+    campuses: ['Regional Office VII, Sudlon, Lahug, Cebu City'],
+  },
+  {
+    name: 'Department of Education (DepEd Region VII)',
+    campuses: ['Regional Office VII, Sudlon, Lahug, Cebu City'],
+  },
+  {
+    name: 'National Economic and Development Authority (NEDA Region VII)',
+    campuses: ['Regional Office VII, Sudlon, Lahug, Cebu City'],
+  },
+
+  // ── Custom / Other Region VII HEI ──
+  {
+    name: 'Other Higher Education Institution / Agency in Region VII',
+    campuses: ['Other Campus / Custom City in Region VII'],
   },
 ];
-
 const MEMBERSHIP_CSS = `
   .ms-input {
     width: 100%; box-sizing: border-box;

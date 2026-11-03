@@ -12,49 +12,118 @@ const MEMBER_GRADS = [
   'linear-gradient(135deg,#0369a1,#0ea5e9)',
 ];
 
-const INSTITUTION_ABOUT = {
-  UP: {
-    about: 'The University of the Philippines Visayas (UPV) is a premier state university under the UP System, located in Miagao, Iloilo. It is the only constituent university of UP in Western Visayas, offering undergraduate and graduate programs in fisheries, science, management, and the arts. As a national research university, UPV leads in marine science and aquatic research for the Visayas region.',
-    founded: '1979',
-    website: 'upv.up.edu.ph',
-    email: 'ovc@upv.edu.ph',
-    role: 'State University — Research & Academic Leadership',
+const DEFAULT_REGION7_MEMBERS = [
+  {
+    id: 1,
+    abbr: 'CIT',
+    full_name: 'Cebu Institute of Technology – University',
+    campus: 'N. Bacalso Ave, Cebu City, Region VII',
+    type: 'Private University',
+    website: 'cit.edu',
+    email: 'info@cit.edu'
   },
-  USa: {
-    about: 'The University of San Agustin (USa) is a private Catholic institution in Iloilo City, run by the Order of Saint Augustine. Established in 1904, it is one of the oldest universities in Western Visayas. USa offers programs across engineering, nursing, business, education, and the arts, and actively participates in community development and research partnerships.',
-    founded: '1904',
-    website: 'usa.edu.ph',
-    email: 'registrar@usa.edu.ph',
-    role: 'Private University — Catholic Augustinian Institution',
+  {
+    id: 2,
+    abbr: 'UP',
+    full_name: 'University of the Philippines Cebu',
+    campus: 'Lahug Main Campus & SRP Innovation Campus, Cebu City',
+    type: 'State University',
+    website: 'upcebu.edu.ph',
+    email: 'admin@upcebu.edu.ph'
   },
-  DOST: {
-    about: 'The Department of Science and Technology (DOST) Region VII is the government\'s primary agency for scientific and technological development in Central Visayas. It provides funding for research, scholarships, and technology transfer programs. DOST Region VII supports startups and local industries through its SETUP program and administers the DOST scholarship for deserving students in the region.',
-    founded: '1987',
+  {
+    id: 3,
+    abbr: 'USC',
+    full_name: 'University of San Carlos',
+    campus: 'Talamban & Downtown Campuses, Cebu City',
+    type: 'Private University',
+    website: 'usc.edu.ph',
+    email: 'information@usc.edu.ph'
+  },
+  {
+    id: 4,
+    abbr: 'CTU',
+    full_name: 'Cebu Technological University',
+    campus: 'Main Campus (Cebu City) & Satellite Campuses',
+    type: 'State University',
+    website: 'ctu.edu.ph',
+    email: 'information@ctu.edu.ph'
+  },
+  {
+    id: 5,
+    abbr: 'SU',
+    full_name: 'Silliman University',
+    campus: 'Hibbard Ave, Dumaguete City, Negros Oriental',
+    type: 'Private University',
+    website: 'su.edu.ph',
+    email: 'admissions@su.edu.ph'
+  },
+  {
+    id: 6,
+    abbr: 'BISU',
+    full_name: 'Bohol Island State University',
+    campus: 'Tagbilaran Main Campus, Balilihan, Calape, Bohol',
+    type: 'State University',
+    website: 'bisu.edu.ph',
+    email: 'info@bisu.edu.ph'
+  },
+  {
+    id: 7,
+    abbr: 'CNU',
+    full_name: 'Cebu Normal University',
+    campus: 'Main Campus, Osmeña Blvd, Cebu City',
+    type: 'State University',
+    website: 'cnu.edu.ph',
+    email: 'president@cnu.edu.ph'
+  },
+  {
+    id: 8,
+    abbr: 'DOST',
+    full_name: 'Department of Science and Technology',
+    campus: 'Region VII Regional Office, Sudlon, Lahug, Cebu City',
+    type: 'Government Agency',
     website: 'region7.dost.gov.ph',
-    email: 'ro7@dost.gov.ph',
-    role: 'Government Agency — Science & Technology',
+    email: 'ro7@dost.gov.ph'
   },
-  DICT: {
-    about: 'The Department of Information and Communications Technology (DICT) Region VII drives digital transformation and ICT development across Central Visayas. It implements national ICT programs including the Free Wi-Fi for All initiative, National Broadband Plan, and e-Government systems. DICT Region VII also provides digital literacy training and cybersecurity assistance to local government units.',
-    founded: '2016',
+  {
+    id: 9,
+    abbr: 'DICT',
+    full_name: 'Department of Information and Communications Technology',
+    campus: 'Region VII Regional Office, Cebu City',
+    type: 'Government Agency',
     website: 'dict.gov.ph',
-    email: 'ro7@dict.gov.ph',
-    role: 'Government Agency — Information & Communications Technology',
+    email: 'ro7@dict.gov.ph'
   },
-  DTI: {
-    about: 'The Department of Trade and Industry (DTI) Region VII promotes business development, consumer protection, and trade facilitation across Central Visayas. It supports micro, small, and medium enterprises (MSMEs) through One Town One Product (OTOP) programs, Negosyo Centers, and investment promotion. DTI Region VII also enforces fair trade and consumer laws across the region.',
-    founded: '1987',
+  {
+    id: 10,
+    abbr: 'DTI',
+    full_name: 'Department of Trade and Industry',
+    campus: 'Region VII Regional Office, Cebu City',
+    type: 'Government Agency',
     website: 'dti.gov.ph',
-    email: 'ro7@dti.gov.ph',
-    role: 'Government Agency — Trade & Industry Promotion',
+    email: 'ro7@dti.gov.ph'
   },
-  DepEd: {
-    about: 'The Department of Education (DepEd) Region VII oversees basic education — kindergarten through senior high school — across Central Visayas. It manages thousands of public schools and teachers serving millions of learners in Cebu, Bohol, Negros Oriental, and Siquijor. DepEd Region VII leads education policy implementation, curriculum delivery, and the K-12 program in the region.',
-    founded: '1901',
+  {
+    id: 11,
+    abbr: 'DepEd',
+    full_name: 'Department of Education',
+    campus: 'Region VII Regional Office, Sudlon, Lahug, Cebu City',
+    type: 'Government Agency',
     website: 'region7.deped.gov.ph',
-    email: 'ro7@deped.gov.ph',
-    role: 'Government Agency — Basic Education',
+    email: 'ro7@deped.gov.ph'
   },
+  {
+    id: 12,
+    abbr: 'CHED',
+    full_name: 'Commission on Higher Education',
+    campus: 'Region VII Regional Office, Sudlon, Lahug, Cebu City',
+    type: 'Government Agency',
+    website: 'chedro7.gov.ph',
+    email: 'chedro7@ched.gov.ph'
+  }
+];
+
+const INSTITUTION_ABOUT = {
   CIT: {
     about: 'Cebu Institute of Technology – University (CIT-U) is a premier autonomous higher education institution in Cebu City recognized for engineering excellence, computing, and technological innovation. CIT-U serves as a foundational academic cornerstone for regional research commercialization, software development, and industry-aligned capstone initiatives.',
     founded: '1946',
@@ -62,51 +131,170 @@ const INSTITUTION_ABOUT = {
     email: 'info@cit.edu',
     role: 'Autonomous Private University — Engineering & Computing Excellence',
   },
-};
-
-// Institution logos — local SVG files in /public/logos/ (always work, no internet needed)
-const MEMBER_ASSETS = {
   UP: {
-    logo:  '/logos/up.svg',
-    logo2: null,
-    bg: 'linear-gradient(135deg,#6b1010 0%,#9b2020 60%,#7b1212 100%)',
-    accent: '#ef4444', emoji: '🎓',
+    about: 'The University of the Philippines Cebu (UP Cebu) is the premier constituent university of the national university system in Central Visayas (Region VII). Established in 1918, UP Cebu excels as a Center of Excellence in Information Technology, Computer Science, Environmental Sciences, and Creative Product Design, operating its main campus in Lahug and the SRP Innovation Campus in Cebu City.',
+    founded: '1918',
+    website: 'upcebu.edu.ph',
+    email: 'admin@upcebu.edu.ph',
+    role: 'National State University — Central Visayas Research & Innovation Hub',
   },
-  USa: {
-    logo:  '/logos/usa.svg',
-    logo2: null,
-    bg: 'linear-gradient(135deg,#0f2d5c 0%,#1e4a9e 60%,#163880 100%)',
-    accent: '#d4af37', emoji: '✝️',
+  USC: {
+    about: 'The University of San Carlos (USC) is a premier Catholic higher education institution in Cebu City administered by the Society of the Divine Word (SVD). Recognized across the ASEAN region, USC is a CHED Center of Excellence across engineering, natural sciences, and commerce, featuring world-class research facilities in water resources and biodiversity.',
+    founded: '1595',
+    website: 'usc.edu.ph',
+    email: 'information@usc.edu.ph',
+    role: 'Autonomous Private University — Research & Academic Excellence',
+  },
+  CTU: {
+    about: 'Cebu Technological University (CTU) is the premier state technological university in Region VII, operating a comprehensive network of campuses across Cebu province. CTU leads in industry-driven engineering, vocational-technical education, fisheries, and automated agricultural innovation.',
+    founded: '1927',
+    website: 'ctu.edu.ph',
+    email: 'information@ctu.edu.ph',
+    role: 'State Technological University — Multi-Campus Innovation',
+  },
+  SU: {
+    about: 'Silliman University is a distinguished private research university in Dumaguete City, Negros Oriental. Renowned for its world-class Institute of Environmental and Marine Sciences, healthcare education, and humanities, Silliman is a foundational research pillar of Central Visayas.',
+    founded: '1901',
+    website: 'su.edu.ph',
+    email: 'admissions@su.edu.ph',
+    role: 'Autonomous Private University — Marine & Environmental Research',
+  },
+  BISU: {
+    about: 'Bohol Island State University (BISU) is the leading state institution of higher learning in the island province of Bohol. BISU drives agricultural research, environmental stewardship, computer technology, and eco-tourism development across Central Visayas.',
+    founded: '1998',
+    website: 'bisu.edu.ph',
+    email: 'info@bisu.edu.ph',
+    role: 'State University — Agricultural, Tech & Eco-Tourism Leadership',
+  },
+  CNU: {
+    about: 'Cebu Normal University (CNU) is a premier state research university in Cebu City recognized as a national Center of Excellence in Teacher Education and Nursing. CNU spearheads healthcare and basic education research across Region VII.',
+    founded: '1902',
+    website: 'cnu.edu.ph',
+    email: 'president@cnu.edu.ph',
+    role: 'State University — Education & Nursing Leadership',
   },
   DOST: {
-    logo:  '/logos/dost.svg',
-    logo2: null,
-    bg: 'linear-gradient(135deg,#053d18 0%,#0a6b2e 60%,#074f22 100%)',
-    accent: '#34d399', emoji: '🔬',
+    about: 'The Department of Science and Technology (DOST) Region VII is the government primary agency for scientific and technological development in Central Visayas. It provides funding for research, scholarships, and technology transfer programs. DOST Region VII supports startups and local industries through SETUP and provincial offices across Cebu, Bohol, Negros Oriental, and Siquijor.',
+    founded: '1987',
+    website: 'region7.dost.gov.ph',
+    email: 'ro7@dost.gov.ph',
+    role: 'Government Agency — Science & Technology',
   },
   DICT: {
-    logo:  '/logos/dict.svg',
-    logo2: null,
-    bg: 'linear-gradient(135deg,#041f5c 0%,#0a3a9e 60%,#082e80 100%)',
-    accent: '#93c5fd', emoji: '💻',
+    about: 'The Department of Information and Communications Technology (DICT) Region VII drives digital transformation and ICT development across Central Visayas. It implements national ICT programs including the Free Wi-Fi for All initiative, National Broadband Plan, and e-Government systems across Cebu, Bohol, Negros Oriental, and Siquijor.',
+    founded: '2016',
+    website: 'dict.gov.ph',
+    email: 'ro7@dict.gov.ph',
+    role: 'Government Agency — Information & Communications Technology',
   },
   DTI: {
-    logo:  '/logos/dti.svg',
-    logo2: null,
-    bg: 'linear-gradient(135deg,#6b0a0a 0%,#b01e1e 60%,#8b1010 100%)',
-    accent: '#fca5a5', emoji: '💼',
+    about: 'The Department of Trade and Industry (DTI) Region VII promotes business development, consumer protection, and trade facilitation across Central Visayas. It supports MSMEs through Negosyo Centers, startup incubators, and One Town One Product (OTOP) initiatives in Cebu, Bohol, Negros Oriental, and Siquijor.',
+    founded: '1987',
+    website: 'dti.gov.ph',
+    email: 'ro7@dti.gov.ph',
+    role: 'Government Agency — Trade & Industry Promotion',
   },
   DepEd: {
-    logo:  '/logos/deped.svg',
-    logo2: null,
-    bg: 'linear-gradient(135deg,#0b2d6c 0%,#1546b4 60%,#0d3892 100%)',
-    accent: '#fbbf24', emoji: '📚',
+    about: 'The Department of Education (DepEd) Region VII oversees basic education across Central Visayas. It manages thousands of public schools and teachers serving millions of learners across the provinces of Cebu, Bohol, Negros Oriental, and Siquijor.',
+    founded: '1901',
+    website: 'region7.deped.gov.ph',
+    email: 'ro7@deped.gov.ph',
+    role: 'Government Agency — Basic Education',
   },
+  CHED: {
+    about: 'The Commission on Higher Education (CHED) Region VII supervises and guides all public and private higher education institutions (HEIs) across Central Visayas. It promotes academic quality, grants research centers of excellence, and administers national tertiary education scholarships.',
+    founded: '1994',
+    website: 'chedro7.gov.ph',
+    email: 'chedro7@ched.gov.ph',
+    role: 'Government Agency — Higher Education Governance',
+  },
+};
+
+// Institution logos & theme styling for Region VII institutions
+const MEMBER_ASSETS = {
   CIT: {
-    logo:  '/logos/cit.svg',
+    logo: '/logos/cit.svg',
     logo2: null,
     bg: 'linear-gradient(135deg,#78350f 0%,#b45309 60%,#92400e 100%)',
-    accent: '#fbbf24', emoji: '🦁',
+    accent: '#fbbf24',
+    emoji: '🦁',
+  },
+  UP: {
+    logo: '/logos/up.svg',
+    logo2: null,
+    bg: 'linear-gradient(135deg,#6b1010 0%,#9b2020 60%,#7b1212 100%)',
+    accent: '#ef4444',
+    emoji: '🎓',
+  },
+  USC: {
+    logo: null,
+    logo2: null,
+    bg: 'linear-gradient(135deg,#064e3b 0%,#047857 60%,#065f46 100%)',
+    accent: '#34d399',
+    emoji: '🦅',
+  },
+  CTU: {
+    logo: null,
+    logo2: null,
+    bg: 'linear-gradient(135deg,#1e3a8a 0%,#2563eb 60%,#1d4ed8 100%)',
+    accent: '#60a5fa',
+    emoji: '⚙️',
+  },
+  SU: {
+    logo: null,
+    logo2: null,
+    bg: 'linear-gradient(135deg,#7f1d1d 0%,#dc2626 60%,#991b1b 100%)',
+    accent: '#f87171',
+    emoji: '🏛️',
+  },
+  BISU: {
+    logo: null,
+    logo2: null,
+    bg: 'linear-gradient(135deg,#0f766e 0%,#0d9488 60%,#115e59 100%)',
+    accent: '#2dd4bf',
+    emoji: '🌴',
+  },
+  CNU: {
+    logo: null,
+    logo2: null,
+    bg: 'linear-gradient(135deg,#1e1b4b 0%,#4338ca 60%,#312e81 100%)',
+    accent: '#818cf8',
+    emoji: '📖',
+  },
+  DOST: {
+    logo: '/logos/dost.svg',
+    logo2: null,
+    bg: 'linear-gradient(135deg,#053d18 0%,#0a6b2e 60%,#074f22 100%)',
+    accent: '#34d399',
+    emoji: '🔬',
+  },
+  DICT: {
+    logo: '/logos/dict.svg',
+    logo2: null,
+    bg: 'linear-gradient(135deg,#041f5c 0%,#0a3a9e 60%,#082e80 100%)',
+    accent: '#93c5fd',
+    emoji: '💻',
+  },
+  DTI: {
+    logo: '/logos/dti.svg',
+    logo2: null,
+    bg: 'linear-gradient(135deg,#6b0a0a 0%,#b01e1e 60%,#8b1010 100%)',
+    accent: '#fca5a5',
+    emoji: '💼',
+  },
+  DepEd: {
+    logo: '/logos/deped.svg',
+    logo2: null,
+    bg: 'linear-gradient(135deg,#0b2d6c 0%,#1546b4 60%,#0d3892 100%)',
+    accent: '#fbbf24',
+    emoji: '📚',
+  },
+  CHED: {
+    logo: null,
+    logo2: null,
+    bg: 'linear-gradient(135deg,#1e3a5f 0%,#0284c7 60%,#0369a1 100%)',
+    accent: '#38bdf8',
+    emoji: '🏛️',
   },
 };
 
@@ -164,8 +352,14 @@ export default function MembersPage() {
 
   useEffect(() => {
     api.members.list()
-      .then(setMembers)
-      .catch(() => {})
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) {
+          setMembers(data);
+        } else {
+          setMembers(DEFAULT_REGION7_MEMBERS);
+        }
+      })
+      .catch(() => setMembers(DEFAULT_REGION7_MEMBERS))
       .finally(() => setLoading(false));
   }, []);
 

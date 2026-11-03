@@ -607,13 +607,22 @@ ON CONFLICT (title) DO NOTHING;
 -- Consortium member institutions
 INSERT INTO members (abbr, full_name, campus, type)
 VALUES
-  ('UP',    'University of the Philippines',                         'UP Visayas',  'State University'),
-  ('USa',   'University of San Agustin',                             'Iloilo City', 'Private University'),
-  ('DOST',  'Department of Science & Technology',                    'Region VII',  'Government Agency'),
-  ('DICT',  'Department of Information & Communications Technology', 'Region VII',  'Government Agency'),
-  ('DTI',   'Department of Trade & Industry',                        'Region VII',  'Government Agency'),
-  ('DepEd', 'Department of Education',                               'Region VII',  'Government Agency')
-ON CONFLICT (abbr) DO NOTHING;
+  ('CIT',   'Cebu Institute of Technology – University',              'N. Bacalso Ave, Cebu City', 'Private University'),
+  ('UP',    'University of the Philippines Cebu',                    'Lahug Main Campus & SRP, Cebu City', 'State University'),
+  ('USC',   'University of San Carlos',                               'Talamban & Downtown, Cebu City', 'Private University'),
+  ('CTU',   'Cebu Technological University',                          'Main Campus, Cebu City', 'State University'),
+  ('SU',    'Silliman University',                                    'Dumaguete City, Negros Oriental', 'Private University'),
+  ('BISU',  'Bohol Island State University',                          'Tagbilaran City, Bohol', 'State University'),
+  ('CNU',   'Cebu Normal University',                                 'Osmeña Blvd, Cebu City', 'State University'),
+  ('DOST',  'Department of Science & Technology',                    'Region VII, Sudlon, Lahug, Cebu City', 'Government Agency'),
+  ('DICT',  'Department of Information & Communications Technology', 'Region VII, Cebu City', 'Government Agency'),
+  ('DTI',   'Department of Trade & Industry',                        'Region VII, Cebu City', 'Government Agency'),
+  ('DepEd', 'Department of Education',                               'Region VII, Sudlon, Lahug, Cebu City', 'Government Agency'),
+  ('CHED',  'Commission on Higher Education',                         'Region VII, Sudlon, Lahug, Cebu City', 'Government Agency')
+ON CONFLICT (abbr) DO UPDATE SET
+  full_name = EXCLUDED.full_name,
+  campus = EXCLUDED.campus,
+  type = EXCLUDED.type;
 
 
 -- Seed policies
