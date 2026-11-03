@@ -5,6 +5,7 @@ import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { solveClientQuery } from '../lib/haribonEngine';
 import { SUPPORTED_LANGUAGES, getLangByKey, translateMessageText, getLocalizedGreeting, getLocalizedUI, LANG_CHIPS } from '../lib/languages';
+import { voicePlayer } from '../lib/audioPlayer.js';
 
 
 /* ── Slash commands for developer/power-user UX ─ */
@@ -474,32 +475,8 @@ export default function Chatbot() {
     } catch (_) {}
   }
 
-  function speakMessage(idx, text) {
-    if (!('speechSynthesis' in window)) return;
-    if (speakingIdx === idx) {
-      window.speechSynthesis.cancel();
-      setSpeakingIdx(null);
-      return;
-    }
-    window.speechSynthesis.cancel();
-    const cleanText = (text || '').replace(/[*_#`[\]()]/g, '');
-    const utter = new SpeechSynthesisUtterance(cleanText);
-    const langObj = getLangByKey(activeLang);
-    utter.lang = langObj.bcp47 || 'en-US';
-
-    const voices = window.speechSynthesis.getVoices() || [];
-    const targetCode = (langObj.code || 'en').toLowerCase();
-    const matchedVoice = voices.find(v => v.lang.toLowerCase().startsWith(targetCode)) ||
-                         voices.find(v => v.lang.toLowerCase().includes(targetCode)) ||
-                         voices.find(v => /natural|neural|online/i.test(v.name) && /en/i.test(v.lang)) ||
-                         voices.find(v => /google/i.test(v.name)) ||
-                         voices.find(v => /en[-_]us|en[-_]ph|en[-_]gb/i.test(v.lang));
-    if (matchedVoice) utter.voice = matchedVoice;
-    utter.rate = 1.0;
-    utter.onend = () => setSpeakingIdx(null);
-    utter.onerror = () => setSpeakingIdx(null);
-    setSpeakingIdx(idx);
-    window.speechSynthesis.speak(utter);
+  function speakMessage(idx, text, langKey = activeLang) {
+    voicePlayer.play(idx, text, langKey, (sIdx) => setSpeakingIdx(sIdx));
   }
 
   function toggleVoiceInput() {
@@ -900,7 +877,11 @@ export default function Chatbot() {
                         </button>
                         <button
                           className={`w-action-btn${speakingIdx === i ? ' speaking' : ''}`}
-                          onClick={() => speakMessage(i, msg.text)}
+                          onClick={() => {
+                            const textToSpeak = (translations[i]?.isShowingTranslated && translations[i]?.translatedText) ? translations[i].translatedText : msg.text;
+                            const langToSpeak = (translations[i]?.isShowingTranslated && translations[i]?.targetLang) ? translations[i].targetLang : activeLang;
+                            speakMessage(i, textToSpeak, langToSpeak);
+                          }}
                           title={speakingIdx === i ? 'Stop voice playback' : 'Read aloud with voice'}
                         >
                           {speakingIdx === i ? (

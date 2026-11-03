@@ -7,6 +7,7 @@ import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { solveClientQuery } from '../lib/haribonEngine';
 import { SUPPORTED_LANGUAGES, getLangByKey, translateMessageText, getLocalizedGreeting, getLocalizedUI, LANG_CHIPS } from '../lib/languages';
+import { voicePlayer } from '../lib/audioPlayer.js';
 
 // Renders bot reply text with formatted markdown, headings, bullets, numbered lists, and inline code
 function BotText({ text, isStreaming = false }) {
@@ -953,122 +954,8 @@ export default function ChatbotPage() {
   const [speakingIdx, setSpeakingIdx] = useState(null);
   const [voiceSpeed, setVoiceSpeed]   = useState(1.0);
 
-  // Intelligently select the most realistic natural / neural human voice on the system
-  function getBestHumanVoice(isPH = false) {
-    if (!window.speechSynthesis) return null;
-    const voices = window.speechSynthesis.getVoices() || [];
-    if (!voices.length) return null;
-
-    if (isPH) {
-      const phVoice = voices.find(v => /fil|tl|ceb|tgl|tagalog/i.test(v.lang) || /filipino|tagalog/i.test(v.name));
-      if (phVoice) return phVoice;
-    }
-
-    // 1. Prioritize Microsoft Natural / Neural voices (Jenny, Guy, Aria, Ryan, Christopher)
-    const natural = voices.find(v =>
-      /natural|neural|online/i.test(v.name) && (/english|en[-_]/i.test(v.lang) || /en[-_]us|en[-_]ph|en[-_]gb/i.test(v.lang))
-    );
-    if (natural) return natural;
-
-    // 2. Google High Quality US / UK / PH English
-    const google = voices.find(v =>
-      /google/i.test(v.name) && /en[-_]/i.test(v.lang)
-    );
-    if (google) return google;
-
-    // 3. Apple Enhanced / Premium voices (Samantha, Ava, Alex, Daniel)
-    const apple = voices.find(v =>
-      /enhanced|premium|samantha|ava|daniel|karen|moira/i.test(v.name) && /en[-_]/i.test(v.lang)
-    );
-    if (apple) return apple;
-
-    // 4. Default high-compatibility English voice
-    const english = voices.find(v => /en[-_]ph|en[-_]us|en[-_]gb/i.test(v.lang)) || voices.find(v => v.lang.startsWith('en'));
-    return english || voices[0];
-  }
-
-  function cleanSpeechText(text) {
-    if (!text) return '';
-    return text
-      .replace(/https?:\/\/\S+/gi, '') // Remove URLs
-      .replace(/[\*\_\~`#]/g, '') // Remove markdown formatting
-      .replace(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '') // Remove emojis to avoid robotic symbol reading
-      .replace(/^[•▸\-\*\d+\.]\s*/gm, '') // Remove bullets
-      .replace(/\s+/g, ' ')
-      .trim();
-  }
-
-  const audioPlayerRef = useRef(null);
-
-  async function speakMessage(idx, text, overrideSpeed) {
-    if (speakingIdx === idx && !overrideSpeed) {
-      if (audioPlayerRef.current) {
-        audioPlayerRef.current.pause();
-        audioPlayerRef.current = null;
-      }
-      if (window.speechSynthesis) window.speechSynthesis.cancel();
-      setSpeakingIdx(null);
-      return;
-    }
-
-    if (audioPlayerRef.current) {
-      audioPlayerRef.current.pause();
-      audioPlayerRef.current = null;
-    }
-    if (window.speechSynthesis) window.speechSynthesis.cancel();
-
-    const cleanText = cleanSpeechText(text);
-    if (!cleanText) return;
-
-    setSpeakingIdx(idx);
-    const speed = overrideSpeed || voiceSpeed || 1.0;
-
-    try {
-      // 1. Attempt ElevenLabs Neural Audio Generation via Backend API
-      const res = await api.chatbot.tts(cleanText, 'Adam');
-      const contentType = res.headers?.get('content-type') || '';
-
-      if (res.ok && contentType.includes('audio/mpeg')) {
-        const blob = await res.blob();
-        const audioUrl = URL.createObjectURL(blob);
-        const audio = new Audio(audioUrl);
-        audio.playbackRate = speed;
-        audio.onended = () => { setSpeakingIdx(null); audioPlayerRef.current = null; };
-        audio.onerror = () => { fallbackSpeak(idx, cleanText, speed); };
-        audioPlayerRef.current = audio;
-        await audio.play();
-        return;
-      }
-    } catch (e) {
-      console.warn('[tts] Backend streaming fallback:', e.message);
-    }
-
-    // 2. High-fidelity Client Neural Synthesis Fallback
-    fallbackSpeak(idx, cleanText, speed);
-  }
-
-  function fallbackSpeak(idx, cleanText, speed) {
-    if (!window.speechSynthesis) {
-      setSpeakingIdx(null);
-      return;
-    }
-    const utter = new SpeechSynthesisUtterance(cleanText);
-    const langObj = getLangByKey(activeLang);
-    utter.lang = langObj.bcp47 || 'en-US';
-
-    const voices = window.speechSynthesis.getVoices() || [];
-    const targetCode = (langObj.code || 'en').toLowerCase();
-    const matchedVoice = voices.find(v => v.lang.toLowerCase().startsWith(targetCode)) ||
-                         voices.find(v => v.lang.toLowerCase().includes(targetCode)) ||
-                         getBestHumanVoice(false);
-    if (matchedVoice) utter.voice = matchedVoice;
-    utter.rate = (speed || 1.0) * 0.96;
-    utter.pitch = 1.0;
-    utter.volume = 1.0;
-    utter.onend = () => setSpeakingIdx(null);
-    utter.onerror = () => setSpeakingIdx(null);
-    setSpeakingIdx(idx);
-    window.speechSynthesis.speak(utter);
+  function speakMessage(idx, text, langKey = activeLang) {
+    voicePlayer.play(idx, text, langKey, (sIdx) => setSpeakingIdx(sIdx));
   }
 
   async function copyMessage(idx, text) {
@@ -1526,7 +1413,11 @@ export default function ChatbotPage() {
                         </button>
                         <button
                           className={`action-btn${speakingIdx === i ? ' speaking-btn' : ''}`}
-                          onClick={() => speakMessage(i, msg.text)}
+                          onClick={() => {
+                            const textToSpeak = (translations[i]?.isShowingTranslated && translations[i]?.translatedText) ? translations[i].translatedText : msg.text;
+                            const langToSpeak = (translations[i]?.isShowingTranslated && translations[i]?.targetLang) ? translations[i].targetLang : activeLang;
+                            speakMessage(i, textToSpeak, langToSpeak);
+                          }}
                           title={speakingIdx === i ? 'Pause voice playback' : 'Listen with high-fidelity voice'}
                         >
                           {speakingIdx === i ? (
