@@ -323,7 +323,13 @@ export default function Chatbot() {
   const [copied, setCopied]     = useState(null);
   const [speakingIdx, setSpeakingIdx] = useState(null);
   const [listening, setListening] = useState(false);
-  const [activeLang, setActiveLang] = useState('en');
+  const [activeLang, setActiveLang] = useState(() => {
+    try {
+      return localStorage.getItem('dasig_lang') || 'en';
+    } catch {
+      return 'en';
+    }
+  });
   const [translations, setTranslations] = useState({});
   const [translatingIdx, setTranslatingIdx] = useState(null);
   const [showLangMenu, setShowLangMenu] = useState(false);
@@ -332,6 +338,11 @@ export default function Chatbot() {
 
   const handleLanguageChange = async (newLang) => {
     setActiveLang(newLang);
+    try {
+      localStorage.setItem('dasig_lang', newLang);
+    } catch {
+      // Ignore storage errors
+    }
     setShowLangMenu(false);
 
     // 1. Immediately update initial greeting in messages[0]
@@ -473,14 +484,17 @@ export default function Chatbot() {
     window.speechSynthesis.cancel();
     const cleanText = (text || '').replace(/[*_#`[\]()]/g, '');
     const utter = new SpeechSynthesisUtterance(cleanText);
+    const langObj = getLangByKey(activeLang);
+    utter.lang = langObj.bcp47 || 'en-US';
+
     const voices = window.speechSynthesis.getVoices() || [];
-    const isPH = /maayong|salamat|unsa|kinsa|kanus|daghan|kamusta|kumusta|magandang|po|opo|kailan|paano|sumali|miyembro/i.test(cleanText);
-    const phVoice = isPH ? voices.find(v => /fil|tl|ceb|tgl|tagalog/i.test(v.lang) || /filipino|tagalog/i.test(v.name)) : null;
-    const best = phVoice ||
-                 voices.find(v => /natural|neural|online/i.test(v.name) && /en/i.test(v.lang)) ||
-                 voices.find(v => /google/i.test(v.name) && /en/i.test(v.lang)) ||
-                 voices.find(v => /en[-_]us|en[-_]ph|en[-_]gb/i.test(v.lang));
-    if (best) utter.voice = best;
+    const targetCode = (langObj.code || 'en').toLowerCase();
+    const matchedVoice = voices.find(v => v.lang.toLowerCase().startsWith(targetCode)) ||
+                         voices.find(v => v.lang.toLowerCase().includes(targetCode)) ||
+                         voices.find(v => /natural|neural|online/i.test(v.name) && /en/i.test(v.lang)) ||
+                         voices.find(v => /google/i.test(v.name)) ||
+                         voices.find(v => /en[-_]us|en[-_]ph|en[-_]gb/i.test(v.lang));
+    if (matchedVoice) utter.voice = matchedVoice;
     utter.rate = 1.0;
     utter.onend = () => setSpeakingIdx(null);
     utter.onerror = () => setSpeakingIdx(null);
@@ -501,7 +515,8 @@ export default function Chatbot() {
     }
     try {
       const recognition = new SpeechRecognition();
-      recognition.lang = 'en-PH';
+      const langObj = getLangByKey(activeLang);
+      recognition.lang = langObj.bcp47 || 'en-US';
       recognition.interimResults = false;
       recognition.maxAlternatives = 1;
       recognition.onstart = () => setListening(true);

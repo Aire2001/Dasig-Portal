@@ -519,7 +519,13 @@ export default function ChatbotPage() {
   const [listening, setListening] = useState(false);
   const [autoVoicemail, setAutoVoicemail] = useState(false);
   const [activeCat, setActiveCat] = useState('ALL');
-  const [activeLang, setActiveLang] = useState('en');
+  const [activeLang, setActiveLang] = useState(() => {
+    try {
+      return localStorage.getItem('dasig_lang') || 'en';
+    } catch {
+      return 'en';
+    }
+  });
   const [translations, setTranslations] = useState({});
   const [translatingIdx, setTranslatingIdx] = useState(null);
   const [showLangMenu, setShowLangMenu] = useState(false);
@@ -527,6 +533,11 @@ export default function ChatbotPage() {
 
   const handleLanguageChange = async (newLang) => {
     setActiveLang(newLang);
+    try {
+      localStorage.setItem('dasig_lang', newLang);
+    } catch {
+      // Ignore storage errors
+    }
     setActiveCat('ALL');
     setShowLangMenu(false);
 
@@ -1042,9 +1053,15 @@ export default function ChatbotPage() {
       return;
     }
     const utter = new SpeechSynthesisUtterance(cleanText);
-    const isPH = /maayong|salamat|unsa|kinsa|kanus|daghan|kamusta|kumusta|magandang|po|opo|kailan|paano|sumali|miyembro/i.test(cleanText);
-    const bestVoice = getBestHumanVoice(isPH);
-    if (bestVoice) utter.voice = bestVoice;
+    const langObj = getLangByKey(activeLang);
+    utter.lang = langObj.bcp47 || 'en-US';
+
+    const voices = window.speechSynthesis.getVoices() || [];
+    const targetCode = (langObj.code || 'en').toLowerCase();
+    const matchedVoice = voices.find(v => v.lang.toLowerCase().startsWith(targetCode)) ||
+                         voices.find(v => v.lang.toLowerCase().includes(targetCode)) ||
+                         getBestHumanVoice(false);
+    if (matchedVoice) utter.voice = matchedVoice;
     utter.rate = (speed || 1.0) * 0.96;
     utter.pitch = 1.0;
     utter.volume = 1.0;
@@ -1087,7 +1104,8 @@ export default function ChatbotPage() {
     }
     try {
       const recognition = new SpeechRecognition();
-      recognition.lang = 'en-PH';
+      const langObj = getLangByKey(activeLang);
+      recognition.lang = langObj.bcp47 || 'en-US';
       recognition.interimResults = false;
       recognition.maxAlternatives = 1;
       recognition.onstart = () => setListening(true);

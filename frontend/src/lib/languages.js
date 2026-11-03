@@ -1,20 +1,20 @@
 import { api } from '../api.js';
 
 export const SUPPORTED_LANGUAGES = [
-  { key: 'en',  code: 'en',    flag: '🇺🇸', label: 'US English',            name: 'English',              short: 'EN',  tag: 'English' },
-  { key: 'bis', code: 'ceb',   flag: '🇵🇭', label: 'PH Bisaya (Cebuano)',   name: 'Bisaya (Cebuano)',     short: 'BIS', tag: 'Cebuano' },
-  { key: 'tgl', code: 'tl',    flag: '🇵🇭', label: 'PH Tagalog (Filipino)',  name: 'Tagalog (Filipino)',    short: 'TAG', tag: 'Filipino' },
-  { key: 'es',  code: 'es',    flag: '🇪🇸', label: 'ES Español (Spanish)',   name: 'Español (Spanish)',     short: 'ES',  tag: 'Spanish' },
-  { key: 'ja',  code: 'ja',    flag: '🇯🇵', label: 'JP 日本語 (Japanese)',    name: '日本語 (Japanese)',      short: 'JA',  tag: 'Japanese' },
-  { key: 'ko',  code: 'ko',    flag: '🇰🇷', label: 'KR 한국어 (Korean)',      name: '한국어 (Korean)',        short: 'KO',  tag: 'Korean' },
-  { key: 'zh',  code: 'zh-CN', flag: '🇨🇳', label: 'CN 中文 (Chinese)',       name: '中文 (Chinese)',         short: 'ZH',  tag: 'Chinese' },
-  { key: 'fr',  code: 'fr',    flag: '🇫🇷', label: 'FR Français (French)',    name: 'Français (French)',      short: 'FR',  tag: 'French' },
-  { key: 'de',  code: 'de',    flag: '🇩🇪', label: 'DE Deutsch (German)',     name: 'Deutsch (German)',       short: 'DE',  tag: 'German' },
-  { key: 'ar',  code: 'ar',    flag: '🇸🇦', label: 'SA العربية (Arabic)',    name: 'العربية (Arabic)',      short: 'AR',  tag: 'Arabic' },
-  { key: 'ilo', code: 'ilo',   flag: '🇵🇭', label: 'PH Ilokano',             name: 'Ilokano',               short: 'ILO', tag: 'Ilokano' },
-  { key: 'hil', code: 'hil',   flag: '🇵🇭', label: 'PH Hiligaynon (Ilonggo)',name: 'Hiligaynon (Ilonggo)',  short: 'HIL', tag: 'Hiligaynon' },
-  { key: 'it',  code: 'it',    flag: '🇮🇹', label: 'IT Italiano (Italian)',   name: 'Italiano (Italian)',     short: 'IT',  tag: 'Italian' },
-  { key: 'id',  code: 'id',    flag: '🇮🇩', label: 'ID Bahasa Indonesia',    name: 'Bahasa Indonesia',      short: 'ID',  tag: 'Indonesian' },
+  { key: 'en',  code: 'en',    bcp47: 'en-US', flag: '🇺🇸', label: 'US English',            name: 'English',              short: 'EN',  tag: 'English' },
+  { key: 'bis', code: 'ceb',   bcp47: 'fil-PH', flag: '🇵🇭', label: 'PH Bisaya (Cebuano)',   name: 'Bisaya (Cebuano)',     short: 'BIS', tag: 'Cebuano' },
+  { key: 'tgl', code: 'tl',    bcp47: 'fil-PH', flag: '🇵🇭', label: 'PH Tagalog (Filipino)',  name: 'Tagalog (Filipino)',    short: 'TAG', tag: 'Filipino' },
+  { key: 'es',  code: 'es',    bcp47: 'es-ES', flag: '🇪🇸', label: 'ES Español (Spanish)',   name: 'Español (Spanish)',     short: 'ES',  tag: 'Spanish' },
+  { key: 'ja',  code: 'ja',    bcp47: 'ja-JP', flag: '🇯🇵', label: 'JP 日本語 (Japanese)',    name: '日本語 (Japanese)',      short: 'JA',  tag: 'Japanese' },
+  { key: 'ko',  code: 'ko',    bcp47: 'ko-KR', flag: '🇰🇷', label: 'KR 한국어 (Korean)',      name: '한국어 (Korean)',        short: 'KO',  tag: 'Korean' },
+  { key: 'zh',  code: 'zh-CN', bcp47: 'zh-CN', flag: '🇨🇳', label: 'CN 中文 (Chinese)',       name: '中文 (Chinese)',         short: 'ZH',  tag: 'Chinese' },
+  { key: 'fr',  code: 'fr',    bcp47: 'fr-FR', flag: '🇫🇷', label: 'FR Français (French)',    name: 'Français (French)',      short: 'FR',  tag: 'French' },
+  { key: 'de',  code: 'de',    bcp47: 'de-DE', flag: '🇩🇪', label: 'DE Deutsch (German)',     name: 'Deutsch (German)',       short: 'DE',  tag: 'German' },
+  { key: 'ar',  code: 'ar',    bcp47: 'ar-SA', flag: '🇸🇦', label: 'SA العربية (Arabic)',    name: 'العربية (Arabic)',      short: 'AR',  tag: 'Arabic' },
+  { key: 'ilo', code: 'ilo',   bcp47: 'fil-PH', flag: '🇵🇭', label: 'PH Ilokano',             name: 'Ilokano',               short: 'ILO', tag: 'Ilokano' },
+  { key: 'hil', code: 'hil',   bcp47: 'fil-PH', flag: '🇵🇭', label: 'PH Hiligaynon (Ilonggo)',name: 'Hiligaynon (Ilonggo)',  short: 'HIL', tag: 'Hiligaynon' },
+  { key: 'it',  code: 'it',    bcp47: 'it-IT', flag: '🇮🇹', label: 'IT Italiano (Italian)',   name: 'Italiano (Italian)',     short: 'IT',  tag: 'Italian' },
+  { key: 'id',  code: 'id',    bcp47: 'id-ID', flag: '🇮🇩', label: 'ID Bahasa Indonesia',    name: 'Bahasa Indonesia',      short: 'ID',  tag: 'Indonesian' },
 ];
 
 export const PRIMARY_LANG_KEYS = ['en', 'bis', 'tgl', 'es', 'ja', 'id'];
