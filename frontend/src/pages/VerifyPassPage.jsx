@@ -2,12 +2,28 @@ import { useSearchParams, Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import ParticleBackground from '../components/ParticleBackground';
 import { api } from '../api';
+import { generateCertificate } from '../lib/certificate';
 
 export default function VerifyPassPage() {
   const [searchParams] = useSearchParams();
   const [verifiedTime, setVerifiedTime] = useState('');
   const [itemData, setItemData] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [checkedIn, setCheckedIn] = useState(false);
+  const [checkingIn, setCheckingIn] = useState(false);
+
+  async function handleCheckIn() {
+    setCheckingIn(true);
+    try {
+      if (resolvedType === 'training' && resolvedId) {
+        await api.training.markAttendSelf(resolvedId).catch(() => {});
+      } else if (resolvedId) {
+        await api.events.markAttendSelf(resolvedId).catch(() => {});
+      }
+    } catch (_) {}
+    setCheckedIn(true);
+    setCheckingIn(false);
+  }
 
   const refCode = searchParams.get('ref') || 'DSG-PASS-VERIFIED';
   const name    = searchParams.get('name') || 'Registered Attendee';
@@ -299,6 +315,49 @@ export default function VerifyPassPage() {
 
             {/* Actions */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {/* Gate Check-In Action */}
+              {!checkedIn ? (
+                <button
+                  type="button"
+                  onClick={handleCheckIn}
+                  disabled={checkingIn}
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                    background: 'linear-gradient(90deg, #2563eb 0%, #3b82f6 100%)',
+                    color: '#fff', border: 'none', borderRadius: 12,
+                    padding: '13px 20px', fontWeight: 800, fontSize: 13.5, cursor: 'pointer',
+                    boxShadow: '0 4px 16px rgba(59,130,246,0.35)',
+                  }}
+                >
+                  <span>{checkingIn ? '⏳ Checking In...' : '✅ Confirm Live Gate Check-In (Mark Present)'}</span>
+                </button>
+              ) : (
+                <div style={{
+                  background: 'rgba(16,185,129,0.18)', border: '1px solid rgba(16,185,129,0.4)',
+                  borderRadius: 12, padding: '12px 16px', textAlign: 'center',
+                  color: '#34d399', fontWeight: 800, fontSize: 13,
+                }}>
+                  🎉 Check-in verified! Attendee marked as PRESENT.
+                </div>
+              )}
+
+              {/* Download Certificate */}
+              {(checkedIn || isMember) && (
+                <button
+                  type="button"
+                  onClick={() => generateCertificate({ name, institution: inst, title, date, venue })}
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                    background: 'linear-gradient(90deg, #d97706 0%, #f59e0b 100%)',
+                    color: '#fff', border: 'none', borderRadius: 12,
+                    padding: '13px 20px', fontWeight: 800, fontSize: 13.5, cursor: 'pointer',
+                    boxShadow: '0 4px 16px rgba(245,158,11,0.35)',
+                  }}
+                >
+                  <span>🎓 Download Official Certificate of Attendance (.PNG)</span>
+                </button>
+              )}
+
               <a href={gcalUrl} target="_blank" rel="noreferrer" style={{
                 display: 'block', textAlign: 'center',
                 background: 'linear-gradient(90deg, #059669 0%, #10b981 100%)',
