@@ -5,6 +5,41 @@ import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { solveClientQuery } from '../lib/haribonEngine';
 
+/* ── Language-specific quick chips & prompts ─ */
+const LANG_CHIPS = {
+  en: [
+    { label: '📅 Upcoming Summits', q: 'What events are coming up in Region VII?' },
+    { label: '🎓 Faculty Training', q: 'What training programs are open for enrollment?' },
+    { label: '💰 DOST-7 Research Grants', q: 'What research funding opportunities are available?' },
+    { label: '🏛 Consortium Members', q: 'Who are the DASIG member universities and agencies?' },
+    { label: '📋 Governance Charters', q: 'What policies and IP accords are active?' },
+  ],
+  bis: [
+    { label: '📅 Mga Kalihokan (Events)', q: 'Maayong adlaw! Unsay mga umaabot nga events ug summits sa DASIG?' },
+    { label: '🎓 Libreng Bootcamps', q: 'Unsa ang mga available nga training programs para sa faculty?' },
+    { label: '💰 DOST Panukiduki', q: 'Naa bay available nga research grants gikan sa DOST-7?' },
+    { label: '🏛 Kasaping Unibersidad', q: 'Kinsa ang mga miyembro nga unibersidad sa Central Visayas?' },
+    { label: '🤝 Unsaon Pag-apil', q: 'Unsaon pag-apil o pag-apply sa membership sa konsorsyum?' },
+  ],
+  tgl: [
+    { label: '📅 Paparating na Kaganapan', q: 'Magandang araw! May mga paparating bang event o summit sa DASIG?' },
+    { label: '🎓 Pagsasanay ng Guro', q: 'Ano-anong training bootcamps ang bukas para salihan?' },
+    { label: '💰 DOST Research Grants', q: 'Mayroon bang open research funding para sa unibersidad?' },
+    { label: '🏛 Kasaping Institusyon', q: 'Sino-sino ang mga miyembro ng DASIG consortium?' },
+    { label: '📋 Patakaran at Privacy', q: 'Ano ang mga patakaran sa Data Privacy ng DASIG?' },
+  ],
+};
+
+/* ── Slash commands for developer/power-user UX ─ */
+const SLASH_COMMANDS = [
+  { cmd: '/events', label: 'View upcoming consortium summits & conferences', q: 'What events are coming up in Region VII?' },
+  { cmd: '/training', label: 'View accredited faculty training programs', q: 'What faculty training bootcamps are open for enrollment?' },
+  { cmd: '/grants', label: 'Query open DOST-7 research grants & calls', q: 'What funding opportunities and research grants exist?' },
+  { cmd: '/members', label: 'List partner HEIs (CIT-U, UPV, USA)', q: 'Who are the DASIG member institutions?' },
+  { cmd: '/policies', label: 'Show Data Privacy & IP sharing accords', q: 'What governance policies and charters are active?' },
+  { cmd: '/clear', label: 'Clear current conversation and reset', q: '__CLEAR__' },
+];
+
 /* ── Role-based quick chips (Trilingual: English, Bisaya, Tagalog) ─ */
 const QUICK_BY_ROLE = {
   GUEST: [
@@ -304,6 +339,8 @@ export default function Chatbot() {
   const [copied, setCopied]     = useState(null);
   const [speakingIdx, setSpeakingIdx] = useState(null);
   const [listening, setListening] = useState(false);
+  const [activeLang, setActiveLang] = useState('en'); // 'en' | 'bis' | 'tgl'
+  const [copiedSummary, setCopiedSummary] = useState(false);
   const recognitionRef          = useRef(null);
   const msgsRef                 = useRef(null);
   const streamIntervalRef       = useRef(null);
@@ -449,9 +486,25 @@ export default function Chatbot() {
     }, 20);
   }
 
+  function exportSummary() {
+    const transcript = messages.map(m => `[${m.from === 'bot' ? 'Haribon AI' : 'User'}]: ${m.text}`).join('\n\n');
+    navigator.clipboard.writeText(transcript).then(() => {
+      setCopiedSummary(true);
+      setTimeout(() => setCopiedSummary(false), 2000);
+    }).catch(() => {});
+  }
+
   async function send(text) {
-    const t = (text || input).trim();
-    if (!t || thinking) return;
+    const rawText = (text || input).trim();
+    if (!rawText || thinking) return;
+
+    if (rawText === '/clear' || rawText === '__CLEAR__') {
+      newChat();
+      setInput('');
+      return;
+    }
+
+    const t = rawText;
 
     if (streamIntervalRef.current) {
       clearInterval(streamIntervalRef.current);
@@ -579,6 +632,16 @@ export default function Chatbot() {
                   <span style={{ color: rb.color, fontSize: 9.5, fontWeight: 800 }}>{rb.label}</span>
                 </div>
               )}
+
+              <button onClick={exportSummary} style={{
+                background: copiedSummary ? 'rgba(16,185,129,0.25)' : 'rgba(255,255,255,0.08)',
+                border: `1px solid ${copiedSummary ? 'rgba(16,185,129,0.45)' : 'rgba(255,255,255,0.18)'}`,
+                borderRadius:8, padding:'4px 8px', fontSize:11, fontWeight:700,
+                color: copiedSummary ? '#34d399' : '#fff', cursor:'pointer', fontFamily:'inherit',
+                transition:'all .13s',
+              }}
+              title="Copy entire chat transcript"
+              >{copiedSummary ? 'Copied ✓' : '📋 Copy'}</button>
 
               <button onClick={() => {
                 sessionStorage.setItem('haribon_resume', JSON.stringify(messages));
@@ -743,26 +806,94 @@ export default function Chatbot() {
             )}
           </div>
 
-          {/* ── Quick chips (until first reply) ── */}
-          {!ended && !hasReplied && (
-            <div style={{ padding:'6px 12px 8px', display:'flex', gap:5, flexWrap:'wrap', borderTop:'1px solid rgba(255,255,255,0.05)', maxHeight: 110, overflowY: 'auto' }}>
-              {quick.map(({ label, q }) => (
-                <button key={label} className="w-chip" onClick={() => send(q)} disabled={thinking}>{label}</button>
-              ))}
+          {/* ── Language Switcher Bar & Quick Prompts ── */}
+          {!ended && (
+            <div style={{ borderTop:'1px solid rgba(255,255,255,0.06)', background:'rgba(0,0,0,0.2)', padding:'6px 12px' }}>
+              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom: 4 }}>
+                <span style={{ fontSize:10, color:'rgba(255,255,255,0.4)', fontWeight:700, textTransform:'uppercase', letterSpacing:'.5px' }}>
+                  Language / Pinulongan:
+                </span>
+                <div style={{ display:'flex', gap:4 }}>
+                  {[
+                    { key:'en', label:'🇺🇸 EN' },
+                    { key:'bis', label:'🇵🇭 BIS' },
+                    { key:'tgl', label:'🇵🇭 TAG' },
+                  ].map(l => (
+                    <button
+                      key={l.key}
+                      onClick={() => setActiveLang(l.key)}
+                      style={{
+                        background: activeLang === l.key ? 'rgba(249,115,22,0.22)' : 'rgba(255,255,255,0.04)',
+                        border: `1px solid ${activeLang === l.key ? 'rgba(249,115,22,0.5)' : 'rgba(255,255,255,0.08)'}`,
+                        color: activeLang === l.key ? '#fb923c' : 'rgba(255,255,255,0.55)',
+                        borderRadius: 6, padding: '2px 7px', fontSize: 10, fontWeight: 800,
+                        cursor: 'pointer', fontFamily: 'inherit',
+                      }}
+                    >
+                      {l.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {!hasReplied && (
+                <div style={{ display:'flex', gap:5, flexWrap:'wrap', maxHeight: 85, overflowY: 'auto', paddingTop: 2 }}>
+                  {(LANG_CHIPS[activeLang] || LANG_CHIPS.en).map(({ label, q }) => (
+                    <button key={label} className="w-chip" onClick={() => send(q)} disabled={thinking}>{label}</button>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
           {/* ── Input ── */}
           {!ended && (
             <div style={{ padding:'8px 12px 14px', borderTop:'1px solid rgba(255,255,255,0.06)', display:'flex', gap:7, flexShrink:0, alignItems: 'center' }}>
-              <input
-                className="w-input"
-                value={input}
-                onChange={e => setInput(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && !thinking && send()}
-                placeholder={user ? `Ask Haribon, ${(user.name || 'there').split(' ')[0]}…` : 'Ask Haribon…'}
-                disabled={thinking}
-              />
+              <div style={{ position:'relative', flex:1, display:'flex' }}>
+                {input.startsWith('/') && (
+                  <div style={{
+                    position:'absolute', bottom:'100%', left:0, right:0, marginBottom:8,
+                    background:'#0a1329', border:'1px solid rgba(249,115,22,0.3)',
+                    borderRadius:12, padding:'6px', display:'flex', flexDirection:'column', gap:3,
+                    boxShadow:'0 16px 40px rgba(0,0,0,0.85)', zIndex:999,
+                  }}>
+                    <div style={{ fontSize:10, color:'rgba(249,115,22,0.8)', fontWeight:800, padding:'2px 6px', textTransform:'uppercase' }}>
+                      ⚡ Haribon Slash Commands
+                    </div>
+                    {SLASH_COMMANDS.filter(s => s.cmd.startsWith(input.toLowerCase())).map(sc => (
+                      <div
+                        key={sc.cmd}
+                        onClick={() => {
+                          if (sc.cmd === '/clear') {
+                            newChat();
+                            setInput('');
+                          } else {
+                            send(sc.q);
+                          }
+                        }}
+                        style={{
+                          display:'flex', alignItems:'center', justifyContent:'space-between',
+                          padding:'6px 8px', borderRadius:8, cursor:'pointer',
+                          background:'rgba(255,255,255,0.03)',
+                        }}
+                        onMouseEnter={e => e.currentTarget.style.background='rgba(249,115,22,0.15)'}
+                        onMouseLeave={e => e.currentTarget.style.background='rgba(255,255,255,0.03)'}
+                      >
+                        <span style={{ color:'#fb923c', fontWeight:900, fontSize:12 }}>{sc.cmd}</span>
+                        <span style={{ color:'rgba(255,255,255,0.6)', fontSize:11 }}>{sc.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <input
+                  className="w-input"
+                  value={input}
+                  onChange={e => setInput(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && !thinking && send()}
+                  placeholder={user ? `Ask Haribon (or type /), ${(user.name || 'there').split(' ')[0]}…` : 'Ask Haribon (type / for commands)…'}
+                  disabled={thinking}
+                />
+              </div>
               <button
                 type="button"
                 onClick={toggleVoiceInput}
