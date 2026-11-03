@@ -4,10 +4,74 @@ const { matchIntent: matchIntentKB, isDomainMessage, contentWords, tokenize } = 
 
 const router = express.Router();
 
+// Translation in-memory cache and Language Code Map
+const translationCache = new Map();
+
+const LANG_CODE_MAP = {
+  en: 'en',
+  bis: 'ceb',
+  ceb: 'ceb',
+  tgl: 'tl',
+  tag: 'tl',
+  tl: 'tl',
+  es: 'es',
+  ja: 'ja',
+  ko: 'ko',
+  zh: 'zh-CN',
+  'zh-cn': 'zh-CN',
+  fr: 'fr',
+  de: 'de',
+  ar: 'ar',
+  ilo: 'ilo',
+  hil: 'hil',
+  it: 'it',
+  id: 'id',
+};
+
+async function translateServerText(text, targetLang = 'en', sourceLang = 'auto') {
+  if (!text || typeof text !== 'string') return text;
+  const cleanText = text.trim();
+  const normalizedTarget = LANG_CODE_MAP[targetLang.toLowerCase()] || targetLang || 'en';
+  const normalizedSource = sourceLang === 'auto' ? 'auto' : (LANG_CODE_MAP[sourceLang.toLowerCase()] || sourceLang || 'auto');
+
+  if (normalizedTarget === normalizedSource) return cleanText;
+
+  const cacheKey = `${normalizedSource}:${normalizedTarget}:${cleanText}`;
+  if (translationCache.has(cacheKey)) {
+    return translationCache.get(cacheKey);
+  }
+
+  try {
+    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${encodeURIComponent(normalizedSource)}&tl=${encodeURIComponent(normalizedTarget)}&dt=t&q=${encodeURIComponent(cleanText)}`;
+    const response = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' } });
+    if (response.ok) {
+      const data = await response.json();
+      if (Array.isArray(data) && Array.isArray(data[0])) {
+        const translated = data[0].map(segment => segment[0]).join('');
+        if (translated && translated.trim()) {
+          if (translationCache.size > 500) translationCache.clear();
+          translationCache.set(cacheKey, translated);
+          return translated;
+        }
+      }
+    }
+  } catch (err) {
+    // Non-blocking on network failure
+  }
+  return cleanText;
+}
+
 // Helper: Detect language (English, Bisaya/Cebuano, or Tagalog/Filipino)
 function detectLanguage(text) {
   if (!text) return 'english';
   const t = text.toLowerCase();
+
+  // Script-based detection
+  if (/[\u4e00-\u9fa5]/.test(t)) return 'zh';
+  if (/[\u3040-\u30ff]/.test(t)) return 'ja';
+  if (/[\uac00-\ud7af]/.test(t)) return 'ko';
+  if (/[\u0600-\u06ff]/.test(t)) return 'ar';
+
 
   // Strong Bisaya / Cebuano indicators
   const bisayaMarkers = [
@@ -106,7 +170,7 @@ const KB = [
     intent: 'events',
     keywords: [
       'event', 'events', 'summit', 'conference', 'seminar', 'workshop', 'calendar schedule', 'upcoming events',
-      'symposium', 'webinar', 'forum', 'upcoming activities', 'consortium activities', 'whats happening',
+      'symposium', 'webinar', 'forum', 'upcoming activities', 'consortium activities', 'whats happening', 'activity', 'activities', 'academic activities', 'academic events',
       'unsay mga event', 'unsay kalihokan', 'naay event', 'mga umaabot nga event', 'kanus-a ang summit', 'unsay seminar', 'mga kalihukan',
       'anong mga event', 'anong kaganapan', 'may event ba', 'mga paparating na kaganapan', 'kailan ang summit', 'anong seminar', 'mga pagtitipon'
     ],
@@ -683,14 +747,27 @@ const asyncRoute = (fn) => (req, res, next) => {
 };
 
 router.post('/message', asyncRoute(async (req, res) => {
-  const { message, history = [] } = req.body || {};
+  const { message, history = [], lang: preferredLang = 'en' } = req.body || {};
   if (typeof message !== 'string' || !message.trim()) return res.status(400).json({ error: 'Message is required' });
 
   const trimmed = message.trim();
-  const normalized = trimmed.replace(/^[\p{Emoji_Presentation}\p{Extended_Pictographic}]+\s*/gu, '');
+  let normalized = trimmed.replace(/^[\p{Emoji_Presentation}\p{Extended_Pictographic}]+\s*/gu, '');
   
-  // 1. Detect User's Language
-  const lang = detectLanguage(normalized);
+  // 1. Language Detection & Cross-Lingual Translation
+  const detected = detectLanguage(normalized);
+  const effectiveLang = (preferredLang && preferredLang !== 'en') ? preferredLang : detected;
+  const lang = ['bisaya', 'tagalog'].includes(effectiveLang) ? effectiveLang : 'english';
+
+  // If query is in a non-English language (e.g. Chinese, Spanish, Japanese, Korean, Arabic),
+  // translate to English so knowledge base and database searches match with 100% precision
+  if (!['bisaya', 'tagalog', 'english'].includes(effectiveLang) || /[\u4e00-\u9fa5\u3040-\u30ff\uac00-\ud7af\u0600-\u06ff]/.test(normalized)) {
+    try {
+      const enQuery = await translateServerText(normalized, 'en', 'auto');
+      if (enQuery && enQuery.trim()) {
+        normalized = enQuery.trim();
+      }
+    } catch (_) {}
+  }
 
 
   // 2. Check if this is a Live Database Counts/Stats Query (e.g. "how many events", "how many members", "pila ka miyembro", "ilang events")
@@ -1023,14 +1100,21 @@ router.post('/message', asyncRoute(async (req, res) => {
     haribon: '/chatbot', contact: '/contact-admin', member_institutions: '/members'
   };
 
+    // Translate final response into user's language if not English, Bisaya, or Tagalog
+  if (effectiveLang && !['english', 'en', 'bisaya', 'ceb', 'tagalog', 'tl'].includes(effectiveLang.toLowerCase())) {
+    try {
+      reply = await translateServerText(reply, effectiveLang, 'en');
+    } catch (_) {}
+  }
+
   return res.json({
     reply,
     matched: true,
-    intent: match.intent,
+    intent: match ? match.intent : 'general',
     score: bestScore,
-    language: lang,
+    language: effectiveLang,
     followups: getSmartFollowups(match?.intent || 'events', lang),
-    navigate_to: PAGE_LINKS[match.intent] || null,
+    navigate_to: match ? (PAGE_LINKS[match.intent] || null) : null,
   });
 }));
 
@@ -1054,14 +1138,50 @@ router.post('/tts', asyncRoute(async (req, res) => {
   if (!apiKey) {
     try {
       const normalizedLang = LANG_CODE_MAP[lang.toLowerCase()] || lang || 'en';
-      const ttsUrl = `https://translate.googleapis.com/translate_tts?ie=UTF-8&tl=${encodeURIComponent(normalizedLang)}&client=tw-ob&q=${encodeURIComponent(clean.slice(0, 500))}`;
-      const ttsRes = await fetch(ttsUrl, {
-        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' }
-      });
-      if (ttsRes.ok) {
-        res.setHeader('Content-Type', 'audio/mpeg');
-        const buffer = await ttsRes.arrayBuffer();
-        return res.send(Buffer.from(buffer));
+      const rawParts = clean.split(/([。！？!?\n]+|[.][\s]+)/).filter(Boolean);
+      const chunks = [];
+      let buf = '';
+      for (const p of rawParts) {
+        if (buf.length + p.length <= 120) {
+          buf += p;
+        } else {
+          if (buf.trim()) chunks.push(buf.trim());
+          buf = p;
+        }
+      }
+      if (buf.trim()) chunks.push(buf.trim());
+
+      const finalChunks = [];
+      for (const c of chunks) {
+        if (c.length <= 120) {
+          finalChunks.push(c);
+        } else {
+          for (let i = 0; i < c.length; i += 120) {
+            finalChunks.push(c.slice(i, i + 120));
+          }
+        }
+      }
+
+      const audioBuffers = [];
+      for (const segment of finalChunks.slice(0, 10)) {
+        const ttsUrl = `https://translate.googleapis.com/translate_tts?ie=UTF-8&tl=${encodeURIComponent(normalizedLang)}&client=tw-ob&q=${encodeURIComponent(segment)}`;
+        const ttsRes = await fetch(ttsUrl, {
+          headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' }
+        });
+        if (ttsRes.ok) {
+          const arr = await ttsRes.arrayBuffer();
+          audioBuffers.push(Buffer.from(arr));
+        }
+      }
+
+      if (audioBuffers.length > 0) {
+        const fullAudio = Buffer.concat(audioBuffers);
+        res.set({
+          'Content-Type': 'audio/mpeg',
+          'Content-Length': fullAudio.length,
+          'Cache-Control': 'public, max-age=86400',
+        });
+        return res.send(fullAudio);
       }
     } catch (e) {
       console.warn('[tts] Cloud proxy error:', e);
@@ -1126,29 +1246,6 @@ router.get('/intents', (req, res) => {
   res.json(KB.map(k => ({ intent: k.intent, sample: k.keywords[0] })));
 });
 
-// Translation in-memory cache
-const translationCache = new Map();
-
-const LANG_CODE_MAP = {
-  en: 'en',
-  bis: 'ceb',
-  ceb: 'ceb',
-  tgl: 'tl',
-  tag: 'tl',
-  tl: 'tl',
-  es: 'es',
-  ja: 'ja',
-  ko: 'ko',
-  zh: 'zh-CN',
-  'zh-cn': 'zh-CN',
-  fr: 'fr',
-  de: 'de',
-  ar: 'ar',
-  ilo: 'ilo',
-  hil: 'hil',
-  it: 'it',
-  id: 'id',
-};
 
 // POST /api/chatbot/translate — Enterprise Multilingual Translation Engine
 router.post('/translate', asyncRoute(async (req, res) => {
@@ -1157,46 +1254,12 @@ router.post('/translate', asyncRoute(async (req, res) => {
     return res.status(400).json({ error: 'Text is required for translation' });
   }
 
-  const cleanText = text.trim();
+  const translated = await translateServerText(text, targetLang, sourceLang);
   const normalizedTarget = LANG_CODE_MAP[targetLang.toLowerCase()] || targetLang || 'en';
-  const normalizedSource = sourceLang === 'auto' ? 'auto' : (LANG_CODE_MAP[sourceLang.toLowerCase()] || sourceLang || 'auto');
-
-  const cacheKey = `${normalizedSource}:${normalizedTarget}:${cleanText}`;
-  if (translationCache.has(cacheKey)) {
-    return res.json({
-      translatedText: translationCache.get(cacheKey),
-      targetLang: normalizedTarget,
-      cached: true,
-    });
-  }
-
-  try {
-    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${encodeURIComponent(normalizedSource)}&tl=${encodeURIComponent(normalizedTarget)}&dt=t&q=${encodeURIComponent(cleanText)}`;
-    const response = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' } });
-    
-    if (response.ok) {
-      const data = await response.json();
-      if (Array.isArray(data) && Array.isArray(data[0])) {
-        const translated = data[0].map(segment => segment[0]).join('');
-        if (translated && translated.trim()) {
-          if (translationCache.size > 500) translationCache.clear();
-          translationCache.set(cacheKey, translated);
-          return res.json({
-            translatedText: translated,
-            targetLang: normalizedTarget,
-            sourceLang: data[2] || normalizedSource,
-          });
-        }
-      }
-    }
-  } catch (err) {
-    console.warn('[translate] Upstream translation error:', err.message);
-  }
-
-  res.json({
-    translatedText: cleanText,
+  return res.json({
+    translatedText: translated,
     targetLang: normalizedTarget,
-    fallback: true,
+    cached: translationCache.has(`${sourceLang}:${normalizedTarget}:${text.trim()}`),
   });
 }));
 

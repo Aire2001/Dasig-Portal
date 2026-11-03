@@ -6,7 +6,7 @@ function splitIntoAudioChunks(text, maxLen = 130) {
 
   // Split on paragraph or sentence boundaries (including Chinese/Japanese/Western punctuation)
   const rawParts = text
-    .split(/([。！？!?\n]+|[.][\s]+)/)
+    .split(/([。！？!?\n]+|\.(?:\s|$)+)/)
     .filter(Boolean);
 
   const sentences = [];
@@ -24,10 +24,10 @@ function splitIntoAudioChunks(text, maxLen = 130) {
   if (buffer.trim()) sentences.push(buffer.trim());
 
   // If any sentence is still longer than maxLen, split cleanly on commas, semicolons, or spaces
-  const finalChunks = [];
+  const intermediateChunks = [];
   for (const s of sentences) {
     if (s.length <= maxLen) {
-      finalChunks.push(s);
+      intermediateChunks.push(s);
     } else {
       const sub = s.split(/([，,;；、\s]+)/).filter(Boolean);
       let subBuf = '';
@@ -35,15 +35,27 @@ function splitIntoAudioChunks(text, maxLen = 130) {
         if (subBuf.length + p.length <= maxLen) {
           subBuf += p;
         } else {
-          if (subBuf.trim()) finalChunks.push(subBuf.trim());
+          if (subBuf.trim()) intermediateChunks.push(subBuf.trim());
           subBuf = p;
         }
       }
-      if (subBuf.trim()) finalChunks.push(subBuf.trim());
+      if (subBuf.trim()) intermediateChunks.push(subBuf.trim());
     }
   }
 
-  return finalChunks.filter(c => c && c.trim().length > 0);
+  // Safety hard-split on any remainder to ensure no single chunk exceeds maxLen
+  const boundedChunks = [];
+  for (const c of intermediateChunks) {
+    if (c.length <= maxLen) {
+      boundedChunks.push(c);
+    } else {
+      for (let i = 0; i < c.length; i += maxLen) {
+        boundedChunks.push(c.slice(i, i + maxLen));
+      }
+    }
+  }
+
+  return boundedChunks.filter(c => c && c.trim().length > 0);
 }
 
 class MultilingualVoicePlayer {
@@ -67,7 +79,7 @@ class MultilingualVoicePlayer {
     if (this.onStateChange) this.onStateChange(null);
   }
 
-  async play(idx, text, langKey = 'en', onStateChange) {
+  async play(idx, text, langKey = 'en', onStateChange, speed = 1.0) {
     this.onStateChange = onStateChange;
 
     if (this.currentIdx === idx) {
@@ -93,32 +105,43 @@ class MultilingualVoicePlayer {
       return;
     }
 
-    const langObj = getLangByKey(langKey);
+    // Auto-detect script if non-Latin characters are present to prevent speaking in the wrong voice
+    let resolvedLangKey = langKey;
+    if (/[\u4e00-\u9fa5]/.test(cleanText)) {
+      resolvedLangKey = 'zh';
+    } else if (/[\u3040-\u30ff]/.test(cleanText)) {
+      resolvedLangKey = 'ja';
+    } else if (/[\uac00-\ud7af]/.test(cleanText)) {
+      resolvedLangKey = 'ko';
+    } else if (/[\u0600-\u06ff]/.test(cleanText)) {
+      resolvedLangKey = 'ar';
+    }
+
+    const langObj = getLangByKey(resolvedLangKey);
     const targetCode = (langObj.code || 'en').toLowerCase();
     const targetBcp47 = (langObj.bcp47 || 'en-US').toLowerCase();
 
-    // 1. Try Browser SpeechSynthesis if native voice exists for target language
+    // 1. Try Browser SpeechSynthesis if native matching voice exists AND text is brief (< 150 chars)
     const voices = (typeof window !== 'undefined' && 'speechSynthesis' in window)
       ? window.speechSynthesis.getVoices() || []
       : [];
 
     const matchedVoice =
       voices.find(v => v.lang && v.lang.toLowerCase() === targetBcp47) ||
-      voices.find(v => v.lang && v.lang.toLowerCase().startsWith(targetCode.slice(0, 2))) ||
-      voices.find(v => v.lang && v.lang.toLowerCase().includes(targetCode.slice(0, 2)));
+      voices.find(v => v.lang && v.lang.toLowerCase().startsWith(targetCode.slice(0, 2)));
 
-    if (matchedVoice && 'speechSynthesis' in window) {
+    if (matchedVoice && cleanText.length < 150 && 'speechSynthesis' in window) {
       const utter = new SpeechSynthesisUtterance(cleanText);
       utter.lang = langObj.bcp47 || 'en-US';
       utter.voice = matchedVoice;
-      utter.rate = 1.0;
+      utter.rate = speed || 1.0;
       utter.onend = () => this.stop();
       utter.onerror = () => this.stop();
       window.speechSynthesis.speak(utter);
       return;
     }
 
-    // 2. Play Sequential Queue of Native Cloud Neural Audio Chunks (Full Text, Never Cut Off)
+    // 2. Play Sequential Queue of Native Cloud Neural Audio Chunks (Full Text, Complete Words, Never Cut Off)
     const chunks = splitIntoAudioChunks(cleanText, 130);
     if (!chunks.length) {
       this.stop();
@@ -143,6 +166,7 @@ class MultilingualVoicePlayer {
           const blob = await res.blob();
           const audioUrl = URL.createObjectURL(blob);
           const audio = new Audio(audioUrl);
+          audio.playbackRate = speed || 1.0;
           this.audio = audio;
           audio.onended = () => {
             try { URL.revokeObjectURL(audioUrl); } catch (_) {}
@@ -160,6 +184,7 @@ class MultilingualVoicePlayer {
 
       const directUrl = `https://translate.googleapis.com/translate_tts?ie=UTF-8&tl=${encodeURIComponent(langObj.code)}&client=tw-ob&q=${encodeURIComponent(segment)}`;
       const audio = new Audio(directUrl);
+      audio.playbackRate = speed || 1.0;
       this.audio = audio;
       audio.onended = () => playNextChunk();
       audio.onerror = () => playNextChunk();

@@ -50,7 +50,7 @@ const SOCIAL = ['haribon', 'general_help', 'greeting', 'thanks'];
 const REG_VERBS = new Set(['register', 'registration', 'registered', 'signup', 'reserve', 'rsvp',
   'join', 'rehistro', 'magparehistro', 'parehistro', 'magrehistro', 'magpa', 'apil', 'moapil', 'mosalmot',
   'sumali', 'salihan', 'mag-register']);
-const EVENT_WORDS = new Set(['event', 'summit', 'seminar', 'workshop', 'conference', 'symposium', 'webinar',
+const EVENT_WORDS = new Set(['event', 'summit', 'seminar', 'workshop', 'conference', 'symposium', 'webinar', 'activity', 'activities',
   'forum', 'kalihokan', 'kaganapan', 'pagtitipon', 'kalihukan']);
 
 function stem(w) {
