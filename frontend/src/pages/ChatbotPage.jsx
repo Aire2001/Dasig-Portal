@@ -262,8 +262,8 @@ const CATEGORIZED_CHIPS = {
   ],
   MEMBERS: [
     { label: '🏛 CIT-University',          q: 'Tell me about Cebu Institute of Technology – University in DASIG' },
-    { label: '🌊 UP Visayas',              q: 'What is UP Visayas\' specialization in marine science research?' },
-    { label: '🏛 University of San Agustin', q: 'What is University of San Agustin\'s role in consortium governance?' },
+    { label: '🎓 UP Cebu',                 q: 'What programs and research specializations does UP Cebu lead?' },
+    { label: '🦅 University of San Carlos', q: 'What is University of San Carlos (USC)\'s role in the consortium?' },
     { label: '📋 Membership Tiers',        q: 'What is the difference between Tier 1 and Tier 2 membership?' },
   ],
   DIALECTS: [

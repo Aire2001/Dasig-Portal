@@ -7,7 +7,7 @@ import ParticleBackground from '../components/ParticleBackground';
 const INSTITUTIONS = [
   'Cebu Institute of Technology - University',
   'University of the Philippines Visayas',
-  'University of San Agustin',
+  'University of San Carlos',
   'Department of Science and Technology (DOST)',
   'Department of Information and Communications Technology (DICT)',
   'Department of Trade and Industry (DTI)',
@@ -18,7 +18,7 @@ const INSTITUTIONS = [
 const CONSORTIUM_MEMBERS = [
   { name: 'Cebu Institute of Technology - University', short: 'CIT-U', icon: '🏛️' },
   { name: 'University of the Philippines Visayas', short: 'UP Visayas', icon: '🎓' },
-  { name: 'University of San Agustin', short: 'USA Iloilo', icon: '🏛️' },
+  { name: 'University of San Carlos', short: 'USA Iloilo', icon: '🏛️' },
   { name: 'DOST Region VII', short: 'DOST-7', icon: '🔬' },
   { name: 'DICT Region VII', short: 'DICT-7', icon: '💻' },
   { name: 'DTI Region VII', short: 'DTI-7', icon: '📈' },
@@ -29,7 +29,7 @@ function detectDomainBadge(email) {
   if (!email || !email.includes('@')) return null;
   const domain = email.split('@')[1]?.toLowerCase() || '';
   if (domain.includes('cit.edu')) return { text: 'CIT-University Domain', icon: '🏛️', color: '#fbbf24' };
-  if (domain.includes('up.edu.ph') || domain.includes('upv.edu.ph')) return { text: 'UP Visayas Domain', icon: '🎓', color: '#34d399' };
+  if (domain.includes('up.edu.ph') || domain.includes('upcebu.edu.ph')) return { text: 'UP Cebu Domain', icon: '🎓', color: '#34d399' };
   if (domain.includes('usa.edu.ph') || domain.includes('sanagustin')) return { text: 'Univ. of San Agustin Domain', icon: '🏛️', color: '#60a5fa' };
   if (domain.includes('dost.gov.ph')) return { text: 'DOST Region VII Domain', icon: '🔬', color: '#38bdf8' };
   if (domain.includes('dict.gov.ph')) return { text: 'DICT Region VII Domain', icon: '💻', color: '#818cf8' };

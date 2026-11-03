@@ -723,7 +723,7 @@ export default function HomePage() {
               }}>Run Your Consortium</span>
             </h1>
             <p style={{ color: 'rgba(255,255,255,0.62)', fontSize: 15.5, lineHeight: 1.75, marginBottom: 32, maxWidth: 500 }}>
-              DASIG unifies membership, events, funding, training, and governance for CIT-U, UP Visayas, University of San Agustin, DOST, DICT, DTI, and DepEd Region VII — all in one secure, role-based platform.
+              DASIG unifies membership, events, funding, training, and governance for CIT-U, UP Cebu, University of San Carlos (USC), DOST, DICT, DTI, and DepEd Region VII — all in one secure, role-based platform.
             </p>
             <div style={{ display: 'flex', gap: 12, marginBottom: 40, flexWrap: 'wrap' }}>
               <button onClick={() => navigate('/membership')} style={{
@@ -785,7 +785,7 @@ export default function HomePage() {
           </span>
           <div style={{ width: 1, height: 14, background: 'rgba(255,255,255,0.1)', flexShrink: 0 }} />
           <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap' }}>
-            {['CIT-University', 'University of the Philippines Visayas', 'University of San Agustin', 'DOST Region VII', 'DICT Region VII', 'DTI Region VII', 'DepEd Region VII'].map(m => (
+            {['CIT-University', 'University of the Philippines Cebu', 'University of San Carlos', 'DOST Region VII', 'DICT Region VII', 'DTI Region VII', 'DepEd Region VII'].map(m => (
               <div key={m} style={{
                 background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)',
                 borderRadius: 6, padding: '4px 12px', fontSize: 13,
@@ -808,7 +808,7 @@ export default function HomePage() {
             },
             {
               icon: '🏛', title: 'Built for 7 Region VII Institutions',
-              desc: 'One platform connecting CIT-University (Host), UP Visayas, USan Agustin, DOST-7, DICT-7, DTI-7, and DepEd-7 with unified RBAC.',
+              desc: 'One platform connecting CIT-University (Host), UP Cebu, USC, CTU, DOST-7, DICT-7, DTI-7, and DepEd-7 with unified RBAC.',
               grad: 'linear-gradient(135deg,#0d1445,#1a3878)', border: 'rgba(59,130,246,0.25)',
               iconGrad: 'linear-gradient(135deg,rgba(79,70,229,0.25),rgba(125,211,252,0.15))',
             },

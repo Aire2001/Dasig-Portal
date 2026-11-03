@@ -123,8 +123,8 @@ export const HARIBON_KB = [
 ### 🌐 The Regional Consortium Network:
 The consortium unites **7 leading academic and government institutions**:
 • **CIT-University** (Cebu City — Central Host Node & Computing Hub)
-• **UP Visayas** (Marine & Aquatic Sciences, Miagao & Iloilo)
-• **University of San Agustin** (Institutional Governance, Law & Ethics, Iloilo)
+• **UP Cebu** (Computing, IT & Environmental Innovation, Lahug & SRP)
+• **University of San Carlos (USC)** (Science, Engineering & Research Excellence, Cebu City)
 • **DOST Region VII** (Science, Technology & Research Grants-In-Aid)
 • **DICT Region VII** (Digital Transformation & ICT Bootcamps)
 • **DTI Region VII** (Regional Trade, MSME Commercialization & Tech Transfer)
@@ -143,8 +143,8 @@ Ang **DASIG** nagpasabot og **Digital Alliance for Sustainable Innovation and Gr
 
 ### 🌐 Ang 7 ka Kasaping Institusyon:
 • **CIT-University** (Cebu City — Central Host Node ug Engineering/IT Hub)
-• **UP Visayas** (Marine & Aquatic Sciences)
-• **University of San Agustin** (Governance & Ethics)
+• **UP Cebu** (Information Technology & Environmental Science)
+• **University of San Carlos (USC)** (Science & Engineering)
 • **DOST Region VII** (Pondo sa Siyensya & Research Grants)
 • **DICT Region VII** (Digital Transformation & Technical Bootcamps)
 • **DTI Region VII** (Patigayon & MSME Commercialization)
@@ -163,8 +163,8 @@ Ang **DASIG** ay nangangahulugang **Digital Alliance for Sustainable Innovation 
 
 ### 🌐 Ang 7 Kasaping Institusyon:
 • **CIT-University** (Cebu City — Central Host Node at Engineering/IT Hub)
-• **UP Visayas** (Marine & Aquatic Sciences)
-• **University of San Agustin** (Governance & Ethics)
+• **UP Cebu** (Information Technology & Environmental Science)
+• **University of San Carlos (USC)** (Science & Engineering)
 • **DOST Region VII** (Agham, Teknolohiya at Research Grants)
 • **DICT Region VII** (Digital Transformation at Technical Bootcamps)
 • **DTI Region VII** (Kalakalan at MSME Commercialization)
@@ -182,7 +182,7 @@ Ang **DASIG** ay nangangahulugang **Digital Alliance for Sustainable Innovation 
     intent: 'member_institutions',
     keywords: [
       '/members', 'members', 'member institutions', 'consortium members', 'who are members', 'list of members', 'partner institutions',
-      'all members', 'universities in dasig', 'cit-u', 'upv', 'san agustin', 'dost-7', 'dict-7', 'dti-7', 'deped-7',
+      'all members', 'universities in dasig', 'cit-u', 'upcebu', 'usc', 'san carlos', 'dost-7', 'dict-7', 'dti-7', 'deped-7',
       'kinsay mga miyembro', 'kinsay apil', 'mga unibersidad', 'sino ang mga miyembro', 'kasaping paaralan'
     ],
     navigate_to: '/members',
@@ -195,7 +195,7 @@ The consortium comprises 7 premier higher education institutions and regional go
    Leads portal technical infrastructure, AI engineering, and inter-HEI technology transfer.
 2. **UP Visayas (Miagao & Iloilo City)** — *Marine & Aquatic Research Node*
    Leads fisheries, coastal ecology, climate resilience, and environmental sciences.
-3. **University of San Agustin (Iloilo City)** — *Institutional Governance Node*
+3. **University of San Carlos (Iloilo City)** — *Institutional Governance Node*
    Leads academic ethics, pharmacy & health research, and institutional policy design.
 4. **DOST Region VII** — *Science & Research Funding Agency*
    Provides Grants-In-Aid (GIA), research instrumentation, and laboratory access.
@@ -214,7 +214,7 @@ Adunay 7 ka nangunang unibersidad ug ahensya sa gobyerno sa atong network:
 
 1. **CIT-University (Cebu City)** — Central Host Node, Engineering & Computer Science.
 2. **UP Visayas** — Marine Science, Fisheries, ug Environmental Protection.
-3. **University of San Agustin (Iloilo)** — Governance, Pharmacy, ug Research Ethics.
+3. **University of San Carlos (Iloilo)** — Governance, Pharmacy, ug Research Ethics.
 4. **DOST Region VII** — Grants-In-Aid ug pinansyal nga pondo sa panukiduki.
 5. **DICT Region VII** — Digital Transformation, AI bootcamps, ug cybersecurity.
 6. **DTI Region VII** — Patigayon ug pagpamaligya sa mga teknolohiya (commercialization).
@@ -228,7 +228,7 @@ Binubuo ito ng 7 nangungunang unibersidad at ahensya ng pamahalaan:
 
 1. **CIT-University (Cebu City)** — Central Host Node, Engineering & Computer Science.
 2. **UP Visayas** — Marine Science, Fisheries, at Environmental Protection.
-3. **University of San Agustin (Iloilo)** — Governance, Pharmacy, at Research Ethics.
+3. **University of San Carlos (Iloilo)** — Governance, Pharmacy, at Research Ethics.
 4. **DOST Region VII** — Grants-In-Aid at pondo para sa pananaliksik.
 5. **DICT Region VII** — Digital Transformation, AI bootcamps, at cybersecurity.
 6. **DTI Region VII** — Kalakalan at pagsasapamilihan ng teknolohiya (commercialization).
@@ -323,12 +323,12 @@ Here are the active flagship summits organized across Region VII:
 
 2. **Inter-HEI Computing & Science Symposium**
    • 📅 **Date:** September 25, 2026
-   • 📍 **Venue:** UP Visayas Conference Hall (Miagao / Zoom)
+   • 📍 **Venue:** UP Cebu Performing Arts Hall (Lahug / Zoom)
    • 🎯 **Topic:** Multi-Disciplinary Data Science & Marine Ecology
 
 3. **Central Visayas EdTech Leadership Conference**
    • 📅 **Date:** October 12, 2026
-   • 📍 **Venue:** University of San Agustin Grand Hall, Iloilo City
+   • 📍 **Venue:** University of San Carlos SAFAD Theater, Talamban, Cebu City
    • 🎯 **Topic:** Regional Governance, Academic IP & Ethics
 
 ### 🎟️ How to Register:
@@ -346,9 +346,9 @@ Mao kini ang mga umaabot nga dagkong kalihokan sa Rehiyon VII:
    • 📅 **Petsa:** Setyembre 18, 2026 · 📍 **Lugar:** CIT-University Auditorium, Cebu City
    • 🎯 **Tema:** Artificial Intelligence ug Panukiduki sa Rehiyon VII
 2. **Inter-HEI Computing & Science Symposium**
-   • 📅 **Petsa:** Setyembre 25, 2026 · 📍 **Lugar:** UP Visayas
+   • 📅 **Petsa:** Setyembre 25, 2026 · 📍 **Lugar:** UP Cebu
 3. **EdTech Leadership Conference**
-   • 📅 **Petsa:** Oktubre 12, 2026 · 📍 **Lugar:** Univ. of San Agustin
+   • 📅 **Petsa:** Oktubre 12, 2026 · 📍 **Lugar:** Univ. of San Carlos
 
 ### 🎟️ Unsaon Pag-rehistro:
 • Ablihi ang **[Programs Module](/programs?tab=events)**, pilia ang event, ug i-klik ang **"Register"**. Makadawat ka dayon og digital pass nga may QR code!`,
@@ -361,9 +361,9 @@ Narito ang mga pangunahing symposiums at pagtitipon sa Rehiyon VII:
    • 📅 **Petsa:** Setyembre 18, 2026 · 📍 **Lokasyon:** CIT-University Auditorium, Cebu City
    • 🎯 **Paksa:** Artificial Intelligence at Pananaliksik sa Rehiyon VII
 2. **Inter-HEI Computing & Science Symposium**
-   • 📅 **Petsa:** Setyembre 25, 2026 · 📍 **Lokasyon:** UP Visayas
+   • 📅 **Petsa:** Setyembre 25, 2026 · 📍 **Lokasyon:** UP Cebu
 3. **EdTech Leadership Conference**
-   • 📅 **Petsa:** Oktubre 12, 2026 · 📍 **Lokasyon:** Univ. of San Agustin
+   • 📅 **Petsa:** Oktubre 12, 2026 · 📍 **Lokasyon:** Univ. of San Carlos
 
 ### 🎟️ Paano Magparehistro:
 • Pumunta sa **[Programs Module](/programs?tab=events)**, piliin ang event, at i-click ang **"Register"**. Makatatanggap ka agad ng digital pass na may QR code!`
@@ -385,10 +385,10 @@ DASIG conducts high-impact accredited professional courses in collaboration with
    • ⏱️ **Duration:** 4 Weeks (Intensive Hybrid) · 🏛️ **Organizer:** CIT-U & DICT-7
    • 💡 **Covers:** Prompt Engineering, RAG Architectures, Vector Databases & Local LLMs.
 2. **STEM Empirical Research Methods & Data Analytics**
-   • ⏱️ **Duration:** 2 Weeks · 🏛️ **Organizer:** UP Visayas & DOST-7
+   • ⏱️ **Duration:** 2 Weeks · 🏛️ **Organizer:** UP Cebu & DOST-7
    • 💡 **Covers:** Statistical Modeling, ISO 25010 Quality Framework, and Peer-Reviewed Publishing.
 3. **Cybersecurity & Institutional Data Privacy (RA 10173)**
-   • ⏱️ **Duration:** 3 Weeks · 🏛️ **Organizer:** University of San Agustin
+   • ⏱️ **Duration:** 3 Weeks · 🏛️ **Organizer:** University of San Carlos
    • 💡 **Covers:** NPC RA 10173 Compliance, Threat Modeling, and Secure Cloud Pipelines.
 
 ### 📜 Digital Micro-Credentials:
@@ -401,7 +401,7 @@ Completing all course attendance check-ins unlocks an automated, tamper-evident 
 Nagtanyag ang konsorsyum og mga sertipikadong kurso kauban ang DICT, DOST, ug CIT-U:
 
 1. **Applied GenAI & LLM Engineering:** 4 ka semana bahin sa Artificial Intelligence ug prompt engineering.
-2. **STEM Research Methods & Analytics:** 2 ka semana bahin sa data analysis ug panukiduki kauban ang UP Visayas.
+2. **STEM Research Methods & Analytics:** 2 ka semana bahin sa data analysis ug panukiduki kauban ang UP Cebu.
 3. **Cybersecurity & Data Privacy (RA 10173):** 3 ka semana bahin sa proteksyon sa datos sa unibersidad.
 
 Human sa kurso, makadawat ka og opisyal nga **Certificate of Completion** nga may QR code!
@@ -413,7 +413,7 @@ Human sa kurso, makadawat ka og opisyal nga **Certificate of Completion** nga ma
 Nag-aalok ang konsorsyum ng mga sertipikadong kurso katuwang ang DICT, DOST, at CIT-U:
 
 1. **Applied GenAI & LLM Engineering:** 4 na linggo tungkol sa Artificial Intelligence at prompt engineering.
-2. **STEM Research Methods & Analytics:** 2 linggo tungkol sa data analysis at pananaliksik kasama ang UP Visayas.
+2. **STEM Research Methods & Analytics:** 2 linggo tungkol sa data analysis at pananaliksik kasama ang UP Cebu.
 3. **Cybersecurity & Data Privacy (RA 10173):** 3 linggo tungkol sa proteksyon ng datos sa unibersidad.
 
 Pagkatapos ng kurso, makatatanggap ka ng opisyal na **Certificate of Completion** na may QR code!
@@ -745,7 +745,7 @@ export function solveClientQuery(query, history = [], user = null) {
   // 4. Region VII / Cebu Geography
   if (q.includes('cebu') || q.includes('region vii') || q.includes('central visayas') || q.includes('bohol')) {
     return {
-      reply: `🇵🇭 **Region VII (Central Visayas) Academic Hub:**\n\n**Central Visayas** encompasses Cebu, Bohol, Negros Oriental, and Siquijor. It is the premier educational and IT-BPM center of the southern Philippines, anchored by the **DASIG Consortium** with host node **CIT-University** in Cebu City collaborating with UP Visayas, University of San Agustin, DOST-7, DICT-7, DTI-7, and DepEd-7.`,
+      reply: `🇵🇭 **Region VII (Central Visayas) Academic Hub:**\n\n**Central Visayas** encompasses Cebu, Bohol, Negros Oriental, and Siquijor. It is the premier educational and IT-BPM center of the southern Philippines, anchored by the **DASIG Consortium** with host node **CIT-University** in Cebu City collaborating with UP Visayas, University of San Carlos, DOST-7, DICT-7, DTI-7, and DepEd-7.`,
       intent: 'geography',
       navigate_to: '/members',
       followups: ['Who are the member institutions?', 'What events are coming up?'],
@@ -790,7 +790,7 @@ export function solveClientQuery(query, history = [], user = null) {
   } else if (lang === 'tagalog') {
     fallbackReply = `🦅 **Haribon AI — Talino ng Konsorsyum:**\n\nNauunawaan ko ang iyong katanungan tungkol sa **"${raw}"**.\n\nBilang opisyal na virtual assistant ng **DASIG Regional Consortium (Central Visayas)**, maaari kitang gabayan sa mga sumusunod:\n\n• 🏛️ **Tungkol sa DASIG:** Konsorsyum ng CIT-U, UPV, USA, DOST, at DICT.\n• 📅 **Events & Summits:** Iskedyul at pagpaparehistro sa [Programs Module](/programs?tab=events).\n• 🎓 **Faculty Bootcamps:** Pagsasanay sa AI, Web, at pananaliksik.\n• 💰 **Research Grants:** Pondo at tulong pinansyal mula sa DOST-7.\n• 👥 **Membership:** Pagsali bilang opisyal na miyembro sa [Membership](/membership).\n\n💡 *Aling bahagi ang nais mong buksan ngayon?*`;
   } else {
-    fallbackReply = `🦅 **Haribon AI — Consortium Intelligence:**\n\nI processed your inquiry regarding **"${raw}"**.\n\nAs the intelligent assistant for the **DASIG Regional Academic Consortium (Region VII)**, I can directly guide you across our core modules:\n\n• 🏛️ **About DASIG:** Our mission and 7 partner institutions (CIT-U, UP Visayas, Univ. of San Agustin, DOST, DICT, DTI, DepEd).\n• 📅 **Events & Summits:** Live schedules and instant QR seat booking in the **[Programs Module](/programs?tab=events)**.\n• 🎓 **Faculty Development:** Certified bootcamps and verifiable digital micro-credentials.\n• 💰 **Research Funding:** DOST-7 Grants-In-Aid (GIA) and collaborative funding calls.\n• 👥 **Institutional Membership:** Elevating privileges in the **[Membership Portal](/membership)**.\n\n💡 *Which specific area would you like to explore?*`;
+    fallbackReply = `🦅 **Haribon AI — Consortium Intelligence:**\n\nI processed your inquiry regarding **"${raw}"**.\n\nAs the intelligent assistant for the **DASIG Regional Academic Consortium (Region VII)**, I can directly guide you across our core modules:\n\n• 🏛️ **About DASIG:** Our mission and 7 partner institutions (CIT-U, UP Cebu, USC, CTU, DOST-7, DICT-7, DTI-7, DepEd-7).\n• 📅 **Events & Summits:** Live schedules and instant QR seat booking in the **[Programs Module](/programs?tab=events)**.\n• 🎓 **Faculty Development:** Certified bootcamps and verifiable digital micro-credentials.\n• 💰 **Research Funding:** DOST-7 Grants-In-Aid (GIA) and collaborative funding calls.\n• 👥 **Institutional Membership:** Elevating privileges in the **[Membership Portal](/membership)**.\n\n💡 *Which specific area would you like to explore?*`;
   }
 
   return {

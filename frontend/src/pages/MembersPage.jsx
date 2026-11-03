@@ -354,7 +354,8 @@ export default function MembersPage() {
     api.members.list()
       .then(data => {
         if (Array.isArray(data) && data.length > 0) {
-          setMembers(data);
+          const sanitized = data.map(sanitizeMember);
+          setMembers(sanitized);
         } else {
           setMembers(DEFAULT_REGION7_MEMBERS);
         }
@@ -362,6 +363,32 @@ export default function MembersPage() {
       .catch(() => setMembers(DEFAULT_REGION7_MEMBERS))
       .finally(() => setLoading(false));
   }, []);
+
+    function sanitizeMember(m) {
+    if (!m) return m;
+    if (m.abbr === 'USa' || (m.campus && m.campus.toLowerCase().includes('iloilo'))) {
+      return {
+        ...m,
+        abbr: 'USC',
+        full_name: 'University of San Carlos',
+        campus: 'Talamban & Downtown Campuses, Cebu City',
+        type: 'Private University',
+        region: 'Region VII (Cebu)',
+      };
+    }
+    if (m.abbr === 'UP' && (m.campus && m.campus.toLowerCase().includes('visayas'))) {
+      return {
+        ...m,
+        full_name: 'University of the Philippines Cebu',
+        campus: 'Lahug Main Campus & SRP Innovation Campus, Cebu City',
+        region: 'Region VII (Cebu)',
+      };
+    }
+    return {
+      ...m,
+      region: m.region || 'Region VII (Central Visayas)',
+    };
+  }
 
   function cleanSpeechText(text) {
     if (!text) return '';
@@ -539,7 +566,7 @@ export default function MembersPage() {
                       { l: 'Abbreviation', v: selected.abbr },
                       { l: 'Type',         v: selected.type },
                       { l: 'Campus',       v: selected.campus },
-                      { l: 'Region',       v: 'Region VII' },
+                      { l: 'Region',       v: selected.region || 'Region VII (Central Visayas)' },
                       ...(info ? [{ l: 'Founded', v: info.founded }, { l: 'Role', v: info.role }] : []),
                     ].map(r => (
                       <div key={r.l} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: '12px 14px' }}>
@@ -633,7 +660,7 @@ export default function MembersPage() {
                   <p style={{ color: 'rgba(255,255,255,0.62)', fontSize: 13.5, lineHeight: 1.8, marginBottom: 16 }}>
                     DASIG is a Region VII consortium of higher education institutions and government agencies in the Philippines,
                     united under a shared mission of collaborative research, governance innovation, and knowledge sharing.
-                    Established in 2022, the consortium fosters inter-institutional cooperation across Central and Western Visayas.
+                    Established in 2022, the consortium fosters inter-institutional cooperation across Central Visayas (Region VII).
                   </p>
                   <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, lineHeight: 1.75, margin: 0 }}>
                     Member institutions span state universities, private universities, and key government agencies —
@@ -644,7 +671,7 @@ export default function MembersPage() {
                 <div style={{ flex: 1, minWidth: 200, display: 'flex', flexDirection: 'column', gap: 10 }}>
                   {[
                     { icon: '🎯', label: 'Mission', text: 'Collaborative research and governance innovation for Region VII institutions.' },
-                    { icon: '🌐', label: 'Coverage', text: 'Central & Western Visayas — Cebu, Iloilo, Bacolod and surrounding areas.' },
+                    { icon: '🌐', label: 'Coverage', text: 'Central Visayas (Region VII) — Cebu, Bohol, Negros Oriental, and Siquijor.' },
                     { icon: '📅', label: 'Founded', text: 'Established 2022 with six founding member institutions.' },
                     { icon: '🔐', label: 'Platform', text: 'Secure role-based portal: Guest, Member, and Admin access levels.' },
                   ].map(item => (
@@ -723,7 +750,7 @@ export default function MembersPage() {
                   <button onClick={() => setSearch('')} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', fontSize: 13 }}>✕</button>
                 )}
                 <button
-                  onClick={() => { setLoading(true); api.members.list().then(setMembers).catch(()=>{}).finally(()=>setLoading(false)); }}
+                  onClick={() => { setLoading(true); api.members.list().then(data => setMembers(Array.isArray(data) && data.length ? data.map(sanitizeMember) : DEFAULT_REGION7_MEMBERS)).catch(() => setMembers(DEFAULT_REGION7_MEMBERS)).finally(() => setLoading(false)); }}
                   title="Refresh member list"
                   style={{
                     background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.14)',

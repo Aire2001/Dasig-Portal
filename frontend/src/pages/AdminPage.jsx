@@ -1348,8 +1348,8 @@ function DashboardTab({ showToast, setTab, telemetry = {} }) {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 12 }}>
           {[
             { name: 'CIT-University', role: 'Central Host Node · Engineering & Computing Hub', icon: '🦁', color: '#fb923c', status: 'Host Active' },
-            { name: 'UP Visayas', role: 'Marine Science & Aquaculture Research Lead', icon: '🎓', color: '#ef4444', status: 'Connected' },
-            { name: 'University of San Agustin', role: 'Institutional Governance, Ethics & Health', icon: '✝️', color: '#eab308', status: 'Connected' },
+            { name: 'UP Cebu', role: 'Computing, Design & Environmental Innovation Lead', icon: '🎓', color: '#ef4444', status: 'Connected' },
+            { name: 'University of San Carlos', role: 'Science, Engineering & Research Excellence', icon: '🦅', color: '#10b981', status: 'Connected' },
             { name: 'DOST Region VII', role: 'Science, Tech & R&D Research Grants', icon: '🔬', color: '#34d399', status: 'Connected' },
             { name: 'DICT Region VII', role: 'Digital Transformation & ICT Bootcamps', icon: '💻', color: '#60a5fa', status: 'Connected' },
             { name: 'DTI Region VII', role: 'Trade, MSME Incubation & Commercialization', icon: '💼', color: '#f87171', status: 'Connected' },

@@ -399,7 +399,7 @@ function ProfileTab({ user, showToast, onSaved }) {
         {/* Campus */}
         <div>
           <label className="pf-label">Campus / Branch</label>
-          <input className="pf-input" value={campus} placeholder="e.g. UP Visayas"
+          <input className="pf-input" value={campus} placeholder="e.g. Lahug Main Campus, Cebu City"
             onChange={e => setCampus(e.target.value)} />
         </div>
       </div>
