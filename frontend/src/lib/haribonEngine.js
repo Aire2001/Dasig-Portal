@@ -92,6 +92,20 @@ export function detectLanguage(text) {
 // Comprehensive Knowledge Base
 export const HARIBON_KB = [
   {
+    intent: 'forgot_password',
+    keywords: [
+      'forgot password', 'reset password', 'reset my password', 'how to reset password', 'change password', 'recover password', 'lost password',
+      'password reset', 'password',
+      'nakalimutan ang password', 'paano mag-reset ng password', 'palitan ang password', 'reset ng password', 'bawiin ang password',
+      'nakalimot sa password', 'unsaon pag reset sa password', 'unsaon pag-usab sa password', 'nalimtan ang password', 'ilisig password', 'usba ang password'
+    ],
+    navigate_to: '/forgot-password',
+    followups: ['How do I create a DASIG account?', 'What events are coming up?', 'Who are the members of DASIG?'],
+    reply_en: '🔐 **How to Reset Your DASIG Account Password:**\n\n1. Go to the [Reset Password](/forgot-password) page.\n2. Enter your registered email address and click **"Send Reset Code"**.\n3. Check your email inbox for the **6-digit verification code** dispatched via our secure server.\n4. Enter the code and your new password (minimum 8 characters) to regain access.\n\n*Note: The verification code expires in 1 hour and can only be used once for security.*',
+    reply_ceb: '🔐 **Unsaon Pag-reset sa Imong Password sa DASIG:**\n\n1. Adto sa panid sa [Reset Password](/forgot-password).\n2. Isulod ang imong narehistro nga email address ug pindota ang **"Send Reset Code"**.\n3. Tan-awa ang imong email inbox alang sa **6-digit nga verification code**.\n4. Isulod ang code ug ang imong bag-ong password (labing menos 8 ka letra/numero) aron makasulod pag-usab.\n\n*Pahinumdom: Ang verification code mo-expire sulod sa 1 ka oras alang sa imong seguridad.*',
+    reply_tgl: '🔐 **Paano Mag-reset ng Password sa DASIG:**\n\n1. Pumunta sa pahina ng [Reset Password](/forgot-password).\n2. I-type ang iyong rehistradong email address at pindutin ang **"Send Reset Code"**.\n3. Tingnan ang iyong email inbox para sa **6-digit verification code**.\n4. Ilagay ang code at ang iyong bagong password (hindi bababa sa 8 characters) upang makapag-login muli.\n\n*Tandaan: Ang verification code ay may bisa lamang sa loob ng 1 oras para sa seguridad.*',
+  },
+  {
     intent: 'about_dasig',
     keywords: [
       'what is dasig', 'about dasig', 'dasig consortium', 'who is dasig', 'what does dasig do',
@@ -167,7 +181,7 @@ Ang **DASIG** ay nangangahulugang **Digital Alliance for Sustainable Innovation 
   {
     intent: 'member_institutions',
     keywords: [
-      'member institutions', 'consortium members', 'who are members', 'list of members', 'partner institutions',
+      '/members', 'members', 'member institutions', 'consortium members', 'who are members', 'list of members', 'partner institutions',
       'all members', 'universities in dasig', 'cit-u', 'upv', 'san agustin', 'dost-7', 'dict-7', 'dti-7', 'deped-7',
       'kinsay mga miyembro', 'kinsay apil', 'mga unibersidad', 'sino ang mga miyembro', 'kasaping paaralan'
     ],

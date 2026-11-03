@@ -94,7 +94,7 @@ const KB = [
   {
     intent: 'member_institutions',
     keywords: [
-      'member institutions', 'consortium members', 'who are members', 'list of members', 'partner institutions', 'all members', 'member agencies', 'part of consortium', 'member universities',
+      '/members', 'members', 'member institutions', 'consortium members', 'who are members', 'list of members', 'partner institutions', 'all members', 'member agencies', 'part of consortium', 'member universities',
       'kinsay mga miyembro', 'mga unibersidad nga miyembro', 'kinsay apil sa dasig', 'listahan sa mga miyembro', 'kinsay mga sakop',
       'sino-sino ang mga miyembro', 'mga kasaping paaralan', 'sino ang kasali sa dasig', 'talaan ng mga miyembro'
     ],
