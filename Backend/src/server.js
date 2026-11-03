@@ -19,6 +19,14 @@ const supabase          = require('./lib/supabase');
 const serverStartTime = Date.now();
 
 const app = express();
+app.disable('x-powered-by');
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  next();
+});
 
 // Production-ready permissive CORS allowing localhost, Vercel, Netlify, Render, and custom client domains
 app.use(cors({
@@ -102,6 +110,11 @@ app.get('/api/health', async (req, res) => {
   }
 });
 
+// 404 handler for unknown routes
+app.use((req, res) => {
+  res.status(404).json({ error: `Cannot ${req.method} ${req.originalUrl}` });
+});
+
 app.use((err, req, res, next) => {
   console.error(err);
   res.status(500).json({ error: 'Internal server error' });
@@ -114,4 +127,19 @@ process.on('unhandledRejection', (reason) => {
 });
 
 const PORT = process.env.PORT || 4000;
-app.listen(PORT, () => console.log(`DASIG API running on http://localhost:${PORT}`));
+const server = app.listen(PORT, () => console.log(`DASIG API running on http://localhost:${PORT}`));
+
+function gracefulShutdown(signal) {
+  console.log(`[server] Received ${signal}. Closing HTTP server cleanly...`);
+  server.close(() => {
+    console.log('[server] HTTP server closed cleanly.');
+    process.exit(0);
+  });
+  setTimeout(() => {
+    console.error('[server] Forcefully terminating after timeout.');
+    process.exit(1);
+  }, 10000).unref();
+}
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));

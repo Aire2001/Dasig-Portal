@@ -37,6 +37,9 @@ export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
+        <a href="#main-content" className="skip-to-content">
+          Skip to main content
+        </a>
         <ScrollToTop />
         <Routes>
           <Route path="/login" element={<LoginPage />} />
@@ -48,29 +51,31 @@ export default function App() {
               <ColdStartBanner />
               <NetworkStatusToast />
               <Nav />
-              <Routes>
-                <Route path="/"             element={<HomePage />} />
-                <Route path="/programs"     element={<ProgramsPage />} />
-                <Route path="/calendar"     element={<Navigate to="/programs?tab=calendar" replace />} />
-                <Route path="/event"        element={<Navigate to="/programs?tab=events" replace />} />
-                <Route path="/events"       element={<Navigate to="/programs?tab=events" replace />} />
-                <Route path="/news"         element={<NewsPage />} />
-                <Route path="/training"     element={<Navigate to="/programs?tab=training" replace />} />
-                <Route path="/trainings"    element={<Navigate to="/programs?tab=training" replace />} />
-                <Route path="/grants"       element={<Navigate to="/funding" replace />} />
-                <Route path="/members"      element={<MembersPage />} />
-                <Route path="/membership"   element={<MembershipPage />} />
-                <Route path="/policies"     element={<PoliciesPage />} />
-                <Route path="/funding"      element={<FundingPage />} />
-                <Route path="/partnerships" element={<PartnershipsPage />} />
-                <Route path="/admin"         element={<AdminPage />} />
-                <Route path="/contact-admin" element={<ContactAdminPage />} />
-                <Route path="/terms"         element={<TermsPage />} />
-                <Route path="/chatbot"       element={<ChatbotPage />} />
-                <Route path="/profile"       element={<ProfilePage />} />
-                <Route path="/verify-pass"   element={<VerifyPassPage />} />
-                <Route path="*"             element={<NotFoundPage />} />
-              </Routes>
+              <main id="main-content" tabIndex={-1} style={{ outline: 'none' }}>
+                <Routes>
+                  <Route path="/"             element={<HomePage />} />
+                  <Route path="/programs"     element={<ProgramsPage />} />
+                  <Route path="/calendar"     element={<Navigate to="/programs?tab=calendar" replace />} />
+                  <Route path="/event"        element={<Navigate to="/programs?tab=events" replace />} />
+                  <Route path="/events"       element={<Navigate to="/programs?tab=events" replace />} />
+                  <Route path="/news"         element={<NewsPage />} />
+                  <Route path="/training"     element={<Navigate to="/programs?tab=training" replace />} />
+                  <Route path="/trainings"    element={<Navigate to="/programs?tab=training" replace />} />
+                  <Route path="/grants"       element={<Navigate to="/funding" replace />} />
+                  <Route path="/members"      element={<MembersPage />} />
+                  <Route path="/membership"   element={<MembershipPage />} />
+                  <Route path="/policies"     element={<PoliciesPage />} />
+                  <Route path="/funding"      element={<FundingPage />} />
+                  <Route path="/partnerships" element={<PartnershipsPage />} />
+                  <Route path="/admin"         element={<AdminPage />} />
+                  <Route path="/contact-admin" element={<ContactAdminPage />} />
+                  <Route path="/terms"         element={<TermsPage />} />
+                  <Route path="/chatbot"       element={<ChatbotPage />} />
+                  <Route path="/profile"       element={<ProfilePage />} />
+                  <Route path="/verify-pass"   element={<VerifyPassPage />} />
+                  <Route path="*"             element={<NotFoundPage />} />
+                </Routes>
+              </main>
               <Footer />
               <Chatbot />
             </>
