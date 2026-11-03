@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="ctuBlue" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2563eb"/>
+      <stop offset="100%" stop-color="#1e3a8a"/>
+    </linearGradient>
+    <linearGradient id="ctuGold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fde047"/>
+      <stop offset="50%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#ea580c"/>
+    </linearGradient>
+  </defs>
+  <!-- Outer Royal Blue & Gold Ring -->
+  <circle cx="100" cy="100" r="98" fill="url(#ctuBlue)" stroke="url(#ctuGold)" stroke-width="4"/>
+  <circle cx="100" cy="100" r="86" fill="none" stroke="url(#ctuGold)" stroke-width="1.5" stroke-dasharray="2 2"/>
+  <circle cx="100" cy="100" r="75" fill="#0f172a" stroke="url(#ctuGold)" stroke-width="2"/>
+
+  <!-- Industrial Gear Outline -->
+  <circle cx="100" cy="74" r="24" fill="none" stroke="url(#ctuGold)" stroke-width="2" stroke-dasharray="6 3"/>
+
+  <!-- Atomic Orbit rings -->
+  <ellipse cx="100" cy="74" rx="20" ry="7" fill="none" stroke="#60a5fa" stroke-width="1.2" transform="rotate(30 100 74)"/>
+  <ellipse cx="100" cy="74" rx="20" ry="7" fill="none" stroke="#60a5fa" stroke-width="1.2" transform="rotate(-30 100 74)"/>
+  <circle cx="100" cy="74" r="4" fill="url(#ctuGold)"/>
+
+  <!-- Torch of Technology -->
+  <path d="M97 84 L103 84 L101 98 L99 98 Z" fill="url(#ctuGold)"/>
+  <path d="M96 82 Q100 76 104 82 Z" fill="#ef4444"/>
+
+  <!-- CTU Acronym -->
+  <text x="100" y="128" font-family="Arial Black, Impact, sans-serif" font-size="23" font-weight="900" fill="url(#ctuGold)" text-anchor="middle" letter-spacing="3">CTU</text>
+  <text x="100" y="142" font-family="Arial, sans-serif" font-size="8.5" font-weight="700" fill="#93c5fd" text-anchor="middle" letter-spacing="1.5">EST. 1927</text>
+
+  <!-- Top curved text -->
+  <path id="curve-ctu-top" d="M 24,100 A 76,76 0 0,1 176,100" fill="none"/>
+  <text font-family="Arial, sans-serif" font-size="7.5" font-weight="800" fill="url(#ctuGold)" text-anchor="middle" letter-spacing="1">
+    <textPath href="#curve-ctu-top" startOffset="50%">CEBU TECHNOLOGICAL UNIVERSITY</textPath>
+  </text>
+
+  <!-- Bottom curved text -->
+  <path id="curve-ctu-bot" d="M 30,118 A 72,72 0 0,0 170,118" fill="none"/>
+  <text font-family="Arial, sans-serif" font-size="8" font-weight="800" fill="url(#ctuGold)" text-anchor="middle" letter-spacing="2">
+    <textPath href="#curve-ctu-bot" startOffset="50%">REGION VII · CEBU</textPath>
+  </text>
+</svg>

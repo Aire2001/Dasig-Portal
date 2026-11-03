@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="cnuIndigo" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4338ca"/>
+      <stop offset="100%" stop-color="#1e1b4b"/>
+    </linearGradient>
+    <linearGradient id="cnuGold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fef08a"/>
+      <stop offset="50%" stop-color="#fbbf24"/>
+      <stop offset="100%" stop-color="#d97706"/>
+    </linearGradient>
+  </defs>
+  <!-- Outer Indigo & Gold Ring -->
+  <circle cx="100" cy="100" r="98" fill="url(#cnuIndigo)" stroke="url(#cnuGold)" stroke-width="4"/>
+  <circle cx="100" cy="100" r="86" fill="none" stroke="url(#cnuGold)" stroke-width="1.5"/>
+  <circle cx="100" cy="100" r="74" fill="#0f0e26" stroke="url(#cnuGold)" stroke-width="2"/>
+
+  <!-- Laurel Wreath -->
+  <path d="M52 98 C52 66 74 48 100 46 C126 48 148 66 148 98 C148 130 126 148 100 150 C74 148 52 130 52 98 Z" fill="none" stroke="url(#cnuGold)" stroke-width="1.2" stroke-dasharray="3 3" opacity="0.6"/>
+
+  <!-- Blazing Torch of Education -->
+  <path d="M96 66 Q100 52 104 66 Z" fill="#ef4444"/>
+  <path d="M98 65 Q100 56 102 65 Z" fill="#fbbf24"/>
+  <path d="M95 68 L105 68 L102 82 L98 82 Z" fill="url(#cnuGold)"/>
+
+  <!-- Open Book of Teacher Education -->
+  <path d="M82 82 C90 80 98 82 100 84 C102 82 110 80 118 82 L118 96 C110 94 102 96 100 98 C98 96 90 94 82 96 Z" fill="#ffffff" stroke="url(#cnuGold)" stroke-width="1.2"/>
+  <line x1="100" y1="84" x2="100" y2="98" stroke="#1e1b4b" stroke-width="1.2"/>
+
+  <!-- CNU Acronym -->
+  <text x="100" y="128" font-family="Georgia, 'Times New Roman', serif" font-size="24" font-weight="bold" fill="url(#cnuGold)" text-anchor="middle" letter-spacing="3">CNU</text>
+  <text x="100" y="142" font-family="Arial, sans-serif" font-size="8.5" font-weight="700" fill="#a5b4fc" text-anchor="middle" letter-spacing="1.5">EST. 1902</text>
+
+  <!-- Top curved text -->
+  <path id="curve-cnu-top" d="M 24,100 A 76,76 0 0,1 176,100" fill="none"/>
+  <text font-family="Arial, sans-serif" font-size="8" font-weight="800" fill="url(#cnuGold)" text-anchor="middle" letter-spacing="1.2">
+    <textPath href="#curve-cnu-top" startOffset="50%">CEBU NORMAL UNIVERSITY</textPath>
+  </text>
+
+  <!-- Bottom curved text -->
+  <path id="curve-cnu-bot" d="M 30,118 A 72,72 0 0,0 170,118" fill="none"/>
+  <text font-family="Arial, sans-serif" font-size="8" font-weight="800" fill="url(#cnuGold)" text-anchor="middle" letter-spacing="2">
+    <textPath href="#curve-cnu-bot" startOffset="50%">CEBU CITY · REGION VII</textPath>
+  </text>
+</svg>

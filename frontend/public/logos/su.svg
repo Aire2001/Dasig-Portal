@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="suRed" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#b91c1c"/>
+      <stop offset="100%" stop-color="#7f1d1d"/>
+    </linearGradient>
+    <linearGradient id="suGold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fef08a"/>
+      <stop offset="50%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#d97706"/>
+    </linearGradient>
+  </defs>
+  <!-- Outer Crimson & Gold Ring -->
+  <circle cx="100" cy="100" r="98" fill="url(#suRed)" stroke="url(#suGold)" stroke-width="4"/>
+  <circle cx="100" cy="100" r="86" fill="none" stroke="url(#suGold)" stroke-width="1.5"/>
+  <circle cx="100" cy="100" r="74" fill="#450a0a" stroke="url(#suGold)" stroke-width="2"/>
+
+  <!-- Latin Motto Arc: VIA VERITAS VITA -->
+  <path id="curve-su-motto" d="M 40,84 A 62,62 0 0,1 160,84" fill="none"/>
+  <text font-family="Georgia, serif" font-size="7" font-weight="bold" fill="#fef08a" text-anchor="middle" letter-spacing="2">
+    <textPath href="#curve-su-motto" startOffset="50%">VIA · VERITAS · VITA</textPath>
+  </text>
+
+  <!-- Open Bible / Book of Truth -->
+  <path d="M80 62 C88 60 98 62 100 64 C102 62 112 60 120 62 L120 80 C112 78 102 80 100 82 C98 80 88 78 80 80 Z" fill="#ffffff" stroke="url(#suGold)" stroke-width="1.5"/>
+  <line x1="100" y1="64" x2="100" y2="82" stroke="#7f1d1d" stroke-width="1.5"/>
+
+  <!-- Lamp of Knowledge & Flame -->
+  <path d="M92 90 Q100 94 108 90 L110 93 Q100 97 90 93 Z" fill="url(#suGold)"/>
+  <path d="M99 87 Q100 83 102 87 Z" fill="#fbbf24"/>
+  <circle cx="100" cy="85" r="1.5" fill="#ef4444"/>
+
+  <!-- SU Acronym -->
+  <text x="100" y="128" font-family="Georgia, 'Times New Roman', serif" font-size="24" font-weight="bold" fill="url(#suGold)" text-anchor="middle" letter-spacing="3">SU</text>
+  <text x="100" y="142" font-family="Arial, sans-serif" font-size="8.5" font-weight="700" fill="#fef08a" text-anchor="middle" letter-spacing="1.5">EST. 1901</text>
+
+  <!-- Top curved text -->
+  <path id="curve-su-top" d="M 24,100 A 76,76 0 0,1 176,100" fill="none"/>
+  <text font-family="Arial, sans-serif" font-size="8.5" font-weight="800" fill="url(#suGold)" text-anchor="middle" letter-spacing="1.5">
+    <textPath href="#curve-su-top" startOffset="50%">SILLIMAN UNIVERSITY</textPath>
+  </text>
+
+  <!-- Bottom curved text -->
+  <path id="curve-su-bot" d="M 30,118 A 72,72 0 0,0 170,118" fill="none"/>
+  <text font-family="Arial, sans-serif" font-size="7.5" font-weight="800" fill="url(#suGold)" text-anchor="middle" letter-spacing="1.5">
+    <textPath href="#curve-su-bot" startOffset="50%">DUMAGUETE CITY · NEGROS ORIENTAL</textPath>
+  </text>
+</svg>

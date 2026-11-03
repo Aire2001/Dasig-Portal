@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="bisuTeal" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0d9488"/>
+      <stop offset="100%" stop-color="#115e59"/>
+    </linearGradient>
+    <linearGradient id="bisuGold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fef08a"/>
+      <stop offset="50%" stop-color="#fbbf24"/>
+      <stop offset="100%" stop-color="#d97706"/>
+    </linearGradient>
+  </defs>
+  <!-- Outer Teal & Gold Ring -->
+  <circle cx="100" cy="100" r="98" fill="url(#bisuTeal)" stroke="url(#bisuGold)" stroke-width="4"/>
+  <circle cx="100" cy="100" r="86" fill="none" stroke="url(#bisuGold)" stroke-width="1.5" stroke-dasharray="3 3"/>
+  <circle cx="100" cy="100" r="74" fill="#042f2e" stroke="url(#bisuGold)" stroke-width="2"/>
+
+  <!-- Bohol Chocolate Hills Silhouette & Rising Sun -->
+  <circle cx="100" cy="62" r="14" fill="#fde047" opacity="0.8"/>
+  <!-- Three Chocolate Hills -->
+  <path d="M72 82 Q85 58 98 82 Z" fill="#b45309" opacity="0.9"/>
+  <path d="M102 82 Q115 58 128 82 Z" fill="#b45309" opacity="0.9"/>
+  <path d="M86 86 Q100 62 114 86 Z" fill="#78350f"/>
+
+  <!-- Open Book of Learning -->
+  <path d="M82 86 C90 84 98 86 100 88 C102 86 110 84 118 86 L118 96 C110 94 102 96 100 98 C98 96 90 94 82 96 Z" fill="#ffffff" stroke="url(#bisuGold)" stroke-width="1.2"/>
+
+  <!-- BISU Acronym -->
+  <text x="100" y="128" font-family="Arial Black, Impact, sans-serif" font-size="22" font-weight="900" fill="url(#bisuGold)" text-anchor="middle" letter-spacing="3">BISU</text>
+  <text x="100" y="142" font-family="Arial, sans-serif" font-size="8.5" font-weight="700" fill="#99f6e4" text-anchor="middle" letter-spacing="1.5">TAGBILARAN · BOHOL</text>
+
+  <!-- Top curved text -->
+  <path id="curve-bisu-top" d="M 24,100 A 76,76 0 0,1 176,100" fill="none"/>
+  <text font-family="Arial, sans-serif" font-size="7.2" font-weight="800" fill="url(#bisuGold)" text-anchor="middle" letter-spacing="1">
+    <textPath href="#curve-bisu-top" startOffset="50%">BOHOL ISLAND STATE UNIVERSITY</textPath>
+  </text>
+
+  <!-- Bottom curved text -->
+  <path id="curve-bisu-bot" d="M 30,118 A 72,72 0 0,0 170,118" fill="none"/>
+  <text font-family="Arial, sans-serif" font-size="8" font-weight="800" fill="url(#bisuGold)" text-anchor="middle" letter-spacing="2">
+    <textPath href="#curve-bisu-bot" startOffset="50%">REGION VII · PHILIPPINES</textPath>
+  </text>
+</svg>

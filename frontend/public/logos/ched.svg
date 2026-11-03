@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="chedBlue" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0284c7"/>
+      <stop offset="100%" stop-color="#0369a1"/>
+    </linearGradient>
+    <linearGradient id="chedGold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fef08a"/>
+      <stop offset="50%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#d97706"/>
+    </linearGradient>
+  </defs>
+  <!-- Outer Blue & Gold Ring -->
+  <circle cx="100" cy="100" r="98" fill="url(#chedBlue)" stroke="url(#chedGold)" stroke-width="4"/>
+  <circle cx="100" cy="100" r="86" fill="none" stroke="url(#chedGold)" stroke-width="1.5"/>
+  <circle cx="100" cy="100" r="74" fill="#082f49" stroke="url(#chedGold)" stroke-width="2"/>
+
+  <!-- Philippine 8-Rayed Sun -->
+  <circle cx="100" cy="68" r="12" fill="url(#chedGold)"/>
+  <g stroke="url(#chedGold)" stroke-width="2">
+    <line x1="100" y1="46" x2="100" y2="52"/>
+    <line x1="100" y1="84" x2="100" y2="90"/>
+    <line x1="78" y1="68" x2="84" y2="68"/>
+    <line x1="116" y1="68" x2="122" y2="68"/>
+    <line x1="84" y1="52" x2="89" y2="57"/>
+    <line x1="116" y1="84" x2="111" y2="79"/>
+    <line x1="84" y1="84" x2="89" y2="79"/>
+    <line x1="116" y1="52" x2="111" y2="57"/>
+  </g>
+
+  <!-- Open Book of Higher Learning -->
+  <path d="M82 82 C90 80 98 82 100 84 C102 82 110 80 118 82 L118 96 C110 94 102 96 100 98 C98 96 90 94 82 96 Z" fill="#ffffff" stroke="url(#chedGold)" stroke-width="1.2"/>
+  <line x1="100" y1="84" x2="100" y2="98" stroke="#0369a1" stroke-width="1.2"/>
+
+  <!-- CHED Acronym -->
+  <text x="100" y="128" font-family="Arial Black, Impact, sans-serif" font-size="23" font-weight="900" fill="url(#chedGold)" text-anchor="middle" letter-spacing="3">CHED</text>
+  <text x="100" y="142" font-family="Arial, sans-serif" font-size="8.5" font-weight="700" fill="#bae6fd" text-anchor="middle" letter-spacing="1.5">REGION VII</text>
+
+  <!-- Top curved text -->
+  <path id="curve-ched-top" d="M 24,100 A 76,76 0 0,1 176,100" fill="none"/>
+  <text font-family="Arial, sans-serif" font-size="7.5" font-weight="800" fill="url(#chedGold)" text-anchor="middle" letter-spacing="1">
+    <textPath href="#curve-ched-top" startOffset="50%">COMMISSION ON HIGHER EDUCATION</textPath>
+  </text>
+
+  <!-- Bottom curved text -->
+  <path id="curve-ched-bot" d="M 30,118 A 72,72 0 0,0 170,118" fill="none"/>
+  <text font-family="Arial, sans-serif" font-size="8" font-weight="800" fill="url(#chedGold)" text-anchor="middle" letter-spacing="2">
+    <textPath href="#curve-ched-bot" startOffset="50%">CENTRAL VISAYAS</textPath>
+  </text>
+</svg>

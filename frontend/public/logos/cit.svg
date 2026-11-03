@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="citGold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fde047"/>
+      <stop offset="50%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#d97706"/>
+    </linearGradient>
+    <linearGradient id="citMaroon" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#991b1b"/>
+      <stop offset="100%" stop-color="#580d0d"/>
+    </linearGradient>
+  </defs>
+  <!-- Outer Maroon Base & Gold Ring -->
+  <circle cx="100" cy="100" r="98" fill="url(#citMaroon)" stroke="url(#citGold)" stroke-width="4"/>
+  <circle cx="100" cy="100" r="86" fill="none" stroke="url(#citGold)" stroke-width="1.5" stroke-dasharray="3 3"/>
+  <circle cx="100" cy="100" r="76" fill="url(#citMaroon)" stroke="url(#citGold)" stroke-width="2"/>
+
+  <!-- Gear teeth (Technology emblem) -->
+  <g fill="url(#citGold)" opacity="0.3">
+    <circle cx="100" cy="100" r="68" fill="none" stroke="url(#citGold)" stroke-width="3"/>
+  </g>
+
+  <!-- Central Shield -->
+  <path d="M100 48 L126 56 C126 78 118 94 100 106 C82 94 74 78 74 56 Z" fill="url(#citGold)" stroke="#580d0d" stroke-width="2"/>
+  
+  <!-- Lion Rampant Silhouette / Torch inside shield -->
+  <path d="M100 58 C96 64 96 72 100 78 C104 72 104 64 100 58 Z" fill="#7f1d1d"/>
+  <path d="M94 74 C90 82 93 88 100 90 C107 88 110 82 106 74 Z" fill="#7f1d1d"/>
+  <circle cx="100" cy="67" r="3" fill="#fde047"/>
+
+  <!-- CIT-U Main Acronym -->
+  <text x="100" y="132" font-family="Arial Black, Impact, sans-serif" font-size="20" font-weight="900" fill="url(#citGold)" text-anchor="middle" letter-spacing="2">CIT-U</text>
+  <text x="100" y="145" font-family="Arial, sans-serif" font-size="8.5" font-weight="700" fill="#fef08a" text-anchor="middle" letter-spacing="1">EST. 1946</text>
+
+  <!-- Top curved text -->
+  <path id="curve-cit-top" d="M 24,100 A 76,76 0 0,1 176,100" fill="none"/>
+  <text font-family="Arial, sans-serif" font-size="7.5" font-weight="800" fill="url(#citGold)" text-anchor="middle" letter-spacing="1.2">
+    <textPath href="#curve-cit-top" startOffset="50%">CEBU INSTITUTE OF TECHNOLOGY</textPath>
+  </text>
+
+  <!-- Bottom curved text -->
+  <path id="curve-cit-bot" d="M 30,118 A 72,72 0 0,0 170,118" fill="none"/>
+  <text font-family="Arial, sans-serif" font-size="8" font-weight="800" fill="url(#citGold)" text-anchor="middle" letter-spacing="1.5">
+    <textPath href="#curve-cit-bot" startOffset="50%">UNIVERSITY · CEBU CITY</textPath>
+  </text>
+</svg>
