@@ -89,6 +89,13 @@ const QUICK_BY_ROLE = {
 };
 
 /* ── Role-based greeting ──────────────────────────────────────── */
+function formatTime(d) {
+  if (!d) return '';
+  const dateObj = d instanceof Date ? d : new Date(d);
+  if (isNaN(dateObj.getTime())) return '';
+  return dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
 function getGreeting(user) {
   if (!user) {
     return "Hi! I'm Haribon 🦅 — the DASIG AI Assistant.\n\nI am fluent in **English**, **Bisaya (Cebuano)**, and **Tagalog (Filipino)**.\n\nAsk me anything about events, faculty training, membership, research grants, and governance policies. Pwede kang mangutana sa Bisaya o Tagalog!";
@@ -285,7 +292,7 @@ const WIDGET_CSS = `
     display: flex;
     gap: 4px;
     margin-top: 4px;
-    opacity: 0;
+    opacity: 0.65;
     transition: opacity 0.18s;
   }
   .w-action-btn {
@@ -343,7 +350,7 @@ export default function Chatbot() {
 
   // All hooks MUST be declared before any conditional return
   const [open, setOpen]         = useState(false);
-  const [messages, setMessages] = useState(() => [{ from:'bot', text: getGreeting(user) }]);
+  const [messages, setMessages] = useState(() => [{ from:'bot', text: getGreeting(user), time: new Date() }]);
   const [input, setInput]       = useState('');
   const [thinking, setThinking] = useState(false);
   const [ended, setEnded]       = useState(false);
@@ -369,7 +376,7 @@ export default function Chatbot() {
   useEffect(() => {
     if ('speechSynthesis' in window) window.speechSynthesis.cancel();
     setSpeakingIdx(null);
-    setMessages([{ from:'bot', text: getGreeting(user) }]);
+    setMessages([{ from:'bot', text: getGreeting(user), time: new Date() }]);
     setEnded(false); setInput(''); setHasReplied(false); setUnread(0);
   }, [user?.id]);
 
@@ -537,7 +544,7 @@ export default function Chatbot() {
     }
 
     setInput('');
-    setMessages(prev => [...prev, { from:'user', text:t }]);
+    setMessages(prev => [...prev, { from:'user', text:t, time: new Date() }]);
     setThinking(true);
 
     const historyPayload = messages
@@ -559,6 +566,7 @@ export default function Chatbot() {
         navigate_to: res.navigate_to || null,
         matched: res.matched,
         suggestions: res.suggestions || [],
+        time: new Date(),
       };
 
       streamBotResponse(botTemplate, res.reply);
@@ -574,6 +582,7 @@ export default function Chatbot() {
         navigate_to: fallback.navigate_to || null,
         matched: true,
         suggestions: fallback.suggestions || [],
+        time: new Date(),
       };
 
       streamBotResponse(botTemplate, fallback.reply);
@@ -660,6 +669,17 @@ export default function Chatbot() {
               title="Copy entire chat transcript"
               >{copiedSummary ? 'Copied ✓' : '📋 Copy'}</button>
 
+              <button onClick={newChat} style={{
+                background:'rgba(255,255,255,0.08)', border:'1px solid rgba(255,255,255,0.18)',
+                borderRadius:8, padding:'4px 8px', fontSize:11, fontWeight:700,
+                color:'rgba(255,255,255,0.85)', cursor:'pointer', fontFamily:'inherit',
+                transition:'all .13s',
+              }}
+              onMouseEnter={e => e.currentTarget.style.background='rgba(255,255,255,0.18)'}
+              onMouseLeave={e => e.currentTarget.style.background='rgba(255,255,255,0.08)'}
+              title="Start a fresh chat"
+              >↺ Reset</button>
+
               <button onClick={() => {
                 sessionStorage.setItem('haribon_resume', JSON.stringify(messages));
                 setOpen(false);
@@ -721,15 +741,28 @@ export default function Chatbot() {
                     {/* Bubble */}
                     <div style={{
                       maxWidth:'88%',
-                      padding: msg.from === 'bot' ? '10px 13px' : '8px 12px',
-                      borderRadius:14, fontSize:12,
+                      padding: msg.from === 'bot' ? '11px 14px' : '9px 13px',
+                      borderRadius:15, fontSize:12.5,
+                      lineHeight:1.6,
                       ...(msg.from === 'bot'
-                        ? { background:'rgba(20,30,52,0.96)', borderBottomLeftRadius:4, border:'1px solid rgba(255,255,255,0.08)', boxShadow:'0 3px 12px rgba(0,0,0,0.25)' }
-                        : { background:'linear-gradient(135deg,#f97316,#ea580c)', color:'#fff', borderBottomRightRadius:4, boxShadow:'0 3px 12px rgba(249,115,22,0.35)' }
+                        ? { background:'rgba(16,24,44,0.95)', borderBottomLeftRadius:4, border:'1px solid rgba(255,255,255,0.09)', boxShadow:'0 4px 16px rgba(0,0,0,0.3)' }
+                        : { background:'linear-gradient(135deg,#f97316,#ea580c)', color:'#fff', borderBottomRightRadius:4, boxShadow:'0 4px 16px rgba(249,115,22,0.32)' }
                       ),
                     }}>
                       {msg.from === 'bot' ? <WBotText text={msg.text} onNavigate={() => setOpen(false)} isStreaming={msg.isStreaming} /> : <span style={{ lineHeight:1.55 }}>{msg.text}</span>}
                     </div>
+                    {msg.time && (
+                      <div style={{
+                        fontSize: 9.5,
+                        color: 'rgba(255,255,255,0.38)',
+                        marginTop: 3,
+                        paddingLeft: msg.from === 'bot' ? 4 : 0,
+                        paddingRight: msg.from === 'user' ? 4 : 0,
+                        fontWeight: 500,
+                      }}>
+                        {formatTime(msg.time)}
+                      </div>
+                    )}
 
                     {/* Rating, Copy & Voice Read actions for bot messages */}
                     {msg.from === 'bot' && i > 0 && !msg.isStreaming && (

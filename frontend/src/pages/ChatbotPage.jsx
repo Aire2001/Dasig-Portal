@@ -353,7 +353,7 @@ const CHAT_CSS = `
     display: flex;
     gap: 6px;
     margin-top: 6px;
-    opacity: 0;
+    opacity: 0.7;
     transition: opacity 0.18s;
   }
   .action-btn {
@@ -467,7 +467,10 @@ const CHAT_CSS = `
 `;
 
 function formatTime(d) {
-  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  if (!d) return '';
+  const dateObj = d instanceof Date ? d : new Date(d);
+  if (isNaN(dateObj.getTime())) return '';
+  return dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
 const NAV_CARD_INFO = {
