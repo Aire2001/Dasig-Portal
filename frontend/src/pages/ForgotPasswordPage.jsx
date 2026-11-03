@@ -213,7 +213,7 @@ export default function ForgotPasswordPage() {
                   <span>📧</span> Check Your Email Inbox
                 </div>
                 <div>
-                  We sent a 6-digit security code to <strong>{email || 'your email'}</strong>. The code is single-use and expires in 60 minutes.
+                  We sent a 6-digit security code to <strong>{email || 'your email'}</strong>. The code is single-use and expires in 60 minutes. If you do not see it in Primary, please check your Spam, Updates, or Promotions folder.
                 </div>
               </div>
 

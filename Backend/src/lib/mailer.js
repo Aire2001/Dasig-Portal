@@ -96,7 +96,7 @@ async function sendPasswordResetEmail(toEmail, resetToken) {
     return;
   }
 
-  const resetUrl = `${PORTAL_URL}/forgot-password?token=${encodeURIComponent(resetToken)}&email=${encodeURIComponent(toEmail)}`;
+  const resetUrl = `${PORTAL_PUBLIC_URL}/forgot-password?token=${encodeURIComponent(resetToken)}&email=${encodeURIComponent(toEmail)}`;
   const transporter = createTransporter();
 
   const info = await transporter.sendMail({
