@@ -831,4 +831,246 @@ async function sendMembershipApplicationNotification(applicant) {
   return info;
 }
 
-module.exports = { createTransporter, mailConfigured, FROM, SENDER_EMAIL, sendPasswordResetEmail, sendEventRegistrationEmail, sendTrainingEnrollmentEmail, sendEventCancellationEmail, sendTrainingCancellationEmail, sendMembershipApplicationNotification };
+async function sendMembershipApprovalEmail(applicant) {
+  if (!mailConfigured()) {
+    console.warn('[mailer] Email not configured — skipping membership approval email');
+    return;
+  }
+  const toEmail = applicant.email;
+  if (!toEmail) {
+    console.warn('[mailer] Missing applicant email — skipping membership approval email');
+    return;
+  }
+
+  const portalUrl = `${PORTAL_URL}/login`;
+  const approvalDate = new Intl.DateTimeFormat('en-US', {
+    dateStyle: 'medium',
+    timeZone: 'Asia/Manila',
+  }).format(new Date());
+
+  const transporter = createTransporter();
+  const info = await transporter.sendMail({
+    from: FROM,
+    to: toEmail,
+    headers: TRANSACTIONAL_HEADERS,
+    subject: `🎉 Membership Approved — Welcome to the DASIG Consortium, ${applicant.name}!`,
+    html: `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: #0b1329; margin: 0; padding: 32px 14px; }
+          .container { max-width: 560px; margin: 0 auto; background: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 20px 48px rgba(0,0,0,0.35); }
+          .header { background: linear-gradient(135deg, #001233 0%, #001d5c 50%, #1e3a8a 100%); padding: 36px 32px; text-align: center; color: #ffffff; }
+          .badge-live { display: inline-block; background: rgba(34, 197, 94, 0.2); border: 1px solid rgba(34, 197, 94, 0.4); color: #4ade80; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; padding: 5px 14px; border-radius: 9999px; margin-bottom: 14px; }
+          .title { font-size: 24px; font-weight: 900; line-height: 1.25; margin: 0 0 8px; color: #ffffff; letter-spacing: -0.5px; }
+          .subtitle { font-size: 13px; color: #cbd5e1; margin: 0; font-weight: 500; }
+          .body { padding: 32px 30px; }
+          .greeting { font-size: 16px; font-weight: 700; color: #0f172a; margin-top: 0; margin-bottom: 14px; }
+          .lead-p { font-size: 14px; line-height: 1.65; color: #334155; margin-bottom: 22px; }
+          .status-banner { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 14px 18px; margin-bottom: 24px; display: flex; align-items: center; gap: 12px; }
+          .status-icon { font-size: 22px; line-height: 1; }
+          .status-title { font-size: 13px; font-weight: 800; color: #166534; margin: 0; }
+          .status-sub { font-size: 12px; color: #15803d; margin: 2px 0 0; }
+          .card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 20px; margin-bottom: 24px; }
+          .card-title { font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 14px; }
+          .perks { margin-bottom: 26px; }
+          .perk-item { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px; font-size: 13px; color: #334155; line-height: 1.5; }
+          .perk-bullet { color: #2563eb; font-weight: bold; }
+          .btn-container { text-align: center; margin: 28px 0 20px; }
+          .btn { display: inline-block; background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: #ffffff !important; text-decoration: none; font-weight: 800; font-size: 14px; padding: 14px 34px; border-radius: 12px; box-shadow: 0 8px 20px rgba(37, 99, 235, 0.35); letter-spacing: 0.3px; }
+          .footer { background: #0f172a; padding: 24px 28px; text-align: center; font-size: 11px; color: #94a3b8; line-height: 1.7; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <div class="badge-live">● OFFICIAL ACCREDITATION</div>
+            <div class="title">Membership Approved</div>
+            <p class="subtitle">Region VII Higher Education Innovation Consortium</p>
+          </div>
+          <div class="body">
+            <p class="greeting">Dear ${applicant.name},</p>
+            <p class="lead-p">
+              We are pleased to inform you that your application for membership in the <strong>DASIG Higher Education Innovation Consortium</strong> has been reviewed and <strong>officially approved</strong> by the Executive Directorate.
+            </p>
+
+            <div class="status-banner">
+              <span class="status-icon">✅</span>
+              <div>
+                <p class="status-title">Active Consortium Member</p>
+                <p class="status-sub">Your institutional account has been elevated to Member status with full ecosystem privileges.</p>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-title">Membership Dossier Details</div>
+              <table style="width:100%; border-collapse:collapse; font-size:13px;">
+                <tr>
+                  <td style="padding:7px 0; color:#64748b; font-weight:600;">Member Name</td>
+                  <td style="padding:7px 0; color:#0f172a; font-weight:700; text-align:right;">${applicant.name}</td>
+                </tr>
+                <tr>
+                  <td style="padding:7px 0; color:#64748b; font-weight:600;">Registered Email</td>
+                  <td style="padding:7px 0; color:#0f172a; font-weight:700; text-align:right;">${applicant.email}</td>
+                </tr>
+                <tr>
+                  <td style="padding:7px 0; color:#64748b; font-weight:600;">Institution</td>
+                  <td style="padding:7px 0; color:#0f172a; font-weight:700; text-align:right;">${applicant.institution || 'Consortium Node'}</td>
+                </tr>
+                ${applicant.campus ? `
+                <tr>
+                  <td style="padding:7px 0; color:#64748b; font-weight:600;">Campus / Office</td>
+                  <td style="padding:7px 0; color:#0f172a; font-weight:700; text-align:right;">${applicant.campus}</td>
+                </tr>` : ''}
+                <tr>
+                  <td style="padding:7px 0; color:#64748b; font-weight:600;">Membership Tier</td>
+                  <td style="padding:7px 0; color:#0f172a; font-weight:700; text-align:right;"><span style="background:#e0e7ff; color:#3730a3; padding:2px 8px; border-radius:6px; font-weight:800; font-size:11px;">${applicant.tier || 'Tier 2'}</span></td>
+                </tr>
+                <tr>
+                  <td style="padding:7px 0; color:#64748b; font-weight:600;">Effective Date</td>
+                  <td style="padding:7px 0; color:#0f172a; font-weight:700; text-align:right;">${approvalDate} PHT</td>
+                </tr>
+              </table>
+            </div>
+
+            <div class="perks">
+              <p style="font-size:12px; font-weight:800; color:#475569; text-transform:uppercase; letter-spacing:1px; margin-bottom:10px;">Consortium Privileges Granted:</p>
+              <div class="perk-item">
+                <span class="perk-bullet">✦</span>
+                <span><strong>Full Access to All 9 Modules:</strong> Direct access to Funding & Grants, Policy Charters, MOUs & Partnerships, and Research Repositories.</span>
+              </div>
+              <div class="perk-item">
+                <span class="perk-bullet">✦</span>
+                <span><strong>Capacity Development:</strong> Full eligibility to enroll in faculty development bootcamps, workshops, and AI micro-credentials.</span>
+              </div>
+              <div class="perk-item">
+                <span class="perk-bullet">✦</span>
+                <span><strong>Priority Event VIP Passes:</strong> Automatic issuance of scannable QR event admission tickets and official attendance tracking.</span>
+              </div>
+            </div>
+
+            <div class="btn-container">
+              <a href="${portalUrl}" class="btn">Sign In to Member Portal →</a>
+            </div>
+
+            <p style="font-size:12px; color:#64748b; text-align:center; margin:16px 0 0; line-height:1.5;">
+              If you are already logged in, simply refresh your browser or sign back in to see your updated Member badge and features.
+            </p>
+          </div>
+
+          <div class="footer">
+            <strong>DASIG Regional Higher Education Innovation Consortium</strong><br>
+            Hosted at Cebu Institute of Technology – University (Central Node)<br>
+            In partnership with UP Cebu, USC, CTU, DOST-7, DICT-7, DTI-7, and DepEd Region VII.<br>
+            <span style="font-size:10px; color:#64748b; display:inline-block; margin-top:8px;">This is an automated administrative dispatch sent to ${applicant.email}.</span>
+          </div>
+        </div>
+      </body>
+      </html>
+    `,
+    text: `DASIG CONSORTIUM — MEMBERSHIP APPLICATION APPROVED\n\nDear ${applicant.name},\n\nCongratulations! Your application for membership in the DASIG Higher Education Innovation Consortium has been officially APPROVED.\n\nMember Details:\n- Name: ${applicant.name}\n- Email: ${applicant.email}\n- Institution: ${applicant.institution || 'Consortium Node'}\n- Campus: ${applicant.campus || 'N/A'}\n- Membership Tier: ${applicant.tier || 'Tier 2'}\n- Effective Date: ${approvalDate} PHT\n\nLog in now to access all consortium modules and benefits:\n${portalUrl}\n\nDASIG Regional Consortium · Region VII`,
+  });
+  console.log(`[mailer] Sent membership approval email to ${toEmail} (ID: ${info.messageId})`);
+  return info;
+}
+
+async function sendMembershipRejectionEmail(applicant) {
+  if (!mailConfigured()) {
+    console.warn('[mailer] Email not configured — skipping membership rejection email');
+    return;
+  }
+  const toEmail = applicant.email;
+  if (!toEmail) {
+    console.warn('[mailer] Missing applicant email — skipping membership rejection email');
+    return;
+  }
+
+  const portalUrl = `${PORTAL_URL}/contact`;
+  const transporter = createTransporter();
+  const info = await transporter.sendMail({
+    from: FROM,
+    to: toEmail,
+    headers: TRANSACTIONAL_HEADERS,
+    subject: `Update Regarding Your DASIG Consortium Membership Application`,
+    html: `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: #0b1329; margin: 0; padding: 32px 14px; }
+          .container { max-width: 560px; margin: 0 auto; background: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 20px 48px rgba(0,0,0,0.35); }
+          .header { background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%); padding: 36px 32px; text-align: center; color: #ffffff; }
+          .badge { display: inline-block; background: rgba(244, 63, 94, 0.2); border: 1px solid rgba(244, 63, 94, 0.4); color: #fda4af; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; padding: 5px 14px; border-radius: 9999px; margin-bottom: 14px; }
+          .title { font-size: 22px; font-weight: 900; line-height: 1.25; margin: 0 0 8px; color: #ffffff; }
+          .body { padding: 32px 30px; }
+          .greeting { font-size: 16px; font-weight: 700; color: #0f172a; margin-top: 0; margin-bottom: 14px; }
+          .lead-p { font-size: 14px; line-height: 1.65; color: #334155; margin-bottom: 20px; }
+          .reason-box { background: #fff1f2; border: 1px solid #fecdd3; border-radius: 12px; padding: 16px 20px; margin-bottom: 24px; }
+          .reason-title { font-size: 12px; font-weight: 800; color: #9f1239; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+          .reason-text { font-size: 13px; color: #881337; line-height: 1.6; margin: 0; }
+          .btn-container { text-align: center; margin: 26px 0 20px; }
+          .btn { display: inline-block; background: #0f172a; color: #ffffff !important; text-decoration: none; font-weight: 700; font-size: 13px; padding: 12px 28px; border-radius: 10px; }
+          .footer { background: #0f172a; padding: 24px 28px; text-align: center; font-size: 11px; color: #94a3b8; line-height: 1.7; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <div class="badge">Application Update</div>
+            <div class="title">Membership Status Notification</div>
+            <p style="font-size:13px; color:#cbd5e1; margin:0;">Region VII Higher Education Innovation Consortium</p>
+          </div>
+          <div class="body">
+            <p class="greeting">Dear ${applicant.name},</p>
+            <p class="lead-p">
+              Thank you for your interest in joining the <strong>DASIG Higher Education Innovation Consortium</strong>. After careful review of your application on behalf of <strong>${applicant.institution || 'your institution'}</strong>, we regret to inform you that we are unable to approve your application at this time.
+            </p>
+
+            ${applicant.reason ? `
+            <div class="reason-box">
+              <div class="reason-title">Review Remarks / Reason:</div>
+              <p class="reason-text">${applicant.reason}</p>
+            </div>
+            ` : ''}
+
+            <p style="font-size:13px; line-height:1.6; color:#475569;">
+              You may review or update your institutional credentials and submit a new application in the future. If you believe this decision was made in error or if you have additional supporting documentation, please feel free to reach out to our administration desk.
+            </p>
+
+            <div class="btn-container">
+              <a href="${portalUrl}" class="btn">Contact Consortium Secretariat →</a>
+            </div>
+          </div>
+          <div class="footer">
+            DASIG Regional Higher Education Innovation Consortium · Region VII<br>
+            Cebu Institute of Technology – University · Secretariat Desk
+          </div>
+        </div>
+      </body>
+      </html>
+    `,
+    text: `DASIG CONSORTIUM — MEMBERSHIP APPLICATION UPDATE\n\nDear ${applicant.name},\nThank you for your interest in the DASIG Higher Education Innovation Consortium.\nAfter review, we regret to inform you that your application for ${applicant.institution || 'your institution'} could not be approved at this time.\n${applicant.reason ? `\nRemarks: ${applicant.reason}\n` : ''}\nFor inquiries, please contact our secretariat at ${portalUrl}`,
+  });
+  console.log(`[mailer] Sent membership rejection email to ${toEmail} (ID: ${info.messageId})`);
+  return info;
+}
+
+module.exports = {
+  createTransporter,
+  mailConfigured,
+  FROM,
+  SENDER_EMAIL,
+  sendPasswordResetEmail,
+  sendEventRegistrationEmail,
+  sendTrainingEnrollmentEmail,
+  sendEventCancellationEmail,
+  sendTrainingCancellationEmail,
+  sendMembershipApplicationNotification,
+  sendMembershipApprovalEmail,
+  sendMembershipRejectionEmail,
+};

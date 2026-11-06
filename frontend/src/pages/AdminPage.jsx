@@ -2756,10 +2756,15 @@ function ApplicationsTab({ showToast }) {
   async function approve(a) {
     setActing(a.id);
     try {
-      await api.membership.approve(a.id);
+      const res = await api.membership.approve(a.id);
       setApps(p => p.map(x => x.id === a.id ? { ...x, status:'APPROVED' } : x));
       if (detailApp && detailApp.id === a.id) setDetailApp(prev => ({ ...prev, status: 'APPROVED' }));
-      showToast('Application approved successfully!', true, `${a.name} is now a Member`);
+      const targetEmail = a.email || res?.emailSentTo;
+      showToast(
+        'Application approved & confirmation email sent!',
+        true,
+        targetEmail ? `Welcome email delivered to ${targetEmail}` : `${a.name} is now an active Member`
+      );
     } catch (e) {
       showToast(e.message, false);
     } finally {
@@ -2771,10 +2776,15 @@ function ApplicationsTab({ showToast }) {
     if (!rejectTarget) return;
     setActing(rejectTarget.id);
     try {
-      await api.membership.reject(rejectTarget.id, rejectReason);
+      const res = await api.membership.reject(rejectTarget.id, rejectReason);
       setApps(p => p.map(x => x.id === rejectTarget.id ? { ...x, status:'REJECTED', rejection_reason: rejectReason } : x));
       if (detailApp && detailApp.id === rejectTarget.id) setDetailApp(prev => ({ ...prev, status: 'REJECTED', rejection_reason: rejectReason }));
-      showToast('Application rejected', false, `${rejectTarget.name}'s request was declined`);
+      const targetEmail = rejectTarget.email || res?.emailSentTo;
+      showToast(
+        'Application rejected & notice emailed',
+        false,
+        targetEmail ? `Notification sent to ${targetEmail}` : `${rejectTarget.name}'s request was declined`
+      );
     } catch (e) {
       showToast(e.message, false);
     } finally {
@@ -2861,7 +2871,7 @@ function ApplicationsTab({ showToast }) {
             )}
 
             <div style={{ display:'flex', gap:10, marginTop:8, flexWrap:'wrap' }}>
-              {detailApp.status === 'PENDING' && (
+              {detailApp.status === 'PENDING' ? (
                 <>
                   <button
                     onClick={() => { approve(detailApp); setDetailApp(null); }}
@@ -2869,7 +2879,7 @@ function ApplicationsTab({ showToast }) {
                     className="ap-btn ap-btn-green"
                     style={{ flex:1, padding:'11px', fontSize:13 }}
                   >
-                    ✓ Approve Application
+                    {acting === detailApp.id ? 'Approving & Sending Email…' : '✓ Approve & Send Email'}
                   </button>
                   <button
                     onClick={() => { const d = detailApp; setDetailApp(null); setRejectTarget(d); setRejectReason(''); }}
@@ -2880,7 +2890,16 @@ function ApplicationsTab({ showToast }) {
                     ✕ Decline / Reject
                   </button>
                 </>
-              )}
+              ) : detailApp.status === 'APPROVED' ? (
+                <button
+                  onClick={() => approve(detailApp)}
+                  disabled={acting === detailApp.id}
+                  className="ap-btn"
+                  style={{ flex:1, padding:'11px', fontSize:13, background:'linear-gradient(135deg,#059669,#10b981)', color:'#fff', fontWeight:700 }}
+                >
+                  {acting === detailApp.id ? 'Dispatching Email…' : '✉ Resend Approval Email'}
+                </button>
+              ) : null}
               <button onClick={() => setDetailApp(null)} className="ap-btn ap-btn-ghost" style={{ flex: detailApp.status === 'PENDING' ? 'none' : 1, padding:'11px 20px', fontSize:13 }}>
                 Close
               </button>
@@ -2982,13 +3001,40 @@ function ApplicationsTab({ showToast }) {
                   <div style={{ display:'flex', gap:6, alignItems:'center' }}>
                     {a.status === 'PENDING' ? (
                       <>
-                        <button onClick={() => approve(a)} disabled={acting === a.id} className="ap-btn ap-btn-green">✓ Approve</button>
-                        <button onClick={() => { setRejectTarget(a); setRejectReason(''); }} disabled={acting === a.id} className="ap-btn ap-btn-red">✕ Reject</button>
+                        <button
+                          onClick={() => approve(a)}
+                          disabled={acting === a.id}
+                          className="ap-btn ap-btn-green"
+                          title="Approve membership and send confirmation email to applicant"
+                        >
+                          {acting === a.id ? '…' : '✓ Approve'}
+                        </button>
+                        <button
+                          onClick={() => { setRejectTarget(a); setRejectReason(''); }}
+                          disabled={acting === a.id}
+                          className="ap-btn ap-btn-red"
+                          title="Decline membership"
+                        >
+                          ✕ Reject
+                        </button>
                       </>
                     ) : (
-                      <button onClick={() => setDetailApp(a)} className="ap-btn ap-btn-ghost" style={{ fontSize:11.5, padding:'4px 10px' }}>
-                        Details
-                      </button>
+                      <div style={{ display:'flex', gap:6, alignItems:'center' }}>
+                        <button onClick={() => setDetailApp(a)} className="ap-btn ap-btn-ghost" style={{ fontSize:11.5, padding:'4px 10px' }}>
+                          Details
+                        </button>
+                        {a.status === 'APPROVED' && (
+                          <button
+                            onClick={() => approve(a)}
+                            disabled={acting === a.id}
+                            title={`Resend confirmation email to ${a.email}`}
+                            className="ap-btn ap-btn-ghost"
+                            style={{ fontSize:11.5, padding:'4px 8px', color:'#34d399', borderColor:'rgba(52,211,153,0.3)', background:'rgba(52,211,153,0.08)' }}
+                          >
+                            {acting === a.id ? '…' : '✉ Resend'}
+                          </button>
+                        )}
+                      </div>
                     )}
                   </div>
                 </TD>

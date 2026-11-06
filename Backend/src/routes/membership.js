@@ -1,7 +1,11 @@
 const express = require('express');
 const supabase = require('../lib/supabase');
 const { verifyToken, requireRole } = require('../middleware/auth');
-const { sendMembershipApplicationNotification } = require('../lib/mailer');
+const {
+  sendMembershipApplicationNotification,
+  sendMembershipApprovalEmail,
+  sendMembershipRejectionEmail,
+} = require('../lib/mailer');
 
 const router = express.Router();
 
@@ -67,16 +71,75 @@ router.patch('/applications/:id/approve', verifyToken, requireRole('ADMIN'), asy
     renewal_due: `${new Date().getFullYear() + 1}-12-31`,
   }).eq('id', app.user_id);
 
-  res.json({ message: 'Application approved', application: { ...app, status: 'APPROVED' } });
+  // Determine recipient email and name for confirmation dispatch
+  let targetEmail = app.email;
+  let targetName = app.name;
+  if ((!targetEmail || !targetName) && app.user_id) {
+    const { data: u } = await supabase.from('users').select('email, name').eq('id', app.user_id).single();
+    if (u) {
+      if (!targetEmail) targetEmail = u.email;
+      if (!targetName) targetName = u.name;
+    }
+  }
+
+  // Dispatch formal approval and welcome email to applicant's email address
+  if (targetEmail) {
+    sendMembershipApprovalEmail({
+      name: targetName || 'Consortium Member',
+      email: targetEmail,
+      institution: app.institution,
+      campus: app.campus,
+      tier: app.tier || 'Tier 2',
+    }).catch(err => {
+      console.error(`[membership] Failed to send approval email to ${targetEmail}:`, err.message);
+    });
+  }
+
+  res.json({
+    message: 'Application approved & confirmation email sent to applicant',
+    application: { ...app, status: 'APPROVED' },
+    emailSentTo: targetEmail || null,
+  });
 });
 
 router.patch('/applications/:id/reject', verifyToken, requireRole('ADMIN'), async (req, res) => {
   const { reason } = req.body;
+  const { data: app, error: fetchErr } = await supabase.from('membership_applications')
+    .select('*').eq('id', req.params.id).single();
+  if (fetchErr || !app) return res.status(404).json({ error: 'Application not found' });
+
   const updates = { status: 'REJECTED' };
   if (reason) updates.rejection_reason = reason;
   const { error } = await supabase.from('membership_applications').update(updates).eq('id', req.params.id);
-  if (error) return res.status(404).json({ error: 'Application not found' });
-  res.json({ message: 'Application rejected', reason: reason || null });
+  if (error) return res.status(500).json({ error: 'Failed to update application status' });
+
+  // Determine applicant contact
+  let targetEmail = app.email;
+  let targetName = app.name;
+  if ((!targetEmail || !targetName) && app.user_id) {
+    const { data: u } = await supabase.from('users').select('email, name').eq('id', app.user_id).single();
+    if (u) {
+      if (!targetEmail) targetEmail = u.email;
+      if (!targetName) targetName = u.name;
+    }
+  }
+
+  if (targetEmail) {
+    sendMembershipRejectionEmail({
+      name: targetName || 'Applicant',
+      email: targetEmail,
+      institution: app.institution,
+      reason: reason || '',
+    }).catch(err => {
+      console.error(`[membership] Failed to send rejection email to ${targetEmail}:`, err.message);
+    });
+  }
+
+  res.json({
+    message: 'Application rejected & notification email sent',
+    reason: reason || null,
+    emailSentTo: targetEmail || null,
+  });
 });
 
 module.exports = router;
