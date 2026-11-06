@@ -5268,42 +5268,70 @@ function PartnershipsTab({ showToast }) {
   const [items, setItems]     = useState([]);
   const [loading, setLoading] = useState(true);
   const [modal, setModal]     = useState(null);
+  const [detailPartner, setDetailPartner] = useState(null);
   const [form, setForm]       = useState(PA_BLANK);
   const [saving, setSaving]   = useState(false);
   const [confirm, setConfirm] = useState(null);
   const [search, setSearch]   = useState('');
   const [statusF, setStatusF] = useState('All');
 
-  const load = useCallback(() => { setLoading(true); api.partnerships.list({ limit: 1000 }).then(r => setItems(Array.isArray(r) ? r : (r?.data || []))).catch(() => showToast('Failed', false)).finally(() => setLoading(false)); }, []);
+  const load = useCallback(() => {
+    setLoading(true);
+    api.partnerships.list({ limit: 1000 })
+      .then(r => setItems(Array.isArray(r) ? r : (r?.data || [])))
+      .catch(() => showToast('Failed to load partnerships', false))
+      .finally(() => setLoading(false));
+  }, []);
+
   useEffect(load, [load]);
   const fc = e => setForm(p => ({ ...p, [e.target.name]: e.target.value }));
 
   async function save() {
-    if (!form.partner_name || !form.start_date) { showToast('Fill required fields', false); return; }
+    if (!form.partner_name || !form.start_date) { showToast('Partner name and start date are required', false); return; }
     setSaving(true);
     try {
-      if (modal === 'create') { await api.partnerships.create(form); showToast('Partnership created successfully!', true, form.partner_name); }
-      else { await api.partnerships.update(modal.id, form); showToast('Partnership updated successfully!', true, form.partner_name); }
+      if (modal === 'create') {
+        await api.partnerships.create(form);
+        showToast('Partnership created successfully!', true, form.partner_name);
+      } else {
+        await api.partnerships.update(modal.id, form);
+        showToast('Partnership updated successfully!', true, form.partner_name);
+      }
       setModal(null);
       load();
-    } catch (e) { showToast(e.message, false); } finally { setSaving(false); }
+    } catch (e) { showToast(e.message, false); }
+    finally { setSaving(false); }
   }
+
   async function del(id, name) {
-    try { await api.partnerships.delete(id); showToast('Partnership deleted successfully!', true, name); setConfirm(null); load(); }
-    catch (e) { showToast(e.message, false); }
+    try {
+      await api.partnerships.delete(id);
+      showToast('Partnership record deleted', true, name);
+      setConfirm(null);
+      if (detailPartner?.id === id) setDetailPartner(null);
+      load();
+    } catch (e) { showToast(e.message, false); }
   }
 
   function exportPartnershipsCSV() {
     if (!items.length) return;
-    const headers = ['Partner Name', 'Alliance Type', 'Start Date', 'End Date', 'Contact Person', 'Email', 'Status'];
+    const headers = ['Partner Name', 'Alliance Type', 'Start Date', 'End Date', 'Contact Person', 'Email', 'Status', 'Description'];
     const rows = filteredItems.map(p => [
-      p.partner_name || '', p.type || '', String(p.start_date || '').slice(0, 10), String(p.end_date || '').slice(0, 10), p.contact_person || '', p.contact_email || '', p.status || ''
+      p.partner_name || '',
+      p.type || '',
+      String(p.start_date || '').slice(0, 10),
+      String(p.end_date || '').slice(0, 10),
+      p.contact_person || '',
+      p.contact_email || '',
+      p.status || '',
+      (p.description || '').replace(/\n/g, ' ')
     ]);
     const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
     a.download = 'dasig_partnerships_export.csv';
     a.click();
+    showToast('Exported partnerships to CSV', true);
   }
 
   const filteredItems = items.filter(p => {
@@ -5312,18 +5340,40 @@ function PartnershipsTab({ showToast }) {
     const matchesSearch = !q || (
       (p.partner_name || '').toLowerCase().includes(q) ||
       (p.type || '').toLowerCase().includes(q) ||
-      (p.contact_person || '').toLowerCase().includes(q)
+      (p.contact_person || '').toLowerCase().includes(q) ||
+      (p.contact_email || '').toLowerCase().includes(q) ||
+      (p.description || '').toLowerCase().includes(q)
     );
     return matchesStatus && matchesSearch;
   });
 
-  const SC = { Active:'#6ee7b7', Pending:'#fcd34d', Expired:'rgba(255,255,255,0.35)' };
+  const ALLIANCE_TYPES = {
+    'Research Collaboration': { label: 'Research Alliance', color: '#c084fc', bg: 'rgba(192,132,252,0.14)', border: 'rgba(192,132,252,0.35)', icon: '🔬' },
+    'Academic Partnership':    { label: 'Academic Alliance', color: '#38bdf8', bg: 'rgba(56,189,248,0.14)', border: 'rgba(56,189,248,0.35)', icon: '🎓' },
+    'Technology Partnership':  { label: 'Technology Alliance', color: '#fb923c', bg: 'rgba(251,146,60,0.14)', border: 'rgba(251,146,60,0.35)', icon: '💻' },
+    'Funding Partnership':     { label: 'Funding Alliance', color: '#34d399', bg: 'rgba(52,211,153,0.14)', border: 'rgba(52,211,153,0.35)', icon: '💰' },
+  };
+
+  const STATUS_CONFIG = {
+    Active:  { label: 'Active MOU', color: '#34d399', bg: 'rgba(16,185,129,0.15)', border: 'rgba(16,185,129,0.3)', icon: '🟢' },
+    Pending: { label: 'Pending Signing', color: '#fbbf24', bg: 'rgba(245,158,11,0.15)', border: 'rgba(245,158,11,0.3)', icon: '⏳' },
+    Expired: { label: 'Expired / Archived', color: '#94a3b8', bg: 'rgba(148,163,184,0.12)', border: 'rgba(148,163,184,0.25)', icon: '⚪' },
+  };
+
+  function getAcronym(name) {
+    if (!name) return 'HEI';
+    const clean = name.replace(/\([^)]*\)/g, '').trim();
+    const words = clean.split(/[\s-]+/).filter(w => !['and','of','on','the','for','in'].includes(w.toLowerCase()));
+    if (words.length === 1) return words[0].slice(0, 4).toUpperCase();
+    return words.slice(0, 4).map(w => w[0]).join('').toUpperCase();
+  }
 
   return (
     <div>
+      {/* ── Page Header ── */}
       <PageHeader
-        title="Partnerships"
-        desc="Manage strategic inter-institutional partnerships, MOUs, and research alliances"
+        title="Institutional Partnerships & MOUs"
+        desc="Oversee strategic inter-institutional alliances, bilateral charters, research MOUs, and industry linkages"
         action={
           <div style={{ display:'flex', gap:10, alignItems:'center', flexWrap:'wrap' }}>
             {/* Status Segmented Filter */}
@@ -5333,25 +5383,26 @@ function PartnershipsTab({ showToast }) {
             }}>
               {['All','Active','Pending','Expired'].map(s => {
                 const count = s === 'All' ? items.length : items.filter(p => p.status === s).length;
+                const isSelected = statusF === s;
                 return (
                   <button
                     key={s}
                     type="button"
                     onClick={() => setStatusF(s)}
                     style={{
-                      padding: '5px 11px', borderRadius: 7, border: 'none',
-                      background: statusF === s ? 'rgba(255,255,255,0.14)' : 'transparent',
-                      color: statusF === s ? '#fff' : 'rgba(255,255,255,0.55)',
-                      fontWeight: statusF === s ? 800 : 600,
+                      padding: '5px 12px', borderRadius: 7, border: 'none',
+                      background: isSelected ? 'rgba(255,255,255,0.15)' : 'transparent',
+                      color: isSelected ? '#fff' : 'rgba(255,255,255,0.55)',
+                      fontWeight: isSelected ? 800 : 600,
                       fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
                       transition: 'all .14s ease'
                     }}
                   >
                     <span>{s}</span>
                     <span style={{
-                      fontSize: 10, padding: '1px 5px', borderRadius: 99,
-                      background: statusF === s ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.06)',
-                      color: 'inherit', fontWeight: 800
+                      fontSize: 10, padding: '1px 6px', borderRadius: 99,
+                      background: isSelected ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.06)',
+                      color: isSelected ? '#fff' : 'rgba(255,255,255,0.45)', fontWeight: 800
                     }}>
                       {count}
                     </span>
@@ -5361,38 +5412,188 @@ function PartnershipsTab({ showToast }) {
             </div>
 
             {/* Search Input with Clear Button */}
-            <div style={{ position: 'relative', width: 200 }}>
+            <div style={{ position: 'relative', width: 220 }}>
               <input
                 className="ap-input"
-                placeholder="Search partner, track…"
+                placeholder="Search partner, contact, track…"
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                style={{ paddingRight: search ? 28 : 12 }}
+                style={{ fontSize:12, padding:'7px 28px 7px 11px', background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.1)' }}
               />
-              {search && (
+              {search ? (
                 <button
                   type="button"
                   onClick={() => setSearch('')}
                   style={{
                     position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)',
                     background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)',
-                    cursor: 'pointer', fontSize: 13, padding: 0
+                    cursor: 'pointer', fontSize: 12, padding: 0
                   }}
                   title="Clear search"
                 >
                   ✕
                 </button>
+              ) : (
+                <span style={{ position:'absolute', right:8, top:'50%', transform:'translateY(-50%)', fontSize:12, opacity:0.4, pointerEvents:'none' }}>🔍</span>
               )}
             </div>
 
-            <button onClick={exportPartnershipsCSV} className="ap-btn ap-btn-ghost" style={{ fontSize:12.5, whiteSpace:'nowrap' }}>⬇ Export CSV</button>
-            <AddBtn onClick={() => { setForm(PA_BLANK); setModal('create'); }} />
+            <button
+              onClick={exportPartnershipsCSV}
+              className="ap-btn ap-btn-ghost"
+              style={{ fontSize:12.5, whiteSpace:'nowrap', padding:'7px 13px' }}
+              title="Download partnerships directory as CSV"
+            >
+              ⬇ Export CSV
+            </button>
+
+            <button
+              onClick={() => { setForm(PA_BLANK); setModal('create'); }}
+              className="ap-btn ap-btn-primary"
+              style={{ padding:'8px 16px', fontSize:12.5, fontWeight:800, whiteSpace:'nowrap', display:'flex', alignItems:'center', gap:5 }}
+            >
+              <span>＋</span> Add Partnership
+            </button>
           </div>
         }
       />
-      {confirm && <ConfirmModal msg={`Delete "${confirm.partner_name}"?`} onConfirm={() => del(confirm.id, confirm.partner_name)} onCancel={() => setConfirm(null)} />}
+
+      {/* Delete Confirmation Modal */}
+      {confirm && (
+        <ConfirmModal
+          msg={`Are you sure you want to permanently delete partnership with "${confirm.partner_name}"?`}
+          onConfirm={() => del(confirm.id, confirm.partner_name)}
+          onCancel={() => setConfirm(null)}
+        />
+      )}
+
+      {/* ── Partnership Dossier Inspection Modal ── */}
+      {detailPartner && (
+        <Modal title="Alliance Dossier & Institutional Agreement" onClose={() => setDetailPartner(null)} wide>
+          <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
+            {/* Header Identity Card */}
+            <div style={{
+              display:'flex', alignItems:'center', justifyContent:'space-between',
+              padding:'16px 20px', background:'rgba(255,255,255,0.035)',
+              border:'1px solid rgba(255,255,255,0.08)', borderRadius:16, gap:14, flexWrap:'wrap'
+            }}>
+              <div style={{ display:'flex', alignItems:'center', gap:14 }}>
+                <div style={{
+                  width:52, height:52, borderRadius:14,
+                  background:'linear-gradient(135deg, #4f46e5, #7c3aed)',
+                  border:'1.5px solid rgba(255,255,255,0.18)',
+                  display:'flex', alignItems:'center', justifyContent:'center',
+                  fontSize:16, fontWeight:900, color:'#fff', flexShrink:0,
+                  boxShadow:'0 4px 16px rgba(79,70,229,0.35)'
+                }}>
+                  {getAcronym(detailPartner.partner_name)}
+                </div>
+                <div>
+                  <div style={{ color:'#fff', fontWeight:900, fontSize:17 }}>{detailPartner.partner_name}</div>
+                  <div style={{ display:'flex', alignItems:'center', gap:8, marginTop:3 }}>
+                    <span style={{
+                      fontSize:11, fontWeight:800,
+                      color: (ALLIANCE_TYPES[detailPartner.type] || ALLIANCE_TYPES['Academic Partnership']).color,
+                      background: (ALLIANCE_TYPES[detailPartner.type] || ALLIANCE_TYPES['Academic Partnership']).bg,
+                      border: `1px solid ${(ALLIANCE_TYPES[detailPartner.type] || ALLIANCE_TYPES['Academic Partnership']).border}`,
+                      borderRadius:6, padding:'2px 8px'
+                    }}>
+                      {(ALLIANCE_TYPES[detailPartner.type] || ALLIANCE_TYPES['Academic Partnership']).icon} {detailPartner.type}
+                    </span>
+                    <span style={{ fontSize:11.5, color:'rgba(255,255,255,0.4)' }}>· Regional Node</span>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                {(() => {
+                  const st = STATUS_CONFIG[detailPartner.status] || STATUS_CONFIG.Active;
+                  return (
+                    <span style={{
+                      display:'inline-flex', alignItems:'center', gap:6,
+                      background:st.bg, color:st.color, border:`1px solid ${st.border}`,
+                      borderRadius:8, padding:'4px 11px', fontSize:12, fontWeight:800
+                    }}>
+                      <span>{st.icon}</span>
+                      <span>{st.label}</span>
+                    </span>
+                  );
+                })()}
+              </div>
+            </div>
+
+            {/* Terms & Timeline Grid */}
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(200px, 1fr))', gap:10 }}>
+              {[
+                { label: 'Effective Start Date', value: detailPartner.start_date ? new Date(detailPartner.start_date).toLocaleDateString('en-PH', { dateStyle:'medium' }) : '—', icon: '📅' },
+                { label: 'MOU Expiration Date', value: detailPartner.end_date ? new Date(detailPartner.end_date).toLocaleDateString('en-PH', { dateStyle:'medium' }) : 'Continuous / Renewable', icon: '⏳' },
+                { label: 'Focal Contact Person', value: detailPartner.contact_person || 'Consortium Secretariat', icon: '👤' },
+                { label: 'Official Contact Email', value: detailPartner.contact_email || '—', icon: '✉' },
+              ].map(f => (
+                <div key={f.label} style={{ background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:12, padding:'11px 14px' }}>
+                  <div style={{ fontSize:10.5, fontWeight:800, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:4, display:'flex', alignItems:'center', gap:5 }}>
+                    <span>{f.icon}</span> {f.label}
+                  </div>
+                  <div style={{ color:'#fff', fontWeight:700, fontSize:13 }}>
+                    {f.value}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Scope & Description */}
+            <div style={{ background:'rgba(255,255,255,0.025)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:14, padding:'16px 18px' }}>
+              <div style={{ fontSize:11, fontWeight:800, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', letterSpacing:'.6px', marginBottom:8 }}>
+                Collaboration Scope & Strategic Objectives
+              </div>
+              <p style={{ color:'rgba(255,255,255,0.85)', fontSize:13, lineHeight:1.7, margin:0, whiteSpace:'pre-wrap' }}>
+                {detailPartner.description || 'Formal bilateral academic and R&D cooperation charter fostering resource sharing, joint research development, and faculty capacity building across Central Visayas HEIs.'}
+              </p>
+            </div>
+
+            {/* Action Buttons */}
+            <div style={{ display:'flex', gap:10, marginTop:4, flexWrap:'wrap' }}>
+              {detailPartner.contact_email && (
+                <a
+                  href={`mailto:${detailPartner.contact_email}?subject=DASIG Regional Consortium Collaboration — ${encodeURIComponent(detailPartner.partner_name)}`}
+                  style={{
+                    flex: 2, display:'flex', alignItems:'center', justifyContent:'center', gap:8,
+                    background:'linear-gradient(90deg,#f97316,#e11d48)', color:'#fff', textDecoration:'none',
+                    borderRadius:11, padding:'11px', fontSize:13, fontWeight:800, boxShadow:'0 4px 14px rgba(249,115,22,0.3)'
+                  }}
+                >
+                  <span>✉</span> Contact Partner Focal Person
+                </a>
+              )}
+              <button
+                type="button"
+                onClick={() => {
+                  const p = detailPartner;
+                  setDetailPartner(null);
+                  setForm({ ...p, start_date:String(p.start_date||'').slice(0,10), end_date:String(p.end_date||'').slice(0,10) });
+                  setModal(p);
+                }}
+                className="ap-btn ap-btn-blue"
+                style={{ flex: 1.5, padding:'11px', borderRadius:11, fontSize:13 }}
+              >
+                ✏️ Edit Record
+              </button>
+              <button
+                type="button"
+                onClick={() => setDetailPartner(null)}
+                className="ap-btn ap-btn-ghost"
+                style={{ flex: 1, padding:'11px', borderRadius:11, fontSize:13 }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* ── Create / Edit Modal ── */}
       {modal && (
-        <Modal title={modal === 'create' ? 'Create Partnership Record' : 'Edit Partnership Record'} onClose={() => setModal(null)} wide>
+        <Modal title={modal === 'create' ? 'Create Institutional Partnership Record' : 'Edit Partnership Record'} onClose={() => setModal(null)} wide>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
             <DInput label="Partner Institution / Company" name="partner_name" value={form.partner_name} onChange={fc} required span="1/-1" />
             <DInput label="Alliance Type" name="type" value={form.type} onChange={fc} as="select" opts={['Academic Partnership','Research Collaboration','Technology Partnership','Funding Partnership']} />
@@ -5407,28 +5608,141 @@ function PartnershipsTab({ showToast }) {
         </Modal>
       )}
 
+      {/* ── KPI Summary Cards ── */}
       <SectionKPIs items={[
         { label: 'Total Alliances', value: items.length, icon: '🤝', color: '#8b5cf6' },
         { label: 'Active Partners', value: items.filter(p => p.status === 'Active').length, icon: '🟢', color: '#34d399' },
-        { label: 'Academic Tracks', value: items.filter(p => p.type?.includes('Academic') || p.type?.includes('Research')).length, icon: '🎓', color: '#60a5fa' },
+        { label: 'Academic & R&D Tracks', value: items.filter(p => p.type?.includes('Academic') || p.type?.includes('Research')).length, icon: '🎓', color: '#60a5fa' },
         { label: 'Pending Review', value: items.filter(p => p.status === 'Pending').length, icon: '⏳', color: '#fbbf24' },
       ]} />
 
-      {loading ? <Loading /> : (
-        <DataTable head={['Partner','Type','Started','Contact','Status','Actions']}>
-          {filteredItems.length === 0 ? <EmptyTR cols={6} /> : filteredItems.map(p => {
-            const sc = SC[p.status] || '#6ee7b7';
+      {/* ── Table ── */}
+      {loading ? (
+        <Loading />
+      ) : (
+        <DataTable head={['Partner Institution','Alliance Type','Agreement Term','Focal Contact','MOU Status','Actions']}>
+          {filteredItems.length === 0 ? (
+            <EmptyTR cols={6} title="No partnership records found" desc="No institutional agreements match your current filter or search query." />
+          ) : filteredItems.map(p => {
+            const typeInfo = ALLIANCE_TYPES[p.type] || ALLIANCE_TYPES['Academic Partnership'];
+            const statusInfo = STATUS_CONFIG[p.status] || STATUS_CONFIG.Active;
+            const acronym = getAcronym(p.partner_name);
+            const startDateStr = p.start_date ? String(p.start_date).slice(0, 10) : '—';
+            const endDateStr = p.end_date ? String(p.end_date).slice(0, 10) : null;
+
             return (
               <TR key={p.id}>
-                <TD><div style={{ fontWeight:700, color:'#fff' }}>{p.partner_name}</div></TD>
-                <TD muted>{p.type}</TD>
-                <TD muted>{String(p.start_date || '').slice(0,10)}</TD>
-                <TD muted>{p.contact_person || '—'}</TD>
-                <TD><span className="ap-pill" style={{ background:`${sc}1a`, color:sc }}>{p.status}</span></TD>
+                {/* Partner Column */}
                 <TD>
-                  <div style={{ display:'flex', gap:6 }}>
-                    <button onClick={() => { setForm({ ...p, start_date:String(p.start_date||'').slice(0,10), end_date:String(p.end_date||'').slice(0,10) }); setModal(p); }} className="ap-btn ap-btn-blue">Edit</button>
-                    <button onClick={() => setConfirm(p)} className="ap-btn ap-btn-red">Delete</button>
+                  <div
+                    onClick={() => setDetailPartner(p)}
+                    style={{ display:'flex', alignItems:'center', gap:12, cursor:'pointer' }}
+                    title="View full partnership dossier"
+                  >
+                    <div style={{
+                      width:40, height:40, borderRadius:11,
+                      background:'linear-gradient(135deg, #1e3a8a, #4f46e5)',
+                      border:'1.5px solid rgba(255,255,255,0.12)',
+                      display:'flex', alignItems:'center', justifyContent:'center',
+                      fontSize:12.5, fontWeight:900, color:'#fff', flexShrink:0,
+                      boxShadow:'0 2px 10px rgba(0,0,0,0.3)'
+                    }}>
+                      {acronym}
+                    </div>
+                    <div>
+                      <div style={{ fontWeight:800, color:'#fff', fontSize:13.5 }}>
+                        {p.partner_name}
+                      </div>
+                      <div style={{ fontSize:11.5, color:'rgba(255,255,255,0.45)', marginTop:1 }}>
+                        Regional Partner Node
+                      </div>
+                    </div>
+                  </div>
+                </TD>
+
+                {/* Type Column */}
+                <TD>
+                  <span style={{
+                    display:'inline-flex', alignItems:'center', gap:5,
+                    background: typeInfo.bg, color: typeInfo.color,
+                    border: `1px solid ${typeInfo.border}`,
+                    borderRadius: 7, padding: '3px 9px', fontSize: 11, fontWeight: 800, whiteSpace:'nowrap'
+                  }}>
+                    <span>{typeInfo.icon}</span>
+                    <span>{typeInfo.label}</span>
+                  </span>
+                </TD>
+
+                {/* Started / Term Column */}
+                <TD>
+                  <div style={{ display:'flex', flexDirection:'column', gap:2 }}>
+                    <span style={{ color:'#fff', fontWeight:700, fontSize:12.5 }}>
+                      📅 {startDateStr}
+                    </span>
+                    <span style={{ fontSize:11, color:'rgba(255,255,255,0.45)' }}>
+                      {endDateStr ? `Until ${endDateStr}` : 'Continuous / Active'}
+                    </span>
+                  </div>
+                </TD>
+
+                {/* Contact Column */}
+                <TD>
+                  <div>
+                    <div style={{ color:'rgba(255,255,255,0.9)', fontWeight:700, fontSize:13 }}>
+                      {p.contact_person || '—'}
+                    </div>
+                    {p.contact_email && (
+                      <div style={{ fontSize:11.5, color:'rgba(255,255,255,0.45)', marginTop:1, display:'flex', alignItems:'center', gap:4 }}>
+                        <span>✉</span>
+                        <span>{p.contact_email}</span>
+                      </div>
+                    )}
+                  </div>
+                </TD>
+
+                {/* Status Column */}
+                <TD>
+                  <span style={{
+                    display:'inline-flex', alignItems:'center', gap:5,
+                    background: statusInfo.bg, color: statusInfo.color,
+                    border: `1px solid ${statusInfo.border}`,
+                    borderRadius: 8, padding: '3px 9px', fontSize: 11, fontWeight: 800, whiteSpace:'nowrap'
+                  }}>
+                    <span>{statusInfo.icon}</span>
+                    <span>{statusInfo.label}</span>
+                  </span>
+                </TD>
+
+                {/* Actions Column */}
+                <TD>
+                  <div style={{ display:'flex', gap:6, alignItems:'center' }}>
+                    <button
+                      type="button"
+                      onClick={() => setDetailPartner(p)}
+                      className="ap-btn ap-btn-ghost"
+                      style={{ fontSize:11.5, padding:'5px 10px', borderRadius:8 }}
+                      title="Inspect full MOU agreement"
+                    >
+                      Dossier
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setForm({ ...p, start_date:String(p.start_date||'').slice(0,10), end_date:String(p.end_date||'').slice(0,10) }); setModal(p); }}
+                      className="ap-btn ap-btn-blue"
+                      style={{ fontSize:11.5, padding:'5px 10px', borderRadius:8 }}
+                      title="Edit partnership details"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setConfirm(p)}
+                      className="ap-btn ap-btn-red"
+                      style={{ fontSize:11.5, padding:'5px 8px', borderRadius:8 }}
+                      title="Delete record"
+                    >
+                      🗑
+                    </button>
                   </div>
                 </TD>
               </TR>
