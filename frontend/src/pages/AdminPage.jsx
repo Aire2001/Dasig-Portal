@@ -4081,15 +4081,16 @@ function compressNewsImage(file) {
 }
 
 function NewsTab({ showToast }) {
-  const [items, setItems]       = useState([]);
-  const [loading, setLoading]   = useState(true);
-  const [modal, setModal]       = useState(null);
-  const [form, setForm]         = useState(NW_BLANK);
-  const [saving, setSaving]     = useState(false);
-  const [confirm, setConfirm]   = useState(null);
-  const [imgUploading, setImgUp] = useState(false);
-  const [search, setSearch]     = useState('');
-  const [badgeF, setBadgeF]     = useState('All');
+  const [items, setItems]               = useState([]);
+  const [loading, setLoading]           = useState(true);
+  const [modal, setModal]               = useState(null);
+  const [detailNews, setDetailNews]     = useState(null);
+  const [form, setForm]                 = useState(NW_BLANK);
+  const [saving, setSaving]             = useState(false);
+  const [confirm, setConfirm]           = useState(null);
+  const [imgUploading, setImgUp]         = useState(false);
+  const [search, setSearch]             = useState('');
+  const [badgeF, setBadgeF]             = useState('All');
 
   const load = useCallback(() => {
     setLoading(true);
@@ -4107,7 +4108,10 @@ function NewsTab({ showToast }) {
     return () => clearTimeout(timer);
   }, [load]);
 
-  const fc = e => setForm(p => ({ ...p, [e.target.name]: e.target.type === 'checkbox' ? e.target.checked : e.target.value }));
+  const fc = e => setForm(p => ({
+    ...p,
+    [e.target.name]: e.target.type === 'checkbox' ? e.target.checked : e.target.value
+  }));
 
   async function handleImageUpload(e) {
     const file = e.target.files?.[0];
@@ -4124,55 +4128,101 @@ function NewsTab({ showToast }) {
   }
 
   async function save() {
-    if (!form.title || !form.date) { showToast('Please fill all required fields', false); return; }
+    if (!form.title || !form.date) { showToast('Article title and publish date are required', false); return; }
     setSaving(true);
     try {
-      if (modal === 'create') { await api.news.create(form); showToast('Article published successfully!', true, form.title); }
-      else { await api.news.update(modal.id, form); showToast('Article updated successfully!', true, form.title); }
+      if (modal === 'create') {
+        await api.news.create(form);
+        showToast('Article published successfully!', true, form.title);
+      } else {
+        await api.news.update(modal.id, form);
+        showToast('Article updated successfully!', true, form.title);
+      }
       setModal(null);
       load();
-    } catch (e) { showToast(e.message, false); } finally { setSaving(false); }
+    } catch (e) {
+      showToast(e.message, false);
+    } finally {
+      setSaving(false);
+    }
   }
 
   async function toggleArchive(n) {
     try {
       await api.news.archive(n.id, !n.archived);
       showToast(n.archived ? 'Article restored successfully!' : 'Article archived successfully', !n.archived, n.title);
+      if (detailNews?.id === n.id) {
+        setDetailNews(prev => prev ? { ...prev, archived: !prev.archived } : null);
+      }
       load();
-    } catch (e) { showToast(e.message, false); }
+    } catch (e) {
+      showToast(e.message, false);
+    }
   }
 
   async function del(id, title) {
-    try { await api.news.delete(id); showToast('Article deleted successfully!', true, title); setConfirm(null); load(); }
-    catch (e) { showToast(e.message, false); }
+    try {
+      await api.news.delete(id);
+      showToast('Article deleted successfully!', true, title);
+      setConfirm(null);
+      if (detailNews?.id === id) setDetailNews(null);
+      load();
+    } catch (e) {
+      showToast(e.message, false);
+    }
   }
 
   function exportNewsCSV() {
     if (!items.length) return;
-    const headers = ['Title', 'Category', 'Date', 'Access', 'Status', 'Excerpt'];
+    const headers = ['Title', 'Category', 'Date', 'Access', 'Status', 'Excerpt', 'Content'];
     const rows = items.map(n => [
-      n.title || '', n.badge || '', n.date ? String(n.date).slice(0,10) : '', n.members_only ? 'Members Only' : 'Public', n.archived ? 'Archived' : 'Active', n.excerpt || ''
+      n.title || '',
+      n.badge || '',
+      n.date ? String(n.date).slice(0, 10) : '',
+      n.members_only ? 'Members Only' : 'Public',
+      n.archived ? 'Archived' : 'Active',
+      (n.excerpt || '').replace(/\r?\n/g, ' '),
+      (n.content || '').replace(/\r?\n/g, ' ')
     ]);
-    const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\r\n');
+    const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
-    a.download = 'dasig_news_export.csv';
+    a.download = 'dasig_news_bulletins.csv';
     a.click();
+    showToast('Exported news catalog to CSV', true);
   }
 
   const BC = {
-    Announcement: { color:'#60a5fa', bg:'rgba(96,165,250,0.18)',  border:'rgba(96,165,250,0.35)',  icon:'📣' },
-    Policy:       { color:'#fcd34d', bg:'rgba(252,211,77,0.18)',  border:'rgba(252,211,77,0.35)',  icon:'📋' },
-    Funding:      { color:'#6ee7b7', bg:'rgba(110,231,183,0.18)', border:'rgba(110,231,183,0.35)', icon:'💰' },
-    Training:     { color:'#fca5a5', bg:'rgba(252,165,165,0.18)', border:'rgba(252,165,165,0.35)', icon:'🎓' },
-    Research:     { color:'#c4b5fd', bg:'rgba(196,181,253,0.18)', border:'rgba(196,181,253,0.35)', icon:'🔬' },
+    Announcement: { label:'Announcement',      color:'#38bdf8', bg:'rgba(56,189,248,0.14)',  border:'rgba(56,189,248,0.32)',  grad:'linear-gradient(135deg, #0284c7, #38bdf8)', icon:'📣' },
+    Policy:       { label:'Policy Update',     color:'#c084fc', bg:'rgba(192,132,252,0.14)', border:'rgba(192,132,252,0.32)', grad:'linear-gradient(135deg, #7c3aed, #a855f7)', icon:'📋' },
+    Funding:      { label:'Funding Call',      color:'#34d399', bg:'rgba(52,211,153,0.14)',  border:'rgba(52,211,153,0.32)',  grad:'linear-gradient(135deg, #059669, #10b981)', icon:'💰' },
+    Training:     { label:'Training Program',  color:'#fb923c', bg:'rgba(251,146,60,0.14)',  border:'rgba(251,146,60,0.32)',  grad:'linear-gradient(135deg, #ea580c, #f97316)', icon:'🎓' },
+    Research:     { label:'Research Bulletin', color:'#818cf8', bg:'rgba(129,140,248,0.14)', border:'rgba(129,140,248,0.32)', grad:'linear-gradient(135deg, #4338ca, #6366f1)', icon:'🔬' },
   };
+
+  const ACCESS_CONFIG = {
+    restricted: { label: 'Members Only', color: '#fbbf24', bg: 'rgba(245,158,11,0.14)', border: 'rgba(245,158,11,0.28)', icon: '🔒' },
+    public:     { label: 'Public Bulletin', color: '#2dd4bf', bg: 'rgba(45,212,191,0.14)', border: 'rgba(45,212,191,0.28)', icon: '🌐' },
+  };
+
+  const STATUS_CONFIG = {
+    active:   { label: 'Published & Live', color: '#34d399', bg: 'rgba(16,185,129,0.15)', border: 'rgba(16,185,129,0.3)', icon: '🟢' },
+    archived: { label: 'Archived Article', color: '#94a3b8', bg: 'rgba(148,163,184,0.12)', border: 'rgba(148,163,184,0.25)', icon: '⚪' },
+  };
+
+  function formatPublishDate(dateStr) {
+    if (!dateStr) return { dateStr: '—', relative: 'Draft / Unpublished' };
+    const d = new Date(dateStr);
+    const formatted = d.toLocaleDateString('en-PH', { month:'short', day:'numeric', year:'numeric' });
+    return { dateStr: formatted, relative: 'Official Bulletin' };
+  }
 
   return (
     <div>
+      {/* ── Page Header ── */}
       <PageHeader
-        title="News & Announcements"
-        desc="Publish, edit, and archive consortium bulletins, policy updates, and press releases"
+        title="News & Official Bulletins"
+        desc="Publish, edit, and archive consortium bulletins, policy updates, research breakthroughs, and press releases"
         action={
           <div style={{ display:'flex', gap:10, alignItems:'center', flexWrap:'wrap' }}>
             {/* Category Segmented Filter */}
@@ -4182,25 +4232,26 @@ function NewsTab({ showToast }) {
             }}>
               {['All','Announcement','Policy','Funding','Training','Research'].map(b => {
                 const count = b === 'All' ? items.length : items.filter(n => n.badge === b).length;
+                const isSelected = badgeF === b;
                 return (
                   <button
                     key={b}
                     type="button"
                     onClick={() => setBadgeF(b)}
                     style={{
-                      padding: '5px 9px', borderRadius: 7, border: 'none',
-                      background: badgeF === b ? 'rgba(255,255,255,0.14)' : 'transparent',
-                      color: badgeF === b ? '#fff' : 'rgba(255,255,255,0.55)',
-                      fontWeight: badgeF === b ? 800 : 600,
+                      padding: '5px 11px', borderRadius: 7, border: 'none',
+                      background: isSelected ? 'rgba(255,255,255,0.15)' : 'transparent',
+                      color: isSelected ? '#fff' : 'rgba(255,255,255,0.55)',
+                      fontWeight: isSelected ? 800 : 600,
                       fontSize: 11.5, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5,
                       transition: 'all .14s ease'
                     }}
                   >
                     <span>{b}</span>
                     <span style={{
-                      fontSize: 10, padding: '1px 5px', borderRadius: 99,
-                      background: badgeF === b ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.06)',
-                      color: 'inherit', fontWeight: 800
+                      fontSize: 10, padding: '1px 6px', borderRadius: 99,
+                      background: isSelected ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.06)',
+                      color: isSelected ? '#fff' : 'rgba(255,255,255,0.45)', fontWeight: 800
                     }}>
                       {count}
                     </span>
@@ -4210,50 +4261,281 @@ function NewsTab({ showToast }) {
             </div>
 
             {/* Search Input with Clear Button */}
-            <div style={{ position: 'relative', width: 190 }}>
+            <div style={{ position: 'relative', width: 210 }}>
               <input
                 className="ap-input"
                 placeholder="Search title, excerpt…"
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                style={{ paddingRight: search ? 28 : 12 }}
+                style={{ fontSize:12, padding:'7px 28px 7px 11px', background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.1)' }}
               />
-              {search && (
+              {search ? (
                 <button
                   type="button"
                   onClick={() => setSearch('')}
                   style={{
                     position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)',
                     background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)',
-                    cursor: 'pointer', fontSize: 13, padding: 0
+                    cursor: 'pointer', fontSize: 12, padding: 0
                   }}
                   title="Clear search"
                 >
                   ✕
                 </button>
+              ) : (
+                <span style={{ position:'absolute', right:8, top:'50%', transform:'translateY(-50%)', fontSize:12, opacity:0.4, pointerEvents:'none' }}>🔍</span>
               )}
             </div>
 
-            <button onClick={exportNewsCSV} className="ap-btn ap-btn-ghost" style={{ fontSize:12.5, whiteSpace:'nowrap' }}>⬇ Export CSV</button>
+            <button
+              onClick={exportNewsCSV}
+              className="ap-btn ap-btn-ghost"
+              style={{ fontSize:12.5, whiteSpace:'nowrap', padding:'7px 13px' }}
+              title="Download news bulletins catalog as CSV"
+            >
+              ⬇ Export CSV
+            </button>
+
             <button
               onClick={() => { setForm(NW_BLANK); setModal('create'); }}
               className="ap-btn ap-btn-primary"
-              style={{ padding:'8px 16px', fontSize:13, fontWeight:800, whiteSpace:'nowrap' }}
+              style={{ padding:'8px 16px', fontSize:12.5, fontWeight:800, whiteSpace:'nowrap', display:'flex', alignItems:'center', gap:5 }}
             >
-              + Publish News
+              <span>＋</span> Publish News
             </button>
           </div>
         }
       />
 
-      {confirm && <ConfirmModal msg={`Are you sure you want to delete article "${confirm.title}"?`} onConfirm={() => del(confirm.id, confirm.title)} onCancel={() => setConfirm(null)} />}
+      {confirm && (
+        <ConfirmModal
+          msg={`Are you sure you want to permanently delete article "${confirm.title}"?`}
+          onConfirm={() => del(confirm.id, confirm.title)}
+          onCancel={() => setConfirm(null)}
+        />
+      )}
 
+      {/* ── News Article Reader & Dossier Modal ── */}
+      {detailNews && (
+        <Modal title="Consortium News Bulletin & Reader" onClose={() => setDetailNews(null)} wide>
+          <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
+            {/* Cover Banner (if available) */}
+            {detailNews.image_url && (
+              <div style={{
+                position:'relative', borderRadius:16, overflow:'hidden',
+                maxHeight:220, border:'1px solid rgba(255,255,255,0.12)',
+                boxShadow:'0 6px 20px rgba(0,0,0,0.4)'
+              }}>
+                <img src={detailNews.image_url} alt="" style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }} />
+                <div style={{ position:'absolute', inset:0, background:'linear-gradient(to top, rgba(15,23,42,0.95) 0%, rgba(15,23,42,0.2) 60%, rgba(0,0,0,0) 100%)' }} />
+                <div style={{ position:'absolute', bottom:14, left:18, right:18 }}>
+                  <div style={{ color:'#fff', fontWeight:900, fontSize:19, textShadow:'0 2px 8px rgba(0,0,0,0.8)' }}>
+                    {detailNews.title}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Top Identity Card */}
+            <div style={{
+              display:'flex', alignItems:'center', justifyContent:'space-between',
+              padding:'18px 22px', background:'rgba(255,255,255,0.035)',
+              border:'1px solid rgba(255,255,255,0.08)', borderRadius:16, gap:16, flexWrap:'wrap'
+            }}>
+              <div style={{ display:'flex', alignItems:'center', gap:14 }}>
+                <div style={{
+                  width:52, height:52, borderRadius:14,
+                  background: (BC[detailNews.badge] || BC.Announcement).grad,
+                  border:'1.5px solid rgba(255,255,255,0.2)',
+                  display:'flex', alignItems:'center', justifyContent:'center',
+                  fontSize:22, color:'#fff', flexShrink:0,
+                  boxShadow:'0 4px 18px rgba(0,0,0,0.35)'
+                }}>
+                  {(BC[detailNews.badge] || BC.Announcement).icon}
+                </div>
+                <div>
+                  {!detailNews.image_url && (
+                    <div style={{ color:'#fff', fontWeight:900, fontSize:18, lineHeight:1.3 }}>{detailNews.title}</div>
+                  )}
+                  <div style={{ display:'flex', alignItems:'center', gap:8, marginTop: detailNews.image_url ? 0 : 4, flexWrap:'wrap' }}>
+                    {(() => {
+                      const bc = BC[detailNews.badge] || BC.Announcement;
+                      return (
+                        <span style={{
+                          fontSize:11, fontWeight:800,
+                          color: bc.color, background: bc.bg,
+                          border: `1px solid ${bc.border}`,
+                          borderRadius:6, padding:'2px 8px'
+                        }}>
+                          {bc.icon} {bc.label}
+                        </span>
+                      );
+                    })()}
+                    <span style={{ fontSize:12, color:'rgba(255,255,255,0.5)' }}>· DASIG Regional Press</span>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                {(() => {
+                  const acc = detailNews.members_only ? ACCESS_CONFIG.restricted : ACCESS_CONFIG.public;
+                  return (
+                    <span style={{
+                      display:'inline-flex', alignItems:'center', gap:5,
+                      background:acc.bg, color:acc.color, border:`1px solid ${acc.border}`,
+                      borderRadius:8, padding:'5px 11px', fontSize:12, fontWeight:800
+                    }}>
+                      <span>{acc.icon}</span>
+                      <span>{acc.label}</span>
+                    </span>
+                  );
+                })()}
+
+                {(() => {
+                  const st = detailNews.archived ? STATUS_CONFIG.archived : STATUS_CONFIG.active;
+                  return (
+                    <span style={{
+                      display:'inline-flex', alignItems:'center', gap:5,
+                      background:st.bg, color:st.color, border:`1px solid ${st.border}`,
+                      borderRadius:8, padding:'5px 11px', fontSize:12, fontWeight:800
+                    }}>
+                      <span>{st.icon}</span>
+                      <span>{st.label}</span>
+                    </span>
+                  );
+                })()}
+              </div>
+            </div>
+
+            {/* Telemetry Metrics Grid */}
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(200px, 1fr))', gap:12 }}>
+              {[
+                {
+                  label: 'Publication Category',
+                  value: (BC[detailNews.badge] || BC.Announcement).label,
+                  icon: (BC[detailNews.badge] || BC.Announcement).icon,
+                  color: (BC[detailNews.badge] || BC.Announcement).color
+                },
+                {
+                  label: 'Publication Date',
+                  value: detailNews.date ? new Date(detailNews.date).toLocaleDateString('en-PH', { dateStyle:'long' }) : 'Draft',
+                  icon: '📅',
+                  color: '#60a5fa'
+                },
+                {
+                  label: 'Access Audience',
+                  value: detailNews.members_only ? 'Consortium Member HEIs Only' : 'Open Public Bulletin',
+                  icon: detailNews.members_only ? '🔒' : '🌐',
+                  color: detailNews.members_only ? '#fbbf24' : '#2dd4bf'
+                },
+                {
+                  label: 'Archive Status',
+                  value: detailNews.archived ? 'Archived Article' : 'Published & Visible',
+                  icon: detailNews.archived ? '⚪' : '🟢',
+                  color: detailNews.archived ? '#94a3b8' : '#34d399'
+                },
+              ].map(f => (
+                <div key={f.label} style={{
+                  background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.06)',
+                  borderRadius:12, padding:'12px 15px'
+                }}>
+                  <div style={{
+                    fontSize:10.5, fontWeight:800, color:'rgba(255,255,255,0.4)',
+                    textTransform:'uppercase', letterSpacing:'.5px', marginBottom:5,
+                    display:'flex', alignItems:'center', gap:6
+                  }}>
+                    <span>{f.icon}</span> {f.label}
+                  </div>
+                  <div style={{ color:f.color, fontWeight:800, fontSize:13.5 }}>
+                    {f.value}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Excerpt Lead */}
+            {detailNews.excerpt && (
+              <div style={{ background:'rgba(56,189,248,0.06)', border:'1px solid rgba(56,189,248,0.18)', borderRadius:12, padding:'14px 16px' }}>
+                <div style={{ fontSize:10.5, fontWeight:800, color:'#38bdf8', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:4 }}>
+                  Summary Excerpt
+                </div>
+                <div style={{ color:'rgba(255,255,255,0.92)', fontSize:13.5, fontStyle:'italic', lineHeight:1.6 }}>
+                  "{detailNews.excerpt}"
+                </div>
+              </div>
+            )}
+
+            {/* Full Article Content Reader */}
+            <div style={{ background:'rgba(255,255,255,0.025)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:14, padding:'20px 22px' }}>
+              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:12 }}>
+                <div style={{ fontSize:11, fontWeight:800, color:'rgba(255,255,255,0.45)', textTransform:'uppercase', letterSpacing:'.6px', display:'flex', alignItems:'center', gap:6 }}>
+                  <span>📰</span> Full Article Text & Release Details
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(detailNews.content || detailNews.excerpt || '');
+                    showToast('Copied article text to clipboard', true);
+                  }}
+                  style={{
+                    background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.1)',
+                    color:'rgba(255,255,255,0.7)', borderRadius:6, padding:'4px 9px', fontSize:11,
+                    cursor:'pointer', display:'flex', alignItems:'center', gap:5
+                  }}
+                >
+                  <span>📋</span> Copy Text
+                </button>
+              </div>
+              <div style={{
+                color:'rgba(255,255,255,0.88)', fontSize:13.5, lineHeight:1.8,
+                whiteSpace:'pre-wrap', maxHeight:300, overflowY:'auto', paddingRight:6
+              }}>
+                {detailNews.content || detailNews.excerpt || 'No full article body text provided for this release.'}
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div style={{ display:'flex', gap:10, marginTop:4, flexWrap:'wrap' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  const n = detailNews;
+                  setDetailNews(null);
+                  setForm({ ...n });
+                  setModal(n);
+                }}
+                className="ap-btn ap-btn-blue"
+                style={{ flex: 2, padding:'11px', borderRadius:11, fontSize:13, fontWeight:800 }}
+              >
+                ✏️ Edit Article
+              </button>
+              <button
+                type="button"
+                onClick={() => toggleArchive(detailNews)}
+                className="ap-btn ap-btn-amber"
+                style={{ flex: 1.5, padding:'11px', borderRadius:11, fontSize:13 }}
+              >
+                {detailNews.archived ? '🔄 Restore Article' : '📦 Archive Article'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setDetailNews(null)}
+                className="ap-btn ap-btn-ghost"
+                style={{ flex: 1, padding:'11px', borderRadius:11, fontSize:13 }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* ── Create / Edit Modal ── */}
       {modal && (
         <Modal title={modal === 'create' ? 'Publish News Article' : 'Edit News Article'} onClose={() => setModal(null)} wide>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
             <DInput label="Title" name="title" value={form.title} onChange={fc} required span="1/-1" />
             
-            {/* Custom Badge Dropdown */}
             <div>
               <label style={{ display:'block', fontSize:11.5, fontWeight:800, color:'rgba(255,255,255,0.65)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:6 }}>
                 Category / Badge <span style={{ color:'#f97316' }}>*</span>
@@ -4319,6 +4601,7 @@ function NewsTab({ showToast }) {
         </Modal>
       )}
 
+      {/* ── Section KPIs ── */}
       <SectionKPIs items={[
         { label: 'Published News', value: items.length, icon: '📰', color: '#10b981' },
         { label: 'Active Articles', value: items.filter(n => !n.archived).length, icon: '🟢', color: '#34d399' },
@@ -4326,52 +4609,165 @@ function NewsTab({ showToast }) {
         { label: 'Archived', value: items.filter(n => n.archived).length, icon: '📦', color: '#94a3b8' },
       ]} />
 
-      {loading ? <Loading /> : (
-        <DataTable head={['Cover','Title','Badge','Date','Access','Status','Actions']}>
-          {items.length === 0 ? <EmptyTR cols={7} /> : items.map(n => {
-            const badgeInfo = BC[n.badge] || { color:'#60a5fa', bg:'rgba(96,165,250,0.18)', border:'rgba(96,165,250,0.35)', icon:'📰' };
+      {/* ── Table ── */}
+      {loading ? (
+        <Loading />
+      ) : (
+        <DataTable head={['Cover','Article Title & Summary','Category Badge','Publication Date','Access Tier','Status','Actions']}>
+          {items.length === 0 ? (
+            <EmptyTR cols={7} title="No news articles found" desc="No published bulletins or announcements match your filter." />
+          ) : items.map(n => {
+            const badgeInfo = BC[n.badge] || BC.Announcement;
+            const accessInfo = n.members_only ? ACCESS_CONFIG.restricted : ACCESS_CONFIG.public;
+            const statusInfo = n.archived ? STATUS_CONFIG.archived : STATUS_CONFIG.active;
+            const pub = formatPublishDate(n.date);
+
             return (
               <TR key={n.id}>
-                {/* Cover thumbnail */}
-                <TD w={70}>
-                  {n.image_url
-                    ? <img src={n.image_url} alt="" style={{ width:54, height:36, objectFit:'cover', borderRadius:8, display:'block', border:'1px solid rgba(255,255,255,0.15)', boxShadow:'0 2px 8px rgba(0,0,0,0.3)' }} />
-                    : <div style={{ width:54, height:36, borderRadius:8, background:badgeInfo.bg, border:`1px solid ${badgeInfo.border}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:17 }}>{badgeInfo.icon}</div>
-                  }
-                </TD>
-                <TD>
-                  <div style={{ fontWeight:800, color: n.archived ? 'rgba(255,255,255,0.38)' : '#fff', fontSize:13.5, maxWidth:260, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
-                    {n.title}
+                {/* Cover Thumbnail */}
+                <TD w={75}>
+                  <div
+                    onClick={() => setDetailNews(n)}
+                    style={{ cursor:'pointer' }}
+                    title="View complete news bulletin"
+                  >
+                    {n.image_url ? (
+                      <img
+                        src={n.image_url}
+                        alt=""
+                        style={{
+                          width:60, height:42, objectFit:'cover',
+                          borderRadius:10, display:'block',
+                          border:'1.5px solid rgba(255,255,255,0.16)',
+                          boxShadow:'0 3px 10px rgba(0,0,0,0.35)'
+                        }}
+                      />
+                    ) : (
+                      <div style={{
+                        width:60, height:42, borderRadius:10,
+                        background: badgeInfo.grad,
+                        border:'1.5px solid rgba(255,255,255,0.18)',
+                        display:'flex', alignItems:'center', justifyContent:'center',
+                        fontSize:18, color:'#fff', flexShrink:0,
+                        boxShadow:'0 3px 10px rgba(0,0,0,0.35)'
+                      }}>
+                        {badgeInfo.icon}
+                      </div>
+                    )}
                   </div>
-                  <div style={{ fontSize:12, color:'rgba(255,255,255,0.5)', marginTop:2, maxWidth:260, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
-                    {n.excerpt || 'No summary excerpt provided'}
+                </TD>
+
+                {/* Article Title & Excerpt */}
+                <TD>
+                  <div
+                    onClick={() => setDetailNews(n)}
+                    style={{ cursor:'pointer' }}
+                    title="Read complete news bulletin"
+                  >
+                    <div style={{
+                      fontWeight:800,
+                      color: n.archived ? 'rgba(255,255,255,0.45)' : '#fff',
+                      fontSize:13.5, lineHeight:1.35
+                    }}>
+                      {n.title}
+                    </div>
+                    <div style={{
+                      fontSize:11.5, color:'rgba(255,255,255,0.48)',
+                      marginTop:3, lineHeight:1.4
+                    }}>
+                      {n.excerpt || 'Official consortium release.'}
+                    </div>
                   </div>
                 </TD>
+
+                {/* Category Badge */}
                 <TD>
-                  <span className="ap-badge" style={{ background:badgeInfo.bg, color:badgeInfo.color, border:`1px solid ${badgeInfo.border}`, padding:'4px 10px', borderRadius:8, fontWeight:800, fontSize:11.5 }}>
-                    {badgeInfo.icon} {n.badge}
+                  <span style={{
+                    display:'inline-flex', alignItems:'center', gap:5,
+                    background: badgeInfo.bg, color: badgeInfo.color,
+                    border: `1px solid ${badgeInfo.border}`,
+                    borderRadius: 7, padding: '3px 9px', fontSize: 11, fontWeight: 800, whiteSpace:'nowrap'
+                  }}>
+                    <span>{badgeInfo.icon}</span>
+                    <span>{badgeInfo.label}</span>
                   </span>
                 </TD>
-                <TD muted>{n.date ? `📅 ${String(n.date).slice(0,10)}` : '—'}</TD>
+
+                {/* Publication Date */}
                 <TD>
-                  <span style={{ fontSize:12, fontWeight:700, color: n.members_only ? '#fcd34d' : 'rgba(255,255,255,0.5)' }}>
-                    {n.members_only ? '🔒 Members' : '🌐 Public'}
+                  <div style={{ display:'flex', flexDirection:'column', gap:2 }}>
+                    <span style={{ color:'#fff', fontWeight:700, fontSize:12.5 }}>
+                      📅 {pub.dateStr}
+                    </span>
+                    <span style={{ fontSize:11, color:'rgba(255,255,255,0.45)' }}>
+                      {pub.relative}
+                    </span>
+                  </div>
+                </TD>
+
+                {/* Access Tier */}
+                <TD>
+                  <span style={{
+                    display:'inline-flex', alignItems:'center', gap:5,
+                    background: accessInfo.bg, color: accessInfo.color,
+                    border: `1px solid ${accessInfo.border}`,
+                    borderRadius: 8, padding: '3px 9px', fontSize: 11, fontWeight: 800, whiteSpace:'nowrap'
+                  }}>
+                    <span>{accessInfo.icon}</span>
+                    <span>{accessInfo.label}</span>
                   </span>
                 </TD>
+
+                {/* Status */}
                 <TD>
-                  <span className="ap-pill" style={{ background: n.archived ? 'rgba(255,255,255,0.06)' : 'rgba(16,185,129,0.15)', color: n.archived ? 'rgba(255,255,255,0.35)' : '#6ee7b7', border:`1px solid ${n.archived ? 'rgba(255,255,255,0.1)' : 'rgba(16,185,129,0.3)'}` }}>
-                    {n.archived ? 'Archived' : '● Active'}
+                  <span style={{
+                    display:'inline-flex', alignItems:'center', gap:5,
+                    background: statusInfo.bg, color: statusInfo.color,
+                    border: `1px solid ${statusInfo.border}`,
+                    borderRadius: 8, padding: '3px 9px', fontSize: 11, fontWeight: 800, whiteSpace:'nowrap'
+                  }}>
+                    <span>{statusInfo.icon}</span>
+                    <span>{statusInfo.label}</span>
                   </span>
                 </TD>
+
+                {/* Actions */}
                 <TD>
-                  <div style={{ display:'flex', gap:6 }}>
-                    <button onClick={() => { setForm({ ...n }); setModal(n); }} className="ap-btn ap-btn-blue" style={{ padding:'6px 10px', fontSize:12, borderRadius:8 }}>
-                      ✏️ Edit
+                  <div style={{ display:'flex', gap:6, alignItems:'center' }}>
+                    <button
+                      type="button"
+                      onClick={() => setDetailNews(n)}
+                      className="ap-btn ap-btn-ghost"
+                      style={{ fontSize:11.5, padding:'5px 9px', borderRadius:8 }}
+                      title="Read complete bulletin and press release"
+                    >
+                      Dossier
                     </button>
-                    <button onClick={() => toggleArchive(n)} className="ap-btn ap-btn-amber" style={{ padding:'6px 10px', fontSize:12, borderRadius:8 }}>
+                    <button
+                      type="button"
+                      onClick={() => { setForm({ ...n }); setModal(n); }}
+                      className="ap-btn ap-btn-blue"
+                      style={{ fontSize:11.5, padding:'5px 9px', borderRadius:8 }}
+                      title="Edit article"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => toggleArchive(n)}
+                      className="ap-btn ap-btn-amber"
+                      style={{ fontSize:11.5, padding:'5px 8px', borderRadius:8 }}
+                      title={n.archived ? 'Restore article' : 'Archive article'}
+                    >
                       {n.archived ? 'Restore' : 'Archive'}
                     </button>
-                    <button onClick={() => setConfirm(n)} className="ap-btn ap-btn-red" style={{ padding:'6px 10px', fontSize:12, borderRadius:8 }}>
+                    <button
+                      type="button"
+                      onClick={() => setConfirm(n)}
+                      className="ap-btn ap-btn-red"
+                      style={{ fontSize:11.5, padding:'5px 8px', borderRadius:8 }}
+                      title="Delete article permanently"
+                    >
                       🗑
                     </button>
                   </div>
