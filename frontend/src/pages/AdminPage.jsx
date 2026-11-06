@@ -80,36 +80,60 @@ const CSS = `
   }
 
   .ap-input {
-    width:100%; padding:9px 12px; border-radius:9px;
-    border:1.5px solid rgba(255,255,255,0.11);
-    background:rgba(255,255,255,0.05);
+    width:100%; padding:8.5px 13px; border-radius:10px;
+    border:1px solid rgba(255,255,255,0.12);
+    background:rgba(15,23,42,0.65);
     color:#fff; font-size:13px; font-family:inherit;
-    outline:none; transition:border-color .15s;
+    outline:none; transition:all .15s ease;
+    backdrop-filter:blur(8px);
+    box-shadow:inset 0 1px 2px rgba(0,0,0,0.25);
   }
-  .ap-input:focus { border-color:#f97316; background:rgba(255,255,255,0.08); }
-  .ap-input::placeholder { color:rgba(255,255,255,0.25); }
+  .ap-input:focus {
+    border-color:#f97316;
+    background:rgba(15,23,42,0.9);
+    box-shadow:0 0 0 3px rgba(249,115,22,0.18), inset 0 1px 2px rgba(0,0,0,0.2);
+  }
+  .ap-input::placeholder { color:rgba(255,255,255,0.32); }
 
-  .ap-row { transition:background .12s; }
-  .ap-row:hover { background:rgba(255,255,255,0.035); }
+  .ap-row { transition:all .14s ease; }
+  .ap-row:hover {
+    background:rgba(255,255,255,0.045);
+  }
+
+  .ap-kpi-card {
+    transition: all .2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .ap-kpi-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(255,255,255,0.18) !important;
+    box-shadow: 0 10px 28px rgba(0,0,0,0.38) !important;
+  }
 
   .ap-btn {
-    border:none; border-radius:7px;
-    padding:6px 13px; font-size:11.5px; font-weight:700;
-    cursor:pointer; font-family:inherit; transition:all .14s;
-    white-space:nowrap;
+    border:1px solid transparent; border-radius:9px;
+    padding:7px 14px; font-size:12px; font-weight:700;
+    cursor:pointer; font-family:inherit; transition:all .15s ease;
+    white-space:nowrap; display:inline-flex; align-items:center; justify-content:center; gap:6px;
   }
-  .ap-btn-primary { background:linear-gradient(90deg,#f97316,#e11d48); color:#fff; }
-  .ap-btn-primary:hover { opacity:.88; }
-  .ap-btn-blue  { background:rgba(59,130,246,.18); color:#93c5fd; }
-  .ap-btn-blue:hover  { background:rgba(59,130,246,.32); }
-  .ap-btn-red   { background:rgba(225,29,72,.15);  color:#fca5a5; }
-  .ap-btn-red:hover   { background:rgba(225,29,72,.3); }
-  .ap-btn-green { background:rgba(16,185,129,.15); color:#6ee7b7; }
-  .ap-btn-green:hover { background:rgba(16,185,129,.3); }
-  .ap-btn-amber { background:rgba(245,158,11,.15); color:#fcd34d; }
-  .ap-btn-amber:hover { background:rgba(245,158,11,.3); }
-  .ap-btn-ghost { background:rgba(255,255,255,.07); color:rgba(255,255,255,.6); border:1px solid rgba(255,255,255,.1); }
-  .ap-btn-ghost:hover { background:rgba(255,255,255,.12); }
+  .ap-btn:hover { transform:translateY(-1px); }
+  .ap-btn:active { transform:translateY(0); }
+  .ap-btn-primary {
+    background:linear-gradient(90deg,#f97316,#e11d48); color:#fff;
+    box-shadow:0 4px 14px rgba(249,115,22,0.28);
+  }
+  .ap-btn-primary:hover {
+    box-shadow:0 6px 20px rgba(249,115,22,0.42); opacity:0.95;
+  }
+  .ap-btn-blue  { background:rgba(59,130,246,.16); color:#93c5fd; border-color:rgba(59,130,246,.3); }
+  .ap-btn-blue:hover  { background:rgba(59,130,246,.28); border-color:rgba(59,130,246,.5); color:#fff; }
+  .ap-btn-red   { background:rgba(225,29,72,.14);  color:#fca5a5; border-color:rgba(225,29,72,.3); }
+  .ap-btn-red:hover   { background:rgba(225,29,72,.28); border-color:rgba(225,29,72,.5); color:#fff; }
+  .ap-btn-green { background:rgba(16,185,129,.14); color:#6ee7b7; border-color:rgba(16,185,129,.3); }
+  .ap-btn-green:hover { background:rgba(16,185,129,.28); border-color:rgba(16,185,129,.5); color:#fff; }
+  .ap-btn-amber { background:rgba(245,158,11,.14); color:#fcd34d; border-color:rgba(245,158,11,.3); }
+  .ap-btn-amber:hover { background:rgba(245,158,11,.28); border-color:rgba(245,158,11,.5); color:#fff; }
+  .ap-btn-ghost { background:rgba(255,255,255,.06); color:rgba(255,255,255,.78); border:1px solid rgba(255,255,255,.12); }
+  .ap-btn-ghost:hover { background:rgba(255,255,255,.12); color:#fff; border-color:rgba(255,255,255,.2); }
 
   .ap-badge {
     display:inline-block; border-radius:6px;
@@ -595,10 +619,20 @@ function Toast({ msg, ok, sub }) {
 
 function PageHeader({ title, desc, action }) {
   return (
-    <div className="ap-header-row">
+    <div className="ap-header-row" style={{
+      background: 'linear-gradient(135deg, rgba(13,21,39,0.85) 0%, rgba(8,14,28,0.92) 100%)',
+      border: '1px solid rgba(255,255,255,0.08)',
+      borderRadius: 16, padding: '18px 22px', marginBottom: 20,
+      backdropFilter: 'blur(16px)',
+      boxShadow: '0 6px 22px rgba(0,0,0,0.25)',
+      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      flexWrap: 'wrap', gap: 14,
+    }}>
       <div>
-        <h2 style={{ color:'#fff', fontWeight:900, fontSize:19, margin:'0 0 3px', letterSpacing:'-0.3px' }}>{title}</h2>
-        {desc && <p style={{ color:'rgba(255,255,255,0.55)', fontSize:12.5, margin:0 }}>{desc}</p>}
+        <h2 style={{ color:'#fff', fontWeight:900, fontSize:20, margin:'0 0 3px', letterSpacing:'-0.4px', display:'flex', alignItems:'center', gap:8 }}>
+          {title}
+        </h2>
+        {desc && <p style={{ color:'rgba(255,255,255,0.5)', fontSize:12.5, margin:0, fontWeight:500 }}>{desc}</p>}
       </div>
       {action && (
         <div style={{ display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
@@ -619,16 +653,23 @@ function AddBtn({ label='+ Add New', onClick }) {
 
 function DataTable({ head, children, empty }) {
   return (
-    <div style={{ borderRadius:14, border:'1px solid rgba(255,255,255,0.08)', overflow:'hidden' }}>
+    <div style={{
+      borderRadius: 16,
+      border: '1px solid rgba(255,255,255,0.08)',
+      background: 'rgba(11,19,38,0.72)',
+      backdropFilter: 'blur(16px)',
+      overflow: 'hidden',
+      boxShadow: '0 12px 36px rgba(0,0,0,0.35)'
+    }}>
       <div style={{ overflowX:'auto', WebkitOverflowScrolling:'touch' }}>
-        <table style={{ width:'100%', borderCollapse:'collapse' }}>
+        <table style={{ width:'100%', borderCollapse:'collapse', textAlign:'left' }}>
           <thead>
-            <tr style={{ background:'rgba(255,255,255,0.04)' }}>
+            <tr style={{ background:'rgba(255,255,255,0.035)', borderBottom:'1px solid rgba(255,255,255,0.08)' }}>
               {head.map(h => (
                 <th key={h} style={{
-                  padding:'10px 16px', fontSize:12, fontWeight:800,
+                  padding:'13px 18px', fontSize:11, fontWeight:900,
                   color:'rgba(255,255,255,0.55)', textTransform:'uppercase',
-                  letterSpacing:'.6px', textAlign:'left', whiteSpace:'nowrap',
+                  letterSpacing:'0.8px', whiteSpace:'nowrap',
                 }}>{h}</th>
               ))}
             </tr>
@@ -640,30 +681,60 @@ function DataTable({ head, children, empty }) {
   );
 }
 
-function TR({ children }) {
-  return <tr className="ap-row" style={{ borderTop:'1px solid rgba(255,255,255,0.05)' }}>{children}</tr>;
+function TR({ children, onClick, style = {} }) {
+  return (
+    <tr
+      onClick={onClick}
+      className="ap-row"
+      style={{
+        borderTop:'1px solid rgba(255,255,255,0.05)',
+        cursor: onClick ? 'pointer' : 'default',
+        transition:'all 0.15s ease',
+        ...style
+      }}
+    >
+      {children}
+    </tr>
+  );
 }
-function TD({ children, muted, w }) {
+
+function TD({ children, muted, w, style = {} }) {
   return (
     <td style={{
-      padding:'12px 16px', fontSize:13, verticalAlign:'middle',
-      color: muted ? 'rgba(255,255,255,0.42)' : 'rgba(255,255,255,0.82)',
+      padding:'14px 18px', fontSize:13, verticalAlign:'middle',
+      color: muted ? 'rgba(255,255,255,0.45)' : 'rgba(255,255,255,0.88)',
       width: w,
+      ...style
     }}>{children}</td>
   );
 }
-function EmptyTR({ cols }) {
+
+function EmptyTR({ cols, title = 'No records found', desc = 'No matching entries found for your active filter or search query.' }) {
   return (
-    <tr><td colSpan={cols} style={{ textAlign:'center', padding:'48px 0', color:'rgba(255,255,255,0.28)', fontSize:14 }}>
-      No records found.
-    </td></tr>
+    <tr>
+      <td colSpan={cols} style={{ textAlign:'center', padding:'56px 20px' }}>
+        <div style={{ maxWidth: 360, margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+          <div style={{
+            width: 52, height: 52, borderRadius: 16,
+            background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24,
+            boxShadow: '0 8px 24px rgba(0,0,0,0.3)'
+          }}>
+            📂
+          </div>
+          <div style={{ fontSize: 15, fontWeight: 800, color: '#fff' }}>{title}</div>
+          <div style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.45)', lineHeight: 1.5 }}>{desc}</div>
+        </div>
+      </td>
+    </tr>
   );
 }
+
 function Loading() {
   return (
-    <div style={{ textAlign:'center', padding:'64px 0', color:'rgba(255,255,255,0.3)' }}>
+    <div style={{ textAlign:'center', padding:'64px 0', color:'rgba(255,255,255,0.4)' }}>
       <div style={{ fontSize:28, marginBottom:10 }}>⏳</div>
-      <div style={{ fontSize:13 }}>Loading…</div>
+      <div style={{ fontSize:13.5, fontWeight:600 }}>Loading consortium records…</div>
     </div>
   );
 }
@@ -673,24 +744,31 @@ function SectionKPIs({ items }) {
   return (
     <div className="ap-kpi-grid">
       {items.map((kpi, idx) => (
-        <div key={idx} style={{
-          background:'rgba(8,14,28,0.75)',
-          backdropFilter:'blur(12px)',
-          border:'1px solid rgba(255,255,255,0.08)',
-          borderRadius:14, padding:'14px 16px',
-          display:'flex', alignItems:'center', gap:12,
-          boxShadow:'0 4px 16px rgba(0,0,0,0.25)',
+        <div key={idx} className="ap-kpi-card" style={{
+          background: 'linear-gradient(145deg, rgba(13,22,44,0.85) 0%, rgba(8,14,28,0.92) 100%)',
+          backdropFilter: 'blur(16px)',
+          border: '1px solid rgba(255,255,255,0.08)',
+          borderRadius: 16, padding: '15px 18px',
+          display: 'flex', alignItems: 'center', gap: 14,
+          boxShadow: '0 8px 24px rgba(0,0,0,0.28)',
+          position: 'relative', overflow: 'hidden'
         }}>
           <div style={{
-            width:38, height:38, borderRadius:10,
-            background: `${kpi.color || '#f97316'}15`,
-            border: `1px solid ${kpi.color || '#f97316'}35`,
-            display:'flex', alignItems:'center', justifyContent:'center',
-            fontSize:18, flexShrink:0,
+            position: 'absolute', top: 0, left: 0, right: 0, height: 2,
+            background: `linear-gradient(90deg, transparent, ${kpi.color || '#f97316'}, transparent)`,
+            opacity: 0.65
+          }} />
+          <div style={{
+            width: 42, height: 42, borderRadius: 12,
+            background: `${kpi.color || '#f97316'}18`,
+            border: `1px solid ${kpi.color || '#f97316'}38`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 20, flexShrink: 0,
+            boxShadow: `0 4px 14px ${kpi.color || '#f97316'}22`
           }}>{kpi.icon}</div>
-          <div>
-            <div style={{ fontSize:20, fontWeight:900, color:'#fff', lineHeight:1 }}>{kpi.value}</div>
-            <div style={{ fontSize:11.5, color:'rgba(255,255,255,0.45)', fontWeight:600, marginTop:3 }}>{kpi.label}</div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 22, fontWeight: 900, color: '#fff', lineHeight: 1, letterSpacing: '-0.3px' }}>{kpi.value}</div>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', fontWeight: 700, marginTop: 4, textTransform: 'uppercase', letterSpacing: '0.4px' }}>{kpi.label}</div>
           </div>
         </div>
       ))}
@@ -1747,6 +1825,14 @@ export default function AdminPage() {
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+                  <div style={{
+                    display: 'flex', alignItems: 'center', gap: 6,
+                    background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.3)',
+                    borderRadius: 99, padding: '3px 10px', fontSize: 11, fontWeight: 800, color: '#6ee7b7'
+                  }}>
+                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#34d399', boxShadow: '0 0 8px #34d399' }} />
+                    <span>CIT-U Central Node · Live</span>
+                  </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11.5, color: 'rgba(255,255,255,0.5)', fontWeight: 600 }}>
                     <span>🕒</span>
                     <span>{currentTimePHT || 'Asia/Manila PHT'}</span>
@@ -1754,12 +1840,15 @@ export default function AdminPage() {
                   <div style={{ width: 1, height: 14, background: 'rgba(255,255,255,0.1)' }} />
                   <button
                     onClick={() => setQuickJumpOpen(true)}
+                    className="ap-btn ap-btn-ghost"
                     style={{
-                      background: 'none', border: 'none', color: '#fb923c', fontSize: 11.5,
-                      fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, padding: 0
+                      padding: '4px 10px', borderRadius: 8, fontSize: 11.5, fontWeight: 800,
+                      color: '#fb923c', border: '1px solid rgba(249,115,22,0.3)', background: 'rgba(249,115,22,0.08)',
+                      display: 'flex', alignItems: 'center', gap: 6
                     }}
                   >
-                    <span>🔍 Jump (⌘K)</span>
+                    <span>🔍 Quick Jump</span>
+                    <kbd style={{ fontSize: 9.5, background: 'rgba(249,115,22,0.2)', padding: '1px 5px', borderRadius: 4, color: '#fdba74' }}>⌘K</kbd>
                   </button>
                 </div>
               </div>
@@ -2624,13 +2713,70 @@ function UsersTab({ showToast }) {
         </Modal>
       )}
 
-      <PageHeader title="Users" desc="Manage roles, delete accounts, and view user details" action={
-        <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+      <PageHeader title="Users" desc="Manage consortium roles, institutional directory, and account activations" action={
+        <div style={{ display:'flex', gap:10, alignItems:'center', flexWrap:'wrap' }}>
+          {/* Segmented Role Filter Pills */}
+          <div style={{
+            display: 'flex', background: 'rgba(255,255,255,0.05)',
+            border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: 3, gap: 2
+          }}>
+            {[
+              { id: 'All', label: 'All', count: users.length },
+              { id: 'MEMBER', label: 'Members', count: users.filter(u => u.role === 'MEMBER').length, color: '#34d399' },
+              { id: 'ADMIN', label: 'Admins', count: users.filter(u => u.role === 'ADMIN').length, color: '#f87171' },
+              { id: 'GUEST', label: 'Guests', count: users.filter(u => u.role === 'GUEST').length, color: '#93c5fd' },
+            ].map(tabItem => (
+              <button
+                key={tabItem.id}
+                type="button"
+                onClick={() => setRoleF(tabItem.id)}
+                style={{
+                  padding: '5px 11px', borderRadius: 7, border: 'none',
+                  background: roleF === tabItem.id ? 'rgba(255,255,255,0.14)' : 'transparent',
+                  color: roleF === tabItem.id ? '#fff' : 'rgba(255,255,255,0.55)',
+                  fontWeight: roleF === tabItem.id ? 800 : 600,
+                  fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
+                  transition: 'all .14s ease'
+                }}
+              >
+                <span>{tabItem.label}</span>
+                <span style={{
+                  fontSize: 10, padding: '1px 5px', borderRadius: 99,
+                  background: roleF === tabItem.id ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.06)',
+                  color: tabItem.color || 'inherit', fontWeight: 800
+                }}>
+                  {tabItem.count}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {/* Search Input with Clear Button */}
+          <div style={{ position: 'relative', width: 230 }}>
+            <input
+              className="ap-input"
+              placeholder="Search name, email, institution…"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              style={{ paddingRight: search ? 28 : 12 }}
+            />
+            {search && (
+              <button
+                type="button"
+                onClick={() => setSearch('')}
+                style={{
+                  position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)',
+                  background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)',
+                  cursor: 'pointer', fontSize: 13, padding: 0
+                }}
+                title="Clear search"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+
           <button onClick={exportUsersCSV} className="ap-btn ap-btn-ghost" style={{ fontSize:12.5, whiteSpace:'nowrap' }}>⬇ Export CSV</button>
-          <input className="ap-input" placeholder="Search name, email, institution…" value={search} onChange={e => setSearch(e.target.value)} style={{ width:210 }} />
-          <select className="ap-input" value={roleF} onChange={e => setRoleF(e.target.value)} style={{ width:110, cursor:'pointer' }}>
-            {['All','ADMIN','MEMBER','GUEST'].map(r => <option key={r} value={r} style={{ background:'#0f172a' }}>{r}</option>)}
-          </select>
         </div>
       } />
 
@@ -2675,7 +2821,20 @@ function UsersTab({ showToast }) {
                         {displayName}
                         <span style={{ fontSize:10, color:'rgba(249,115,22,0.8)', fontWeight:700 }}>🔍</span>
                       </div>
-                      <div style={{ fontSize:12, color:'rgba(255,255,255,0.5)' }}>{u.email}</div>
+                      <div
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (navigator.clipboard) {
+                            navigator.clipboard.writeText(u.email);
+                            showToast('Copied email to clipboard!', true, u.email);
+                          }
+                        }}
+                        title="Click to copy email"
+                        style={{ fontSize:12, color:'rgba(255,255,255,0.5)', display:'flex', alignItems:'center', gap:5, cursor:'pointer' }}
+                      >
+                        <span>{u.email}</span>
+                        <span style={{ fontSize:10, opacity:0.6 }}>📋</span>
+                      </div>
                     </div>
                   </div>
                 </TD>
@@ -2942,30 +3101,73 @@ function ApplicationsTab({ showToast }) {
 
       <PageHeader
         title="Applications"
-        desc="Approve or reject membership requests"
+        desc="Review, approve, or reject consortium institutional membership requests"
         action={
-          <div style={{ display:'flex', alignItems:'center', gap:8, flexWrap:'wrap' }}>
+          <div style={{ display:'flex', alignItems:'center', gap:10, flexWrap:'wrap' }}>
+            {/* Segmented Filter Pills */}
+            <div style={{
+              display: 'flex', background: 'rgba(255,255,255,0.05)',
+              border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: 3, gap: 2
+            }}>
+              {[
+                { id: 'All', label: 'All', count: apps.length },
+                { id: 'PENDING', label: 'Pending', count: apps.filter(a => a.status === 'PENDING').length, color: '#fbbf24' },
+                { id: 'APPROVED', label: 'Approved', count: apps.filter(a => a.status === 'APPROVED').length, color: '#34d399' },
+                { id: 'REJECTED', label: 'Declined', count: apps.filter(a => a.status === 'REJECTED').length, color: '#f87171' },
+              ].map(tabItem => (
+                <button
+                  key={tabItem.id}
+                  type="button"
+                  onClick={() => setStatusF(tabItem.id)}
+                  style={{
+                    padding: '5px 11px', borderRadius: 7, border: 'none',
+                    background: statusF === tabItem.id ? 'rgba(255,255,255,0.14)' : 'transparent',
+                    color: statusF === tabItem.id ? '#fff' : 'rgba(255,255,255,0.55)',
+                    fontWeight: statusF === tabItem.id ? 800 : 600,
+                    fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
+                    transition: 'all .14s ease'
+                  }}
+                >
+                  <span>{tabItem.label}</span>
+                  <span style={{
+                    fontSize: 10, padding: '1px 5px', borderRadius: 99,
+                    background: statusF === tabItem.id ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.06)',
+                    color: tabItem.color || 'inherit', fontWeight: 800
+                  }}>
+                    {tabItem.count}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            {/* Search Input with Clear Button */}
+            <div style={{ position: 'relative', width: 220 }}>
+              <input
+                className="ap-input"
+                placeholder="Search applicant, institution…"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                style={{ paddingRight: search ? 28 : 12 }}
+              />
+              {search && (
+                <button
+                  type="button"
+                  onClick={() => setSearch('')}
+                  style={{
+                    position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)',
+                    background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)',
+                    cursor: 'pointer', fontSize: 13, padding: 0
+                  }}
+                  title="Clear search"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+
             <button onClick={exportAppsCSV} className="ap-btn ap-btn-ghost" style={{ fontSize:12.5, whiteSpace:'nowrap' }}>
               ⬇ Export CSV
             </button>
-            <input
-              className="ap-input"
-              placeholder="Search applicant, institution…"
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              style={{ width: 190 }}
-            />
-            <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-              <span style={{ fontSize:12, color:'rgba(255,255,255,0.4)', fontWeight:600 }}>Filter:</span>
-              <select
-                className="ap-input"
-                value={statusF}
-                onChange={e => setStatusF(e.target.value)}
-                style={{ width:120, cursor:'pointer' }}
-              >
-                {['All','PENDING','APPROVED','REJECTED'].map(s => <option key={s} value={s} style={{ background:'#0f172a' }}>{s}</option>)}
-              </select>
-            </div>
           </div>
         }
       />
