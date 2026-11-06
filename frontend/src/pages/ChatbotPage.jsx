@@ -648,6 +648,8 @@ export default function ChatbotPage() {
   }
 
   function startNewChat() {
+    voicePlayer.stop();
+    setSpeakingIdx(null);
     setCurrentSessionId(null);
     setMessages([{ from:'bot', text: getLocalizedGreeting(user, activeLang), time: new Date() }]);
     setTotalAsked(0);
@@ -689,6 +691,7 @@ export default function ChatbotPage() {
 
   useEffect(() => {
     return () => {
+      voicePlayer.stop();
       if (streamIntervalRef.current) clearInterval(streamIntervalRef.current);
     };
   }, []);

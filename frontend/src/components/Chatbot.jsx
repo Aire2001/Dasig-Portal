@@ -367,12 +367,14 @@ export default function Chatbot() {
 
   useEffect(() => {
     return () => {
+      voicePlayer.stop();
       if (streamIntervalRef.current) clearInterval(streamIntervalRef.current);
     };
   }, []);
 
   // Reset chat when user changes (login/logout)
   useEffect(() => {
+    voicePlayer.stop();
     if ('speechSynthesis' in window) window.speechSynthesis.cancel();
     setSpeakingIdx(null);
     setMessages([{ from:'bot', text: getLocalizedGreeting(user, activeLang), time: new Date() }]);
@@ -391,7 +393,13 @@ export default function Chatbot() {
   }, [messages.length, open]);
 
   function openWidget() { setOpen(true); setUnread(0); }
+  function closeWidget() {
+    voicePlayer.stop();
+    setSpeakingIdx(null);
+    setOpen(false);
+  }
   function newChat() {
+    voicePlayer.stop();
     if ('speechSynthesis' in window) window.speechSynthesis.cancel();
     setSpeakingIdx(null);
     setMessages([{ from:'bot', text: getLocalizedGreeting(user, activeLang), time: new Date() }]);
@@ -728,7 +736,7 @@ export default function Chatbot() {
                 <button onClick={newChat} style={{ background:'rgba(249,115,22,0.2)', border:'1px solid rgba(249,115,22,0.4)', borderRadius:8, padding:'4px 9px', fontSize:10.5, fontWeight:700, color:'#f97316', cursor:'pointer', fontFamily:'inherit' }}>New</button>
               ) : (
                 <button
-                  onClick={() => setOpen(false)}
+                  onClick={closeWidget}
                   style={{
                     background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)',
                     borderRadius: 8, width: 26, height: 26, display: 'flex', alignItems: 'center', justifyContent: 'center',
