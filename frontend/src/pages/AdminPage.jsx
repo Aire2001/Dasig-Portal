@@ -3438,25 +3438,67 @@ function EventsTab({ showToast }) {
         title="Events"
         desc="Create, schedule, and oversee consortium summits, workshops, and seminars"
         action={
-          <div style={{ display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
+          <div style={{ display:'flex', gap:10, alignItems:'center', flexWrap:'wrap' }}>
+            {/* Category Segmented Filter */}
+            <div style={{
+              display: 'flex', background: 'rgba(255,255,255,0.05)',
+              border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: 3, gap: 2
+            }}>
+              {['All','Summit','Workshop','Seminar','Funding'].map(c => {
+                const count = c === 'All' ? items.length : items.filter(e => e.category === c).length;
+                return (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => setCatFilter(c)}
+                    style={{
+                      padding: '5px 10px', borderRadius: 7, border: 'none',
+                      background: catFilter === c ? 'rgba(255,255,255,0.14)' : 'transparent',
+                      color: catFilter === c ? '#fff' : 'rgba(255,255,255,0.55)',
+                      fontWeight: catFilter === c ? 800 : 600,
+                      fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5,
+                      transition: 'all .14s ease'
+                    }}
+                  >
+                    <span>{c}</span>
+                    <span style={{
+                      fontSize: 10, padding: '1px 5px', borderRadius: 99,
+                      background: catFilter === c ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.06)',
+                      color: 'inherit', fontWeight: 800
+                    }}>
+                      {count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Search Input with Clear Button */}
+            <div style={{ position: 'relative', width: 210 }}>
+              <input
+                className="ap-input"
+                placeholder="Search title, venue, host…"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                style={{ paddingRight: search ? 28 : 12 }}
+              />
+              {search && (
+                <button
+                  type="button"
+                  onClick={() => setSearch('')}
+                  style={{
+                    position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)',
+                    background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)',
+                    cursor: 'pointer', fontSize: 13, padding: 0
+                  }}
+                  title="Clear search"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+
             <button onClick={exportEventsCSV} className="ap-btn ap-btn-ghost" style={{ fontSize:12.5, whiteSpace:'nowrap' }}>⬇ Export CSV</button>
-            <input
-              className="ap-input"
-              placeholder="Search title, venue, host…"
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              style={{ width:210 }}
-            />
-            <select
-              className="ap-input"
-              value={catFilter}
-              onChange={e => setCatFilter(e.target.value)}
-              style={{ width:120, cursor:'pointer' }}
-            >
-              {['All','Summit','Workshop','Seminar','Funding'].map(c => (
-                <option key={c} value={c} style={{ background:'#0f172a' }}>{c}</option>
-              ))}
-            </select>
             <button
               onClick={() => { setForm(EV_BLANK); setModal('create'); }}
               className="ap-btn ap-btn-primary"
@@ -3931,25 +3973,67 @@ function NewsTab({ showToast }) {
         title="News & Announcements"
         desc="Publish, edit, and archive consortium bulletins, policy updates, and press releases"
         action={
-          <div style={{ display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
+          <div style={{ display:'flex', gap:10, alignItems:'center', flexWrap:'wrap' }}>
+            {/* Category Segmented Filter */}
+            <div style={{
+              display: 'flex', background: 'rgba(255,255,255,0.05)',
+              border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: 3, gap: 2
+            }}>
+              {['All','Announcement','Policy','Funding','Training','Research'].map(b => {
+                const count = b === 'All' ? items.length : items.filter(n => n.badge === b).length;
+                return (
+                  <button
+                    key={b}
+                    type="button"
+                    onClick={() => setBadgeF(b)}
+                    style={{
+                      padding: '5px 9px', borderRadius: 7, border: 'none',
+                      background: badgeF === b ? 'rgba(255,255,255,0.14)' : 'transparent',
+                      color: badgeF === b ? '#fff' : 'rgba(255,255,255,0.55)',
+                      fontWeight: badgeF === b ? 800 : 600,
+                      fontSize: 11.5, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5,
+                      transition: 'all .14s ease'
+                    }}
+                  >
+                    <span>{b}</span>
+                    <span style={{
+                      fontSize: 10, padding: '1px 5px', borderRadius: 99,
+                      background: badgeF === b ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.06)',
+                      color: 'inherit', fontWeight: 800
+                    }}>
+                      {count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Search Input with Clear Button */}
+            <div style={{ position: 'relative', width: 190 }}>
+              <input
+                className="ap-input"
+                placeholder="Search title, excerpt…"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                style={{ paddingRight: search ? 28 : 12 }}
+              />
+              {search && (
+                <button
+                  type="button"
+                  onClick={() => setSearch('')}
+                  style={{
+                    position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)',
+                    background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)',
+                    cursor: 'pointer', fontSize: 13, padding: 0
+                  }}
+                  title="Clear search"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+
             <button onClick={exportNewsCSV} className="ap-btn ap-btn-ghost" style={{ fontSize:12.5, whiteSpace:'nowrap' }}>⬇ Export CSV</button>
-            <input
-              className="ap-input"
-              placeholder="Search title, excerpt…"
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              style={{ width:180 }}
-            />
-            <select
-              className="ap-input"
-              value={badgeF}
-              onChange={e => setBadgeF(e.target.value)}
-              style={{ width:140, cursor:'pointer' }}
-            >
-              {['All','Announcement','Policy','Funding','Training','Research'].map(b => (
-                <option key={b} value={b} style={{ background:'#0f172a' }}>{b}</option>
-              ))}
-            </select>
             <button
               onClick={() => { setForm(NW_BLANK); setModal('create'); }}
               className="ap-btn ap-btn-primary"
@@ -4250,27 +4334,69 @@ function TrainingTab({ showToast }) {
     <div>
       <PageHeader
         title="Training Programs"
-        desc="Offer, organize, and track consortium certifications and skill programs"
+        desc="Offer, organize, and track consortium certifications and faculty development programs"
         action={
-          <div style={{ display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
+          <div style={{ display:'flex', gap:10, alignItems:'center', flexWrap:'wrap' }}>
+            {/* Category Segmented Filter */}
+            <div style={{
+              display: 'flex', background: 'rgba(255,255,255,0.05)',
+              border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: 3, gap: 2
+            }}>
+              {['All','Technology','Research','Leadership','Governance'].map(c => {
+                const count = c === 'All' ? items.length : items.filter(t => t.category === c).length;
+                return (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => setCatFilter(c)}
+                    style={{
+                      padding: '5px 10px', borderRadius: 7, border: 'none',
+                      background: catFilter === c ? 'rgba(255,255,255,0.14)' : 'transparent',
+                      color: catFilter === c ? '#fff' : 'rgba(255,255,255,0.55)',
+                      fontWeight: catFilter === c ? 800 : 600,
+                      fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5,
+                      transition: 'all .14s ease'
+                    }}
+                  >
+                    <span>{c}</span>
+                    <span style={{
+                      fontSize: 10, padding: '1px 5px', borderRadius: 99,
+                      background: catFilter === c ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.06)',
+                      color: 'inherit', fontWeight: 800
+                    }}>
+                      {count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Search Input with Clear Button */}
+            <div style={{ position: 'relative', width: 200 }}>
+              <input
+                className="ap-input"
+                placeholder="Search program, host…"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                style={{ paddingRight: search ? 28 : 12 }}
+              />
+              {search && (
+                <button
+                  type="button"
+                  onClick={() => setSearch('')}
+                  style={{
+                    position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)',
+                    background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)',
+                    cursor: 'pointer', fontSize: 13, padding: 0
+                  }}
+                  title="Clear search"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+
             <button onClick={exportTrainingCSV} className="ap-btn ap-btn-ghost" style={{ fontSize:12.5, whiteSpace:'nowrap' }}>⬇ Export CSV</button>
-            <input
-              className="ap-input"
-              placeholder="Search program, host…"
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              style={{ width:190 }}
-            />
-            <select
-              className="ap-input"
-              value={catFilter}
-              onChange={e => setCatFilter(e.target.value)}
-              style={{ width:140, cursor:'pointer' }}
-            >
-              {['All','Technology','Research','Leadership','Governance'].map(c => (
-                <option key={c} value={c} style={{ background:'#0f172a' }}>{c}</option>
-              ))}
-            </select>
             <button
               onClick={() => { setForm(TR_BLANK); setModal('create'); }}
               className="ap-btn ap-btn-primary"
@@ -4573,6 +4699,8 @@ function PoliciesTab({ showToast }) {
   const [form, setForm]       = useState(PL_BLANK);
   const [saving, setSaving]   = useState(false);
   const [confirm, setConfirm] = useState(null);
+  const [search, setSearch]   = useState('');
+  const [catF, setCatF]       = useState('All');
 
   const load = useCallback(() => { setLoading(true); api.policies.list({ limit: 1000 }).then(r => setItems(Array.isArray(r) ? r : (r?.data || []))).catch(() => showToast('Failed', false)).finally(() => setLoading(false)); }, []);
   useEffect(load, [load]);
@@ -4597,11 +4725,103 @@ function PoliciesTab({ showToast }) {
     catch (e) { showToast(e.message, false); }
   }
 
+  function exportPoliciesCSV() {
+    if (!items.length) return;
+    const headers = ['Title', 'Category', 'Effective Date', 'Access', 'Status'];
+    const rows = filteredItems.map(p => [
+      p.title || '', p.category || '', String(p.effective_date || '').slice(0, 10), p.members_only ? 'Members Only' : 'Public', p.archived ? 'Archived' : 'Active'
+    ]);
+    const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+    a.download = 'dasig_policies_export.csv';
+    a.click();
+  }
+
+  const filteredItems = items.filter(p => {
+    const matchesCat = catF === 'All' || p.category === catF;
+    const q = search.trim().toLowerCase();
+    const matchesSearch = !q || (
+      (p.title || '').toLowerCase().includes(q) ||
+      (p.category || '').toLowerCase().includes(q) ||
+      (p.content || '').toLowerCase().includes(q)
+    );
+    return matchesCat && matchesSearch;
+  });
+
   const CC = { Membership:'#60a5fa', Governance:'#c4b5fd', Events:'#fcd34d', Research:'#6ee7b7' };
 
   return (
     <div>
-      <PageHeader title="Policies & Guidelines" desc="Manage governance documents" action={<AddBtn onClick={() => { setForm(PL_BLANK); setModal('create'); }} />} />
+      <PageHeader
+        title="Policies & Guidelines"
+        desc="Manage governance charters, by-laws, and consortium compliance frameworks"
+        action={
+          <div style={{ display:'flex', gap:10, alignItems:'center', flexWrap:'wrap' }}>
+            {/* Category Segmented Filter */}
+            <div style={{
+              display: 'flex', background: 'rgba(255,255,255,0.05)',
+              border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: 3, gap: 2
+            }}>
+              {['All','Membership','Governance','Events','Research'].map(c => {
+                const count = c === 'All' ? items.length : items.filter(p => p.category === c).length;
+                return (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => setCatF(c)}
+                    style={{
+                      padding: '5px 10px', borderRadius: 7, border: 'none',
+                      background: catF === c ? 'rgba(255,255,255,0.14)' : 'transparent',
+                      color: catF === c ? '#fff' : 'rgba(255,255,255,0.55)',
+                      fontWeight: catF === c ? 800 : 600,
+                      fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5,
+                      transition: 'all .14s ease'
+                    }}
+                  >
+                    <span>{c}</span>
+                    <span style={{
+                      fontSize: 10, padding: '1px 5px', borderRadius: 99,
+                      background: catF === c ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.06)',
+                      color: 'inherit', fontWeight: 800
+                    }}>
+                      {count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Search Input with Clear Button */}
+            <div style={{ position: 'relative', width: 200 }}>
+              <input
+                className="ap-input"
+                placeholder="Search policy, article…"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                style={{ paddingRight: search ? 28 : 12 }}
+              />
+              {search && (
+                <button
+                  type="button"
+                  onClick={() => setSearch('')}
+                  style={{
+                    position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)',
+                    background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)',
+                    cursor: 'pointer', fontSize: 13, padding: 0
+                  }}
+                  title="Clear search"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+
+            <button onClick={exportPoliciesCSV} className="ap-btn ap-btn-ghost" style={{ fontSize:12.5, whiteSpace:'nowrap' }}>⬇ Export CSV</button>
+            <AddBtn onClick={() => { setForm(PL_BLANK); setModal('create'); }} />
+          </div>
+        }
+      />
       {confirm && <ConfirmModal msg={`Delete "${confirm.title}"?`} onConfirm={() => del(confirm.id, confirm.title)} onCancel={() => setConfirm(null)} />}
       {modal && (
         <Modal title={modal === 'create' ? 'Create Governance Policy' : 'Edit Governance Policy'} onClose={() => setModal(null)} wide>
@@ -4625,7 +4845,7 @@ function PoliciesTab({ showToast }) {
 
       {loading ? <Loading /> : (
         <DataTable head={['Title','Category','Effective','Access','Status','Actions']}>
-          {items.length === 0 ? <EmptyTR cols={6} /> : items.map(p => {
+          {filteredItems.length === 0 ? <EmptyTR cols={6} /> : filteredItems.map(p => {
             const c = CC[p.category] || '#60a5fa';
             return (
               <TR key={p.id}>
@@ -4666,6 +4886,8 @@ function FundingTab({ showToast }) {
   const [form, setForm]       = useState(FU_BLANK);
   const [saving, setSaving]   = useState(false);
   const [confirm, setConfirm] = useState(null);
+  const [search, setSearch]   = useState('');
+  const [statusF, setStatusF] = useState('All');
 
   const load = useCallback(() => { setLoading(true); api.funding.list({ limit: 1000 }).then(r => setItems(Array.isArray(r) ? r : (r?.data || []))).catch(() => showToast('Failed', false)).finally(() => setLoading(false)); }, []);
   useEffect(load, [load]);
@@ -4686,11 +4908,103 @@ function FundingTab({ showToast }) {
     catch (e) { showToast(e.message, false); }
   }
 
+  function exportFundingCSV() {
+    if (!items.length) return;
+    const headers = ['Title', 'Category', 'Provider', 'Amount', 'Deadline', 'Status'];
+    const rows = filteredItems.map(f => [
+      f.title || '', f.category || '', f.provider || '', f.amount || '', String(f.deadline || '').slice(0, 10), f.status || ''
+    ]);
+    const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+    a.download = 'dasig_funding_export.csv';
+    a.click();
+  }
+
+  const filteredItems = items.filter(f => {
+    const matchesStatus = statusF === 'All' || f.status === statusF;
+    const q = search.trim().toLowerCase();
+    const matchesSearch = !q || (
+      (f.title || '').toLowerCase().includes(q) ||
+      (f.provider || '').toLowerCase().includes(q) ||
+      (f.category || '').toLowerCase().includes(q)
+    );
+    return matchesStatus && matchesSearch;
+  });
+
   const SC = { Open:'#6ee7b7', Upcoming:'#93c5fd', Closed:'rgba(255,255,255,0.35)' };
 
   return (
     <div>
-      <PageHeader title="Funding Opportunities" desc="Post grants, scholarships and government funds" action={<AddBtn onClick={() => { setForm(FU_BLANK); setModal('create'); }} />} />
+      <PageHeader
+        title="Funding Opportunities"
+        desc="Post grants, research funding calls, and scholarships"
+        action={
+          <div style={{ display:'flex', gap:10, alignItems:'center', flexWrap:'wrap' }}>
+            {/* Status Segmented Filter */}
+            <div style={{
+              display: 'flex', background: 'rgba(255,255,255,0.05)',
+              border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: 3, gap: 2
+            }}>
+              {['All','Open','Upcoming','Closed'].map(s => {
+                const count = s === 'All' ? items.length : items.filter(f => f.status === s).length;
+                return (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => setStatusF(s)}
+                    style={{
+                      padding: '5px 11px', borderRadius: 7, border: 'none',
+                      background: statusF === s ? 'rgba(255,255,255,0.14)' : 'transparent',
+                      color: statusF === s ? '#fff' : 'rgba(255,255,255,0.55)',
+                      fontWeight: statusF === s ? 800 : 600,
+                      fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
+                      transition: 'all .14s ease'
+                    }}
+                  >
+                    <span>{s}</span>
+                    <span style={{
+                      fontSize: 10, padding: '1px 5px', borderRadius: 99,
+                      background: statusF === s ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.06)',
+                      color: 'inherit', fontWeight: 800
+                    }}>
+                      {count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Search Input with Clear Button */}
+            <div style={{ position: 'relative', width: 200 }}>
+              <input
+                className="ap-input"
+                placeholder="Search grant, agency…"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                style={{ paddingRight: search ? 28 : 12 }}
+              />
+              {search && (
+                <button
+                  type="button"
+                  onClick={() => setSearch('')}
+                  style={{
+                    position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)',
+                    background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)',
+                    cursor: 'pointer', fontSize: 13, padding: 0
+                  }}
+                  title="Clear search"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+
+            <button onClick={exportFundingCSV} className="ap-btn ap-btn-ghost" style={{ fontSize:12.5, whiteSpace:'nowrap' }}>⬇ Export CSV</button>
+            <AddBtn onClick={() => { setForm(FU_BLANK); setModal('create'); }} />
+          </div>
+        }
+      />
       {confirm && <ConfirmModal msg={`Delete "${confirm.title}"?`} onConfirm={() => del(confirm.id, confirm.title)} onCancel={() => setConfirm(null)} />}
       {modal && (
         <Modal title={modal === 'create' ? 'Create Funding Call' : 'Edit Funding Call'} onClose={() => setModal(null)} wide>
@@ -4717,7 +5031,7 @@ function FundingTab({ showToast }) {
 
       {loading ? <Loading /> : (
         <DataTable head={['Title','Provider','Amount','Deadline','Status','Actions']}>
-          {items.length === 0 ? <EmptyTR cols={6} /> : items.map(f => {
+          {filteredItems.length === 0 ? <EmptyTR cols={6} /> : filteredItems.map(f => {
             const sc = SC[f.status] || '#6ee7b7';
             return (
               <TR key={f.id}>
@@ -4756,6 +5070,8 @@ function PartnershipsTab({ showToast }) {
   const [form, setForm]       = useState(PA_BLANK);
   const [saving, setSaving]   = useState(false);
   const [confirm, setConfirm] = useState(null);
+  const [search, setSearch]   = useState('');
+  const [statusF, setStatusF] = useState('All');
 
   const load = useCallback(() => { setLoading(true); api.partnerships.list({ limit: 1000 }).then(r => setItems(Array.isArray(r) ? r : (r?.data || []))).catch(() => showToast('Failed', false)).finally(() => setLoading(false)); }, []);
   useEffect(load, [load]);
@@ -4776,11 +5092,103 @@ function PartnershipsTab({ showToast }) {
     catch (e) { showToast(e.message, false); }
   }
 
+  function exportPartnershipsCSV() {
+    if (!items.length) return;
+    const headers = ['Partner Name', 'Alliance Type', 'Start Date', 'End Date', 'Contact Person', 'Email', 'Status'];
+    const rows = filteredItems.map(p => [
+      p.partner_name || '', p.type || '', String(p.start_date || '').slice(0, 10), String(p.end_date || '').slice(0, 10), p.contact_person || '', p.contact_email || '', p.status || ''
+    ]);
+    const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+    a.download = 'dasig_partnerships_export.csv';
+    a.click();
+  }
+
+  const filteredItems = items.filter(p => {
+    const matchesStatus = statusF === 'All' || p.status === statusF;
+    const q = search.trim().toLowerCase();
+    const matchesSearch = !q || (
+      (p.partner_name || '').toLowerCase().includes(q) ||
+      (p.type || '').toLowerCase().includes(q) ||
+      (p.contact_person || '').toLowerCase().includes(q)
+    );
+    return matchesStatus && matchesSearch;
+  });
+
   const SC = { Active:'#6ee7b7', Pending:'#fcd34d', Expired:'rgba(255,255,255,0.35)' };
 
   return (
     <div>
-      <PageHeader title="Partnerships" desc="Manage strategic consortium partnerships" action={<AddBtn onClick={() => { setForm(PA_BLANK); setModal('create'); }} />} />
+      <PageHeader
+        title="Partnerships"
+        desc="Manage strategic inter-institutional partnerships, MOUs, and research alliances"
+        action={
+          <div style={{ display:'flex', gap:10, alignItems:'center', flexWrap:'wrap' }}>
+            {/* Status Segmented Filter */}
+            <div style={{
+              display: 'flex', background: 'rgba(255,255,255,0.05)',
+              border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: 3, gap: 2
+            }}>
+              {['All','Active','Pending','Expired'].map(s => {
+                const count = s === 'All' ? items.length : items.filter(p => p.status === s).length;
+                return (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => setStatusF(s)}
+                    style={{
+                      padding: '5px 11px', borderRadius: 7, border: 'none',
+                      background: statusF === s ? 'rgba(255,255,255,0.14)' : 'transparent',
+                      color: statusF === s ? '#fff' : 'rgba(255,255,255,0.55)',
+                      fontWeight: statusF === s ? 800 : 600,
+                      fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
+                      transition: 'all .14s ease'
+                    }}
+                  >
+                    <span>{s}</span>
+                    <span style={{
+                      fontSize: 10, padding: '1px 5px', borderRadius: 99,
+                      background: statusF === s ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.06)',
+                      color: 'inherit', fontWeight: 800
+                    }}>
+                      {count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Search Input with Clear Button */}
+            <div style={{ position: 'relative', width: 200 }}>
+              <input
+                className="ap-input"
+                placeholder="Search partner, track…"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                style={{ paddingRight: search ? 28 : 12 }}
+              />
+              {search && (
+                <button
+                  type="button"
+                  onClick={() => setSearch('')}
+                  style={{
+                    position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)',
+                    background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)',
+                    cursor: 'pointer', fontSize: 13, padding: 0
+                  }}
+                  title="Clear search"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+
+            <button onClick={exportPartnershipsCSV} className="ap-btn ap-btn-ghost" style={{ fontSize:12.5, whiteSpace:'nowrap' }}>⬇ Export CSV</button>
+            <AddBtn onClick={() => { setForm(PA_BLANK); setModal('create'); }} />
+          </div>
+        }
+      />
       {confirm && <ConfirmModal msg={`Delete "${confirm.partner_name}"?`} onConfirm={() => del(confirm.id, confirm.partner_name)} onCancel={() => setConfirm(null)} />}
       {modal && (
         <Modal title={modal === 'create' ? 'Create Partnership Record' : 'Edit Partnership Record'} onClose={() => setModal(null)} wide>
@@ -4807,7 +5215,7 @@ function PartnershipsTab({ showToast }) {
 
       {loading ? <Loading /> : (
         <DataTable head={['Partner','Type','Started','Contact','Status','Actions']}>
-          {items.length === 0 ? <EmptyTR cols={6} /> : items.map(p => {
+          {filteredItems.length === 0 ? <EmptyTR cols={6} /> : filteredItems.map(p => {
             const sc = SC[p.status] || '#6ee7b7';
             return (
               <TR key={p.id}>
@@ -4895,8 +5303,16 @@ function ReportsTab({ showToast, onOpenReport }) {
 
   return (
     <div>
-      <PageHeader title="Analytics & Reports" desc="Portal performance and usage insights" action={
-        <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+      <PageHeader title="Analytics & Reports" desc="Regional consortium performance telemetry, AI accuracy, and compliance metrics" action={
+        <div style={{ display:'flex', alignItems:'center', gap:10, flexWrap:'wrap' }}>
+          <button
+            type="button"
+            onClick={() => onOpenReport?.()}
+            className="ap-btn ap-btn-primary"
+            style={{ padding:'8px 16px', fontSize:12.5, fontWeight:800 }}
+          >
+            <span>📄 Accreditation Dossier (CHED/DOST)</span>
+          </button>
           {lastFetched && <span style={{ fontSize:13, color:'rgba(255,255,255,0.5)' }}>Live data · {lastFetched.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit', second:'2-digit' })}</span>}
           <button onClick={() => load(true)} disabled={refreshing} className="ap-btn ap-btn-ghost" style={{ display:'flex', alignItems:'center', gap:6 }}>
             <span style={{ display:'inline-block', animation: refreshing ? 'spin .7s linear infinite' : 'none' }}>↻</span>
