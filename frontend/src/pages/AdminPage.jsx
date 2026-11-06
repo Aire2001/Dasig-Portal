@@ -923,6 +923,41 @@ export default function AdminPage() {
   const [quickJumpOpen, setQuickJumpOpen] = useState(false);
   const [healthModalOpen, setHealthModalOpen] = useState(false);
   const [telemetry, setTelemetry] = useState({ latency: null, dbLatency: null, status: 'checking', dbStatus: 'checking', uptime: null });
+  const [statsSummary, setStatsSummary] = useState(null);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [currentTimePHT, setCurrentTimePHT] = useState('');
+
+  const refreshOverviewStats = useCallback(() => {
+    api.admin.stats().then(setStatsSummary).catch(() => {});
+    api.contact.messages()
+      .then(msgs => {
+        if (Array.isArray(msgs)) setUnreadCount(msgs.filter(m => !m.read).length);
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    refreshOverviewStats();
+    const interval = setInterval(refreshOverviewStats, 30000);
+    return () => clearInterval(interval);
+  }, [refreshOverviewStats]);
+
+  useEffect(() => {
+    const updateClock = () => {
+      try {
+        const str = new Date().toLocaleTimeString('en-US', {
+          timeZone: 'Asia/Manila',
+          hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true
+        });
+        setCurrentTimePHT(str + ' PHT');
+      } catch {
+        setCurrentTimePHT(new Date().toLocaleTimeString() + ' PHT');
+      }
+    };
+    updateClock();
+    const timer = setInterval(updateClock, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -988,10 +1023,10 @@ export default function AdminPage() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  function showToast(msg, ok = true, sub = '') {
+  const showToast = useCallback((msg, ok = true, sub = '') => {
     setToast({ msg, ok, sub });
     setTimeout(() => setToast(null), 3000);
-  }
+  }, []);
 
   const initials = (user?.name || 'A').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
 
@@ -1198,15 +1233,13 @@ function DashboardTab({ showToast, setTab, telemetry = {}, refreshOverviewStats 
   const [renewals, setRenewals] = useState([]);
   const [events, setEvents]     = useState([]);
 
-  const loadData = useCallback(() => {
-    api.admin.stats().then(s => { setStats(s); refreshOverviewStats?.(); }).catch(() => showToast('Failed to load stats', false));
-    api.admin.renewals().then(r => setRenewals(r.data || [])).catch(() => {});
-    api.events.list({ limit: 6 }).then(r => setEvents(Array.isArray(r) ? r : (r?.data || []))).catch(() => {});
-  }, [showToast, refreshOverviewStats]);
-
   useEffect(() => {
-    loadData();
-  }, [loadData]);
+    let active = true;
+    api.admin.stats().then(s => { if (active) setStats(s); }).catch(() => showToast('Failed to load stats', false));
+    api.admin.renewals().then(r => { if (active) setRenewals(r.data || []); }).catch(() => {});
+    api.events.list({ limit: 6 }).then(r => { if (active) setEvents(Array.isArray(r) ? r : (r?.data || [])); }).catch(() => {});
+    return () => { active = false; };
+  }, [showToast]);
 
   function exportSystemOverviewCSV() {
     if (!stats) return;
