@@ -1771,7 +1771,7 @@ export default function AdminPage() {
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   DASHBOARD (Executive Command Center)
+   DASHBOARD (Executive Operations & Intelligence Cockpit)
 ═══════════════════════════════════════════════════════════════════ */
 function DashboardTab({ showToast, setTab, telemetry = {}, refreshOverviewStats, onOpenReport, onOpenBroadcast, onOpenHealth }) {
   const [stats, setStats]       = useState(null);
@@ -1786,43 +1786,17 @@ function DashboardTab({ showToast, setTab, telemetry = {}, refreshOverviewStats,
     return () => { active = false; };
   }, [showToast]);
 
-  function exportSystemOverviewCSV() {
-    if (!stats) return;
-    const rows = [
-      ['METRIC', 'VALUE', 'STATUS'],
-      ['Total Registered Users', stats.users.total, `${stats.users.member} Verified Members`],
-      ['Pending Applications', stats.applications.pending, stats.applications.pending > 0 ? 'Action Required' : 'All Clear'],
-      ['Approved Applications', stats.applications.approved, 'Approved'],
-      ['Consortium Events', stats.events.total, `${stats.events.totalEnrolled} / ${stats.events.totalCapacity} Seats Registered`],
-      ['Faculty Training Programs', stats.trainings.total, `${stats.trainings.totalEnrolled} Faculty Enrolled`],
-      ['Public Media Releases', stats.news.total, 'Published Archive'],
-      ['Active Partnerships', stats.partnerships.active, `${stats.partnerships.total} Total MOUs`],
-      ['Open Funding Calls', stats.funding.open, 'DOST / CHED Calls'],
-      ['Governance Policies', stats.policies.active, `${stats.policies.archived} Archived`],
-      ['System Health', telemetry.status === 'ok' ? 'Online' : 'Checking', `${telemetry.latency ?? 0}ms RTT`],
-    ];
-    const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `dasig_consortium_audit_${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-    showToast('Consortium overview audit CSV exported successfully!', true);
-  }
-
   if (!stats) return <Loading />;
 
   const CARDS = [
-    { label:'Total Users',        value:stats.users.total,          sub:`${stats.users.member} verified members`, icon:'👥', color:'#3b82f6', tab:'users',        tag:'Accounts' },
-    { label:'Pending Apps',       value:stats.applications.pending, sub:stats.applications.pending > 0 ? 'Action required' : 'All reviewed', icon:'⏳', color:'#f59e0b', tab:'applications', tag: stats.applications.pending > 0 ? 'Urgent' : 'Clear' },
-    { label:'Consortium Events',  value:stats.events.total,         sub:`${stats.events.totalEnrolled} participants`, icon:'📅', color:'#a855f7', tab:'events',        tag:'Live Summits' },
-    { label:'Training Courses',   value:stats.trainings.total,      sub:`${stats.trainings.totalEnrolled} faculty enrolled`, icon:'🎓', color:'#f43f5e', tab:'training',     tag:'Capacity Dev' },
-    { label:'News & Press',       value:stats.news.total,           sub:'published articles',                 icon:'📰', color:'#14b8a6', tab:'news',          tag:'Public Archive' },
-    { label:'Partnerships',       value:stats.partnerships.active,  sub:`${stats.partnerships.total} total MOUs`,   icon:'🤝', color:'#8b5cf6', tab:'partnerships',  tag:'Active Alliances' },
-    { label:'Funding & Grants',   value:stats.funding.open,         sub:`${stats.funding.total} listed calls`,      icon:'💰', color:'#10b981', tab:'funding',       tag:'DOST/CHED Calls' },
-    { label:'Governance Policies',value:stats.policies.active,      sub:`${stats.policies.archived} archived`,      icon:'📜', color:'#0ea5e9', tab:'policies',      tag:'Active Charters' },
+    { label:'Registered Users',      value:stats.users.total,          sub:`${stats.users.member} Verified Members`, icon:'👥', color:'#3b82f6', tab:'users',        tag:'Accounts' },
+    { label:'Pending Approvals',     value:stats.applications.pending, sub:stats.applications.pending > 0 ? 'Requires Administrative Review' : 'All Rosters Cleared', icon:'⏳', color:'#f59e0b', tab:'applications', tag: stats.applications.pending > 0 ? 'Urgent' : 'Clear' },
+    { label:'Consortium Summits',    value:stats.events.total,         sub:`${stats.events.totalEnrolled} Confirmed RSVPs`, icon:'📅', color:'#a855f7', tab:'events',        tag:'Live Summits' },
+    { label:'Capacity Programs',     value:stats.trainings.total,      sub:`${stats.trainings.totalEnrolled} Faculty Enrolled`, icon:'🎓', color:'#f43f5e', tab:'training',     tag:'Faculty Dev' },
+    { label:'News & Dispatches',     value:stats.news.total,           sub:'Published Media Archive',            icon:'📰', color:'#14b8a6', tab:'news',          tag:'Press Releases' },
+    { label:'Active Alliances',      value:stats.partnerships.active,  sub:`${stats.partnerships.total} Total Regional MOUs`,   icon:'🤝', color:'#8b5cf6', tab:'partnerships',  tag:'HEI Network' },
+    { label:'R&D Funding Calls',     value:stats.funding.open,         sub:`${stats.funding.total} Available Grants`,      icon:'💰', color:'#10b981', tab:'funding',       tag:'DOST/CHED Calls' },
+    { label:'Governance Charters',   value:stats.policies.active,      sub:`${stats.policies.archived} Archived Bylaws`,       icon:'📜', color:'#0ea5e9', tab:'policies',      tag:'Active Policies' },
   ];
 
   const evFill    = stats.events.totalCapacity   > 0 ? Math.round(stats.events.totalEnrolled   / stats.events.totalCapacity   * 100) : 0;
@@ -1830,167 +1804,228 @@ function DashboardTab({ showToast, setTab, telemetry = {}, refreshOverviewStats,
   const memberPct = stats.users.total            > 0 ? Math.round(stats.users.member            / stats.users.total            * 100) : 0;
 
   const roleChartData = [
-    { name: 'Members', value: stats.users.member, color: '#34d399' },
-    { name: 'Guests',  value: stats.users.guest,  color: '#60a5fa' },
-    { name: 'Admins',  value: stats.users.admin,  color: '#f87171' },
+    { name: 'Verified Members', value: stats.users.member, color: '#34d399' },
+    { name: 'Guest Scholars',   value: stats.users.guest,  color: '#60a5fa' },
+    { name: 'Administrators',   value: stats.users.admin,  color: '#f87171' },
   ].filter(d => d.value > 0);
 
   return (
-    <div style={{ maxWidth: 1280, margin: '0 auto' }}>
-      {/* ── Executive Header Banner ── */}
+    <div style={{ maxWidth: 1280, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 20 }}>
+      {/* ── Hero Executive Command Deck ── */}
       <div style={{
+        background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.88) 0%, rgba(13, 27, 62, 0.8) 100%)',
+        border: '1px solid rgba(255, 255, 255, 0.09)',
+        borderRadius: 18, padding: '22px 26px',
+        boxShadow: '0 8px 30px rgba(0, 0, 0, 0.35)',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        flexWrap: 'wrap', gap: 16, marginBottom: 24,
-        background: 'linear-gradient(135deg,rgba(15,23,42,0.85),rgba(20,30,55,0.75))',
-        border: '1px solid rgba(255,255,255,0.1)',
-        borderRadius: 20, padding: '20px 24px',
-        boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+        flexWrap: 'wrap', gap: 16, position: 'relative', overflow: 'hidden'
       }}>
+        {/* Subtle accent glow line at top */}
+        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2.5, background: 'linear-gradient(90deg, #f97316 0%, #e11d48 50%, #3b82f6 100%)' }} />
+
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-            <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#10b981', boxShadow: '0 0 10px #10b981', display: 'inline-block' }} />
-            <span style={{ fontSize: 11.5, fontWeight: 800, color: '#34d399', textTransform: 'uppercase', letterSpacing: '1px' }}>
-              Region VII Central Node · Live PostgreSQL Sync
+            <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#10b981', boxShadow: '0 0 10px #10b981', display: 'inline-block' }} />
+            <span style={{ fontSize: 11, fontWeight: 800, color: '#34d399', textTransform: 'uppercase', letterSpacing: '1.2px' }}>
+              Region VII Central Node · Live PostgreSQL Sync · CIT-U Host
             </span>
           </div>
-          <h1 style={{ color: '#fff', fontSize: 28, fontWeight: 900, letterSpacing: '-0.8px', margin: 0 }}>
+          <h1 style={{ color: '#fff', fontSize: 26, fontWeight: 800, letterSpacing: '-0.5px', margin: 0 }}>
             Executive Command Dashboard
           </h1>
+          <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12.5, marginTop: 4 }}>
+            Central Visayas Academic Consortium Operations · 7 Institutional Nodes Connected
+          </div>
         </div>
 
-        {/* Quick Action Buttons */}
-        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+        {/* Quick Action Button Group */}
+        <div style={{ display: 'flex', gap: 9, flexWrap: 'wrap', alignItems: 'center' }}>
           <button
-            onClick={exportSystemOverviewCSV}
+            type="button"
+            onClick={() => onOpenReport?.()}
             className="ap-btn ap-btn-ghost"
-            style={{ padding: '10px 16px', fontSize: 13, fontWeight: 700, borderRadius: 10, display: 'flex', alignItems: 'center', gap: 6 }}
-            title="Download complete administrative audit CSV"
+            style={{ padding: '9px 15px', fontSize: 12.5, fontWeight: 700, borderRadius: 10, display: 'flex', alignItems: 'center', gap: 6 }}
+            title="Generate official CHED / DOST Regional Accreditation Dossier"
           >
-            <span>📥</span>
-            <span>Export Audit CSV</span>
+            <span>📄</span>
+            <span>Accreditation Dossier</span>
           </button>
           <button
+            type="button"
+            onClick={() => onOpenBroadcast?.()}
+            className="ap-btn ap-btn-amber"
+            style={{ padding: '9px 15px', fontSize: 12.5, fontWeight: 800, borderRadius: 10, display: 'flex', alignItems: 'center', gap: 6 }}
+            title="Transmit emergency broadcast to Region VII HEIs"
+          >
+            <span>📢</span>
+            <span>Broadcast</span>
+          </button>
+          <button
+            type="button"
             onClick={() => setTab('events')}
             className="ap-btn ap-btn-primary"
-            style={{ padding: '10px 18px', fontSize: 13, fontWeight: 800, borderRadius: 10 }}
+            style={{ padding: '9px 16px', fontSize: 12.5, fontWeight: 800, borderRadius: 10, display: 'flex', alignItems: 'center', gap: 6 }}
           >
-            + New Event
+            <span>+</span>
+            <span>New Event</span>
           </button>
           <button
-            onClick={() => setTab('news')}
-            className="ap-btn ap-btn-ghost"
-            style={{ padding: '10px 18px', fontSize: 13, fontWeight: 700, borderRadius: 10 }}
-          >
-            + News Release
-          </button>
-          <button
+            type="button"
             onClick={() => setTab('applications')}
             className="ap-btn"
             style={{
-              padding: '10px 18px', fontSize: 13, fontWeight: 800, borderRadius: 10,
-              background: stats.applications.pending > 0 ? 'rgba(245,158,11,0.22)' : 'rgba(255,255,255,0.06)',
+              padding: '9px 16px', fontSize: 12.5, fontWeight: 800, borderRadius: 10,
+              background: stats.applications.pending > 0 ? 'rgba(245,158,11,0.2)' : 'rgba(255,255,255,0.06)',
               color: stats.applications.pending > 0 ? '#fbbf24' : 'rgba(255,255,255,0.85)',
               border: `1px solid ${stats.applications.pending > 0 ? 'rgba(245,158,11,0.45)' : 'rgba(255,255,255,0.12)'}`,
-              boxShadow: stats.applications.pending > 0 ? '0 0 14px rgba(245,158,11,0.2)' : 'none'
+              boxShadow: stats.applications.pending > 0 ? '0 0 14px rgba(245,158,11,0.22)' : 'none',
+              display: 'flex', alignItems: 'center', gap: 6
             }}
           >
-            📋 Review Apps ({stats.applications.pending})
+            <span>📋</span>
+            <span>Review Apps ({stats.applications.pending})</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => downloadSystemAuditCSV(stats, telemetry, showToast)}
+            className="ap-btn ap-btn-ghost"
+            style={{ padding: '9px 12px', fontSize: 12.5, fontWeight: 700, borderRadius: 10, display: 'flex', alignItems: 'center', gap: 5 }}
+            title="Download complete administrative audit CSV"
+          >
+            <span>📥</span>
+            <span>CSV</span>
           </button>
         </div>
       </div>
 
-      {/* ── 8 KPI Bento Cards (4x2 Balanced Grid) ── */}
-      <div className="ap-bento-grid">
-        {CARDS.map((c) => (
-          <div
-            key={c.label}
-            onClick={() => setTab(c.tab)}
-            style={{
-              background: 'rgba(11, 19, 38, 0.85)',
-              backdropFilter: 'blur(14px)',
-              border: '1px solid rgba(255,255,255,0.08)',
-              borderRadius: 18, padding: '18px 20px', cursor: 'pointer',
-              position: 'relative', overflow: 'hidden',
-              display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-              transition: 'all .2s cubic-bezier(0.16, 1, 0.3, 1)',
-              boxShadow: '0 8px 20px rgba(0,0,0,0.25)',
-            }}
-            onMouseEnter={e => {
-              e.currentTarget.style.transform = 'translateY(-4px)';
-              e.currentTarget.style.boxShadow = `0 16px 36px rgba(0,0,0,0.5), 0 0 20px ${c.color}25`;
-              e.currentTarget.style.borderColor = `${c.color}70`;
-            }}
-            onMouseLeave={e => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 8px 20px rgba(0,0,0,0.25)';
-              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)';
-            }}
-          >
-            {/* Top accent gradient line */}
-            <div style={{
-              position: 'absolute', top: 0, left: 0, right: 0, height: 3,
-              background: `linear-gradient(90deg, transparent, ${c.color}, transparent)`
-            }} />
-
-            <div>
-              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom: 12 }}>
-                <div style={{
-                  width: 38, height: 38, borderRadius: 11,
-                  background: `${c.color}18`, border: `1px solid ${c.color}35`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 18, flexShrink: 0
-                }}>
-                  {c.icon}
-                </div>
-                <span style={{
-                  fontSize: 10.5, fontWeight: 800, color: c.color,
-                  background: `${c.color}14`, border: `1px solid ${c.color}30`,
-                  borderRadius: 6, padding: '2px 8px', letterSpacing: '.4px'
-                }}>
-                  {c.tag}
-                </span>
-              </div>
-
-              <div style={{ fontSize: 28, fontWeight: 900, color: '#fff', letterSpacing: '-0.8px', marginBottom: 4 }}>
-                {c.value}
-              </div>
-              <div style={{ fontSize: 13.5, fontWeight: 800, color: 'rgba(255,255,255,0.9)', marginBottom: 2 }}>
-                {c.label}
-              </div>
+      {/* ── Quick Telemetry & Governance Ticker Strip ── */}
+      <div style={{
+        display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 12
+      }}>
+        {[
+          { icon: '🏛️', label: 'Central Host Node', val: 'Cebu Institute of Technology - University', sub: 'Region VII Engineering & Computing Hub', color: '#fb923c' },
+          { icon: '🛡️', label: 'Statutory Data Privacy', val: 'Republic Act 10173 Certified', sub: 'Zero Plaintext PII · Strict TLS 1.3 Transport', color: '#34d399' },
+          { icon: '⚡', label: 'PostgreSQL Sync Engine', val: telemetry.latency !== null ? `${telemetry.latency}ms Live Round-Trip` : 'Node VII Active', sub: 'Multi-Region Continuous WAL-G Snapshots', color: '#60a5fa' },
+        ].map(t => (
+          <div key={t.label} style={{
+            background: 'rgba(13, 20, 38, 0.72)',
+            border: '1px solid rgba(255, 255, 255, 0.07)',
+            borderRadius: 14, padding: '12px 16px',
+            display: 'flex', alignItems: 'center', gap: 12,
+            backdropFilter: 'blur(14px)'
+          }}>
+            <div style={{ width: 34, height: 34, borderRadius: 9, background: `${t.color}15`, border: `1px solid ${t.color}35`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}>
+              {t.icon}
             </div>
-
-            <div style={{
-              fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: 600,
-              borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: 10, marginTop: 10
-            }}>
-              {c.sub}
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <div style={{ fontSize: 10.5, fontWeight: 800, color: t.color, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{t.label}</div>
+              <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.val}</div>
+              <div style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.45)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.sub}</div>
             </div>
           </div>
         ))}
       </div>
 
-      {/* ── Visual Analytics Grid (Donut & Fill Rate Progress) ── */}
-      <div className="ap-analytics-grid">
+      {/* ── 8 KPI Bento Cards (Clean Modern 4x2 Grid) ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 14 }}>
+        {CARDS.map((c) => (
+          <div
+            key={c.label}
+            onClick={() => setTab(c.tab)}
+            style={{
+              background: 'linear-gradient(180deg, rgba(16, 24, 46, 0.85) 0%, rgba(10, 16, 32, 0.9) 100%)',
+              backdropFilter: 'blur(16px)',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              borderRadius: 16, padding: '18px 20px', cursor: 'pointer',
+              position: 'relative', overflow: 'hidden',
+              display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+              minHeight: 146,
+              transition: 'all 0.22s cubic-bezier(0.16, 1, 0.3, 1)',
+              boxShadow: '0 4px 18px rgba(0, 0, 0, 0.25)',
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.transform = 'translateY(-3px)';
+              e.currentTarget.style.boxShadow = `0 12px 28px -4px rgba(0,0,0,0.5), 0 0 20px ${c.color}25`;
+              e.currentTarget.style.borderColor = `${c.color}65`;
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 4px 18px rgba(0, 0, 0, 0.25)';
+              e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.08)';
+            }}
+          >
+            {/* Top thin accent line */}
+            <div style={{
+              position: 'absolute', top: 0, left: 0, right: 0, height: 2.5,
+              background: `linear-gradient(90deg, transparent, ${c.color}, transparent)`
+            }} />
+
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <div style={{
+                  width: 36, height: 36, borderRadius: 10,
+                  background: `${c.color}15`, border: `1px solid ${c.color}35`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 17, flexShrink: 0
+                }}>
+                  {c.icon}
+                </div>
+                <span style={{
+                  fontSize: 10, fontWeight: 800, color: c.color,
+                  background: `${c.color}12`, border: `1px solid ${c.color}30`,
+                  borderRadius: 6, padding: '2px 8px', letterSpacing: '0.5px', textTransform: 'uppercase'
+                }}>
+                  {c.tag}
+                </span>
+              </div>
+
+              <div style={{ fontSize: 32, fontWeight: 800, color: '#ffffff', letterSpacing: '-1px', lineHeight: 1, marginBottom: 6 }}>
+                {c.value}
+              </div>
+              <div style={{ fontSize: 13.5, fontWeight: 700, color: 'rgba(255,255,255,0.92)' }}>
+                {c.label}
+              </div>
+            </div>
+
+            <div style={{
+              fontSize: 11.5, color: 'rgba(255,255,255,0.48)', fontWeight: 500,
+              borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 10, marginTop: 12,
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between'
+            }}>
+              <span>{c.sub}</span>
+              <span style={{ fontSize: 10.5, color: c.color, fontWeight: 700 }}>View →</span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* ── Visual Analytics & Progress Gauges ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 16 }}>
         {/* User Distribution Donut */}
         <div style={{
-          background: 'rgba(11, 19, 38, 0.85)', border: '1px solid rgba(255,255,255,0.08)',
-          borderRadius: 20, padding: '22px', backdropFilter: 'blur(14px)',
-          boxShadow: '0 8px 24px rgba(0,0,0,0.3)'
+          background: 'rgba(13, 20, 38, 0.78)', border: '1px solid rgba(255,255,255,0.08)',
+          borderRadius: 18, padding: '22px', backdropFilter: 'blur(16px)',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.25)'
         }}>
-          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom: 16 }}>
-            <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', textTransform: 'uppercase', letterSpacing: '.6px' }}>
-              👥 User &amp; Institutional Role Mix
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom: 18 }}>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', textTransform: 'uppercase', letterSpacing: '.6px' }}>
+                👥 Consortium User Distribution
+              </div>
+              <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.45)', marginTop: 2 }}>
+                Verified academic members vs. registered accounts
+              </div>
             </div>
             <span style={{ fontSize: 11, color: '#60a5fa', background: 'rgba(96,165,250,0.12)', border: '1px solid rgba(96,165,250,0.25)', borderRadius: 6, padding: '2px 8px', fontWeight: 800 }}>
-              {stats.users.total} Total Accounts
+              {stats.users.total} Total
             </span>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '160px 1fr', alignItems: 'center', gap: 20 }}>
-            <div style={{ width: 160, height: 160, position: 'relative' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '150px 1fr', alignItems: 'center', gap: 20 }}>
+            <div style={{ width: 150, height: 150, position: 'relative' }}>
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie data={roleChartData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={46} outerRadius={72} paddingAngle={4}>
+                  <Pie data={roleChartData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={44} outerRadius={68} paddingAngle={4}>
                     {roleChartData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
@@ -2002,16 +2037,16 @@ function DashboardTab({ showToast, setTab, telemetry = {}, refreshOverviewStats,
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {roleChartData.map(r => (
                 <div key={r.name} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <div style={{ width: 10, height: 10, borderRadius: '50%', background: r.color, flexShrink: 0 }} />
+                  <div style={{ width: 9, height: 9, borderRadius: '50%', background: r.color, flexShrink: 0 }} />
                   <div style={{ flex: 1 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                      <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.85)', fontWeight: 700 }}>{r.name}</span>
-                      <span style={{ fontSize: 13, fontWeight: 800, color: '#fff' }}>
-                        {r.value} <span style={{ color: 'rgba(255,255,255,0.4)', fontWeight: 500, fontSize: 11.5 }}>({Math.round((r.value / stats.users.total) * 100)}%)</span>
+                      <span style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.85)', fontWeight: 700 }}>{r.name}</span>
+                      <span style={{ fontSize: 12.5, fontWeight: 800, color: '#fff' }}>
+                        {r.value} <span style={{ color: 'rgba(255,255,255,0.4)', fontWeight: 500, fontSize: 11 }}>({Math.round((r.value / stats.users.total) * 100)}%)</span>
                       </span>
                     </div>
-                    <div style={{ height: 6, background: 'rgba(255,255,255,0.08)', borderRadius: 4, overflow: 'hidden' }}>
-                      <div style={{ height: '100%', width: `${Math.round((r.value / stats.users.total) * 100)}%`, background: r.color, borderRadius: 4 }} />
+                    <div style={{ height: 5, background: 'rgba(255,255,255,0.08)', borderRadius: 3, overflow: 'hidden' }}>
+                      <div style={{ height: '100%', width: `${Math.round((r.value / stats.users.total) * 100)}%`, background: r.color, borderRadius: 3 }} />
                     </div>
                   </div>
                 </div>
@@ -2020,16 +2055,21 @@ function DashboardTab({ showToast, setTab, telemetry = {}, refreshOverviewStats,
           </div>
         </div>
 
-        {/* Progress Fill Rates */}
+        {/* Progress Capacity Gauges */}
         <div style={{
-          background: 'rgba(11, 19, 38, 0.85)', border: '1px solid rgba(255,255,255,0.08)',
-          borderRadius: 20, padding: '22px', backdropFilter: 'blur(14px)',
+          background: 'rgba(13, 20, 38, 0.78)', border: '1px solid rgba(255,255,255,0.08)',
+          borderRadius: 18, padding: '22px', backdropFilter: 'blur(16px)',
           display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-          boxShadow: '0 8px 24px rgba(0,0,0,0.3)'
+          boxShadow: '0 4px 20px rgba(0,0,0,0.25)'
         }}>
-          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom: 16 }}>
-            <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', textTransform: 'uppercase', letterSpacing: '.6px' }}>
-              📊 Consortium Capacity &amp; Engagement
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom: 18 }}>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', textTransform: 'uppercase', letterSpacing: '.6px' }}>
+                📊 Capacity &amp; Engagement Fill Rates
+              </div>
+              <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.45)', marginTop: 2 }}>
+                Real-time regional seat &amp; verification utilization
+              </div>
             </div>
             <span style={{ fontSize: 11, color: '#34d399', background: 'rgba(52,211,153,0.12)', border: '1px solid rgba(52,211,153,0.25)', borderRadius: 6, padding: '2px 8px', fontWeight: 800 }}>
               Live Telemetry
@@ -2039,18 +2079,18 @@ function DashboardTab({ showToast, setTab, telemetry = {}, refreshOverviewStats,
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             {[
               { label:'Event Seat Utilization',    pct:evFill,    color:'#a855f7', count: `${stats.events.totalEnrolled} / ${stats.events.totalCapacity} seats` },
-              { label:'Training Capacity Enrolled',pct:trFill,    color:'#f43f5e', count: `${stats.trainings.totalEnrolled} / ${stats.trainings.totalCapacity || 80} faculty` },
+              { label:'Training Faculty Enrolled', pct:trFill,    color:'#f43f5e', count: `${stats.trainings.totalEnrolled} / ${stats.trainings.totalCapacity || 80} faculty` },
               { label:'Member Verification Ratio', pct:memberPct, color:'#3b82f6', count: `${stats.users.member} of ${stats.users.total} accounts` },
             ].map(b => (
-              <div key={b.label} style={{ background:'rgba(255,255,255,0.035)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:14, padding:'12px 16px' }}>
-                <div style={{ display:'flex', justifyContent:'space-between', marginBottom:7 }}>
-                  <span style={{ fontSize:12.5, color:'rgba(255,255,255,0.8)', fontWeight:700 }}>{b.label}</span>
-                  <span style={{ fontSize:13, fontWeight:900, color:'#fff' }}>
-                    {Math.min(b.pct, 100)}% <span style={{ color:'rgba(255,255,255,0.45)', fontWeight:500, fontSize:11.5 }}>({b.count})</span>
+              <div key={b.label} style={{ background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:12, padding:'11px 14px' }}>
+                <div style={{ display:'flex', justifyContent:'space-between', marginBottom:6 }}>
+                  <span style={{ fontSize:12, color:'rgba(255,255,255,0.85)', fontWeight:700 }}>{b.label}</span>
+                  <span style={{ fontSize:12.5, fontWeight:800, color:'#fff' }}>
+                    {Math.min(b.pct, 100)}% <span style={{ color:'rgba(255,255,255,0.4)', fontWeight:500, fontSize:11 }}>({b.count})</span>
                   </span>
                 </div>
-                <div style={{ height:7, background:'rgba(255,255,255,0.08)', borderRadius:4, overflow:'hidden' }}>
-                  <div style={{ height:'100%', width:`${Math.min(b.pct, 100)}%`, background:`linear-gradient(90deg,${b.color},${b.color}cc)`, borderRadius:4, transition:'width .8s ease' }} />
+                <div style={{ height:6, background:'rgba(255,255,255,0.08)', borderRadius:3, overflow:'hidden' }}>
+                  <div style={{ height:'100%', width:`${Math.min(b.pct, 100)}%`, background:`linear-gradient(90deg,${b.color},${b.color}cc)`, borderRadius:3, transition:'width .8s ease' }} />
                 </div>
               </div>
             ))}
@@ -2058,172 +2098,19 @@ function DashboardTab({ showToast, setTab, telemetry = {}, refreshOverviewStats,
         </div>
       </div>
 
-      {/* ── 🏛️ 7 Region VII Consortium Partner HEIs & Agencies Roster ── */}
-      <div style={{
-        background: 'rgba(11, 19, 38, 0.85)', border: '1px solid rgba(255,255,255,0.08)',
-        borderRadius: 20, padding: '22px', backdropFilter: 'blur(14px)',
-        marginBottom: 24, boxShadow: '0 8px 24px rgba(0,0,0,0.3)'
-      }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 10 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontSize: 18 }}>🏛️</span>
-            <div>
-              <div style={{ color: '#fff', fontSize: 14, fontWeight: 900, letterSpacing: '-0.2px' }}>
-                Region VII Academic Consortium Active Nodes
-              </div>
-              <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11.5 }}>
-                Central Visayas Higher Education &amp; Research Alliances
-              </div>
-            </div>
-          </div>
-          <span style={{ fontSize: 11, color: '#fb923c', background: 'rgba(249,115,22,0.12)', border: '1px solid rgba(249,115,22,0.3)', borderRadius: 6, padding: '3px 10px', fontWeight: 800 }}>
-            7 Nodes Operational
-          </span>
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 12 }}>
-          {[
-            { name: 'CIT-University', role: 'Central Host Node · Engineering & Computing Hub', icon: '🦁', color: '#fb923c', status: 'Host Active' },
-            { name: 'UP Cebu', role: 'Computing, Design & Environmental Innovation Lead', icon: '🎓', color: '#ef4444', status: 'Connected' },
-            { name: 'University of San Carlos', role: 'Science, Engineering & Research Excellence', icon: '🦅', color: '#10b981', status: 'Connected' },
-            { name: 'DOST Region VII', role: 'Science, Tech & R&D Research Grants', icon: '🔬', color: '#34d399', status: 'Connected' },
-            { name: 'DICT Region VII', role: 'Digital Transformation & ICT Bootcamps', icon: '💻', color: '#60a5fa', status: 'Connected' },
-            { name: 'DTI Region VII', role: 'Trade, MSME Incubation & Commercialization', icon: '💼', color: '#f87171', status: 'Connected' },
-            { name: 'DepEd Region VII', role: 'Basic Education & STEM EdTech Pipeline', icon: '📚', color: '#38bdf8', status: 'Connected' },
-          ].map(inst => (
-            <div
-              key={inst.name}
-              style={{
-                background: 'rgba(255,255,255,0.03)',
-                border: '1px solid rgba(255,255,255,0.06)',
-                borderRadius: 14, padding: '12px 14px',
-                display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-                transition: 'all .16s ease',
-              }}
-              onMouseEnter={e => {
-                e.currentTarget.style.background = 'rgba(255,255,255,0.06)';
-                e.currentTarget.style.borderColor = 'rgba(249,115,22,0.3)';
-              }}
-              onMouseLeave={e => {
-                e.currentTarget.style.background = 'rgba(255,255,255,0.03)';
-                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)';
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-                <span style={{ fontSize: 18 }}>{inst.icon}</span>
-                <span style={{
-                  fontSize: 10, fontWeight: 800, color: inst.color,
-                  background: `${inst.color}18`, border: `1px solid ${inst.color}35`,
-                  borderRadius: 5, padding: '1px 6px'
-                }}>
-                  {inst.status}
-                </span>
-              </div>
-              <div style={{ color: '#fff', fontSize: 13, fontWeight: 800, marginBottom: 2 }}>
-                {inst.name}
-              </div>
-              <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11, lineHeight: 1.4 }}>
-                {inst.role}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* ── System Status Bar ── */}
-      <div style={{
-        background: 'rgba(11, 19, 38, 0.65)', border: '1px solid rgba(255,255,255,0.07)',
-        borderRadius: 14, padding: '12px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        flexWrap: 'wrap', gap: 12, fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 24
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
-          <span style={{ color: telemetry.status === 'ok' ? '#34d399' : '#f87171', fontWeight: 800 }}>⚡ API Latency: {telemetry.latency !== null ? `${telemetry.latency}ms (Live)` : 'Connecting...'}</span>
-          <span>·</span>
-          <span style={{ color: '#fb923c', fontWeight: 800 }}>🦅 Haribon AI: 100% Accuracy (Online)</span>
-          <span>·</span>
-          <span style={{ color: '#60a5fa', fontWeight: 800 }}>🔒 Session Security: TLS 1.3 · RFC 6749</span>
-        </div>
-        <div style={{ fontWeight: 700, color: 'rgba(255,255,255,0.4)' }}>
-          DASIG Regional Academic Consortium · Region VII
-        </div>
-      </div>
-
-      {/* ── ⚡ Real-Time Consortium System Activity & Audit Stream ── */}
-      <div className="ap-activity-stream">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 10 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontSize: 18 }}>⚡</span>
-            <div>
-              <div style={{ color: '#fff', fontSize: 14, fontWeight: 900, letterSpacing: '-0.2px' }}>
-                Consortium Activity &amp; Audit Log
-              </div>
-              <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11.5 }}>
-                Real-time governance trail across Region VII Central Node
-              </div>
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <span style={{
-              fontSize: 10.5, fontWeight: 800, color: '#34d399',
-              background: 'rgba(52,211,153,0.12)', border: '1px solid rgba(52,211,153,0.3)',
-              borderRadius: 6, padding: '3px 8px'
-            }}>
-              Sync Active
-            </span>
-          </div>
-        </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {[
-            { icon: '👥', title: 'Membership & User Directory', desc: `${stats.users.total} registered accounts (${stats.users.member} verified HEI members) across CIT-U, UP Cebu, and USC.`, time: 'Live Active', tag: 'Verified' },
-            { icon: '📋', title: 'Application Pipeline', desc: stats.applications.pending > 0 ? `${stats.applications.pending} institutional membership application(s) awaiting administrative review.` : 'All institutional membership applications reviewed and verified.', time: stats.applications.pending > 0 ? 'Action Required' : 'Up to Date', tag: stats.applications.pending > 0 ? 'Urgent' : 'Clear' },
-            { icon: '📅', title: 'Programs & Summit Registrations', desc: `${stats.events.totalEnrolled} total RSVPs confirmed across ${stats.events.total} active Central Visayas summits.`, time: 'Updated', tag: `${evFill}% Seat Fill` },
-            { icon: '🦅', title: 'Haribon AI Multi-Language Gateway', desc: 'Cross-lingual neural translation active across 14 dialects with unified regional responses.', time: 'Online', tag: '100% Ready' },
-          ].map((act, i) => (
-            <div key={i} className="ap-activity-item">
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{
-                  width: 34, height: 34, borderRadius: 9,
-                  background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0
-                }}>
-                  {act.icon}
-                </div>
-                <div>
-                  <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 2 }}>{act.title}</div>
-                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>{act.desc}</div>
-                </div>
-              </div>
-              <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                <span style={{
-                  fontSize: 10.5, fontWeight: 800,
-                  color: act.tag === 'Urgent' ? '#fbbf24' : act.tag === 'Verified' ? '#60a5fa' : '#34d399',
-                  background: act.tag === 'Urgent' ? 'rgba(245,158,11,0.15)' : 'rgba(255,255,255,0.06)',
-                  border: `1px solid ${act.tag === 'Urgent' ? 'rgba(245,158,11,0.35)' : 'rgba(255,255,255,0.1)'}`,
-                  borderRadius: 6, padding: '2px 8px'
-                }}>
-                  {act.tag}
-                </span>
-                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginTop: 3 }}>{act.time}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      
       {/* ── 🏛️ Region VII Institutional MoA Expiration & Alliance Radar ── */}
       <div style={{
-        background: 'rgba(11, 19, 38, 0.85)', border: '1px solid rgba(255,255,255,0.08)',
-        borderRadius: 20, padding: '22px', backdropFilter: 'blur(14px)',
-        marginBottom: 24, boxShadow: '0 8px 24px rgba(0,0,0,0.3)'
+        background: 'rgba(13, 20, 38, 0.78)', border: '1px solid rgba(255,255,255,0.08)',
+        borderRadius: 18, padding: '22px', backdropFilter: 'blur(16px)',
+        boxShadow: '0 4px 20px rgba(0,0,0,0.25)'
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 10 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontSize: 18 }}>🤝</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(249,115,22,0.15)', border: '1px solid rgba(249,115,22,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>
+              🤝
+            </div>
             <div>
-              <div style={{ color: '#fff', fontSize: 14, fontWeight: 900, letterSpacing: '-0.2px' }}>
+              <div style={{ color: '#fff', fontSize: 14.5, fontWeight: 800, letterSpacing: '-0.2px' }}>
                 Region VII Institutional MoA Expiration &amp; Alliance Radar
               </div>
               <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11.5 }}>
@@ -2231,7 +2118,7 @@ function DashboardTab({ showToast, setTab, telemetry = {}, refreshOverviewStats,
               </div>
             </div>
           </div>
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             <button
               type="button"
               onClick={() => onOpenReport?.()}
@@ -2242,7 +2129,7 @@ function DashboardTab({ showToast, setTab, telemetry = {}, refreshOverviewStats,
               <span>Accreditation Dossier</span>
             </button>
             <span style={{ fontSize: 11, color: '#34d399', background: 'rgba(52,211,153,0.12)', border: '1px solid rgba(52,211,153,0.3)', borderRadius: 6, padding: '3px 10px', fontWeight: 800 }}>
-              7 Alliances Active
+              7 Active Nodes
             </span>
           </div>
         </div>
@@ -2320,8 +2207,8 @@ function DashboardTab({ showToast, setTab, telemetry = {}, refreshOverviewStats,
                 flexWrap: 'wrap', gap: 12, transition: 'all .16s ease'
               }}
               onMouseEnter={e => {
-                e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
-                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)';
+                e.currentTarget.style.background = 'rgba(255,255,255,0.045)';
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
               }}
               onMouseLeave={e => {
                 e.currentTarget.style.background = 'rgba(255,255,255,0.025)';
@@ -2330,10 +2217,10 @@ function DashboardTab({ showToast, setTab, telemetry = {}, refreshOverviewStats,
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 260 }}>
                 <div style={{
-                  width: 38, height: 38, borderRadius: 10,
-                  background: `${m.color}18`, border: `1px solid ${m.color}35`,
+                  width: 36, height: 36, borderRadius: 10,
+                  background: `${m.color}15`, border: `1px solid ${m.color}35`,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 18, flexShrink: 0
+                  fontSize: 17, flexShrink: 0
                 }}>
                   🏛️
                 </div>
@@ -2369,48 +2256,83 @@ function DashboardTab({ showToast, setTab, telemetry = {}, refreshOverviewStats,
         </div>
       </div>
 
-      {/* ── Enterprise Security, Compliance & Data Privacy (RA 10173) ── */}
-      <div style={{
-        background: 'linear-gradient(135deg, rgba(16,185,129,0.08), rgba(6,78,59,0.05))',
-        border: '1px solid rgba(16,185,129,0.22)',
-        borderRadius: 16, padding: '16px 20px', marginBottom: 24,
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        flexWrap: 'wrap', gap: 14
+      {/* ── ⚡ Real-Time Consortium System Activity & Audit Stream ── */}
+      <div className="ap-activity-stream" style={{
+        background: 'rgba(13, 20, 38, 0.78)', border: '1px solid rgba(255,255,255,0.08)',
+        borderRadius: 18, padding: '22px', backdropFilter: 'blur(16px)',
+        boxShadow: '0 4px 20px rgba(0,0,0,0.25)', marginBottom: 0
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <div style={{ width: 40, height: 40, borderRadius: 11, background: 'rgba(16,185,129,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>
-            🛡️
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(52,211,153,0.15)', border: '1px solid rgba(52,211,153,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>
+              ⚡
+            </div>
+            <div>
+              <div style={{ color: '#fff', fontSize: 14.5, fontWeight: 800, letterSpacing: '-0.2px' }}>
+                Consortium Activity &amp; Governance Audit Log
+              </div>
+              <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11.5 }}>
+                Real-time operational stream across Central Visayas regional nodes
+              </div>
+            </div>
           </div>
-          <div>
-            <div style={{ fontSize: 13.5, fontWeight: 900, color: '#6ee7b7' }}>
-              Data Privacy Act (RA 10173) &amp; Enterprise Security Hardening
-            </div>
-            <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.6)', marginTop: 2 }}>
-              Zero Plaintext PII · Multi-Region Continuous WAL-G Snapshots · 256-Bit TLS 1.3 Transport
-            </div>
+
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <span style={{
+              fontSize: 10.5, fontWeight: 800, color: '#34d399',
+              background: 'rgba(52,211,153,0.12)', border: '1px solid rgba(52,211,153,0.3)',
+              borderRadius: 6, padding: '3px 8px'
+            }}>
+              Sync Active
+            </span>
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ fontSize: 11, fontWeight: 900, color: '#34d399', background: 'rgba(52,211,153,0.15)', border: '1px solid rgba(52,211,153,0.35)', borderRadius: 7, padding: '3px 10px' }}>
-            Rating: Grade A+ (99.8%)
-          </span>
-          <button
-            type="button"
-            onClick={() => onOpenHealth?.()}
-            className="ap-btn ap-btn-green"
-            style={{ fontSize: 11.5, padding: '7px 14px', fontWeight: 800 }}
-          >
-            Inspect Node Telemetry
-          </button>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {[
+            { icon: '👥', title: 'Membership & User Directory', desc: `${stats.users.total} registered accounts (${stats.users.member} verified HEI members) across CIT-U, UP Cebu, and USC.`, time: 'Live Active', tag: 'Verified' },
+            { icon: '📋', title: 'Application Pipeline', desc: stats.applications.pending > 0 ? `${stats.applications.pending} institutional membership application(s) awaiting administrative review.` : 'All institutional membership applications reviewed and verified.', time: stats.applications.pending > 0 ? 'Action Required' : 'Up to Date', tag: stats.applications.pending > 0 ? 'Urgent' : 'Clear' },
+            { icon: '📅', title: 'Programs & Summit Registrations', desc: `${stats.events.totalEnrolled} total RSVPs confirmed across ${stats.events.total} active Central Visayas summits.`, time: 'Updated', tag: `${evFill}% Seat Fill` },
+            { icon: '🦅', title: 'Haribon AI Multi-Language Gateway', desc: 'Cross-lingual neural translation active across 14 dialects with unified regional responses.', time: 'Online', tag: '100% Ready' },
+          ].map((act, i) => (
+            <div key={i} className="ap-activity-item" style={{
+              background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 12, padding: '11px 14px'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{
+                  width: 34, height: 34, borderRadius: 9,
+                  background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.09)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0
+                }}>
+                  {act.icon}
+                </div>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 2 }}>{act.title}</div>
+                  <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.5)' }}>{act.desc}</div>
+                </div>
+              </div>
+              <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                <span style={{
+                  fontSize: 10.5, fontWeight: 800,
+                  color: act.tag === 'Urgent' ? '#fbbf24' : act.tag === 'Verified' ? '#60a5fa' : '#34d399',
+                  background: act.tag === 'Urgent' ? 'rgba(245,158,11,0.15)' : 'rgba(255,255,255,0.06)',
+                  border: `1px solid ${act.tag === 'Urgent' ? 'rgba(245,158,11,0.35)' : 'rgba(255,255,255,0.1)'}`,
+                  borderRadius: 6, padding: '2px 8px'
+                }}>
+                  {act.tag}
+                </span>
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginTop: 3 }}>{act.time}</div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
       {/* ── Upcoming Events Live Queue ── */}
       {events.length > 0 && (
         <div style={{
-          background: 'rgba(15,23,42,0.7)', border: '1px solid rgba(255,255,255,0.08)',
-          borderRadius: 18, padding: '20px', backdropFilter: 'blur(12px)', marginBottom: 22,
+          background: 'rgba(13, 20, 38, 0.78)', border: '1px solid rgba(255,255,255,0.08)',
+          borderRadius: 18, padding: '20px', backdropFilter: 'blur(16px)',
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
             <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', display: 'flex', alignItems: 'center', gap: 7 }}>
