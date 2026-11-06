@@ -5762,11 +5762,12 @@ function AdminCalendarTab({ showToast, setTab }) {
   const [showTraining, setShowTraining] = useState(true);
   const [viewMode, setViewMode]         = useState('month'); // 'month' | 'agenda'
   const [calSearch, setCalSearch]       = useState('');
+  const [filterType, setFilterType]     = useState('all'); // 'all' | 'events' | 'training'
 
   useEffect(() => {
     Promise.all([
-      api.events.list({ limit:1000 }),
-      api.training.list({ limit:1000 }),
+      api.events.list({ limit: 1000 }),
+      api.training.list({ limit: 1000 }),
     ]).then(([ev, tr]) => {
       setEvents(Array.isArray(ev) ? ev : (ev?.data || []));
       setTrainings(Array.isArray(tr) ? tr : (tr?.data || []));
@@ -5776,12 +5777,12 @@ function AdminCalendarTab({ showToast, setTab }) {
 
   // All calendar items
   const rawAllItems = [
-    ...(showEvents ? events.map(e => {
+    ...(showEvents && filterType !== 'training' ? events.map(e => {
       const r = parseAdminRange(e.date);
       const c = EV_CAL_COLORS[e.category] || EV_CAL_COLORS.Summit;
       return { ...e, startDate:r?.start||null, endDate:r?.end||null, _type:'event', _bg:c.bg, _border:c.border, _text:c.text, _icon:c.icon };
     }) : []),
-    ...(showTraining ? trainings.map(t => {
+    ...(showTraining && filterType !== 'events' ? trainings.map(t => {
       const r = parseAdminRange(t.schedule);
       const c = TR_CAL_COLORS[t.category] || TR_CAL_COLORS.Technology;
       return { ...t, startDate:r?.start||null, endDate:r?.end||null, _type:'training', _bg:c.bg, _border:c.border, _text:c.text, _icon:c.icon };
@@ -5793,7 +5794,7 @@ function AdminCalendarTab({ showToast, setTab }) {
     const q = calSearch.toLowerCase();
     const title = (it.title || '').toLowerCase();
     const loc = (it.venue || it.org || '').toLowerCase();
-    const cat = (it.category || '').toLowerCase();
+    const cat = (it.category || it.level || '').toLowerCase();
     return title.includes(q) || loc.includes(q) || cat.includes(q);
   });
 
@@ -5868,53 +5869,73 @@ function AdminCalendarTab({ showToast, setTab }) {
     setDetail(null);
   }
 
+  // Upcoming items for sidebar feed
+  const upcomingList = rawAllItems
+    .filter(it => it.startDate)
+    .sort((a,b) => a.startDate.getTime() - b.startDate.getTime())
+    .slice(0, 4);
+
   const shortcuts = [
-    { icon:'📅', label:'Add Event',    action:() => setTab('events'), color:'#818cf8' },
-    { icon:'🎓', label:'Add Training', action:() => setTab('training'), color:'#34d399' },
-    { icon:'👥', label:'View Users',   action:() => setTab('users'), color:'#60a5fa' },
-    { icon:'📊', label:'Reports',      action:() => setTab('reports'), color:'#f59e0b' },
+    { icon:'📅', label:'New Event',    action:() => setTab('events'), color:'#818cf8', bg:'rgba(129,140,248,0.12)' },
+    { icon:'🎓', label:'New Training', action:() => setTab('training'), color:'#34d399', bg:'rgba(52,211,153,0.12)' },
+    { icon:'👥', label:'Directory',    action:() => setTab('users'), color:'#60a5fa', bg:'rgba(96,165,250,0.12)' },
+    { icon:'📊', label:'Reports',      action:() => setTab('reports'), color:'#fbbf24', bg:'rgba(251,191,36,0.12)' },
   ];
 
   return (
-    <div className="ap-calendar-layout" style={{ display:'flex', gap:0, height:'calc(100vh - 140px)', overflow:'hidden' }}>
+    <div className="ap-calendar-layout" style={{ display:'flex', gap:16, height:'calc(100vh - 135px)', overflow:'hidden' }}>
 
       {/* ── Left sidebar ── */}
-      <div className="ap-calendar-sidebar" style={{ width:240, flexShrink:0, padding:'4px 18px 16px 0', overflowY:'auto', borderRight:'1px solid rgba(255,255,255,0.08)' }}>
+      <div className="ap-calendar-sidebar" style={{
+        width: 256, flexShrink: 0, paddingRight: 4, overflowY: 'auto',
+        display: 'flex', flexDirection: 'column', gap: 14
+      }}>
 
-        {/* Mini calendar — clickable */}
+        {/* Mini calendar card */}
         <div style={{
-          background:'rgba(11, 19, 38, 0.85)', border:'1px solid rgba(255,255,255,0.09)',
-          borderRadius:16, padding:'16px 14px', marginBottom:14, backdropFilter:'blur(12px)',
-          boxShadow:'0 4px 20px rgba(0,0,0,0.25)'
+          background: 'linear-gradient(180deg, rgba(15,23,42,0.85) 0%, rgba(11,19,38,0.92) 100%)',
+          border: '1px solid rgba(255,255,255,0.08)',
+          borderRadius: 18, padding: '16px 14px 14px', backdropFilter: 'blur(16px)',
+          boxShadow: '0 8px 24px rgba(0,0,0,0.35)'
         }}>
+          {/* Month selector */}
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:12 }}>
-            <span style={{ color:'#fff', fontWeight:900, fontSize:13.5, letterSpacing:'-0.2px' }}>
-              {MONTH_NAMES_LONG[month].slice(0,3)} {year}
+            <span style={{ color:'#fff', fontWeight:900, fontSize:14, letterSpacing:'-0.3px', display:'flex', alignItems:'center', gap:6 }}>
+              <span>🗓️</span> {MONTH_NAMES_LONG[month]} {year}
             </span>
-            <div style={{ display:'flex', gap:3 }}>
+            <div style={{ display:'flex', gap:4 }}>
               <button onClick={prevMon} style={{
                 background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.1)',
-                color:'rgba(255,255,255,0.7)', cursor:'pointer', fontSize:13, width:26, height:24,
-                borderRadius:6, display:'flex', alignItems:'center', justifyContent:'center', transition:'all .12s'
+                color:'rgba(255,255,255,0.7)', cursor:'pointer', fontSize:13, width:26, height:26,
+                borderRadius:7, display:'flex', alignItems:'center', justifyContent:'center', transition:'all .12s'
               }}
-              onMouseEnter={e=>{e.currentTarget.style.background='rgba(255,255,255,0.15)';e.currentTarget.style.color='#fff';}}
+              onMouseEnter={e=>{e.currentTarget.style.background='rgba(255,255,255,0.16)';e.currentTarget.style.color='#fff';}}
               onMouseLeave={e=>{e.currentTarget.style.background='rgba(255,255,255,0.06)';e.currentTarget.style.color='rgba(255,255,255,0.7)';}}
+              title="Previous Month"
               >‹</button>
               <button onClick={nextMon} style={{
                 background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.1)',
-                color:'rgba(255,255,255,0.7)', cursor:'pointer', fontSize:13, width:26, height:24,
-                borderRadius:6, display:'flex', alignItems:'center', justifyContent:'center', transition:'all .12s'
+                color:'rgba(255,255,255,0.7)', cursor:'pointer', fontSize:13, width:26, height:26,
+                borderRadius:7, display:'flex', alignItems:'center', justifyContent:'center', transition:'all .12s'
               }}
-              onMouseEnter={e=>{e.currentTarget.style.background='rgba(255,255,255,0.15)';e.currentTarget.style.color='#fff';}}
+              onMouseEnter={e=>{e.currentTarget.style.background='rgba(255,255,255,0.16)';e.currentTarget.style.color='#fff';}}
               onMouseLeave={e=>{e.currentTarget.style.background='rgba(255,255,255,0.06)';e.currentTarget.style.color='rgba(255,255,255,0.7)';}}
+              title="Next Month"
               >›</button>
             </div>
           </div>
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', marginBottom:6 }}>
+
+          {/* DOW headers */}
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', marginBottom:8, paddingBottom:6, borderBottom:'1px solid rgba(255,255,255,0.06)' }}>
             {['M','T','W','T','F','S','S'].map((d,i) => (
-              <div key={i} style={{ textAlign:'center', fontSize:10, fontWeight:800, color: i >= 5 ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.45)' }}>{d}</div>
+              <div key={i} style={{
+                textAlign:'center', fontSize:10.5, fontWeight:800,
+                color: i >= 5 ? '#f87171' : 'rgba(255,255,255,0.45)'
+              }}>{d}</div>
             ))}
           </div>
+
+          {/* Days numbers */}
           {miniGrid.map((row,ri) => (
             <div key={ri} style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', gap:'2px 0' }}>
               {row.map((d,ci) => {
@@ -5929,11 +5950,11 @@ function AdminCalendarTab({ showToast, setTab }) {
                     style={{ textAlign:'center', padding:'2px 0', position:'relative', cursor: inM ? 'pointer' : 'default' }}>
                     <span style={{
                       display:'inline-flex', alignItems:'center', justifyContent:'center',
-                      width:22, height:22, borderRadius:'50%', fontSize:11.5, transition:'all .14s',
-                      fontWeight: isT || isSel ? 900 : 500,
-                      color: isT ? '#fff' : isSel ? '#fff' : inM ? (ci >= 5 ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.85)') : 'rgba(255,255,255,0.15)',
+                      width:24, height:24, borderRadius:'50%', fontSize:11.5, transition:'all .14s',
+                      fontWeight: isT || isSel ? 900 : 600,
+                      color: isT ? '#fff' : isSel ? '#fff' : inM ? (ci >= 5 ? '#f87171' : 'rgba(255,255,255,0.85)') : 'rgba(255,255,255,0.15)',
                       background: isT ? 'linear-gradient(135deg,#f97316,#e11d48)' : isSel ? 'linear-gradient(135deg,#3b82f6,#1d4ed8)' : 'transparent',
-                      boxShadow: isT ? '0 0 10px rgba(249,115,22,0.5)' : isSel ? '0 0 10px rgba(59,130,246,0.5)' : 'none',
+                      boxShadow: isT ? '0 0 10px rgba(249,115,22,0.55)' : isSel ? '0 0 10px rgba(59,130,246,0.5)' : 'none',
                     }}>{inM ? d : ''}</span>
                     {/* Event/training dots */}
                     {inM && !isT && !isSel && (evCnt > 0 || trCnt > 0) && (
@@ -5949,26 +5970,36 @@ function AdminCalendarTab({ showToast, setTab }) {
           ))}
         </div>
 
-        {/* Day quick panel — shows when a date is clicked */}
+        {/* Day Inspection popover if a date is clicked */}
         {selectedDay && (
-          <div style={{ background:'rgba(59,130,246,0.1)', border:'1px solid rgba(59,130,246,0.3)', borderRadius:14, padding:'12px', marginBottom:14, animation:'modalIn .18s ease' }}>
-            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8 }}>
+          <div style={{
+            background:'linear-gradient(180deg, rgba(30,58,138,0.25) 0%, rgba(15,23,42,0.7) 100%)',
+            border:'1px solid rgba(96,165,250,0.3)', borderRadius:16, padding:'14px',
+            animation:'modalIn .18s ease', boxShadow:'0 6px 20px rgba(0,0,0,0.4)'
+          }}>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10 }}>
               <div>
-                <div style={{ color:'#93c5fd', fontSize:10, fontWeight:800, textTransform:'uppercase', letterSpacing:'.5px' }}>
-                  {MONTH_NAMES_LONG[month].slice(0,3)} {selectedDay.day}, {year}
+                <div style={{ color:'#93c5fd', fontSize:10, fontWeight:800, textTransform:'uppercase', letterSpacing:'.6px' }}>
+                  {MONTH_NAMES_LONG[month]} {selectedDay.day}, {year}
                 </div>
-                <div style={{ color:'#fff', fontWeight:900, fontSize:13, marginTop:1 }}>
-                  {selectedDay.items.length === 0 ? 'No items scheduled' : `${selectedDay.items.length} item${selectedDay.items.length > 1 ? 's' : ''}`}
+                <div style={{ color:'#fff', fontWeight:900, fontSize:13.5, marginTop:1 }}>
+                  {selectedDay.items.length === 0 ? 'No items scheduled' : `${selectedDay.items.length} Activity Found`}
                 </div>
               </div>
-              <button onClick={() => setSelectedDay(null)} style={{ background:'none',border:'none',color:'rgba(255,255,255,0.6)',cursor:'pointer',fontSize:13,padding:2 }}>✕</button>
+              <button onClick={() => setSelectedDay(null)} style={{ background:'rgba(255,255,255,0.08)',border:'none',color:'#fff',cursor:'pointer',fontSize:12,width:24,height:24,borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center' }}>✕</button>
             </div>
 
             {selectedDay.items.length === 0 ? (
               <div>
-                <p style={{ color:'rgba(255,255,255,0.5)', fontSize:12, margin:'0 0 8px', lineHeight:1.5 }}>No events or training on this day.</p>
-                <button onClick={() => setTab('events')} style={{ width:'100%', background:'linear-gradient(90deg,#f97316,#e11d48)', color:'#fff', border:'none', borderRadius:8, padding:'7px', fontSize:12.5, fontWeight:800, cursor:'pointer', fontFamily:'inherit' }}>
-                  ＋ Add Event
+                <p style={{ color:'rgba(255,255,255,0.5)', fontSize:12, margin:'0 0 10px', lineHeight:1.5 }}>
+                  No consortium meetings, summits, or workshops scheduled on this date.
+                </p>
+                <button onClick={() => setTab('events')} style={{
+                  width:'100%', background:'linear-gradient(90deg,#f97316,#e11d48)',
+                  color:'#fff', border:'none', borderRadius:9, padding:'8px',
+                  fontSize:12, fontWeight:800, cursor:'pointer', fontFamily:'inherit'
+                }}>
+                  ＋ Schedule Event
                 </button>
               </div>
             ) : (
@@ -5976,16 +6007,16 @@ function AdminCalendarTab({ showToast, setTab }) {
                 {selectedDay.items.map(it => (
                   <div key={it.id} onClick={() => { setDetail(it); setSelectedDay(null); }}
                     style={{
-                      display:'flex', alignItems:'center', gap:8, padding:'7px 9px',
-                      background: it._type==='event' ? 'rgba(129,140,248,0.15)' : 'rgba(52,211,153,0.15)',
-                      border: `1px solid ${it._type==='event' ? 'rgba(129,140,248,0.35)' : 'rgba(52,211,153,0.35)'}`,
-                      borderRadius:9, cursor:'pointer', transition:'all .13s'
+                      display:'flex', alignItems:'center', gap:8, padding:'8px 10px',
+                      background: it._type==='event' ? 'rgba(129,140,248,0.14)' : 'rgba(52,211,153,0.14)',
+                      border: `1px solid ${it._type==='event' ? 'rgba(129,140,248,0.3)' : 'rgba(52,211,153,0.3)'}`,
+                      borderRadius:10, cursor:'pointer', transition:'all .13s'
                     }}
                     onMouseEnter={e=>e.currentTarget.style.transform='translateX(2px)'}
                     onMouseLeave={e=>e.currentTarget.style.transform='translateX(0)'}
                   >
-                    <span style={{ fontSize:13 }}>{it._icon || (it._type==='event' ? '📅' : '🎓')}</span>
-                    <span style={{ fontSize:12, fontWeight:700, color:'#fff', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', flex:1 }}>{it.title}</span>
+                    <span style={{ fontSize:14 }}>{it._icon || (it._type==='event' ? '📅' : '🎓')}</span>
+                    <span style={{ fontSize:12, fontWeight:800, color:'#fff', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', flex:1 }}>{it.title}</span>
                     <span style={{ fontSize:10, color: it._type==='event' ? '#a5b4fc' : '#6ee7b7', fontWeight:800 }}>{it.category || it.level}</span>
                   </div>
                 ))}
@@ -5994,171 +6025,212 @@ function AdminCalendarTab({ showToast, setTab }) {
           </div>
         )}
 
-        {/* Role-based quick shortcuts */}
-        <div style={{ background:'rgba(11,19,38,0.85)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:14, padding:'14px 12px', marginBottom:14 }}>
-          <div style={{ fontSize:11, fontWeight:800, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', letterSpacing:'.6px', marginBottom:10, display:'flex', alignItems:'center', gap:6 }}>
+        {/* Calendar Category Switchers */}
+        <div style={{
+          background: 'linear-gradient(180deg, rgba(15,23,42,0.7) 0%, rgba(11,19,38,0.85) 100%)',
+          border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: '14px',
+          boxShadow: '0 4px 16px rgba(0,0,0,0.2)'
+        }}>
+          <div style={{ fontSize:10.5, fontWeight:800, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', letterSpacing:'.6px', marginBottom:10 }}>
+            🗂️ Calendar Layers
+          </div>
+          <div style={{ display:'flex', flexDirection:'column', gap:7 }}>
+            {/* Events toggle */}
+            <div
+              onClick={() => setShowEvents(s => !s)}
+              style={{
+                display:'flex', alignItems:'center', justifyContent:'space-between',
+                padding:'8px 10px', borderRadius:10, cursor:'pointer',
+                background: showEvents ? 'rgba(129,140,248,0.1)' : 'rgba(255,255,255,0.03)',
+                border: `1px solid ${showEvents ? 'rgba(129,140,248,0.3)' : 'rgba(255,255,255,0.06)'}`,
+                transition:'all .15s'
+              }}
+            >
+              <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                <span style={{ width:8, height:8, borderRadius:'50%', background: showEvents ? '#818cf8' : 'rgba(255,255,255,0.25)', boxShadow: showEvents ? '0 0 8px #818cf8' : 'none' }} />
+                <span style={{ fontSize:12.5, fontWeight: showEvents ? 800 : 600, color: showEvents ? '#fff' : 'rgba(255,255,255,0.5)' }}>Consortium Events</span>
+              </div>
+              <span style={{ fontSize:11, fontWeight:800, color: showEvents ? '#a5b4fc' : 'rgba(255,255,255,0.4)', background: showEvents ? 'rgba(129,140,248,0.18)' : 'rgba(255,255,255,0.06)', borderRadius:6, padding:'2px 7px' }}>
+                {rawEvCount}
+              </span>
+            </div>
+
+            {/* Training toggle */}
+            <div
+              onClick={() => setShowTraining(s => !s)}
+              style={{
+                display:'flex', alignItems:'center', justifyContent:'space-between',
+                padding:'8px 10px', borderRadius:10, cursor:'pointer',
+                background: showTraining ? 'rgba(52,211,153,0.1)' : 'rgba(255,255,255,0.03)',
+                border: `1px solid ${showTraining ? 'rgba(52,211,153,0.3)' : 'rgba(255,255,255,0.06)'}`,
+                transition:'all .15s'
+              }}
+            >
+              <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                <span style={{ width:8, height:8, borderRadius:'50%', background: showTraining ? '#34d399' : 'rgba(255,255,255,0.25)', boxShadow: showTraining ? '0 0 8px #34d399' : 'none' }} />
+                <span style={{ fontSize:12.5, fontWeight: showTraining ? 800 : 600, color: showTraining ? '#fff' : 'rgba(255,255,255,0.5)' }}>Faculty Training</span>
+              </div>
+              <span style={{ fontSize:11, fontWeight:800, color: showTraining ? '#6ee7b7' : 'rgba(255,255,255,0.4)', background: showTraining ? 'rgba(52,211,153,0.18)' : 'rgba(255,255,255,0.06)', borderRadius:6, padding:'2px 7px' }}>
+                {rawTrCount}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Quick Shortcuts */}
+        <div style={{
+          background: 'linear-gradient(180deg, rgba(15,23,42,0.7) 0%, rgba(11,19,38,0.85) 100%)',
+          border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: '14px',
+          boxShadow: '0 4px 16px rgba(0,0,0,0.2)'
+        }}>
+          <div style={{ fontSize:10.5, fontWeight:800, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', letterSpacing:'.6px', marginBottom:10, display:'flex', alignItems:'center', gap:6 }}>
             <span>⚡</span> Quick Shortcuts
           </div>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:7 }}>
             {shortcuts.map(s => (
               <button key={s.label} onClick={s.action} style={{
-                background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.08)',
-                borderRadius:10, padding:'10px 6px', cursor:'pointer', fontFamily:'inherit',
+                background: s.bg, border:'1px solid rgba(255,255,255,0.07)',
+                borderRadius:11, padding:'9px 6px', cursor:'pointer', fontFamily:'inherit',
                 display:'flex', flexDirection:'column', alignItems:'center', gap:4,
                 transition:'all .15s',
               }}
-              onMouseEnter={e=>{e.currentTarget.style.background='rgba(249,115,22,0.14)';e.currentTarget.style.borderColor='rgba(249,115,22,0.35)';e.currentTarget.style.transform='translateY(-2px)';}}
-              onMouseLeave={e=>{e.currentTarget.style.background='rgba(255,255,255,0.04)';e.currentTarget.style.borderColor='rgba(255,255,255,0.08)';e.currentTarget.style.transform='translateY(0)';}}
+              onMouseEnter={e=>{e.currentTarget.style.borderColor=s.color;e.currentTarget.style.transform='translateY(-2px)';e.currentTarget.style.boxShadow=`0 4px 12px ${s.color}33`;}}
+              onMouseLeave={e=>{e.currentTarget.style.borderColor='rgba(255,255,255,0.07)';e.currentTarget.style.transform='translateY(0)';e.currentTarget.style.boxShadow='none';}}
               >
                 <span style={{ fontSize:18 }}>{s.icon}</span>
-                <span style={{ fontSize:11.5, fontWeight:800, color:'rgba(255,255,255,0.8)', textAlign:'center', lineHeight:1.2 }}>{s.label}</span>
+                <span style={{ fontSize:11.5, fontWeight:800, color:'#fff', textAlign:'center', lineHeight:1.2 }}>{s.label}</span>
               </button>
             ))}
           </div>
         </div>
 
-        {/* My Calendars Filter Toggles */}
-        <div style={{ background:'rgba(11,19,38,0.85)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:14, padding:'14px 12px', marginBottom:14 }}>
-          <div style={{ fontSize:11, fontWeight:800, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', letterSpacing:'.6px', marginBottom:10 }}>
-            🗂️ My Calendars
+        {/* Upcoming Deadlines / Schedule preview */}
+        <div style={{
+          background: 'linear-gradient(180deg, rgba(15,23,42,0.7) 0%, rgba(11,19,38,0.85) 100%)',
+          border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: '14px',
+          boxShadow: '0 4px 16px rgba(0,0,0,0.2)'
+        }}>
+          <div style={{ fontSize:10.5, fontWeight:800, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', letterSpacing:'.6px', marginBottom:10, display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+            <span>Upcoming Highlights</span>
+            <span style={{ fontSize:10, color:'#93c5fd' }}>{upcomingList.length} total</span>
           </div>
-          <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-            <label style={{ display:'flex', alignItems:'center', justifyContent:'space-between', cursor:'pointer', padding:'6px 8px', background:'rgba(255,255,255,0.03)', borderRadius:8, border:'1px solid rgba(255,255,255,0.06)' }}>
-              <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-                <input type="checkbox" checked={showEvents} onChange={e=>setShowEvents(e.target.checked)} style={{ accentColor:'#818cf8', width:15, height:15, cursor:'pointer' }} />
-                <span style={{ fontSize:12.5, color: showEvents ? '#fff' : 'rgba(255,255,255,0.4)', fontWeight:700 }}>Events</span>
-              </div>
-              <span style={{ fontSize:11, fontWeight:800, color:'#818cf8', background:'rgba(129,140,248,0.15)', border:'1px solid rgba(129,140,248,0.3)', borderRadius:5, padding:'1px 6px' }}>
-                {rawEvCount}
-              </span>
-            </label>
-
-            <label style={{ display:'flex', alignItems:'center', justifyContent:'space-between', cursor:'pointer', padding:'6px 8px', background:'rgba(255,255,255,0.03)', borderRadius:8, border:'1px solid rgba(255,255,255,0.06)' }}>
-              <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-                <input type="checkbox" checked={showTraining} onChange={e=>setShowTraining(e.target.checked)} style={{ accentColor:'#34d399', width:15, height:15, cursor:'pointer' }} />
-                <span style={{ fontSize:12.5, color: showTraining ? '#fff' : 'rgba(255,255,255,0.4)', fontWeight:700 }}>Training</span>
-              </div>
-              <span style={{ fontSize:11, fontWeight:800, color:'#34d399', background:'rgba(52,211,153,0.15)', border:'1px solid rgba(52,211,153,0.3)', borderRadius:5, padding:'1px 6px' }}>
-                {rawTrCount}
-              </span>
-            </label>
-          </div>
+          {upcomingList.length === 0 ? (
+            <div style={{ fontSize:12, color:'rgba(255,255,255,0.4)', textAlign:'center', padding:'10px 0' }}>No upcoming items</div>
+          ) : (
+            <div style={{ display:'flex', flexDirection:'column', gap:7 }}>
+              {upcomingList.map(it => {
+                const dStr = it.date || it.schedule || '';
+                return (
+                  <div key={it._type + it.id} onClick={() => setDetail(it)} style={{
+                    display:'flex', alignItems:'center', gap:8, padding:'7px 8px', borderRadius:8,
+                    background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.05)',
+                    cursor:'pointer', transition:'all .13s'
+                  }}
+                  onMouseEnter={e=>{e.currentTarget.style.background='rgba(255,255,255,0.07)';e.currentTarget.style.transform='translateX(2px)';}}
+                  onMouseLeave={e=>{e.currentTarget.style.background='rgba(255,255,255,0.03)';e.currentTarget.style.transform='translateX(0)';}}
+                  >
+                    <span style={{ fontSize:14 }}>{it._icon || (it._type==='event'?'📅':'🎓')}</span>
+                    <div style={{ minWidth:0, flex:1 }}>
+                      <div style={{ fontSize:11.5, fontWeight:800, color:'#fff', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{it.title}</div>
+                      <div style={{ fontSize:10, color:'rgba(255,255,255,0.45)', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{dStr.split('–')[0] || dStr}</div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
-        {/* Quick actions */}
-        <div style={{ padding:'0 4px' }}>
-          <div style={{ fontSize:11, fontWeight:800, color:'rgba(255,255,255,0.35)', textTransform:'uppercase', letterSpacing:'.6px', marginBottom:8 }}>
-            Quick Actions
-          </div>
-          {[
-            { label:'＋ Add New Event', action:() => setTab('events'), color:'#fb923c' },
-            { label:'＋ Add New Training', action:() => setTab('training'), color:'#34d399' },
-          ].map(a => (
-            <button key={a.label} onClick={a.action} style={{
-              display:'block', width:'100%', textAlign:'left', background:'transparent',
-              border:'none', color:'rgba(255,255,255,0.6)', fontSize:12, fontWeight:700,
-              cursor:'pointer', padding:'6px 0', fontFamily:'inherit', transition:'all .13s',
-            }}
-            onMouseEnter={e=>{e.currentTarget.style.color=a.color;e.currentTarget.style.transform='translateX(3px)';}}
-            onMouseLeave={e=>{e.currentTarget.style.color='rgba(255,255,255,0.6)';e.currentTarget.style.transform='translateX(0)';}}
-            >{a.label}</button>
-          ))}
-        </div>
       </div>
 
-      {/* ── Main calendar ── */}
-      <div className="ap-calendar-main-pane" style={{ flex:1, overflow:'hidden', display:'flex', flexDirection:'column', paddingLeft:20 }}>
+      {/* ── Main calendar area ── */}
+      <div className="ap-calendar-main-pane" style={{
+        flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column',
+        background: 'rgba(11, 19, 38, 0.65)', border: '1px solid rgba(255,255,255,0.08)',
+        borderRadius: 20, padding: 18, backdropFilter: 'blur(16px)',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.35)'
+      }}>
 
-        {/* Toolbar */}
+        {/* ── Sleek Master Toolbar ── */}
         <div style={{
           display:'flex', alignItems:'center', justifyContent:'space-between',
-          gap:12, marginBottom:16, flexShrink:0, flexWrap:'wrap',
-          background:'rgba(11, 19, 38, 0.85)', border:'1px solid rgba(255,255,255,0.08)',
-          borderRadius:16, padding:'12px 18px', backdropFilter:'blur(14px)',
-          boxShadow:'0 4px 20px rgba(0,0,0,0.25)'
+          gap:14, marginBottom:16, flexShrink:0, flexWrap:'wrap'
         }}>
-          <div style={{ display:'flex', alignItems:'center', gap:10, flexWrap:'wrap' }}>
-            <button onClick={goToday} style={{
-              background:'linear-gradient(135deg,#f97316,#e11d48)',
-              border:'none', borderRadius:9, padding:'8px 16px', color:'#fff',
-              fontSize:13, fontWeight:800, cursor:'pointer', fontFamily:'inherit',
-              boxShadow:'0 4px 14px rgba(249,115,22,0.35)', transition:'all .14s'
-            }}
-            onMouseEnter={e=>e.currentTarget.style.opacity='.9'}
-            onMouseLeave={e=>e.currentTarget.style.opacity='1'}
-            >Today</button>
-
-            <div style={{ display:'flex', gap:4 }}>
-              {[['‹',prevMon],['›',nextMon]].map(([ch,fn])=>(
-                <button key={ch} onClick={fn} style={{
-                  background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.12)',
-                  borderRadius:8, width:34, height:34, color:'rgba(255,255,255,0.8)',
-                  fontSize:16, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center',
-                  transition:'all .13s'
-                }}
-                onMouseEnter={e=>{e.currentTarget.style.background='rgba(255,255,255,0.15)';e.currentTarget.style.color='#fff';}}
-                onMouseLeave={e=>{e.currentTarget.style.background='rgba(255,255,255,0.06)';e.currentTarget.style.color='rgba(255,255,255,0.8)';}}
-                >{ch}</button>
-              ))}
-            </div>
-
-            <div style={{ display:'flex', alignItems:'center', gap:8, marginLeft:6 }}>
-              <span style={{ fontSize:18 }}>📅</span>
-              <h2 style={{ color:'#fff', fontWeight:900, fontSize:19, letterSpacing:'-0.4px', margin:0 }}>
-                {MONTH_NAMES_LONG[month]} {year}
+          {/* Left: Navigation and Month Headline */}
+          <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+            <div style={{ display:'flex', alignItems:'baseline', gap:8 }}>
+              <h2 style={{
+                color:'#fff', fontWeight:900, fontSize:22, letterSpacing:'-0.6px', margin:0,
+                display:'flex', alignItems:'center', gap:8
+              }}>
+                <span style={{ fontSize:22 }}>🗓️</span>
+                <span>{MONTH_NAMES_LONG[month]}</span>
+                <span style={{ fontWeight:400, color:'rgba(255,255,255,0.45)', fontSize:20 }}>{year}</span>
               </h2>
             </div>
 
-            {/* View Mode Switcher: Month vs Agenda */}
-            <div style={{
-              display:'flex', background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.1)',
-              borderRadius:9, padding:3, gap:2, marginLeft:8
-            }}>
-              <button
-                type="button"
-                onClick={() => setViewMode('month')}
-                style={{
-                  padding:'5px 12px', borderRadius:7, border:'none',
-                  background: viewMode === 'month' ? 'rgba(255,255,255,0.15)' : 'transparent',
-                  color: viewMode === 'month' ? '#fff' : 'rgba(255,255,255,0.55)',
-                  fontWeight: viewMode === 'month' ? 800 : 600,
-                  fontSize:12, cursor:'pointer', transition:'all .14s'
-                }}
-              >
-                ⊞ Month Grid
-              </button>
-              <button
-                type="button"
-                onClick={() => setViewMode('agenda')}
-                style={{
-                  padding:'5px 12px', borderRadius:7, border:'none',
-                  background: viewMode === 'agenda' ? 'rgba(255,255,255,0.15)' : 'transparent',
-                  color: viewMode === 'agenda' ? '#fff' : 'rgba(255,255,255,0.55)',
-                  fontWeight: viewMode === 'agenda' ? 800 : 600,
-                  fontSize:12, cursor:'pointer', transition:'all .14s'
-                }}
-              >
-                📋 Agenda List
-              </button>
+            {/* Nav arrows & today */}
+            <div style={{ display:'flex', alignItems:'center', gap:4, background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.09)', borderRadius:10, padding:3 }}>
+              <button onClick={prevMon} style={{
+                background:'transparent', border:'none', width:28, height:28, borderRadius:7,
+                color:'rgba(255,255,255,0.8)', fontSize:15, cursor:'pointer', display:'flex',
+                alignItems:'center', justifyContent:'center', transition:'all .12s'
+              }}
+              onMouseEnter={e=>{e.currentTarget.style.background='rgba(255,255,255,0.12)';e.currentTarget.style.color='#fff';}}
+              onMouseLeave={e=>{e.currentTarget.style.background='transparent';e.currentTarget.style.color='rgba(255,255,255,0.8)';}}
+              title="Previous Month"
+              >‹</button>
+              <button onClick={goToday} style={{
+                background:'rgba(249,115,22,0.15)', border:'1px solid rgba(249,115,22,0.35)',
+                color:'#f97316', fontSize:11.5, fontWeight:800, borderRadius:6, padding:'3px 10px',
+                cursor:'pointer', fontFamily:'inherit', transition:'all .12s'
+              }}
+              onMouseEnter={e=>e.currentTarget.style.background='rgba(249,115,22,0.25)'}
+              onMouseLeave={e=>e.currentTarget.style.background='rgba(249,115,22,0.15)'}
+              >Today</button>
+              <button onClick={nextMon} style={{
+                background:'transparent', border:'none', width:28, height:28, borderRadius:7,
+                color:'rgba(255,255,255,0.8)', fontSize:15, cursor:'pointer', display:'flex',
+                alignItems:'center', justifyContent:'center', transition:'all .12s'
+              }}
+              onMouseEnter={e=>{e.currentTarget.style.background='rgba(255,255,255,0.12)';e.currentTarget.style.color='#fff';}}
+              onMouseLeave={e=>{e.currentTarget.style.background='transparent';e.currentTarget.style.color='rgba(255,255,255,0.8)';}}
+              title="Next Month"
+              >›</button>
             </div>
+
+            {/* Active Items Count Pill */}
+            <span style={{
+              fontSize:11.5, fontWeight:700, color:'rgba(255,255,255,0.65)',
+              background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.08)',
+              borderRadius:8, padding:'5px 11px', display:'flex', alignItems:'center', gap:6
+            }}>
+              <span style={{ width:6, height:6, borderRadius:'50%', background:'#34d399' }} />
+              {allItems.length} Active {allItems.length === 1 ? 'Item' : 'Items'}
+            </span>
           </div>
 
-          <div style={{ display:'flex', gap:10, alignItems:'center', flexWrap:'wrap' }}>
-            {/* Search Input with Clear Button */}
+          {/* Right: Controls & Actions */}
+          <div style={{ display:'flex', alignItems:'center', gap:10, flexWrap:'wrap' }}>
+
+            {/* Search Input */}
             <div style={{ position:'relative', width:180 }}>
               <input
                 className="ap-input"
                 placeholder="Search schedule…"
                 value={calSearch}
                 onChange={e => setCalSearch(e.target.value)}
-                style={{ paddingRight: calSearch ? 26 : 10, fontSize:12, padding:'6px 10px' }}
+                style={{
+                  fontSize:12, padding:'7px 28px 7px 11px',
+                  background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.1)'
+                }}
               />
-              {calSearch && (
+              {calSearch ? (
                 <button
                   type="button"
                   onClick={() => setCalSearch('')}
                   style={{
-                    position:'absolute', right:6, top:'50%', transform:'translateY(-50%)',
+                    position:'absolute', right:8, top:'50%', transform:'translateY(-50%)',
                     background:'none', border:'none', color:'rgba(255,255,255,0.5)',
                     cursor:'pointer', fontSize:12, padding:0
                   }}
@@ -6166,77 +6238,126 @@ function AdminCalendarTab({ showToast, setTab }) {
                 >
                   ✕
                 </button>
+              ) : (
+                <span style={{ position:'absolute', right:8, top:'50%', transform:'translateY(-50%)', fontSize:12, opacity:0.4, pointerEvents:'none' }}>🔍</span>
               )}
             </div>
 
+            {/* View Mode Switcher: Month vs Agenda */}
+            <div style={{
+              display:'flex', background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.09)',
+              borderRadius:10, padding:3, gap:2
+            }}>
+              <button
+                type="button"
+                onClick={() => setViewMode('month')}
+                style={{
+                  padding:'6px 14px', borderRadius:7, border:'none',
+                  background: viewMode === 'month' ? 'rgba(255,255,255,0.16)' : 'transparent',
+                  color: viewMode === 'month' ? '#fff' : 'rgba(255,255,255,0.5)',
+                  fontWeight: viewMode === 'month' ? 800 : 600,
+                  fontSize:12, cursor:'pointer', transition:'all .14s',
+                  display:'flex', alignItems:'center', gap:5
+                }}
+              >
+                <span>⊞</span> Month
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode('agenda')}
+                style={{
+                  padding:'6px 14px', borderRadius:7, border:'none',
+                  background: viewMode === 'agenda' ? 'rgba(255,255,255,0.16)' : 'transparent',
+                  color: viewMode === 'agenda' ? '#fff' : 'rgba(255,255,255,0.5)',
+                  fontWeight: viewMode === 'agenda' ? 800 : 600,
+                  fontSize:12, cursor:'pointer', transition:'all .14s',
+                  display:'flex', alignItems:'center', gap:5
+                }}
+              >
+                <span>📋</span> Agenda
+              </button>
+            </div>
+
+            {/* iCal (.ics) Export */}
             <button
               onClick={() => exportCalendarICS(allItems, showToast)}
-              className="ap-btn ap-btn-ghost"
-              style={{ fontSize:12, padding:'7px 12px' }}
-              title="Export consortium schedule as .ics file for Google Calendar, Outlook, or Apple Calendar"
+              style={{
+                background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.1)',
+                color:'rgba(255,255,255,0.85)', borderRadius:10, padding:'7px 13px',
+                fontSize:12, fontWeight:700, cursor:'pointer', display:'flex', alignItems:'center', gap:6,
+                transition:'all .14s'
+              }}
+              onMouseEnter={e=>{e.currentTarget.style.background='rgba(255,255,255,0.12)';e.currentTarget.style.color='#fff';}}
+              onMouseLeave={e=>{e.currentTarget.style.background='rgba(255,255,255,0.05)';e.currentTarget.style.color='rgba(255,255,255,0.85)';}}
+              title="Download RFC 5545 calendar file for Google Calendar, Apple Calendar, or Outlook"
             >
-              ⬇ Export .ics
+              <span>⬇</span> .ics Export
             </button>
 
+            {/* New Event CTA */}
             <button onClick={() => setTab('events')} style={{
               background:'linear-gradient(90deg,#f97316,#e11d48)', color:'#fff',
               border:'none', borderRadius:10, padding:'8px 16px', fontSize:12.5,
               fontWeight:800, cursor:'pointer', fontFamily:'inherit',
-              display:'flex', alignItems:'center', gap:6, boxShadow:'0 4px 16px rgba(249,115,22,0.35)'
-            }}>
-              ＋ New Event
+              display:'flex', alignItems:'center', gap:6, boxShadow:'0 4px 16px rgba(249,115,22,0.35)',
+              transition:'all .14s'
+            }}
+            onMouseEnter={e=>e.currentTarget.style.opacity='.9'}
+            onMouseLeave={e=>e.currentTarget.style.opacity='1'}
+            >
+              <span>＋</span> New Event
             </button>
           </div>
         </div>
 
+        {/* ── Main View Area ── */}
         {viewMode === 'month' ? (
-          <>
+          <div style={{ flex:1, display:'flex', flexDirection:'column', overflow:'hidden', borderRadius:14, border:'1px solid rgba(255,255,255,0.07)' }}>
             {/* Day headers Mon–Sun */}
             <div style={{
               display:'grid', gridTemplateColumns:'repeat(7,1fr)',
-              background:'rgba(15,23,42,0.6)', border:'1px solid rgba(255,255,255,0.08)',
-              borderBottom:'none', borderRadius:'14px 14px 0 0',
+              background:'rgba(15,23,42,0.85)', borderBottom:'1px solid rgba(255,255,255,0.08)',
               padding:'10px 0', flexShrink:0
             }}>
               {DAY_LABELS.map((d,i) => (
                 <div key={d} style={{
-                  textAlign:'center', fontSize:11.5, fontWeight:800,
-                  color: i>=5 ? '#f87171' : 'rgba(255,255,255,0.7)',
-                  letterSpacing:'.6px', textTransform:'uppercase'
+                  textAlign:'center', fontSize:11, fontWeight:800,
+                  color: i>=5 ? '#f87171' : 'rgba(255,255,255,0.65)',
+                  letterSpacing:'.8px', textTransform:'uppercase'
                 }}>{d}</div>
               ))}
             </div>
 
             {loading ? (
-              <div style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', color:'rgba(255,255,255,0.3)', background:'rgba(11,19,38,0.5)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:'0 0 14px 14px' }}>
+              <div style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', color:'rgba(255,255,255,0.4)', background:'rgba(11,19,38,0.5)' }}>
                 <div style={{ textAlign:'center' }}><div style={{ fontSize:32, marginBottom:8 }}>⏳</div>Loading calendar…</div>
               </div>
             ) : (
               /* Week rows */
               <div style={{
                 flex:1, overflowY:'auto', display:'flex', flexDirection:'column',
-                background:'rgba(11,19,38,0.75)', border:'1px solid rgba(255,255,255,0.08)',
-                borderRadius:'0 0 14px 14px', backdropFilter:'blur(12px)'
+                background:'rgba(11,19,38,0.6)'
               }}>
                 {weeks.map((wDays, wi) => {
                   const bars = getWeekBars(wDays);
                   const maxRow = bars.reduce((mx,b)=>Math.max(mx,b.row), -1);
                   return (
                     <div key={wi} style={{
-                      flex:1, minHeight:105, borderBottom: wi < weeks.length - 1 ? '1px solid rgba(255,255,255,0.06)' : 'none',
-                      display:'flex', flexDirection:'column', position:'relative'
+                      flex:1, minHeight:110, borderBottom: wi < weeks.length - 1 ? '1px solid rgba(255,255,255,0.06)' : 'none',
+                      display:'flex', flexDirection:'column', position:'relative',
+                      background: wi % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.008)'
                     }}>
                       {/* Event bars */}
                       {bars.length > 0 && (
                         <div style={{
                           display:'grid', gridTemplateColumns:'repeat(7,1fr)',
-                          gridTemplateRows:`repeat(${maxRow+1}, 26px)`,
-                          gap:3, padding:'6px 6px 2px', flexShrink:0,
-                          minHeight:(maxRow+1)*28+10, zIndex:2,
+                          gridTemplateRows:`repeat(${maxRow+1}, 27px)`,
+                          gap:'4px 6px', padding:'36px 6px 4px', flexShrink:0,
+                          zIndex:2,
                         }}>
                           {bars.map((item,ii) => {
-                            const lR = item.isStart ? 8 : 0;
-                            const rR = item.isEnd   ? 8 : 0;
+                            const lR = item.isStart ? 7 : 0;
+                            const rR = item.isEnd   ? 7 : 0;
                             return (
                               <div
                                 key={`${item.id}-w${wi}-${ii}`}
@@ -6247,8 +6368,9 @@ function AdminCalendarTab({ showToast, setTab }) {
                                   gridRowStart: item.row+1,
                                   background: item._bg,
                                   border: `1px solid ${item._border}`,
+                                  borderLeft: item.isStart ? `3.5px solid ${item._text}` : `1px solid ${item._border}`,
                                   borderRadius: `${lR}px ${rR}px ${rR}px ${lR}px`,
-                                  padding: '2px 9px',
+                                  padding: '2px 8px',
                                   cursor:'pointer', overflow:'hidden',
                                   display:'flex', alignItems:'center', gap:6,
                                   boxShadow:'0 2px 8px rgba(0,0,0,0.3)',
@@ -6267,11 +6389,11 @@ function AdminCalendarTab({ showToast, setTab }) {
                               >
                                 <span style={{ fontSize:11, flexShrink:0 }}>{item._icon || (item._type === 'training' ? '🎓' : '📅')}</span>
                                 {!item.isStart && <span style={{ fontSize:9, color:item._text, opacity:0.6, flexShrink:0 }}>◀</span>}
-                                <span style={{ fontSize:12, fontWeight:800, color:item._text, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', flex:1 }}>
+                                <span style={{ fontSize:11.5, fontWeight:800, color:item._text, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', flex:1 }}>
                                   {item.title}
                                 </span>
                                 {item.isEnd && (
-                                  <span style={{ fontSize:9.5, opacity:0.85, fontWeight:700, color:'#fff', background:'rgba(0,0,0,0.25)', borderRadius:4, padding:'1px 4px', flexShrink:0 }}>
+                                  <span style={{ fontSize:9, opacity:0.85, fontWeight:800, color:'#fff', background:'rgba(0,0,0,0.3)', borderRadius:4, padding:'1px 5px', flexShrink:0 }}>
                                     {item.category || item.level}
                                   </span>
                                 )}
@@ -6280,26 +6402,60 @@ function AdminCalendarTab({ showToast, setTab }) {
                           })}
                         </div>
                       )}
-                      {/* Day number cells */}
-                      <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', flex:1, position:'absolute', inset:0, zIndex:1, pointerEvents:'none' }}>
+
+                      {/* Day number cells background grid */}
+                      <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', position:'absolute', inset:0, zIndex:1 }}>
                         {wDays.map((d, di) => {
                           const inM = d >= 1 && d <= daysInMon;
                           const isT = inM && d===today.getDate() && month===today.getMonth() && year===today.getFullYear();
                           const isWE = di >= 5;
+                          const isSel = inM && selectedDay?.day === d;
                           return (
-                            <div key={di} style={{
-                              borderLeft: di>0 ? '1px solid rgba(255,255,255,0.04)' : 'none',
-                              padding:'6px 8px',
-                              background: isT ? 'rgba(249,115,22,0.06)' : isWE ? 'rgba(255,255,255,0.012)' : 'transparent'
-                            }}>
-                              <div style={{
-                                width:26, height:26, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center',
-                                background: isT ? 'linear-gradient(135deg,#f97316,#e11d48)' : 'transparent',
-                                fontSize:12.5, fontWeight: isT ? 900 : 700,
-                                color: isT ? '#fff' : inM ? (isWE ? '#f87171' : 'rgba(255,255,255,0.85)') : 'rgba(255,255,255,0.15)',
-                                boxShadow: isT ? '0 0 12px rgba(249,115,22,0.6)' : 'none'
-                              }}>
-                                {inM ? d : ''}
+                            <div
+                              key={di}
+                              onClick={() => {
+                                if (inM) {
+                                  const items = itemsOnDay(d);
+                                  setSelectedDay(s => s?.day === d ? null : { day: d, items });
+                                }
+                              }}
+                              style={{
+                                borderLeft: di > 0 ? '1px solid rgba(255,255,255,0.05)' : 'none',
+                                padding:'6px 8px',
+                                cursor: inM ? 'pointer' : 'default',
+                                background: isSel
+                                  ? 'rgba(59,130,246,0.08)'
+                                  : isT
+                                  ? 'linear-gradient(180deg, rgba(249,115,22,0.12) 0%, rgba(249,115,22,0.02) 100%)'
+                                  : isWE
+                                  ? 'rgba(0,0,0,0.14)'
+                                  : !inM
+                                  ? 'rgba(0,0,0,0.22)'
+                                  : 'transparent',
+                                transition:'background .12s'
+                              }}
+                              onMouseEnter={e => {
+                                if (inM && !isT && !isSel) e.currentTarget.style.background = 'rgba(255,255,255,0.025)';
+                              }}
+                              onMouseLeave={e => {
+                                if (inM && !isT && !isSel) e.currentTarget.style.background = isWE ? 'rgba(0,0,0,0.14)' : 'transparent';
+                              }}
+                            >
+                              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+                                <div style={{
+                                  width:25, height:25, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center',
+                                  background: isT ? 'linear-gradient(135deg,#f97316,#e11d48)' : isSel ? 'linear-gradient(135deg,#3b82f6,#1d4ed8)' : 'transparent',
+                                  fontSize:12, fontWeight: isT || isSel ? 900 : 700,
+                                  color: isT || isSel ? '#fff' : inM ? (isWE ? '#f87171' : 'rgba(255,255,255,0.85)') : 'rgba(255,255,255,0.18)',
+                                  boxShadow: isT ? '0 0 10px rgba(249,115,22,0.5)' : isSel ? '0 0 10px rgba(59,130,246,0.5)' : 'none'
+                                }}>
+                                  {inM ? d : ''}
+                                </div>
+                                {isT && (
+                                  <span style={{ fontSize:9, fontWeight:900, color:'#f97316', background:'rgba(249,115,22,0.18)', borderRadius:4, padding:'1px 5px', textTransform:'uppercase' }}>
+                                    TODAY
+                                  </span>
+                                )}
                               </div>
                             </div>
                           );
@@ -6310,13 +6466,13 @@ function AdminCalendarTab({ showToast, setTab }) {
                 })}
               </div>
             )}
-          </>
+          </div>
         ) : (
-          /* Agenda / Chronological Schedule List View */
+          /* ── Agenda / Chronological Schedule List View ── */
           <div style={{
             flex:1, overflowY:'auto',
-            background:'rgba(11,19,38,0.75)', border:'1px solid rgba(255,255,255,0.08)',
-            borderRadius:14, padding:'16px 20px', backdropFilter:'blur(12px)',
+            background:'rgba(11,19,38,0.5)', border:'1px solid rgba(255,255,255,0.07)',
+            borderRadius:14, padding:'16px 20px',
             display:'flex', flexDirection:'column', gap:10
           }}>
             {allItems.length === 0 ? (
@@ -6330,76 +6486,97 @@ function AdminCalendarTab({ showToast, setTab }) {
                 .sort((a,b) => (a.startDate?.getTime() || 0) - (b.startDate?.getTime() || 0))
                 .map(it => {
                   const dateStr = it.date || it.schedule || 'TBA';
-                  const loc = it.venue || it.org || 'Region VII Central Node';
+                  const loc = it.venue || it.org || 'Region VII Central Visayas Node';
+                  const dObj = it.startDate || new Date();
+                  const monStr = MONTH_NAMES_LONG[dObj.getMonth()]?.slice(0,3).toUpperCase();
+                  const dayNum = dObj.getDate();
+                  const dowStr = ['SUN','MON','TUE','WED','THU','FRI','SAT'][dObj.getDay()];
+
                   return (
                     <div
                       key={it._type + it.id}
                       onClick={() => setDetail(it)}
                       style={{
                         display:'flex', alignItems:'center', justifyContent:'space-between',
-                        padding:'14px 18px', borderRadius:12,
-                        background:'rgba(255,255,255,0.035)', border:'1px solid rgba(255,255,255,0.07)',
-                        cursor:'pointer', transition:'all .15s ease', gap:14
+                        padding:'14px 18px', borderRadius:14,
+                        background:'linear-gradient(90deg, rgba(255,255,255,0.035) 0%, rgba(255,255,255,0.015) 100%)',
+                        border:'1px solid rgba(255,255,255,0.08)',
+                        cursor:'pointer', transition:'all .15s ease', gap:16
                       }}
                       onMouseEnter={e => {
-                        e.currentTarget.style.background = 'rgba(255,255,255,0.065)';
-                        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)';
+                        e.currentTarget.style.background = 'rgba(255,255,255,0.06)';
+                        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.18)';
                         e.currentTarget.style.transform = 'translateY(-1px)';
                       }}
                       onMouseLeave={e => {
-                        e.currentTarget.style.background = 'rgba(255,255,255,0.035)';
-                        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)';
+                        e.currentTarget.style.background = 'linear-gradient(90deg, rgba(255,255,255,0.035) 0%, rgba(255,255,255,0.015) 100%)';
+                        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)';
                         e.currentTarget.style.transform = 'translateY(0)';
                       }}
                     >
-                      <div style={{ display:'flex', alignItems:'center', gap:14, minWidth:0, flex:1 }}>
-                        <div style={{
-                          width:42, height:42, borderRadius:11,
-                          background: it._type==='event' ? 'rgba(129,140,248,0.15)' : 'rgba(52,211,153,0.15)',
-                          border:`1px solid ${it._type==='event' ? 'rgba(129,140,248,0.35)' : 'rgba(52,211,153,0.35)'}`,
-                          display:'flex', alignItems:'center', justifyContent:'center', fontSize:20, flexShrink:0
-                        }}>
-                          {it._icon || (it._type==='event' ? '📅' : '🎓')}
+                      {/* Date capsule */}
+                      <div style={{
+                        display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center',
+                        width:54, height:54, borderRadius:12,
+                        background: it._type==='event' ? 'rgba(129,140,248,0.12)' : 'rgba(52,211,153,0.12)',
+                        border: `1px solid ${it._type==='event' ? 'rgba(129,140,248,0.3)' : 'rgba(52,211,153,0.3)'}`,
+                        flexShrink:0
+                      }}>
+                        <span style={{ fontSize:9.5, fontWeight:800, color: it._type==='event' ? '#a5b4fc' : '#6ee7b7', letterSpacing:'.5px' }}>{monStr}</span>
+                        <span style={{ fontSize:18, fontWeight:900, color:'#fff', lineHeight:1 }}>{dayNum}</span>
+                        <span style={{ fontSize:8.5, fontWeight:700, color:'rgba(255,255,255,0.45)' }}>{dowStr}</span>
+                      </div>
+
+                      {/* Main content */}
+                      <div style={{ minWidth:0, flex:1 }}>
+                        <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:4 }}>
+                          <span style={{ color:'#fff', fontWeight:800, fontSize:14.5 }}>{it.title}</span>
+                          <span style={{
+                            fontSize:10.5, fontWeight:800, padding:'2px 8px', borderRadius:6,
+                            background: it._type==='event' ? 'rgba(129,140,248,0.18)' : 'rgba(52,211,153,0.18)',
+                            color: it._type==='event' ? '#c7d2fe' : '#a7f3d0'
+                          }}>
+                            {it._type==='event' ? 'Event' : 'Training'} · {it.category || it.level}
+                          </span>
                         </div>
-                        <div style={{ minWidth:0, flex:1 }}>
-                          <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:3 }}>
-                            <span style={{ color:'#fff', fontWeight:800, fontSize:14.5 }}>{it.title}</span>
-                            <span style={{
-                              fontSize:10.5, fontWeight:800, padding:'2px 7px', borderRadius:6,
-                              background: it._type==='event' ? 'rgba(129,140,248,0.18)' : 'rgba(52,211,153,0.18)',
-                              color: it._type==='event' ? '#a5b4fc' : '#6ee7b7'
-                            }}>
-                              {it._type==='event' ? 'Event' : 'Training'} · {it.category || it.level}
-                            </span>
-                          </div>
-                          <div style={{ fontSize:12, color:'rgba(255,255,255,0.5)', display:'flex', alignItems:'center', gap:10, flexWrap:'wrap' }}>
-                            <span>📅 {dateStr}</span>
-                            <span>·</span>
-                            <span>📍 {loc}</span>
-                            {it.enrolled !== undefined && (
-                              <>
-                                <span>·</span>
-                                <span style={{ color:'#34d399', fontWeight:700 }}>👥 {it.enrolled}/{it.total} Enrolled</span>
-                              </>
-                            )}
-                          </div>
+                        <div style={{ fontSize:12, color:'rgba(255,255,255,0.55)', display:'flex', alignItems:'center', gap:10, flexWrap:'wrap' }}>
+                          <span>📅 {dateStr}</span>
+                          <span>·</span>
+                          <span>📍 {loc}</span>
+                          {it.enrolled !== undefined && (
+                            <>
+                              <span>·</span>
+                              <span style={{ color:'#34d399', fontWeight:700 }}>👥 {it.enrolled}/{it.total} Enrolled</span>
+                            </>
+                          )}
                         </div>
                       </div>
 
+                      {/* Action buttons */}
                       <div style={{ display:'flex', alignItems:'center', gap:8, flexShrink:0 }}>
                         <button
                           type="button"
                           onClick={(e) => { e.stopPropagation(); setDetail(it); }}
-                          className="ap-btn ap-btn-ghost"
-                          style={{ padding:'6px 12px', fontSize:11.5 }}
+                          style={{
+                            background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.1)',
+                            color:'#fff', borderRadius:8, padding:'6px 12px', fontSize:11.5, fontWeight:700,
+                            cursor:'pointer', transition:'all .13s'
+                          }}
+                          onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,0.14)'}
+                          onMouseLeave={e=>e.currentTarget.style.background='rgba(255,255,255,0.06)'}
                         >
                           View Details
                         </button>
                         <button
                           type="button"
                           onClick={(e) => { e.stopPropagation(); setTab(it._type==='event'?'events':'training'); }}
-                          className="ap-btn ap-btn-blue"
-                          style={{ padding:'6px 12px', fontSize:11.5 }}
+                          style={{
+                            background:'linear-gradient(90deg,#3b82f6,#2563eb)', color:'#fff',
+                            border:'none', borderRadius:8, padding:'6px 12px', fontSize:11.5, fontWeight:800,
+                            cursor:'pointer', transition:'all .13s', boxShadow:'0 2px 8px rgba(59,130,246,0.3)'
+                          }}
+                          onMouseEnter={e=>e.currentTarget.style.opacity='.9'}
+                          onMouseLeave={e=>e.currentTarget.style.opacity='1'}
                         >
                           Manage →
                         </button>
@@ -6410,15 +6587,16 @@ function AdminCalendarTab({ showToast, setTab }) {
             )}
           </div>
         )}
+
       </div>
 
-      {/* ── Detail side panel ── */}
+      {/* ── Detail side panel / Inspection modal ── */}
       {detail && (
-        <div onClick={() => setDetail(null)} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.65)', zIndex:9100, display:'flex', alignItems:'center', justifyContent:'flex-end', padding:24, backdropFilter:'blur(6px)' }}>
+        <div onClick={() => setDetail(null)} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.7)', zIndex:9100, display:'flex', alignItems:'center', justifyContent:'flex-end', padding:24, backdropFilter:'blur(8px)' }}>
           <div onClick={e => e.stopPropagation()} style={{
             background:'linear-gradient(180deg,#0f172a,#090e1c)',
-            border:'1px solid rgba(255,255,255,0.15)', borderRadius:22,
-            width:380, maxHeight:'85vh', overflow:'auto',
+            border:'1px solid rgba(255,255,255,0.15)', borderRadius:24,
+            width:400, maxHeight:'85vh', overflow:'auto',
             animation:'modalIn .22s cubic-bezier(0.16, 1, 0.3, 1)',
             boxShadow:'0 30px 90px rgba(0,0,0,0.85)'
           }}>
@@ -6443,7 +6621,7 @@ function AdminCalendarTab({ showToast, setTab }) {
                 {detail._type === 'event'
                   ? [['📅','Date & Schedule',detail.date],['📍','Venue / Location',detail.venue],['🏛','Lead Organizer',detail.organizer],['👥','Seat Capacity',`${detail.enrolled}/${detail.total} Registered`]]
                       .map(([ic,l,v]) => v && (
-                        <div key={l} style={{ display:'flex',gap:12,alignItems:'center',padding:'8px 12px',background:'rgba(255,255,255,0.035)',border:'1px solid rgba(255,255,255,0.06)',borderRadius:10 }}>
+                        <div key={l} style={{ display:'flex',gap:12,alignItems:'center',padding:'9px 12px',background:'rgba(255,255,255,0.035)',border:'1px solid rgba(255,255,255,0.06)',borderRadius:10 }}>
                           <span style={{ fontSize:16,flexShrink:0 }}>{ic}</span>
                           <div>
                             <div style={{ fontSize:10.5,color:'rgba(255,255,255,0.4)',fontWeight:800,textTransform:'uppercase',letterSpacing:'.5px' }}>{l}</div>
@@ -6453,7 +6631,7 @@ function AdminCalendarTab({ showToast, setTab }) {
                       ))
                   : [['🏛','Host Institution',detail.org],['⏱','Duration',detail.duration],['📊','Target Level',detail.level],['📅','Schedule',detail.schedule],['👥','Enrollment',`${detail.enrolled}/${detail.total} Faculty Enrolled`]]
                       .map(([ic,l,v]) => v && (
-                        <div key={l} style={{ display:'flex',gap:12,alignItems:'center',padding:'8px 12px',background:'rgba(255,255,255,0.035)',border:'1px solid rgba(255,255,255,0.06)',borderRadius:10 }}>
+                        <div key={l} style={{ display:'flex',gap:12,alignItems:'center',padding:'9px 12px',background:'rgba(255,255,255,0.035)',border:'1px solid rgba(255,255,255,0.06)',borderRadius:10 }}>
                           <span style={{ fontSize:16,flexShrink:0 }}>{ic}</span>
                           <div>
                             <div style={{ fontSize:10.5,color:'rgba(255,255,255,0.4)',fontWeight:800,textTransform:'uppercase',letterSpacing:'.5px' }}>{l}</div>
@@ -6486,6 +6664,7 @@ function AdminCalendarTab({ showToast, setTab }) {
     </div>
   );
 }
+
 
 /* ═══════════════════════════════════════════════════════════════════
    MESSAGES
