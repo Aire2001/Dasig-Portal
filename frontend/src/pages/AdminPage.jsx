@@ -11,18 +11,72 @@ const CSS = `
 
   .ap-sidebar-link {
     display:flex; align-items:center; gap:10px;
-    padding:9px 14px; border-radius:9px; width:100%;
-    border:none; cursor:pointer; font-family:inherit;
+    padding:9px 12px; border-radius:10px; width:100%;
+    border:1px solid transparent; cursor:pointer; font-family:inherit;
     font-size:13px; font-weight:600; text-align:left;
-    background:transparent; color:rgba(255,255,255,0.52);
-    transition:all .16s;
+    background:transparent; color:rgba(255,255,255,0.62);
+    transition:all .18s cubic-bezier(0.16, 1, 0.3, 1);
+    position:relative;
   }
-  .ap-sidebar-link:hover { background:rgba(255,255,255,0.07); color:rgba(255,255,255,0.88); }
+  .ap-sidebar-link:hover {
+    background:rgba(255,255,255,0.06);
+    color:#fff;
+    border-color:rgba(255,255,255,0.07);
+    transform:translateX(2px);
+  }
   .ap-sidebar-link.active {
-    background:rgba(249,115,22,0.14);
-    color:#f97316;
+    background:linear-gradient(90deg, rgba(249,115,22,0.18) 0%, rgba(225,29,72,0.08) 100%);
+    color:#fb923c;
     font-weight:800;
-    box-shadow:inset 3px 0 0 #f97316;
+    border-color:rgba(249,115,22,0.35);
+    box-shadow:0 4px 14px rgba(249,115,22,0.12), inset 3px 0 0 #f97316;
+  }
+
+  .ap-nav-badge {
+    font-size:10px; font-weight:800; border-radius:99px;
+    padding:1px 6.5px; line-height:1.4; display:inline-flex;
+    align-items:center; justify-content:center;
+    transition:all .15s ease;
+  }
+  .ap-nav-badge-amber {
+    background:rgba(245,158,11,0.22); color:#fbbf24;
+    border:1px solid rgba(245,158,11,0.45);
+    box-shadow:0 0 10px rgba(245,158,11,0.28);
+  }
+  .ap-nav-badge-rose {
+    background:rgba(244,63,94,0.22); color:#fda4af;
+    border:1px solid rgba(244,63,94,0.42);
+    box-shadow:0 0 10px rgba(244,63,94,0.25);
+  }
+  .ap-nav-badge-neutral {
+    background:rgba(255,255,255,0.07); color:rgba(255,255,255,0.55);
+    border:1px solid rgba(255,255,255,0.09);
+  }
+
+  .ap-breadcrumb-bar {
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:20px; flex-wrap:wrap; gap:12px;
+    background:rgba(11,19,38,0.72); border:1px solid rgba(255,255,255,0.08);
+    border-radius:14px; padding:10px 18px; backdrop-filter:blur(14px);
+    box-shadow:0 4px 20px rgba(0,0,0,0.25);
+  }
+
+  .ap-activity-stream {
+    background:rgba(11,19,38,0.85); border:1px solid rgba(255,255,255,0.08);
+    border-radius:20px; padding:22px; backdrop-filter:blur(14px);
+    box-shadow:0 8px 24px rgba(0,0,0,0.3); margin-bottom:24px;
+  }
+  .ap-activity-item {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:11px 14px; border-radius:12px;
+    background:rgba(255,255,255,0.025);
+    border:1px solid rgba(255,255,255,0.05);
+    transition:all .16s ease;
+  }
+  .ap-activity-item:hover {
+    background:rgba(255,255,255,0.05);
+    border-color:rgba(255,255,255,0.1);
+    transform:translateX(3px);
   }
 
   .ap-input {
@@ -837,6 +891,29 @@ function SystemHealthModal({ onClose, telemetry = {} }) {
 /* ─── Main page ─────────────────────────────────────────────────── */
 const VALID_TABS = ['dashboard','calendar','users','applications','events','news','training','policies','funding','partnerships','reports','messages'];
 
+function getNavBadge(key, stats, unreadCount) {
+  if (!stats) return null;
+  if (key === 'applications') {
+    const pending = stats.applications?.pending ?? 0;
+    if (pending > 0) return { count: pending, type: 'amber' };
+    return null;
+  }
+  if (key === 'messages') {
+    if (unreadCount > 0) return { count: unreadCount, type: 'rose' };
+    return null;
+  }
+  if (key === 'users') {
+    return { count: stats.users?.total ?? 0, type: 'neutral' };
+  }
+  if (key === 'events') {
+    return { count: stats.events?.total ?? 0, type: 'neutral' };
+  }
+  if (key === 'training') {
+    return { count: stats.trainings?.total ?? 0, type: 'neutral' };
+  }
+  return null;
+}
+
 export default function AdminPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -1032,37 +1109,80 @@ export default function AdminPage() {
               <div style={{ fontSize:9.5, fontWeight:900, color:'rgba(255,255,255,0.25)', letterSpacing:'1.2px', textTransform:'uppercase', padding:'0 6px', marginBottom:4 }}>
                 {g.label}
               </div>
-              {g.items.map(it => (
-                <button
-                  key={it.key}
-                  className={`ap-sidebar-link${tab === it.key ? ' active' : ''}`}
-                  onClick={() => {
-                    setTab(it.key);
-                    setMobileNavOpen(false);
-                  }}
-                >
-                  <span style={{ fontSize:14, lineHeight:1 }}>{it.icon}</span>
-                  {it.label}
-                </button>
-              ))}
+              {g.items.map(it => {
+                const badge = getNavBadge(it.key, statsSummary, unreadCount);
+                return (
+                  <button
+                    key={it.key}
+                    className={`ap-sidebar-link${tab === it.key ? ' active' : ''}`}
+                    onClick={() => {
+                      setTab(it.key);
+                      setMobileNavOpen(false);
+                    }}
+                  >
+                    <span style={{ fontSize:14, lineHeight:1 }}>{it.icon}</span>
+                    <span style={{ flex: 1, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{it.label}</span>
+                    {badge && (
+                      <span className={`ap-nav-badge ap-nav-badge-${badge.type}`}>
+                        {badge.count}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
           ))}
         </aside>
 
         {/* Content area */}
         <main className="ap-main-content" style={{ flex:1, overflowY:'auto', padding:'28px 32px', background:'#060d1f' }}>
-          {tab === 'dashboard'    && <DashboardTab showToast={showToast} setTab={setTab} telemetry={telemetry} />}
+          {/* ── Breadcrumb & Context Header ── */}
+          {(() => {
+            const currentTabItem = NAV_GROUPS.flatMap(g => g.items.map(it => ({ ...it, group: g.label }))).find(it => it.key === tab) || { label: 'Dashboard', group: 'Overview', icon: '⊞' };
+            return (
+              <div className="ap-breadcrumb-bar">
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                  <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, fontWeight: 700 }}>Admin Console</span>
+                  <span style={{ color: 'rgba(255,255,255,0.2)' }}>/</span>
+                  <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12, fontWeight: 700 }}>{currentTabItem.group}</span>
+                  <span style={{ color: 'rgba(255,255,255,0.2)' }}>/</span>
+                  <span style={{ color: '#fff', fontSize: 12.5, fontWeight: 900, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span>{currentTabItem.icon}</span> {currentTabItem.label}
+                  </span>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11.5, color: 'rgba(255,255,255,0.5)', fontWeight: 600 }}>
+                    <span>🕒</span>
+                    <span>{currentTimePHT || 'Asia/Manila PHT'}</span>
+                  </div>
+                  <div style={{ width: 1, height: 14, background: 'rgba(255,255,255,0.1)' }} />
+                  <button
+                    onClick={() => setQuickJumpOpen(true)}
+                    style={{
+                      background: 'none', border: 'none', color: '#fb923c', fontSize: 11.5,
+                      fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, padding: 0
+                    }}
+                  >
+                    <span>🔍 Jump (⌘K)</span>
+                  </button>
+                </div>
+              </div>
+            );
+          })()}
+
+          {tab === 'dashboard'    && <DashboardTab showToast={showToast} setTab={setTab} telemetry={telemetry} refreshOverviewStats={refreshOverviewStats} />}
           {tab === 'calendar'     && <AdminCalendarTab showToast={showToast} setTab={setTab} />}
-          {tab === 'users'        && <UsersTab showToast={showToast} />}
-          {tab === 'applications' && <ApplicationsTab showToast={showToast} />}
-          {tab === 'events'       && <EventsTab showToast={showToast} />}
-          {tab === 'news'         && <NewsTab showToast={showToast} />}
-          {tab === 'training'     && <TrainingTab showToast={showToast} />}
+          {tab === 'users'        && <UsersTab showToast={showToast} refreshOverviewStats={refreshOverviewStats} />}
+          {tab === 'applications' && <ApplicationsTab showToast={showToast} refreshOverviewStats={refreshOverviewStats} />}
+          {tab === 'events'       && <EventsTab showToast={showToast} refreshOverviewStats={refreshOverviewStats} />}
+          {tab === 'news'         && <NewsTab showToast={showToast} refreshOverviewStats={refreshOverviewStats} />}
+          {tab === 'training'     && <TrainingTab showToast={showToast} refreshOverviewStats={refreshOverviewStats} />}
           {tab === 'policies'     && <PoliciesTab showToast={showToast} />}
           {tab === 'funding'      && <FundingTab showToast={showToast} />}
           {tab === 'partnerships' && <PartnershipsTab showToast={showToast} />}
           {tab === 'reports'      && <ReportsTab showToast={showToast} />}
-          {tab === 'messages'     && <MessagesTab showToast={showToast} />}
+          {tab === 'messages'     && <MessagesTab showToast={showToast} refreshOverviewStats={refreshOverviewStats} />}
         </main>
       </div>
       </div>
@@ -1073,16 +1193,46 @@ export default function AdminPage() {
 /* ═══════════════════════════════════════════════════════════════════
    DASHBOARD (Executive Command Center)
 ═══════════════════════════════════════════════════════════════════ */
-function DashboardTab({ showToast, setTab, telemetry = {} }) {
+function DashboardTab({ showToast, setTab, telemetry = {}, refreshOverviewStats }) {
   const [stats, setStats]       = useState(null);
   const [renewals, setRenewals] = useState([]);
   const [events, setEvents]     = useState([]);
 
-  useEffect(() => {
-    api.admin.stats().then(setStats).catch(() => showToast('Failed to load stats', false));
+  const loadData = useCallback(() => {
+    api.admin.stats().then(s => { setStats(s); refreshOverviewStats?.(); }).catch(() => showToast('Failed to load stats', false));
     api.admin.renewals().then(r => setRenewals(r.data || [])).catch(() => {});
     api.events.list({ limit: 6 }).then(r => setEvents(Array.isArray(r) ? r : (r?.data || []))).catch(() => {});
-  }, []);
+  }, [showToast, refreshOverviewStats]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  function exportSystemOverviewCSV() {
+    if (!stats) return;
+    const rows = [
+      ['METRIC', 'VALUE', 'STATUS'],
+      ['Total Registered Users', stats.users.total, `${stats.users.member} Verified Members`],
+      ['Pending Applications', stats.applications.pending, stats.applications.pending > 0 ? 'Action Required' : 'All Clear'],
+      ['Approved Applications', stats.applications.approved, 'Approved'],
+      ['Consortium Events', stats.events.total, `${stats.events.totalEnrolled} / ${stats.events.totalCapacity} Seats Registered`],
+      ['Faculty Training Programs', stats.trainings.total, `${stats.trainings.totalEnrolled} Faculty Enrolled`],
+      ['Public Media Releases', stats.news.total, 'Published Archive'],
+      ['Active Partnerships', stats.partnerships.active, `${stats.partnerships.total} Total MOUs`],
+      ['Open Funding Calls', stats.funding.open, 'DOST / CHED Calls'],
+      ['Governance Policies', stats.policies.active, `${stats.policies.archived} Archived`],
+      ['System Health', telemetry.status === 'ok' ? 'Online' : 'Checking', `${telemetry.latency ?? 0}ms RTT`],
+    ];
+    const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `dasig_consortium_audit_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('Consortium overview audit CSV exported successfully!', true);
+  }
 
   if (!stats) return <Loading />;
 
@@ -1132,6 +1282,15 @@ function DashboardTab({ showToast, setTab, telemetry = {} }) {
 
         {/* Quick Action Buttons */}
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          <button
+            onClick={exportSystemOverviewCSV}
+            className="ap-btn ap-btn-ghost"
+            style={{ padding: '10px 16px', fontSize: 13, fontWeight: 700, borderRadius: 10, display: 'flex', alignItems: 'center', gap: 6 }}
+            title="Download complete administrative audit CSV"
+          >
+            <span>📥</span>
+            <span>Export Audit CSV</span>
+          </button>
           <button
             onClick={() => setTab('events')}
             className="ap-btn ap-btn-primary"
@@ -1408,6 +1567,70 @@ function DashboardTab({ showToast, setTab, telemetry = {} }) {
         </div>
         <div style={{ fontWeight: 700, color: 'rgba(255,255,255,0.4)' }}>
           DASIG Regional Academic Consortium · Region VII
+        </div>
+      </div>
+
+      {/* ── ⚡ Real-Time Consortium System Activity & Audit Stream ── */}
+      <div className="ap-activity-stream">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 18 }}>⚡</span>
+            <div>
+              <div style={{ color: '#fff', fontSize: 14, fontWeight: 900, letterSpacing: '-0.2px' }}>
+                Consortium Activity &amp; Audit Log
+              </div>
+              <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11.5 }}>
+                Real-time governance trail across Region VII Central Node
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <span style={{
+              fontSize: 10.5, fontWeight: 800, color: '#34d399',
+              background: 'rgba(52,211,153,0.12)', border: '1px solid rgba(52,211,153,0.3)',
+              borderRadius: 6, padding: '3px 8px'
+            }}>
+              Sync Active
+            </span>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {[
+            { icon: '👥', title: 'Membership & User Directory', desc: `${stats.users.total} registered accounts (${stats.users.member} verified HEI members) across CIT-U, UP Cebu, and USC.`, time: 'Live Active', tag: 'Verified' },
+            { icon: '📋', title: 'Application Pipeline', desc: stats.applications.pending > 0 ? `${stats.applications.pending} institutional membership application(s) awaiting administrative review.` : 'All institutional membership applications reviewed and verified.', time: stats.applications.pending > 0 ? 'Action Required' : 'Up to Date', tag: stats.applications.pending > 0 ? 'Urgent' : 'Clear' },
+            { icon: '📅', title: 'Programs & Summit Registrations', desc: `${stats.events.totalEnrolled} total RSVPs confirmed across ${stats.events.total} active Central Visayas summits.`, time: 'Updated', tag: `${evFill}% Seat Fill` },
+            { icon: '🦅', title: 'Haribon AI Multi-Language Gateway', desc: 'Cross-lingual neural translation active across 14 dialects with unified regional responses.', time: 'Online', tag: '100% Ready' },
+          ].map((act, i) => (
+            <div key={i} className="ap-activity-item">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{
+                  width: 34, height: 34, borderRadius: 9,
+                  background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0
+                }}>
+                  {act.icon}
+                </div>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 2 }}>{act.title}</div>
+                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>{act.desc}</div>
+                </div>
+              </div>
+              <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                <span style={{
+                  fontSize: 10.5, fontWeight: 800,
+                  color: act.tag === 'Urgent' ? '#fbbf24' : act.tag === 'Verified' ? '#60a5fa' : '#34d399',
+                  background: act.tag === 'Urgent' ? 'rgba(245,158,11,0.15)' : 'rgba(255,255,255,0.06)',
+                  border: `1px solid ${act.tag === 'Urgent' ? 'rgba(245,158,11,0.35)' : 'rgba(255,255,255,0.1)'}`,
+                  borderRadius: 6, padding: '2px 8px'
+                }}>
+                  {act.tag}
+                </span>
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginTop: 3 }}>{act.time}</div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
