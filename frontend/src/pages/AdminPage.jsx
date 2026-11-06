@@ -4894,49 +4894,95 @@ function TrainingTab({ showToast }) {
 const PL_BLANK = { title:'', category:'Membership', content:'', effective_date:'', members_only:false };
 
 function PoliciesTab({ showToast }) {
-  const [items, setItems]     = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [modal, setModal]     = useState(null);
-  const [form, setForm]       = useState(PL_BLANK);
-  const [saving, setSaving]   = useState(false);
-  const [confirm, setConfirm] = useState(null);
-  const [search, setSearch]   = useState('');
-  const [catF, setCatF]       = useState('All');
+  const [items, setItems]                 = useState([]);
+  const [loading, setLoading]             = useState(true);
+  const [modal, setModal]                 = useState(null);
+  const [detailPolicy, setDetailPolicy]   = useState(null);
+  const [form, setForm]                   = useState(PL_BLANK);
+  const [saving, setSaving]               = useState(false);
+  const [confirm, setConfirm]             = useState(null);
+  const [search, setSearch]               = useState('');
+  const [catF, setCatF]                   = useState('All');
 
-  const load = useCallback(() => { setLoading(true); api.policies.list({ limit: 1000 }).then(r => setItems(Array.isArray(r) ? r : (r?.data || []))).catch(() => showToast('Failed', false)).finally(() => setLoading(false)); }, []);
+  const load = useCallback(() => {
+    setLoading(true);
+    api.policies.list({ limit: 1000 })
+      .then(r => setItems(Array.isArray(r) ? r : (r?.data || [])))
+      .catch(() => showToast('Failed to load policies', false))
+      .finally(() => setLoading(false));
+  }, []);
+
   useEffect(load, [load]);
-  const fc = e => setForm(p => ({ ...p, [e.target.name]: e.target.type === 'checkbox' ? e.target.checked : e.target.value }));
+  const fc = e => setForm(p => ({
+    ...p,
+    [e.target.name]: e.target.type === 'checkbox' ? e.target.checked : e.target.value
+  }));
 
   async function save() {
-    if (!form.title || !form.content || !form.effective_date) { showToast('Fill required fields', false); return; }
+    if (!form.title || !form.content || !form.effective_date) {
+      showToast('Policy title, effective date, and content are required', false);
+      return;
+    }
     setSaving(true);
     try {
-      if (modal === 'create') { await api.policies.create(form); showToast('Policy created successfully!', true, form.title); }
-      else { await api.policies.update(modal.id, form); showToast('Policy updated successfully!', true, form.title); }
+      if (modal === 'create') {
+        await api.policies.create(form);
+        showToast('Governance policy published successfully!', true, form.title);
+      } else {
+        await api.policies.update(modal.id, form);
+        showToast('Policy document updated successfully!', true, form.title);
+      }
       setModal(null);
       load();
-    } catch (e) { showToast(e.message, false); } finally { setSaving(false); }
+    } catch (e) {
+      showToast(e.message, false);
+    } finally {
+      setSaving(false);
+    }
   }
+
   async function toggleArchive(p) {
-    try { await api.policies.archive(p.id, !p.archived); showToast(p.archived ? 'Policy restored successfully!' : 'Policy archived successfully', !p.archived, p.title); load(); }
-    catch (e) { showToast(e.message, false); }
+    try {
+      await api.policies.archive(p.id, !p.archived);
+      showToast(p.archived ? 'Policy restored to active registry' : 'Policy archived successfully', !p.archived, p.title);
+      if (detailPolicy?.id === p.id) {
+        setDetailPolicy(prev => prev ? { ...prev, archived: !prev.archived } : null);
+      }
+      load();
+    } catch (e) {
+      showToast(e.message, false);
+    }
   }
+
   async function del(id, title) {
-    try { await api.policies.delete(id); showToast('Policy deleted successfully!', true, title); setConfirm(null); load(); }
-    catch (e) { showToast(e.message, false); }
+    try {
+      await api.policies.delete(id);
+      showToast('Policy permanently deleted', true, title);
+      setConfirm(null);
+      if (detailPolicy?.id === id) setDetailPolicy(null);
+      load();
+    } catch (e) {
+      showToast(e.message, false);
+    }
   }
 
   function exportPoliciesCSV() {
     if (!items.length) return;
-    const headers = ['Title', 'Category', 'Effective Date', 'Access', 'Status'];
+    const headers = ['Title', 'Category', 'Effective Date', 'Access Tier', 'Status', 'Content'];
     const rows = filteredItems.map(p => [
-      p.title || '', p.category || '', String(p.effective_date || '').slice(0, 10), p.members_only ? 'Members Only' : 'Public', p.archived ? 'Archived' : 'Active'
+      p.title || '',
+      p.category || '',
+      String(p.effective_date || '').slice(0, 10),
+      p.members_only ? 'Members Only' : 'Public',
+      p.archived ? 'Archived' : 'Active',
+      (p.content || '').replace(/\r?\n/g, ' ')
     ]);
-    const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\r\n');
+    const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
-    a.download = 'dasig_policies_export.csv';
+    a.download = 'dasig_governance_policies.csv';
     a.click();
+    showToast('Exported policies directory to CSV', true);
   }
 
   const filteredItems = items.filter(p => {
@@ -4950,13 +4996,44 @@ function PoliciesTab({ showToast }) {
     return matchesCat && matchesSearch;
   });
 
-  const CC = { Membership:'#60a5fa', Governance:'#c4b5fd', Events:'#fcd34d', Research:'#6ee7b7' };
+  const CATEGORY_CONFIG = {
+    Governance: { label: 'Governance & Charters', short: 'Governance', color: '#a78bfa', bg: 'rgba(167,139,250,0.14)', border: 'rgba(167,139,250,0.32)', icon: '🏛️' },
+    Membership: { label: 'Membership By-Laws',    short: 'Membership', color: '#38bdf8', bg: 'rgba(56,189,248,0.14)', border: 'rgba(56,189,248,0.32)', icon: '👥' },
+    Research:   { label: 'Research & Ethics',     short: 'Research',   color: '#34d399', bg: 'rgba(52,211,153,0.14)', border: 'rgba(52,211,153,0.32)', icon: '🔬' },
+    Events:     { label: 'Events & Operations',   short: 'Events',     color: '#fbbf24', bg: 'rgba(251,191,36,0.14)', border: 'rgba(251,191,36,0.32)', icon: '📅' },
+  };
+
+  const ACCESS_CONFIG = {
+    restricted: { label: 'Members Only', color: '#fbbf24', bg: 'rgba(245,158,11,0.14)', border: 'rgba(245,158,11,0.28)', icon: '🔒' },
+    public:     { label: 'Public Charter', color: '#2dd4bf', bg: 'rgba(45,212,191,0.14)', border: 'rgba(45,212,191,0.28)', icon: '🌐' },
+  };
+
+  const STATUS_CONFIG = {
+    active:   { label: 'Enacted & Active',    color: '#34d399', bg: 'rgba(16,185,129,0.15)', border: 'rgba(16,185,129,0.3)', icon: '🟢' },
+    archived: { label: 'Archived Document',   color: '#94a3b8', bg: 'rgba(148,163,184,0.12)', border: 'rgba(148,163,184,0.25)', icon: '⚪' },
+  };
+
+  function getDocCode(title) {
+    if (!title) return 'POL';
+    const clean = title.replace(/\([^)]*\)/g, '').trim();
+    const words = clean.split(/[\s-]+/).filter(w => !['and','of','on','the','for','in'].includes(w.toLowerCase()));
+    if (words.length === 1) return words[0].slice(0, 3).toUpperCase();
+    return words.slice(0, 3).map(w => w[0]).join('').toUpperCase();
+  }
+
+  function formatEffectiveDate(dateStr) {
+    if (!dateStr) return { dateStr: '—', subtitle: 'Pending Enactment' };
+    const d = new Date(dateStr);
+    const formatted = d.toLocaleDateString('en-PH', { month:'short', day:'numeric', year:'numeric' });
+    return { dateStr: formatted, subtitle: 'Enacted & Binding' };
+  }
 
   return (
     <div>
+      {/* ── Page Header ── */}
       <PageHeader
-        title="Policies & Guidelines"
-        desc="Manage governance charters, by-laws, and consortium compliance frameworks"
+        title="Governance Charters & Policies"
+        desc="Administer consortium by-laws, research ethics protocols, institutional compliance frameworks, and operational charters"
         action={
           <div style={{ display:'flex', gap:10, alignItems:'center', flexWrap:'wrap' }}>
             {/* Category Segmented Filter */}
@@ -4966,25 +5043,26 @@ function PoliciesTab({ showToast }) {
             }}>
               {['All','Membership','Governance','Events','Research'].map(c => {
                 const count = c === 'All' ? items.length : items.filter(p => p.category === c).length;
+                const isSelected = catF === c;
                 return (
                   <button
                     key={c}
                     type="button"
                     onClick={() => setCatF(c)}
                     style={{
-                      padding: '5px 10px', borderRadius: 7, border: 'none',
-                      background: catF === c ? 'rgba(255,255,255,0.14)' : 'transparent',
-                      color: catF === c ? '#fff' : 'rgba(255,255,255,0.55)',
-                      fontWeight: catF === c ? 800 : 600,
-                      fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5,
+                      padding: '5px 12px', borderRadius: 7, border: 'none',
+                      background: isSelected ? 'rgba(255,255,255,0.15)' : 'transparent',
+                      color: isSelected ? '#fff' : 'rgba(255,255,255,0.55)',
+                      fontWeight: isSelected ? 800 : 600,
+                      fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
                       transition: 'all .14s ease'
                     }}
                   >
                     <span>{c}</span>
                     <span style={{
-                      fontSize: 10, padding: '1px 5px', borderRadius: 99,
-                      background: catF === c ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.06)',
-                      color: 'inherit', fontWeight: 800
+                      fontSize: 10, padding: '1px 6px', borderRadius: 99,
+                      background: isSelected ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.06)',
+                      color: isSelected ? '#fff' : 'rgba(255,255,255,0.45)', fontWeight: 800
                     }}>
                       {count}
                     </span>
@@ -4994,49 +5072,268 @@ function PoliciesTab({ showToast }) {
             </div>
 
             {/* Search Input with Clear Button */}
-            <div style={{ position: 'relative', width: 200 }}>
+            <div style={{ position: 'relative', width: 220 }}>
               <input
                 className="ap-input"
-                placeholder="Search policy, article…"
+                placeholder="Search policy, article, scope…"
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                style={{ paddingRight: search ? 28 : 12 }}
+                style={{ fontSize:12, padding:'7px 28px 7px 11px', background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.1)' }}
               />
-              {search && (
+              {search ? (
                 <button
                   type="button"
                   onClick={() => setSearch('')}
                   style={{
                     position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)',
                     background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)',
-                    cursor: 'pointer', fontSize: 13, padding: 0
+                    cursor: 'pointer', fontSize: 12, padding: 0
                   }}
                   title="Clear search"
                 >
                   ✕
                 </button>
+              ) : (
+                <span style={{ position:'absolute', right:8, top:'50%', transform:'translateY(-50%)', fontSize:12, opacity:0.4, pointerEvents:'none' }}>🔍</span>
               )}
             </div>
 
-            <button onClick={exportPoliciesCSV} className="ap-btn ap-btn-ghost" style={{ fontSize:12.5, whiteSpace:'nowrap' }}>⬇ Export CSV</button>
-            <AddBtn onClick={() => { setForm(PL_BLANK); setModal('create'); }} />
+            <button
+              onClick={exportPoliciesCSV}
+              className="ap-btn ap-btn-ghost"
+              style={{ fontSize:12.5, whiteSpace:'nowrap', padding:'7px 13px' }}
+              title="Download policies directory as CSV"
+            >
+              ⬇ Export CSV
+            </button>
+
+            <button
+              onClick={() => { setForm(PL_BLANK); setModal('create'); }}
+              className="ap-btn ap-btn-primary"
+              style={{ padding:'8px 16px', fontSize:12.5, fontWeight:800, whiteSpace:'nowrap', display:'flex', alignItems:'center', gap:5 }}
+            >
+              <span>＋</span> Publish Policy
+            </button>
           </div>
         }
       />
-      {confirm && <ConfirmModal msg={`Delete "${confirm.title}"?`} onConfirm={() => del(confirm.id, confirm.title)} onCancel={() => setConfirm(null)} />}
-      {modal && (
-        <Modal title={modal === 'create' ? 'Create Governance Policy' : 'Edit Governance Policy'} onClose={() => setModal(null)} wide>
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
-            <DInput label="Policy Title" name="title" value={form.title} onChange={fc} required span="1/-1" />
-            <DInput label="Policy Category" name="category" value={form.category} onChange={fc} as="select" opts={['Membership','Governance','Events','Research']} />
-            <DInput label="Effective Date" name="effective_date" value={form.effective_date} onChange={fc} type="date" required />
-            <DInput label="Restricted to Members" name="members_only" value={form.members_only} onChange={fc} as="checkbox" />
-            <DInput label="Policy Content & Articles" name="content" value={form.content} onChange={fc} as="textarea" span="1/-1" />
+
+      {/* Delete Confirmation Modal */}
+      {confirm && (
+        <ConfirmModal
+          msg={`Are you sure you want to permanently delete policy "${confirm.title}"?`}
+          onConfirm={() => del(confirm.id, confirm.title)}
+          onCancel={() => setConfirm(null)}
+        />
+      )}
+
+      {/* ── Policy Document Reader & Dossier Modal ── */}
+      {detailPolicy && (
+        <Modal title="Governance Charter & Policy Reader" onClose={() => setDetailPolicy(null)} wide>
+          <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
+            {/* Top Identity Card */}
+            <div style={{
+              display:'flex', alignItems:'center', justifyContent:'space-between',
+              padding:'18px 22px', background:'rgba(255,255,255,0.035)',
+              border:'1px solid rgba(255,255,255,0.08)', borderRadius:16, gap:16, flexWrap:'wrap'
+            }}>
+              <div style={{ display:'flex', alignItems:'center', gap:14 }}>
+                <div style={{
+                  width:54, height:54, borderRadius:14,
+                  background:'linear-gradient(135deg, #4338ca, #6366f1)',
+                  border:'1.5px solid rgba(255,255,255,0.18)',
+                  display:'flex', alignItems:'center', justifyContent:'center',
+                  fontSize:16, fontWeight:900, color:'#fff', flexShrink:0,
+                  boxShadow:'0 4px 18px rgba(67,56,202,0.35)'
+                }}>
+                  {getDocCode(detailPolicy.title)}
+                </div>
+                <div>
+                  <div style={{ color:'#fff', fontWeight:900, fontSize:18, lineHeight:1.3 }}>{detailPolicy.title}</div>
+                  <div style={{ display:'flex', alignItems:'center', gap:8, marginTop:4, flexWrap:'wrap' }}>
+                    {(() => {
+                      const cat = CATEGORY_CONFIG[detailPolicy.category] || CATEGORY_CONFIG.Governance;
+                      return (
+                        <span style={{
+                          fontSize:11, fontWeight:800,
+                          color: cat.color, background: cat.bg,
+                          border: `1px solid ${cat.border}`,
+                          borderRadius:6, padding:'2px 8px'
+                        }}>
+                          {cat.icon} {cat.label}
+                        </span>
+                      );
+                    })()}
+                    <span style={{ fontSize:12, color:'rgba(255,255,255,0.5)' }}>· DASIG Central Governance Framework</span>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                {(() => {
+                  const acc = detailPolicy.members_only ? ACCESS_CONFIG.restricted : ACCESS_CONFIG.public;
+                  return (
+                    <span style={{
+                      display:'inline-flex', alignItems:'center', gap:5,
+                      background:acc.bg, color:acc.color, border:`1px solid ${acc.border}`,
+                      borderRadius:8, padding:'5px 11px', fontSize:12, fontWeight:800
+                    }}>
+                      <span>{acc.icon}</span>
+                      <span>{acc.label}</span>
+                    </span>
+                  );
+                })()}
+
+                {(() => {
+                  const st = detailPolicy.archived ? STATUS_CONFIG.archived : STATUS_CONFIG.active;
+                  return (
+                    <span style={{
+                      display:'inline-flex', alignItems:'center', gap:5,
+                      background:st.bg, color:st.color, border:`1px solid ${st.border}`,
+                      borderRadius:8, padding:'5px 11px', fontSize:12, fontWeight:800
+                    }}>
+                      <span>{st.icon}</span>
+                      <span>{st.label}</span>
+                    </span>
+                  );
+                })()}
+              </div>
+            </div>
+
+            {/* Telemetry Metrics Grid */}
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(200px, 1fr))', gap:12 }}>
+              {[
+                {
+                  label: 'Document Category',
+                  value: (CATEGORY_CONFIG[detailPolicy.category] || CATEGORY_CONFIG.Governance).label,
+                  icon: (CATEGORY_CONFIG[detailPolicy.category] || CATEGORY_CONFIG.Governance).icon,
+                  color: (CATEGORY_CONFIG[detailPolicy.category] || CATEGORY_CONFIG.Governance).color
+                },
+                {
+                  label: 'Effective Enactment Date',
+                  value: detailPolicy.effective_date ? new Date(detailPolicy.effective_date).toLocaleDateString('en-PH', { dateStyle:'long' }) : 'Pending Enactment',
+                  icon: '📅',
+                  color: '#60a5fa'
+                },
+                {
+                  label: 'Audience & Access Scope',
+                  value: detailPolicy.members_only ? 'Consortium Member Institutions Only' : 'Open Public Distribution',
+                  icon: detailPolicy.members_only ? '🔒' : '🌐',
+                  color: detailPolicy.members_only ? '#fbbf24' : '#2dd4bf'
+                },
+                {
+                  label: 'Registry Status',
+                  value: detailPolicy.archived ? 'Archived Document' : 'Enacted & Binding',
+                  icon: detailPolicy.archived ? '⚪' : '🟢',
+                  color: detailPolicy.archived ? '#94a3b8' : '#34d399'
+                },
+              ].map(f => (
+                <div key={f.label} style={{
+                  background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.06)',
+                  borderRadius:12, padding:'12px 15px'
+                }}>
+                  <div style={{
+                    fontSize:10.5, fontWeight:800, color:'rgba(255,255,255,0.4)',
+                    textTransform:'uppercase', letterSpacing:'.5px', marginBottom:5,
+                    display:'flex', alignItems:'center', gap:6
+                  }}>
+                    <span>{f.icon}</span> {f.label}
+                  </div>
+                  <div style={{ color:f.color, fontWeight:800, fontSize:13.5 }}>
+                    {f.value}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Policy Full Content Reader Box */}
+            <div style={{ background:'rgba(255,255,255,0.025)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:14, padding:'20px 22px' }}>
+              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:12 }}>
+                <div style={{ fontSize:11, fontWeight:800, color:'rgba(255,255,255,0.45)', textTransform:'uppercase', letterSpacing:'.6px', display:'flex', alignItems:'center', gap:6 }}>
+                  <span>📜</span> Official Charter Articles & Provisions
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(detailPolicy.content || '');
+                    showToast('Copied policy text to clipboard', true);
+                  }}
+                  style={{
+                    background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.1)',
+                    color:'rgba(255,255,255,0.7)', borderRadius:6, padding:'4px 9px', fontSize:11,
+                    cursor:'pointer', display:'flex', alignItems:'center', gap:5
+                  }}
+                >
+                  <span>📋</span> Copy Text
+                </button>
+              </div>
+              <div style={{
+                color:'rgba(255,255,255,0.88)', fontSize:13.5, lineHeight:1.8,
+                whiteSpace:'pre-wrap', maxHeight:340, overflowY:'auto', paddingRight:6
+              }}>
+                {detailPolicy.content || 'No text provisions specified for this policy charter.'}
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div style={{ display:'flex', gap:10, marginTop:4, flexWrap:'wrap' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  const p = detailPolicy;
+                  setDetailPolicy(null);
+                  setForm({ ...p, effective_date: String(p.effective_date || '').slice(0, 10) });
+                  setModal(p);
+                }}
+                className="ap-btn ap-btn-blue"
+                style={{ flex: 2, padding:'11px', borderRadius:11, fontSize:13, fontWeight:800 }}
+              >
+                ✏️ Edit Policy Document
+              </button>
+              <button
+                type="button"
+                onClick={() => toggleArchive(detailPolicy)}
+                className="ap-btn ap-btn-amber"
+                style={{ flex: 1.5, padding:'11px', borderRadius:11, fontSize:13 }}
+              >
+                {detailPolicy.archived ? '🔄 Restore Policy' : '📦 Archive Document'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setDetailPolicy(null)}
+                className="ap-btn ap-btn-ghost"
+                style={{ flex: 1, padding:'11px', borderRadius:11, fontSize:13 }}
+              >
+                Close
+              </button>
+            </div>
           </div>
-          <FormActions onCancel={() => setModal(null)} onSave={save} saving={saving} saveLabel={modal === 'create' ? 'Create Policy' : 'Save Changes'} />
         </Modal>
       )}
 
+      {/* ── Create / Edit Modal ── */}
+      {modal && (
+        <Modal title={modal === 'create' ? 'Publish Governance Charter or Policy' : 'Edit Policy Document'} onClose={() => setModal(null)} wide>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
+            <DInput label="Policy Title" name="title" value={form.title} onChange={fc} required span="1/-1" />
+            <DInput label="Policy Category" name="category" value={form.category} onChange={fc} as="select" opts={['Membership','Governance','Events','Research']} />
+            <DInput label="Effective Enactment Date" name="effective_date" value={form.effective_date} onChange={fc} type="date" required />
+            <div style={{ gridColumn:'1/-1', padding:'10px 14px', background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:10 }}>
+              <label style={{ display:'flex', alignItems:'center', gap:10, cursor:'pointer' }}>
+                <input type="checkbox" name="members_only" checked={form.members_only} onChange={fc} style={{ width:18, height:18, cursor:'pointer' }} />
+                <div>
+                  <div style={{ color:'#fff', fontWeight:700, fontSize:13 }}>Restricted to Consortium Members Only</div>
+                  <div style={{ color:'rgba(255,255,255,0.45)', fontSize:11.5 }}>When enabled, non-authenticated or public visitors will not be able to read full charter contents.</div>
+                </div>
+              </label>
+            </div>
+            <DInput label="Policy Content & Articles" name="content" value={form.content} onChange={fc} as="textarea" span="1/-1" />
+          </div>
+          <FormActions onCancel={() => setModal(null)} onSave={save} saving={saving} saveLabel={modal === 'create' ? 'Publish Policy' : 'Save Changes'} />
+        </Modal>
+      )}
+
+      {/* ── Section KPIs ── */}
       <SectionKPIs items={[
         { label: 'Total Policies', value: items.length, icon: '📜', color: '#0ea5e9' },
         { label: 'Active Documents', value: items.filter(p => !p.archived).length, icon: '🟢', color: '#34d399' },
@@ -5044,26 +5341,140 @@ function PoliciesTab({ showToast }) {
         { label: 'Governance & Rules', value: items.filter(p => p.category === 'Governance' || p.category === 'Membership').length, icon: '🏛️', color: '#a78bfa' },
       ]} />
 
-      {loading ? <Loading /> : (
-        <DataTable head={['Title','Category','Effective','Access','Status','Actions']}>
-          {filteredItems.length === 0 ? <EmptyTR cols={6} /> : filteredItems.map(p => {
-            const c = CC[p.category] || '#60a5fa';
+      {/* ── Table ── */}
+      {loading ? (
+        <Loading />
+      ) : (
+        <DataTable head={['Policy Document','Category & Focus','Effective Date','Access Tier','Enactment Status','Actions']}>
+          {filteredItems.length === 0 ? (
+            <EmptyTR cols={6} title="No policies found" desc="No governance frameworks or by-laws match your current category or search criteria." />
+          ) : filteredItems.map(p => {
+            const catInfo = CATEGORY_CONFIG[p.category] || CATEGORY_CONFIG.Governance;
+            const accessInfo = p.members_only ? ACCESS_CONFIG.restricted : ACCESS_CONFIG.public;
+            const statusInfo = p.archived ? STATUS_CONFIG.archived : STATUS_CONFIG.active;
+            const docCode = getDocCode(p.title);
+            const eff = formatEffectiveDate(p.effective_date);
+
             return (
               <TR key={p.id}>
-                <TD><div style={{ fontWeight:700, color:'#fff', maxWidth:220, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{p.title}</div></TD>
-                <TD><span className="ap-badge" style={{ background:`${c}1a`, color:c }}>{p.category}</span></TD>
-                <TD muted>{String(p.effective_date || '').slice(0,10)}</TD>
-                <TD><span style={{ fontSize:12, color: p.members_only ? '#fcd34d' : 'rgba(255,255,255,0.38)' }}>{p.members_only ? '🔒 Members' : '🌐 Public'}</span></TD>
+                {/* Policy Document Title */}
                 <TD>
-                  <span className="ap-pill" style={{ background: p.archived ? 'rgba(255,255,255,0.06)' : 'rgba(16,185,129,0.15)', color: p.archived ? 'rgba(255,255,255,0.35)' : '#6ee7b7' }}>
-                    {p.archived ? 'Archived' : '● Active'}
+                  <div
+                    onClick={() => setDetailPolicy(p)}
+                    style={{ display:'flex', alignItems:'center', gap:12, cursor:'pointer' }}
+                    title="Read complete policy document"
+                  >
+                    <div style={{
+                      width:40, height:40, borderRadius:11,
+                      background:'linear-gradient(135deg, #3730a3, #4f46e5)',
+                      border:'1.5px solid rgba(255,255,255,0.14)',
+                      display:'flex', alignItems:'center', justifyContent:'center',
+                      fontSize:12, fontWeight:900, color:'#fff', flexShrink:0,
+                      boxShadow:'0 2px 10px rgba(0,0,0,0.3)'
+                    }}>
+                      {docCode}
+                    </div>
+                    <div>
+                      <div style={{ fontWeight:800, color:'#fff', fontSize:13.5, lineHeight:1.3 }}>
+                        {p.title}
+                      </div>
+                      <div style={{ fontSize:11, color:'rgba(255,255,255,0.45)', marginTop:2 }}>
+                        DASIG Central Governance Framework
+                      </div>
+                    </div>
+                  </div>
+                </TD>
+
+                {/* Category & Focus */}
+                <TD>
+                  <span style={{
+                    display:'inline-flex', alignItems:'center', gap:5,
+                    background: catInfo.bg, color: catInfo.color,
+                    border: `1px solid ${catInfo.border}`,
+                    borderRadius: 7, padding: '3px 9px', fontSize: 11, fontWeight: 800, whiteSpace:'nowrap'
+                  }}>
+                    <span>{catInfo.icon}</span>
+                    <span>{catInfo.short}</span>
                   </span>
                 </TD>
+
+                {/* Effective Date */}
                 <TD>
-                  <div style={{ display:'flex', gap:5 }}>
-                    <button onClick={() => { setForm({ ...p }); setModal(p); }} className="ap-btn ap-btn-blue">Edit</button>
-                    <button onClick={() => toggleArchive(p)} className="ap-btn ap-btn-amber">{p.archived ? 'Restore' : 'Archive'}</button>
-                    <button onClick={() => setConfirm(p)} className="ap-btn ap-btn-red">Del</button>
+                  <div style={{ display:'flex', flexDirection:'column', gap:2 }}>
+                    <span style={{ color:'#fff', fontWeight:700, fontSize:12.5 }}>
+                      📅 {eff.dateStr}
+                    </span>
+                    <span style={{ fontSize:11, color:'rgba(255,255,255,0.45)' }}>
+                      {eff.subtitle}
+                    </span>
+                  </div>
+                </TD>
+
+                {/* Access Tier */}
+                <TD>
+                  <span style={{
+                    display:'inline-flex', alignItems:'center', gap:5,
+                    background: accessInfo.bg, color: accessInfo.color,
+                    border: `1px solid ${accessInfo.border}`,
+                    borderRadius: 8, padding: '3px 9px', fontSize: 11, fontWeight: 800, whiteSpace:'nowrap'
+                  }}>
+                    <span>{accessInfo.icon}</span>
+                    <span>{accessInfo.label}</span>
+                  </span>
+                </TD>
+
+                {/* Enactment Status */}
+                <TD>
+                  <span style={{
+                    display:'inline-flex', alignItems:'center', gap:5,
+                    background: statusInfo.bg, color: statusInfo.color,
+                    border: `1px solid ${statusInfo.border}`,
+                    borderRadius: 8, padding: '3px 9px', fontSize: 11, fontWeight: 800, whiteSpace:'nowrap'
+                  }}>
+                    <span>{statusInfo.icon}</span>
+                    <span>{statusInfo.label}</span>
+                  </span>
+                </TD>
+
+                {/* Actions */}
+                <TD>
+                  <div style={{ display:'flex', gap:6, alignItems:'center' }}>
+                    <button
+                      type="button"
+                      onClick={() => setDetailPolicy(p)}
+                      className="ap-btn ap-btn-ghost"
+                      style={{ fontSize:11.5, padding:'5px 10px', borderRadius:8 }}
+                      title="Read complete policy articles"
+                    >
+                      Dossier
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setForm({ ...p, effective_date: String(p.effective_date || '').slice(0, 10) }); setModal(p); }}
+                      className="ap-btn ap-btn-blue"
+                      style={{ fontSize:11.5, padding:'5px 10px', borderRadius:8 }}
+                      title="Edit policy"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => toggleArchive(p)}
+                      className="ap-btn ap-btn-amber"
+                      style={{ fontSize:11.5, padding:'5px 9px', borderRadius:8 }}
+                      title={p.archived ? 'Restore document' : 'Archive document'}
+                    >
+                      {p.archived ? 'Restore' : 'Archive'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setConfirm(p)}
+                      className="ap-btn ap-btn-red"
+                      style={{ fontSize:11.5, padding:'5px 8px', borderRadius:8 }}
+                      title="Delete policy permanently"
+                    >
+                      🗑
+                    </button>
                   </div>
                 </TD>
               </TR>
