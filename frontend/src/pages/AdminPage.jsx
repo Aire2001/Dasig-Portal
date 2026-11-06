@@ -654,22 +654,25 @@ function AddBtn({ label='+ Add New', onClick }) {
 function DataTable({ head, children, empty }) {
   return (
     <div style={{
-      borderRadius: 16,
-      border: '1px solid rgba(255,255,255,0.08)',
-      background: 'rgba(11,19,38,0.72)',
-      backdropFilter: 'blur(16px)',
+      borderRadius: 18,
+      border: '1px solid rgba(255,255,255,0.09)',
+      background: 'rgba(11,19,38,0.78)',
+      backdropFilter: 'blur(20px)',
       overflow: 'hidden',
-      boxShadow: '0 12px 36px rgba(0,0,0,0.35)'
+      boxShadow: '0 16px 48px rgba(0,0,0,0.45)'
     }}>
       <div style={{ overflowX:'auto', WebkitOverflowScrolling:'touch' }}>
         <table style={{ width:'100%', borderCollapse:'collapse', textAlign:'left' }}>
           <thead>
-            <tr style={{ background:'rgba(255,255,255,0.035)', borderBottom:'1px solid rgba(255,255,255,0.08)' }}>
+            <tr style={{
+              background: 'linear-gradient(90deg, rgba(255,255,255,0.045) 0%, rgba(255,255,255,0.015) 100%)',
+              borderBottom: '1px solid rgba(255,255,255,0.09)'
+            }}>
               {head.map(h => (
                 <th key={h} style={{
-                  padding:'13px 18px', fontSize:11, fontWeight:900,
-                  color:'rgba(255,255,255,0.55)', textTransform:'uppercase',
-                  letterSpacing:'0.8px', whiteSpace:'nowrap',
+                  padding:'14px 20px', fontSize:11, fontWeight:900,
+                  color:'rgba(255,255,255,0.6)', textTransform:'uppercase',
+                  letterSpacing:'1px', whiteSpace:'nowrap',
                 }}>{h}</th>
               ))}
             </tr>
@@ -689,8 +692,14 @@ function TR({ children, onClick, style = {} }) {
       style={{
         borderTop:'1px solid rgba(255,255,255,0.05)',
         cursor: onClick ? 'pointer' : 'default',
-        transition:'all 0.15s ease',
+        transition:'all 0.15s cubic-bezier(0.16, 1, 0.3, 1)',
         ...style
+      }}
+      onMouseEnter={e => {
+        e.currentTarget.style.background = 'rgba(255,255,255,0.025)';
+      }}
+      onMouseLeave={e => {
+        e.currentTarget.style.background = style.background || 'transparent';
       }}
     >
       {children}
@@ -701,8 +710,8 @@ function TR({ children, onClick, style = {} }) {
 function TD({ children, muted, w, style = {} }) {
   return (
     <td style={{
-      padding:'14px 18px', fontSize:13, verticalAlign:'middle',
-      color: muted ? 'rgba(255,255,255,0.45)' : 'rgba(255,255,255,0.88)',
+      padding:'14px 20px', fontSize:13, verticalAlign:'middle',
+      color: muted ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.92)',
       width: w,
       ...style
     }}>{children}</td>
@@ -748,27 +757,39 @@ function SectionKPIs({ items }) {
           background: 'linear-gradient(145deg, rgba(13,22,44,0.85) 0%, rgba(8,14,28,0.92) 100%)',
           backdropFilter: 'blur(16px)',
           border: '1px solid rgba(255,255,255,0.08)',
-          borderRadius: 16, padding: '15px 18px',
+          borderRadius: 16, padding: '16px 20px',
           display: 'flex', alignItems: 'center', gap: 14,
           boxShadow: '0 8px 24px rgba(0,0,0,0.28)',
-          position: 'relative', overflow: 'hidden'
-        }}>
+          position: 'relative', overflow: 'hidden',
+          transition: 'all 0.16s ease'
+        }}
+        onMouseEnter={e => {
+          e.currentTarget.style.transform = 'translateY(-2px)';
+          e.currentTarget.style.borderColor = `${kpi.color || '#f97316'}55`;
+          e.currentTarget.style.boxShadow = `0 12px 32px rgba(0,0,0,0.4), 0 0 16px ${kpi.color || '#f97316'}22`;
+        }}
+        onMouseLeave={e => {
+          e.currentTarget.style.transform = 'translateY(0)';
+          e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)';
+          e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.28)';
+        }}
+        >
           <div style={{
-            position: 'absolute', top: 0, left: 0, right: 0, height: 2,
+            position: 'absolute', top: 0, left: 0, right: 0, height: 2.5,
             background: `linear-gradient(90deg, transparent, ${kpi.color || '#f97316'}, transparent)`,
-            opacity: 0.65
+            opacity: 0.8
           }} />
           <div style={{
-            width: 42, height: 42, borderRadius: 12,
-            background: `${kpi.color || '#f97316'}18`,
-            border: `1px solid ${kpi.color || '#f97316'}38`,
+            width: 44, height: 44, borderRadius: 12,
+            background: `${kpi.color || '#f97316'}1c`,
+            border: `1px solid ${kpi.color || '#f97316'}44`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 20, flexShrink: 0,
-            boxShadow: `0 4px 14px ${kpi.color || '#f97316'}22`
+            fontSize: 21, flexShrink: 0,
+            boxShadow: `0 4px 14px ${kpi.color || '#f97316'}25`
           }}>{kpi.icon}</div>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 22, fontWeight: 900, color: '#fff', lineHeight: 1, letterSpacing: '-0.3px' }}>{kpi.value}</div>
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', fontWeight: 700, marginTop: 4, textTransform: 'uppercase', letterSpacing: '0.4px' }}>{kpi.label}</div>
+            <div style={{ fontSize: 23, fontWeight: 900, color: '#fff', lineHeight: 1, letterSpacing: '-0.4px' }}>{kpi.value}</div>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', fontWeight: 700, marginTop: 4, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{kpi.label}</div>
           </div>
         </div>
       ))}
@@ -3310,32 +3331,78 @@ function ApplicationsTab({ showToast }) {
       {loading ? <Loading /> : (
         <DataTable head={['Applicant','Institution','Tier','Applied','Status','Actions']}>
           {filteredApps.length === 0 ? <EmptyTR cols={6} /> : filteredApps.map(a => {
-            const s = STATUS[a.status] || STATUS.PENDING;
+            const isApproved = a.status === 'APPROVED';
+            const isPending  = a.status === 'PENDING';
+            const isRejected = a.status === 'REJECTED';
+            
+            const tierColor = a.tier === 'Tier 1' ? '#f59e0b' : a.tier === 'Tier 3' ? '#c084fc' : '#38bdf8';
+            const tierBg = a.tier === 'Tier 1' ? 'rgba(245,158,11,0.14)' : a.tier === 'Tier 3' ? 'rgba(192,132,252,0.14)' : 'rgba(56,189,248,0.14)';
+            const tierBorder = a.tier === 'Tier 1' ? 'rgba(245,158,11,0.35)' : a.tier === 'Tier 3' ? 'rgba(192,132,252,0.35)' : 'rgba(56,189,248,0.35)';
+
             return (
               <TR key={a.id}>
                 <TD>
-                  <div style={{ display:'flex', alignItems:'center', gap:10, cursor:'pointer' }} onClick={() => setDetailApp(a)} title="View application details">
-                    <div style={{ width:34, height:34, borderRadius:9, background:'linear-gradient(135deg,#1e3a8a,#4f46e5)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:12, fontWeight:900, color:'#fff', flexShrink:0 }}>
+                  <div style={{ display:'flex', alignItems:'center', gap:12, cursor:'pointer' }} onClick={() => setDetailApp(a)} title="View application details">
+                    <div style={{
+                      width:38, height:38, borderRadius:11,
+                      background: isApproved ? 'linear-gradient(135deg,#065f46,#10b981)' : isPending ? 'linear-gradient(135deg,#92400e,#f59e0b)' : 'linear-gradient(135deg,#1e3a8a,#3b82f6)',
+                      border:'1.5px solid rgba(255,255,255,0.12)',
+                      display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, fontWeight:900, color:'#fff', flexShrink:0,
+                      boxShadow:'0 2px 8px rgba(0,0,0,0.3)'
+                    }}>
                       {(a.name || 'U').split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase()}
                     </div>
                     <div>
-                      <div style={{ fontWeight:700, color:'#fff' }}>{a.name}</div>
-                      <div style={{ fontSize:13, color:'rgba(255,255,255,0.55)' }}>{a.email}</div>
+                      <div style={{ fontWeight:800, color:'#fff', fontSize:13.5 }}>{a.name}</div>
+                      <div style={{ fontSize:12, color:'rgba(255,255,255,0.5)', marginTop:1 }}>{a.email}</div>
                     </div>
                   </div>
                 </TD>
-                <TD muted>{a.institution}{a.campus ? `, ${a.campus}` : ''}</TD>
-                <TD><span className="ap-badge" style={{ background:'rgba(59,130,246,.18)', color:'#93c5fd' }}>{a.tier || 'Tier 2'}</span></TD>
+                <TD>
+                  <div style={{ display:'flex', alignItems:'center', gap:7 }}>
+                    <span style={{ fontSize:14, opacity:0.75 }}>🏛️</span>
+                    <div>
+                      <div style={{ color:'rgba(255,255,255,0.88)', fontWeight:600, fontSize:12.5 }}>
+                        {a.institution || 'Individual Scholar'}
+                      </div>
+                      {a.campus && (
+                        <div style={{ fontSize:11, color:'rgba(255,255,255,0.45)', marginTop:1 }}>
+                          {a.campus}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </TD>
+                <TD>
+                  <span style={{
+                    background: tierBg, color: tierColor, border: `1px solid ${tierBorder}`,
+                    borderRadius: 7, padding: '3px 8px', fontSize: 11, fontWeight: 800, letterSpacing: '.4px'
+                  }}>
+                    {a.tier || 'Tier 2'}
+                  </span>
+                </TD>
                 <TD muted>{a.applied_at?.slice(0,10)}</TD>
-                <TD><span className="ap-pill" style={{ background:s.bg, color:s.color }}>{a.status}</span></TD>
+                <TD>
+                  <span style={{
+                    display:'inline-flex', alignItems:'center', gap:5,
+                    background: isApproved ? 'rgba(16,185,129,0.15)' : isPending ? 'rgba(245,158,11,0.15)' : 'rgba(244,63,94,0.15)',
+                    color: isApproved ? '#34d399' : isPending ? '#fbbf24' : '#f87171',
+                    border: `1px solid ${isApproved ? 'rgba(16,185,129,0.3)' : isPending ? 'rgba(245,158,11,0.3)' : 'rgba(244,63,94,0.3)'}`,
+                    borderRadius: 8, padding: '3px 9px', fontSize: 11, fontWeight: 800, letterSpacing: '.4px'
+                  }}>
+                    <span>{isApproved ? '✓' : isPending ? '⏳' : '✕'}</span>
+                    <span>{a.status}</span>
+                  </span>
+                </TD>
                 <TD>
                   <div style={{ display:'flex', gap:6, alignItems:'center' }}>
-                    {a.status === 'PENDING' ? (
+                    {isPending ? (
                       <>
                         <button
                           onClick={() => approve(a)}
                           disabled={acting === a.id}
                           className="ap-btn ap-btn-green"
+                          style={{ padding:'6px 12px', fontSize:12, fontWeight:800 }}
                           title="Approve membership and send confirmation email to applicant"
                         >
                           {acting === a.id ? '…' : '✓ Approve'}
@@ -3344,6 +3411,7 @@ function ApplicationsTab({ showToast }) {
                           onClick={() => { setRejectTarget(a); setRejectReason(''); }}
                           disabled={acting === a.id}
                           className="ap-btn ap-btn-red"
+                          style={{ padding:'6px 10px', fontSize:12 }}
                           title="Decline membership"
                         >
                           ✕ Reject
@@ -3351,18 +3419,22 @@ function ApplicationsTab({ showToast }) {
                       </>
                     ) : (
                       <div style={{ display:'flex', gap:6, alignItems:'center' }}>
-                        <button onClick={() => setDetailApp(a)} className="ap-btn ap-btn-ghost" style={{ fontSize:11.5, padding:'4px 10px' }}>
+                        <button onClick={() => setDetailApp(a)} className="ap-btn ap-btn-ghost" style={{ fontSize:11.5, padding:'5px 11px', borderRadius:8 }}>
                           Details
                         </button>
-                        {a.status === 'APPROVED' && (
+                        {isApproved && (
                           <button
                             onClick={() => approve(a)}
                             disabled={acting === a.id}
+                            className="ap-btn"
+                            style={{
+                              fontSize:11.5, padding:'5px 10px', borderRadius:8,
+                              color:'#34d399', border:'1px solid rgba(52,211,153,0.35)', background:'rgba(16,185,129,0.1)',
+                              cursor:'pointer', fontWeight:700, transition:'all .14s'
+                            }}
                             title={`Resend confirmation email to ${a.email}`}
-                            className="ap-btn ap-btn-ghost"
-                            style={{ fontSize:11.5, padding:'4px 8px', color:'#34d399', borderColor:'rgba(52,211,153,0.3)', background:'rgba(52,211,153,0.08)' }}
                           >
-                            {acting === a.id ? '…' : '✉ Resend'}
+                            {acting === a.id ? '…' : '✉ Resend Email'}
                           </button>
                         )}
                       </div>
