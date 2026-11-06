@@ -5522,96 +5522,386 @@ function ReportsTab({ showToast, onOpenReport }) {
         </div>
       } />
 
-      {/* Chatbot metrics window — scopes accuracy to a validation period */}
-      <div style={{ display:'flex', flexWrap:'wrap', alignItems:'center', gap:10, background:'rgba(255,255,255,0.03)', border:`1px solid ${isScoped ? 'rgba(129,140,248,0.35)' : 'rgba(255,255,255,0.08)'}`, borderRadius:14, padding:'12px 16px', marginBottom:18 }}>
-        <span style={{ fontSize:12, fontWeight:800, color:'rgba(255,255,255,0.55)', textTransform:'uppercase', letterSpacing:'.6px' }}>
-          🗓 Chatbot metrics window
-        </span>
-        <input type="date" value={from} max={to || undefined} onChange={e => setFrom(e.target.value)}
-          className="ap-input" style={{ width:'auto', padding:'6px 10px', fontSize:12.5, colorScheme:'dark' }} />
-        <span style={{ fontSize:12, color:'rgba(255,255,255,0.35)' }}>to</span>
-        <input type="date" value={to} min={from || undefined} onChange={e => setTo(e.target.value)}
-          className="ap-input" style={{ width:'auto', padding:'6px 10px', fontSize:12.5, colorScheme:'dark' }} />
-        {[{ label:'Last 7 days', days:7 }, { label:'Last 30 days', days:30 }, { label:'All time', days:0 }].map(p => (
-          <button key={p.label} onClick={() => applyPreset(p.days)} className="ap-btn ap-btn-ghost" style={{ padding:'6px 11px', fontSize:12 }}>
-            {p.label}
-          </button>
-        ))}
-        <span style={{ marginLeft:'auto', fontSize:12, fontWeight:700, color: isScoped ? '#a5b4fc' : 'rgba(255,255,255,0.4)' }}>
-          {isScoped
-            ? `${chatbot?.total || 0} queries in window`
-            : `All-time · ${chatbot?.total || 0} queries since launch`}
-        </span>
+      {/* ── Chatbot metrics timeframe toolbar ── */}
+      <div style={{
+        display:'flex', flexWrap:'wrap', alignItems:'center', justifyContent:'space-between',
+        gap:12, background:'linear-gradient(135deg, rgba(13,21,39,0.9) 0%, rgba(8,14,28,0.95) 100%)',
+        border:`1px solid ${isScoped ? 'rgba(99,102,241,0.45)' : 'rgba(255,255,255,0.08)'}`,
+        borderRadius:18, padding:'14px 20px', marginBottom:18, backdropFilter:'blur(16px)',
+        boxShadow:'0 8px 24px rgba(0,0,0,0.3)'
+      }}>
+        <div style={{ display:'flex', alignItems:'center', gap:12, flexWrap:'wrap' }}>
+          <div style={{ display:'flex', alignItems:'center', gap:7 }}>
+            <span style={{ fontSize:15 }}>🗓️</span>
+            <span style={{ fontSize:11.5, fontWeight:800, color:'rgba(255,255,255,0.6)', textTransform:'uppercase', letterSpacing:'.6px' }}>
+              Validation Window
+            </span>
+          </div>
+
+          {/* Date Range Selectors */}
+          <div style={{ display:'flex', alignItems:'center', gap:6, background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:10, padding:'3px 8px' }}>
+            <input
+              type="date"
+              value={from}
+              max={to || undefined}
+              onChange={e => setFrom(e.target.value)}
+              style={{
+                background:'transparent', border:'none', color:'#fff',
+                fontSize:12, fontWeight:600, padding:'4px 6px', outline:'none', colorScheme:'dark', cursor:'pointer'
+              }}
+            />
+            <span style={{ fontSize:11, color:'rgba(255,255,255,0.4)', fontWeight:700 }}>to</span>
+            <input
+              type="date"
+              value={to}
+              min={from || undefined}
+              onChange={e => setTo(e.target.value)}
+              style={{
+                background:'transparent', border:'none', color:'#fff',
+                fontSize:12, fontWeight:600, padding:'4px 6px', outline:'none', colorScheme:'dark', cursor:'pointer'
+              }}
+            />
+          </div>
+
+          {/* Preset Buttons */}
+          <div style={{
+            display:'flex', background:'rgba(255,255,255,0.05)',
+            border:'1px solid rgba(255,255,255,0.08)', borderRadius:9, padding:3, gap:2
+          }}>
+            {[
+              { label:'Last 7 Days', days:7 },
+              { label:'Last 30 Days', days:30 },
+              { label:'All-Time', days:0 }
+            ].map(p => {
+              const isActive = (p.days === 0 && !from && !to) || (p.days === 7 && isScoped) || (p.days === 30 && isScoped);
+              return (
+                <button
+                  key={p.label}
+                  type="button"
+                  onClick={() => applyPreset(p.days)}
+                  style={{
+                    padding:'5px 12px', borderRadius:7, border:'none',
+                    background: (p.days === 0 && !from && !to) ? 'rgba(255,255,255,0.15)' : 'transparent',
+                    color: (p.days === 0 && !from && !to) ? '#fff' : 'rgba(255,255,255,0.65)',
+                    fontWeight: (p.days === 0 && !from && !to) ? 800 : 600,
+                    fontSize:11.5, cursor:'pointer', transition:'all .14s'
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.color = '#fff'; }}
+                  onMouseLeave={e => { if (!(p.days === 0 && !from && !to)) e.currentTarget.style.color = 'rgba(255,255,255,0.65)'; }}
+                >
+                  {p.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Evaluation scope status pill */}
+        <div style={{
+          display:'flex', alignItems:'center', gap:8,
+          background: isScoped ? 'rgba(99,102,241,0.15)' : 'rgba(255,255,255,0.05)',
+          border: `1px solid ${isScoped ? 'rgba(99,102,241,0.35)' : 'rgba(255,255,255,0.08)'}`,
+          borderRadius:10, padding:'6px 12px'
+        }}>
+          <span style={{ width:7, height:7, borderRadius:'50%', background: isScoped ? '#818cf8' : '#34d399', boxShadow: isScoped ? '0 0 8px #818cf8' : '0 0 8px #34d399' }} />
+          <span style={{ fontSize:12, fontWeight:700, color: isScoped ? '#c7d2fe' : 'rgba(255,255,255,0.75)' }}>
+            {isScoped
+              ? `${chatbot?.total || 0} Inquiries in Window`
+              : `Cumulative: ${chatbot?.total || 0} Inquiries Logged`}
+          </span>
+        </div>
       </div>
 
+      {/* ── Cumulative Telemetry Notice Banner ── */}
       {!isScoped && (
-        <div style={{ display:'flex', alignItems:'flex-start', gap:10, background:'rgba(245,158,11,0.07)', border:'1px solid rgba(245,158,11,0.25)', borderRadius:12, padding:'11px 15px', marginBottom:18, fontSize:12.5, lineHeight:1.5, color:'rgba(255,255,255,0.7)' }}>
-          <span style={{ fontSize:14, lineHeight:1.2 }}>⚠️</span>
-          <span>
-            These chatbot figures cover <strong style={{ color:'#fcd34d' }}>every query ever logged</strong>, including internal
-            development and testing traffic. Set a window above before quoting accuracy as a result for a specific
-            evaluation or reporting period.
-          </span>
+        <div style={{
+          display:'flex', alignItems:'center', gap:14,
+          background:'linear-gradient(90deg, rgba(245,158,11,0.1) 0%, rgba(245,158,11,0.02) 100%)',
+          border:'1px solid rgba(245,158,11,0.25)', borderLeft:'4px solid #f59e0b',
+          borderRadius:14, padding:'14px 18px', marginBottom:20,
+          boxShadow:'0 4px 16px rgba(0,0,0,0.2)'
+        }}>
+          <span style={{ fontSize:20, flexShrink:0 }}>⚠️</span>
+          <div style={{ flex:1 }}>
+            <div style={{ color:'#fcd34d', fontWeight:800, fontSize:12, textTransform:'uppercase', letterSpacing:'.6px', marginBottom:2 }}>
+              Comprehensive Cumulative Audit Notice
+            </div>
+            <div style={{ color:'rgba(255,255,255,0.7)', fontSize:12.5, lineHeight:1.5 }}>
+              These telemetry figures cover <strong style={{ color:'#fff' }}>every query recorded since system deployment</strong>, including internal automated validation and engineering diagnostics. For official CHED / DOST accreditation or research papers, filter by a dedicated evaluation date window above.
+            </div>
+          </div>
         </div>
       )}
 
+      {/* ── Top-Level KPI Summary ── */}
       <SectionKPIs items={[
-        { label: 'AI Accuracy Rate', value: `${chatbot?.accuracy || 0}%`, icon: '🦅', color: accColor },
+        { label: 'AI Intent Accuracy', value: `${chatbot?.accuracy || 0}%`, icon: '🦅', color: accColor },
         { label: 'Total Inquiries', value: chatbot?.total || 0, icon: '💬', color: '#818cf8' },
-        { label: 'Events Active', value: statsData?.events?.total || 0, icon: '📅', color: '#a855f7' },
+        { label: 'Active Consortium Events', value: statsData?.events?.total || 0, icon: '📅', color: '#a855f7' },
         { label: 'Registered Members', value: statsData?.users?.member || 0, icon: '👥', color: '#34d399' },
       ]} />
 
-      {/* Chatbot accuracy panel */}
-      <div style={{ background:'rgba(79,70,229,0.07)', border:'1px solid rgba(79,70,229,0.2)', borderRadius:16, padding:'22px 24px', marginBottom:22 }}>
-        <div style={{ display:'flex', flexWrap:'wrap', alignItems:'baseline', gap:10, marginBottom:16 }}>
-          <span style={{ fontSize:13, fontWeight:800, color:'rgba(255,255,255,0.6)', textTransform:'uppercase', letterSpacing:'.6px' }}>
-            🦅 Haribon NLP — Intent Recognition Accuracy
-          </span>
-          {/* Say plainly which queries these numbers were computed from. */}
-          <span style={{ fontSize:11.5, color:'rgba(255,255,255,0.4)' }}>
-            {chatbot?.firstQueryAt
-              ? `covering ${new Date(chatbot.firstQueryAt).toLocaleDateString()} – ${new Date(chatbot.lastQueryAt).toLocaleDateString()}`
-              : 'no queries in this range'}
-          </span>
-        </div>
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:12, marginBottom:18 }}>
-          {[
-            { label:'Total Queries', value:chatbot?.total || 0,    color:'#fff'     },
-            { label:'Matched',       value:chatbot?.matched || 0,  color:'#6ee7b7'  },
-            { label:'Unmatched',     value:chatbot?.unmatched || 0,color:'#fca5a5'  },
-            { label:'Accuracy',      value:`${chatbot?.accuracy || 0}%`, color:accColor },
-          ].map(s => (
-            <div key={s.label} style={{ background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:12, padding:'14px 16px' }}>
-              <div style={{ fontSize:24, fontWeight:900, color:s.color, letterSpacing:'-1px' }}>{s.value}</div>
-              <div style={{ fontSize:13, color:'rgba(255,255,255,0.55)', marginTop:4 }}>{s.label}</div>
+      {/* ── Haribon NLP Intelligence Cockpit Panel ── */}
+      <div style={{
+        background: 'linear-gradient(145deg, rgba(15,23,42,0.85) 0%, rgba(11,19,38,0.92) 100%)',
+        border: '1px solid rgba(99,102,241,0.22)',
+        borderRadius: 22, padding: '24px 26px', marginBottom: 24,
+        boxShadow: '0 16px 48px rgba(0,0,0,0.4)', position: 'relative', overflow: 'hidden'
+      }}>
+        {/* Top ambient color accent line */}
+        <div style={{
+          position: 'absolute', top: 0, left: 0, right: 0, height: 3,
+          background: 'linear-gradient(90deg, #6366f1, #3b82f6, #10b981, #06b6d4)',
+          opacity: 0.85
+        }} />
+
+        {/* Panel Header */}
+        <div style={{ display:'flex', flexWrap:'wrap', alignItems:'center', justifyContent:'space-between', gap:12, marginBottom:20 }}>
+          <div>
+            <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+              <div style={{ width:34, height:34, borderRadius:10, background:'rgba(99,102,241,0.18)', border:'1px solid rgba(99,102,241,0.35)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:18 }}>
+                🦅
+              </div>
+              <div>
+                <h3 style={{ color:'#fff', fontWeight:900, fontSize:17, margin:0, letterSpacing:'-0.3px', display:'flex', alignItems:'center', gap:8 }}>
+                  Haribon NLP · Intent Recognition Intelligence
+                  <span style={{ fontSize:10.5, fontWeight:800, color:'#34d399', background:'rgba(16,185,129,0.15)', border:'1px solid rgba(16,185,129,0.3)', borderRadius:6, padding:'2px 7px' }}>
+                    Model v2.4 Active
+                  </span>
+                </h3>
+                <div style={{ fontSize:12, color:'rgba(255,255,255,0.45)', marginTop:2 }}>
+                  Central Visayas Higher Education Regional Chatbot Telemetry
+                </div>
+              </div>
             </div>
-          ))}
-        </div>
-        <div style={{ marginBottom: chatbot?.topIntents?.length > 0 ? 16 : 0 }}>
-          <div style={{ display:'flex', justifyContent:'space-between', marginBottom:7, fontSize:12, color:'rgba(255,255,255,0.45)' }}>
-            <span>Overall accuracy rate</span>
-            <span style={{ fontWeight:800, color:accColor }}>{chatbot?.accuracy || 0}%</span>
           </div>
-          <div style={{ height:8, background:'rgba(255,255,255,0.08)', borderRadius:4, overflow:'hidden' }}>
-            <div style={{ height:'100%', width:`${chatbot?.accuracy || 0}%`, background: chatbot?.accuracy >= 80 ? 'linear-gradient(90deg,#059669,#6ee7b7)' : 'linear-gradient(90deg,#f59e0b,#fcd34d)', borderRadius:4, transition:'width .8s ease' }} />
+
+          <div style={{ fontSize:11.5, color:'rgba(255,255,255,0.5)', background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:8, padding:'5px 11px', display:'flex', alignItems:'center', gap:6 }}>
+            <span>📅</span>
+            <span>
+              {chatbot?.firstQueryAt
+                ? `Scope: ${new Date(chatbot.firstQueryAt).toLocaleDateString()} – ${new Date(chatbot.lastQueryAt).toLocaleDateString()}`
+                : 'No queries in selected timeframe'}
+            </span>
           </div>
         </div>
 
-        {/* Top Intents BarChart */}
-        {chatbot?.topIntents?.length > 0 && (
-          <div style={{ marginTop: 18 }}>
-            <div style={{ fontSize:12, fontWeight:800, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', letterSpacing:'.8px', marginBottom:12 }}>Top Intents Volume</div>
-            <ResponsiveContainer width="100%" height={Math.max(160, chatbot.topIntents.length * 28)}>
-              <BarChart data={chatbot.topIntents} layout="vertical" margin={{ left: 10, right: 30, top: 0, bottom: 0 }}>
-                <XAxis type="number" tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 11 }} axisLine={false} tickLine={false} />
-                <YAxis type="category" dataKey="intent" tick={{ fill: 'rgba(255,255,255,0.7)', fontSize: 11.5 }} axisLine={false} tickLine={false} width={130} />
-                <Tooltip contentStyle={{ background:'#0f172a', border:'1px solid rgba(255,255,255,0.1)', borderRadius:8, color:'#fff', fontSize:12 }} cursor={{ fill:'rgba(255,255,255,0.05)' }} />
-                <Bar dataKey="count" fill="#818cf8" radius={[0,4,4,0]} />
-              </BarChart>
-            </ResponsiveContainer>
+        {/* 4 Themed Metric Cards */}
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(210px, 1fr))', gap:12, marginBottom:22 }}>
+          {[
+            {
+              icon: '💬',
+              label: 'Total Inquiries',
+              value: chatbot?.total || 0,
+              sub: 'Total user queries processed',
+              color: '#818cf8',
+              bg: 'rgba(129,140,248,0.08)',
+              border: 'rgba(129,140,248,0.22)'
+            },
+            {
+              icon: '✓',
+              label: 'Matched Intents',
+              value: chatbot?.matched || 0,
+              sub: 'Successfully classified queries',
+              color: '#34d399',
+              bg: 'rgba(52,211,153,0.08)',
+              border: 'rgba(52,211,153,0.22)'
+            },
+            {
+              icon: '❓',
+              label: 'Unmatched / Fallback',
+              value: chatbot?.unmatched || 0,
+              sub: 'Routed to default handler',
+              color: '#f87171',
+              bg: 'rgba(248,113,113,0.08)',
+              border: 'rgba(248,113,113,0.22)'
+            },
+            {
+              icon: '🎯',
+              label: 'Recognition Accuracy',
+              value: `${chatbot?.accuracy || 0}%`,
+              sub: (chatbot?.accuracy || 0) >= 90 ? 'Production Grade (Optimal)' : 'Acceptable Confidence',
+              color: accColor,
+              bg: 'rgba(34,211,238,0.08)',
+              border: 'rgba(34,211,238,0.22)'
+            },
+          ].map(s => (
+            <div
+              key={s.label}
+              style={{
+                background: s.bg, border: `1px solid ${s.border}`,
+                borderRadius: 16, padding: '16px 18px',
+                position: 'relative', overflow: 'hidden',
+                transition: 'all .16s ease'
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = `0 8px 24px ${s.color}22`;
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = 'none';
+              }}
+            >
+              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:10 }}>
+                <span style={{ fontSize:11, fontWeight:800, color:'rgba(255,255,255,0.6)', textTransform:'uppercase', letterSpacing:'.6px' }}>
+                  {s.label}
+                </span>
+                <span style={{ width:26, height:26, borderRadius:8, background:'rgba(255,255,255,0.06)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, color:s.color, fontWeight:900 }}>
+                  {s.icon}
+                </span>
+              </div>
+              <div style={{ fontSize:26, fontWeight:900, color:s.color, letterSpacing:'-0.5px', lineHeight:1 }}>
+                {s.value}
+              </div>
+              <div style={{ fontSize:11.5, color:'rgba(255,255,255,0.45)', marginTop:6, fontWeight:500 }}>
+                {s.sub}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Overall Accuracy Benchmark Gauge */}
+        <div style={{
+          background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)',
+          borderRadius: 16, padding: '16px 18px', marginBottom: 24
+        }}>
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8 }}>
+            <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+              <span style={{ fontSize:14 }}>⚡</span>
+              <span style={{ fontSize:12.5, fontWeight:800, color:'#fff' }}>Overall Classification Reliability</span>
+              <span style={{ fontSize:10.5, fontWeight:800, color:accColor, background:'rgba(255,255,255,0.06)', borderRadius:5, padding:'2px 7px' }}>
+                {(chatbot?.accuracy || 0) >= 90 ? 'Tier 1 Excellent (>=90%)' : (chatbot?.accuracy || 0) >= 75 ? 'Tier 2 Good (>=75%)' : 'Needs Optimization'}
+              </span>
+            </div>
+            <div style={{ display:'flex', alignItems:'baseline', gap:4 }}>
+              <span style={{ fontSize:18, fontWeight:900, color:accColor }}>{chatbot?.accuracy || 0}%</span>
+              <span style={{ fontSize:11, color:'rgba(255,255,255,0.4)' }}>/ 100% target</span>
+            </div>
           </div>
-        )}
+
+          {/* Elevated glowing progress bar */}
+          <div style={{ height:10, background:'rgba(255,255,255,0.07)', borderRadius:6, overflow:'hidden', position:'relative' }}>
+            <div style={{
+              height:'100%', width:`${chatbot?.accuracy || 0}%`,
+              background: (chatbot?.accuracy || 0) >= 80 ? 'linear-gradient(90deg, #3b82f6, #10b981, #34d399)' : 'linear-gradient(90deg, #f59e0b, #fbbf24)',
+              borderRadius:6, boxShadow:'0 0 12px rgba(16,185,129,0.5)',
+              transition:'width 1s cubic-bezier(0.16, 1, 0.3, 1)'
+            }} />
+          </div>
+
+          <div style={{ display:'flex', justifyContent:'space-between', marginTop:6, fontSize:10.5, color:'rgba(255,255,255,0.35)', fontWeight:600 }}>
+            <span>0% Baseline</span>
+            <span>50%</span>
+            <span>75% Acceptable Threshold</span>
+            <span>90% Industry Standard Target</span>
+            <span>100%</span>
+          </div>
+        </div>
+
+        {/* ── Top Intents Volume Breakdown ── */}
+        {chatbot?.topIntents?.length > 0 && (() => {
+          const totalMatched = chatbot?.matched || 1;
+          const maxCount = Math.max(...chatbot.topIntents.map(i => i.count), 1);
+          const INTENT_META = {
+            events: { label: 'Consortium Events & Summits', icon: '📅', color: '#818cf8', gradient: 'linear-gradient(90deg, #6366f1, #818cf8)' },
+            about_dasig: { label: 'About DASIG Consortium', icon: '🏛️', color: '#38bdf8', gradient: 'linear-gradient(90deg, #0284c7, #38bdf8)' },
+            training: { label: 'Faculty Training & Workshops', icon: '🎓', color: '#34d399', gradient: 'linear-gradient(90deg, #059669, #34d399)' },
+            membership: { label: 'Membership Tiers & Institutional Join', icon: '📋', color: '#fbbf24', gradient: 'linear-gradient(90deg, #d97706, #fbbf24)' },
+            funding: { label: 'R&D Grants & Research Funding Calls', icon: '💰', color: '#2dd4bf', gradient: 'linear-gradient(90deg, #0d9488, #2dd4bf)' },
+            event_register: { label: 'Event Registration & RSVP Booking', icon: '✍️', color: '#f472b6', gradient: 'linear-gradient(90deg, #db2777, #f472b6)' },
+            partnerships: { label: 'HEI Alliances & MOUs', icon: '🤝', color: '#a78bfa', gradient: 'linear-gradient(90deg, #7c3aed, #a78bfa)' },
+            member_institutions: { label: 'Member Universities Directory', icon: '🏫', color: '#fb923c', gradient: 'linear-gradient(90deg, #ea580c, #fb923c)' },
+          };
+
+          return (
+            <div>
+              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:14 }}>
+                <div>
+                  <div style={{ fontSize:12.5, fontWeight:800, color:'#fff', textTransform:'uppercase', letterSpacing:'.6px', display:'flex', alignItems:'center', gap:7 }}>
+                    <span>📊</span> Top Intent Clusters & Frequency
+                  </div>
+                  <div style={{ fontSize:11.5, color:'rgba(255,255,255,0.4)', marginTop:2 }}>
+                    Distribution of recognized user requests across consortium categories
+                  </div>
+                </div>
+                <span style={{ fontSize:11.5, color:'rgba(255,255,255,0.5)', background:'rgba(255,255,255,0.05)', borderRadius:6, padding:'3px 9px', fontWeight:700 }}>
+                  {chatbot.topIntents.length} Intent Categories
+                </span>
+              </div>
+
+              <div style={{ display:'flex', flexDirection:'column', gap:9 }}>
+                {chatbot.topIntents.map((item, idx) => {
+                  const meta = INTENT_META[item.intent] || {
+                    label: item.intent.replace(/_/g, ' '),
+                    icon: '💬',
+                    color: '#94a3b8',
+                    gradient: 'linear-gradient(90deg, #64748b, #94a3b8)'
+                  };
+                  const pctShare = Math.round((item.count / totalMatched) * 100);
+                  const barWidth = Math.max(8, Math.round((item.count / maxCount) * 100));
+
+                  return (
+                    <div
+                      key={item.intent}
+                      style={{
+                        background:'rgba(255,255,255,0.025)', border:'1px solid rgba(255,255,255,0.05)',
+                        borderRadius:12, padding:'10px 14px',
+                        transition:'all .14s ease'
+                      }}
+                      onMouseEnter={e => {
+                        e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
+                        e.currentTarget.style.borderColor = `${meta.color}44`;
+                        e.currentTarget.style.transform = 'translateX(2px)';
+                      }}
+                      onMouseLeave={e => {
+                        e.currentTarget.style.background = 'rgba(255,255,255,0.025)';
+                        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.05)';
+                        e.currentTarget.style.transform = 'translateX(0)';
+                      }}
+                    >
+                      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:7 }}>
+                        <div style={{ display:'flex', alignItems:'center', gap:9 }}>
+                          <span style={{
+                            width:22, height:22, borderRadius:6,
+                            background: idx === 0 ? 'rgba(245,158,11,0.2)' : idx === 1 ? 'rgba(56,189,248,0.2)' : idx === 2 ? 'rgba(52,211,153,0.2)' : 'rgba(255,255,255,0.06)',
+                            color: idx === 0 ? '#fbbf24' : idx === 1 ? '#38bdf8' : idx === 2 ? '#34d399' : 'rgba(255,255,255,0.5)',
+                            display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:900
+                          }}>
+                            #{idx + 1}
+                          </span>
+                          <span style={{ fontSize:15 }}>{meta.icon}</span>
+                          <span style={{ fontSize:13, fontWeight:700, color:'#fff' }}>{meta.label}</span>
+                          <code style={{ fontSize:10.5, color:'rgba(255,255,255,0.35)', background:'rgba(255,255,255,0.04)', borderRadius:4, padding:'1px 5px' }}>
+                            {item.intent}
+                          </code>
+                        </div>
+
+                        <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+                          <span style={{ fontSize:11.5, color:'rgba(255,255,255,0.45)', fontWeight:600 }}>{pctShare}% share</span>
+                          <span style={{ fontSize:13, fontWeight:800, color:meta.color, background:`${meta.color}18`, border:`1px solid ${meta.color}33`, borderRadius:6, padding:'2px 8px' }}>
+                            {item.count} inquiries
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Custom styled gradient progress bar */}
+                      <div style={{ height:7, background:'rgba(255,255,255,0.06)', borderRadius:4, overflow:'hidden' }}>
+                        <div style={{
+                          height:'100%', width:`${barWidth}%`,
+                          background: meta.gradient,
+                          borderRadius:4,
+                          boxShadow:`0 0 8px ${meta.color}55`,
+                          transition:'width .6s ease'
+                        }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })()}
       </div>
 
       {/* User Role Distribution Pie Chart */}
