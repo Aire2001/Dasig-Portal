@@ -5764,40 +5764,60 @@ function ReportsTab({ showToast, onOpenReport }) {
           ))}
         </div>
 
-        {/* Overall Accuracy Benchmark Gauge */}
+        {/* ── Overall Accuracy Benchmark Gauge ── */}
         <div style={{
-          background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)',
-          borderRadius: 16, padding: '16px 18px', marginBottom: 24
+          background: 'linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.015) 100%)',
+          border: '1px solid rgba(255,255,255,0.08)',
+          borderRadius: 18, padding: '18px 22px', marginBottom: 26,
+          boxShadow: '0 8px 24px rgba(0,0,0,0.2)'
         }}>
-          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8 }}>
-            <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-              <span style={{ fontSize:14 }}>⚡</span>
-              <span style={{ fontSize:12.5, fontWeight:800, color:'#fff' }}>Overall Classification Reliability</span>
-              <span style={{ fontSize:10.5, fontWeight:800, color:accColor, background:'rgba(255,255,255,0.06)', borderRadius:5, padding:'2px 7px' }}>
-                {(chatbot?.accuracy || 0) >= 90 ? 'Tier 1 Excellent (>=90%)' : (chatbot?.accuracy || 0) >= 75 ? 'Tier 2 Good (>=75%)' : 'Needs Optimization'}
-              </span>
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:12, flexWrap:'wrap', gap:8 }}>
+            <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+              <div style={{ width:28, height:28, borderRadius:8, background:'rgba(16,185,129,0.18)', border:'1px solid rgba(16,185,129,0.35)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:14 }}>
+                ⚡
+              </div>
+              <div>
+                <span style={{ fontSize:13.5, fontWeight:800, color:'#fff' }}>Overall Intent Classification Reliability</span>
+                <span style={{
+                  fontSize:10.5, fontWeight:900, color:accColor,
+                  background:'rgba(16,185,129,0.14)', border:'1px solid rgba(16,185,129,0.3)',
+                  borderRadius:6, padding:'2px 8px', marginLeft:8
+                }}>
+                  {(chatbot?.accuracy || 0) >= 90 ? '★ Production Grade · Tier 1 (>=90%)' : (chatbot?.accuracy || 0) >= 75 ? 'Tier 2 Good (>=75%)' : 'Needs Optimization'}
+                </span>
+              </div>
             </div>
-            <div style={{ display:'flex', alignItems:'baseline', gap:4 }}>
-              <span style={{ fontSize:18, fontWeight:900, color:accColor }}>{chatbot?.accuracy || 0}%</span>
-              <span style={{ fontSize:11, color:'rgba(255,255,255,0.4)' }}>/ 100% target</span>
+            <div style={{ display:'flex', alignItems:'baseline', gap:5 }}>
+              <span style={{ fontSize:22, fontWeight:900, color:accColor, letterSpacing:'-0.5px' }}>{chatbot?.accuracy || 0}%</span>
+              <span style={{ fontSize:12, color:'rgba(255,255,255,0.45)', fontWeight:600 }}>/ 100% Target</span>
             </div>
           </div>
 
-          {/* Elevated glowing progress bar */}
-          <div style={{ height:10, background:'rgba(255,255,255,0.07)', borderRadius:6, overflow:'hidden', position:'relative' }}>
+          {/* Elevated glowing progress bar with benchmark markers */}
+          <div style={{ position:'relative', marginBottom:8 }}>
+            <div style={{ height:12, background:'rgba(255,255,255,0.08)', borderRadius:7, overflow:'hidden', position:'relative', boxShadow:'inset 0 2px 4px rgba(0,0,0,0.4)' }}>
+              <div style={{
+                height:'100%', width:`${chatbot?.accuracy || 0}%`,
+                background: (chatbot?.accuracy || 0) >= 80 ? 'linear-gradient(90deg, #3b82f6 0%, #10b981 70%, #34d399 100%)' : 'linear-gradient(90deg, #f59e0b, #fbbf24)',
+                borderRadius:7, boxShadow:'0 0 16px rgba(16,185,129,0.6)',
+                transition:'width 1s cubic-bezier(0.16, 1, 0.3, 1)'
+              }} />
+            </div>
+
+            {/* Target 90% indicator notch */}
             <div style={{
-              height:'100%', width:`${chatbot?.accuracy || 0}%`,
-              background: (chatbot?.accuracy || 0) >= 80 ? 'linear-gradient(90deg, #3b82f6, #10b981, #34d399)' : 'linear-gradient(90deg, #f59e0b, #fbbf24)',
-              borderRadius:6, boxShadow:'0 0 12px rgba(16,185,129,0.5)',
-              transition:'width 1s cubic-bezier(0.16, 1, 0.3, 1)'
-            }} />
+              position:'absolute', left:'90%', top:-3, bottom:-3, width:2,
+              background:'#fff', borderRadius:1, boxShadow:'0 0 6px rgba(255,255,255,0.8)',
+              pointerEvents:'none', zIndex:2
+            }} title="90% Industry Standard Threshold" />
           </div>
 
-          <div style={{ display:'flex', justifyContent:'space-between', marginTop:6, fontSize:10.5, color:'rgba(255,255,255,0.35)', fontWeight:600 }}>
+          {/* Benchmark milestone labels */}
+          <div style={{ display:'flex', justifyContent:'space-between', fontSize:11, color:'rgba(255,255,255,0.4)', fontWeight:600 }}>
             <span>0% Baseline</span>
             <span>50%</span>
             <span>75% Acceptable Threshold</span>
-            <span>90% Industry Standard Target</span>
+            <span style={{ color:'#93c5fd', fontWeight:800 }}>▲ 90% Industry Standard</span>
             <span>100%</span>
           </div>
         </div>
@@ -5819,21 +5839,21 @@ function ReportsTab({ showToast, onOpenReport }) {
 
           return (
             <div>
-              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:14 }}>
+              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:16, flexWrap:'wrap', gap:8 }}>
                 <div>
-                  <div style={{ fontSize:12.5, fontWeight:800, color:'#fff', textTransform:'uppercase', letterSpacing:'.6px', display:'flex', alignItems:'center', gap:7 }}>
+                  <div style={{ fontSize:13, fontWeight:900, color:'#fff', textTransform:'uppercase', letterSpacing:'.7px', display:'flex', alignItems:'center', gap:8 }}>
                     <span>📊</span> Top Intent Clusters & Frequency
                   </div>
-                  <div style={{ fontSize:11.5, color:'rgba(255,255,255,0.4)', marginTop:2 }}>
+                  <div style={{ fontSize:11.5, color:'rgba(255,255,255,0.45)', marginTop:2 }}>
                     Distribution of recognized user requests across consortium categories
                   </div>
                 </div>
-                <span style={{ fontSize:11.5, color:'rgba(255,255,255,0.5)', background:'rgba(255,255,255,0.05)', borderRadius:6, padding:'3px 9px', fontWeight:700 }}>
-                  {chatbot.topIntents.length} Intent Categories
+                <span style={{ fontSize:11.5, color:'rgba(255,255,255,0.65)', background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:8, padding:'4px 10px', fontWeight:800 }}>
+                  {chatbot.topIntents.length} Intent Categories Evaluated
                 </span>
               </div>
 
-              <div style={{ display:'flex', flexDirection:'column', gap:9 }}>
+              <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
                 {chatbot.topIntents.map((item, idx) => {
                   const meta = INTENT_META[item.intent] || {
                     label: item.intent.replace(/_/g, ' '),
@@ -5842,60 +5862,95 @@ function ReportsTab({ showToast, onOpenReport }) {
                     gradient: 'linear-gradient(90deg, #64748b, #94a3b8)'
                   };
                   const pctShare = Math.round((item.count / totalMatched) * 100);
-                  const barWidth = Math.max(8, Math.round((item.count / maxCount) * 100));
+                  const barWidth = Math.max(10, Math.round((item.count / maxCount) * 100));
+
+                  const isGold   = idx === 0;
+                  const isSilver = idx === 1;
+                  const isBronze = idx === 2;
 
                   return (
                     <div
                       key={item.intent}
                       style={{
-                        background:'rgba(255,255,255,0.025)', border:'1px solid rgba(255,255,255,0.05)',
-                        borderRadius:12, padding:'10px 14px',
-                        transition:'all .14s ease'
+                        background:'linear-gradient(135deg, rgba(255,255,255,0.035) 0%, rgba(255,255,255,0.015) 100%)',
+                        border:'1px solid rgba(255,255,255,0.065)',
+                        borderRadius:14, padding:'12px 16px',
+                        transition:'all .16s ease'
                       }}
                       onMouseEnter={e => {
-                        e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
-                        e.currentTarget.style.borderColor = `${meta.color}44`;
-                        e.currentTarget.style.transform = 'translateX(2px)';
+                        e.currentTarget.style.background = 'rgba(255,255,255,0.06)';
+                        e.currentTarget.style.borderColor = `${meta.color}55`;
+                        e.currentTarget.style.transform = 'translateY(-2px)';
+                        e.currentTarget.style.boxShadow = `0 6px 20px rgba(0,0,0,0.3), 0 0 12px ${meta.color}22`;
                       }}
                       onMouseLeave={e => {
-                        e.currentTarget.style.background = 'rgba(255,255,255,0.025)';
-                        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.05)';
-                        e.currentTarget.style.transform = 'translateX(0)';
+                        e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255,255,255,0.035) 0%, rgba(255,255,255,0.015) 100%)';
+                        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.065)';
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = 'none';
                       }}
                     >
-                      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:7 }}>
-                        <div style={{ display:'flex', alignItems:'center', gap:9 }}>
+                      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:9, flexWrap:'wrap', gap:8 }}>
+                        {/* Left: Rank, Icon, Title & Code */}
+                        <div style={{ display:'flex', alignItems:'center', gap:10 }}>
                           <span style={{
-                            width:22, height:22, borderRadius:6,
-                            background: idx === 0 ? 'rgba(245,158,11,0.2)' : idx === 1 ? 'rgba(56,189,248,0.2)' : idx === 2 ? 'rgba(52,211,153,0.2)' : 'rgba(255,255,255,0.06)',
-                            color: idx === 0 ? '#fbbf24' : idx === 1 ? '#38bdf8' : idx === 2 ? '#34d399' : 'rgba(255,255,255,0.5)',
-                            display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:900
+                            width:24, height:24, borderRadius:7,
+                            background: isGold
+                              ? 'linear-gradient(135deg, #f59e0b, #d97706)'
+                              : isSilver
+                              ? 'linear-gradient(135deg, #0284c7, #38bdf8)'
+                              : isBronze
+                              ? 'linear-gradient(135deg, #059669, #34d399)'
+                              : 'rgba(255,255,255,0.06)',
+                            color: '#fff',
+                            display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:900,
+                            boxShadow: isGold ? '0 2px 8px rgba(245,158,11,0.4)' : 'none'
                           }}>
                             #{idx + 1}
                           </span>
-                          <span style={{ fontSize:15 }}>{meta.icon}</span>
-                          <span style={{ fontSize:13, fontWeight:700, color:'#fff' }}>{meta.label}</span>
-                          <code style={{ fontSize:10.5, color:'rgba(255,255,255,0.35)', background:'rgba(255,255,255,0.04)', borderRadius:4, padding:'1px 5px' }}>
-                            {item.intent}
-                          </code>
+
+                          <div style={{
+                            width:28, height:28, borderRadius:8,
+                            background:`${meta.color}18`, border:`1px solid ${meta.color}33`,
+                            display:'flex', alignItems:'center', justifyContent:'center', fontSize:15
+                          }}>
+                            {meta.icon}
+                          </div>
+
+                          <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                            <span style={{ fontSize:13.5, fontWeight:800, color:'#fff' }}>{meta.label}</span>
+                            <span style={{
+                              fontSize:10.5, color:'rgba(255,255,255,0.4)', background:'rgba(255,255,255,0.05)',
+                              border:'1px solid rgba(255,255,255,0.07)', borderRadius:5, padding:'1px 6px', fontWeight:600
+                            }}>
+                              {item.intent}
+                            </span>
+                          </div>
                         </div>
 
-                        <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-                          <span style={{ fontSize:11.5, color:'rgba(255,255,255,0.45)', fontWeight:600 }}>{pctShare}% share</span>
-                          <span style={{ fontSize:13, fontWeight:800, color:meta.color, background:`${meta.color}18`, border:`1px solid ${meta.color}33`, borderRadius:6, padding:'2px 8px' }}>
-                            {item.count} inquiries
+                        {/* Right: Percent Share + Count Pill */}
+                        <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+                          <span style={{ fontSize:12, color:'rgba(255,255,255,0.5)', fontWeight:700 }}>
+                            {pctShare}% share
+                          </span>
+                          <span style={{
+                            fontSize:12.5, fontWeight:800, color:meta.color,
+                            background:`${meta.color}18`, border:`1px solid ${meta.color}38`,
+                            borderRadius:7, padding:'3px 10px', boxShadow:`0 2px 8px ${meta.color}15`
+                          }}>
+                            {item.count} Inquiries
                           </span>
                         </div>
                       </div>
 
-                      {/* Custom styled gradient progress bar */}
-                      <div style={{ height:7, background:'rgba(255,255,255,0.06)', borderRadius:4, overflow:'hidden' }}>
+                      {/* Volumetric Progress Bar */}
+                      <div style={{ height:10, background:'rgba(255,255,255,0.06)', borderRadius:5, overflow:'hidden', position:'relative', boxShadow:'inset 0 1px 3px rgba(0,0,0,0.3)' }}>
                         <div style={{
                           height:'100%', width:`${barWidth}%`,
                           background: meta.gradient,
-                          borderRadius:4,
-                          boxShadow:`0 0 8px ${meta.color}55`,
-                          transition:'width .6s ease'
+                          borderRadius:5,
+                          boxShadow:`0 0 10px ${meta.color}66`,
+                          transition:'width .8s cubic-bezier(0.16, 1, 0.3, 1)'
                         }} />
                       </div>
                     </div>
@@ -5907,48 +5962,57 @@ function ReportsTab({ showToast, onOpenReport }) {
         })()}
       </div>
 
-      {/* User Role Distribution Pie Chart */}
+      {/* ── User Role Distribution Card ── */}
       {statsData?.users && (
-        <div style={{ background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:16, padding:'22px 24px', marginBottom:22 }}>
-          <div style={{ fontSize:13, fontWeight:800, color:'rgba(255,255,255,0.6)', textTransform:'uppercase', letterSpacing:'.6px', marginBottom:16 }}>
-            👥 User Role Distribution
+        <div style={{
+          background: 'linear-gradient(145deg, rgba(15,23,42,0.85) 0%, rgba(11,19,38,0.92) 100%)',
+          border: '1px solid rgba(255,255,255,0.08)', borderRadius: 20, padding: '24px 26px', marginBottom: 22,
+          boxShadow: '0 12px 36px rgba(0,0,0,0.35)', position: 'relative', overflow: 'hidden'
+        }}>
+          <div style={{ position:'absolute', top:0, left:0, right:0, height:3, background:'linear-gradient(90deg, #10b981, #3b82f6, #f43f5e)', opacity:0.8 }} />
+          <div style={{ fontSize:13, fontWeight:900, color:'#fff', textTransform:'uppercase', letterSpacing:'.7px', marginBottom:18, display:'flex', alignItems:'center', gap:8 }}>
+            <span>👥</span> Regional User Role Composition & Access Tiers
           </div>
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:20, alignItems:'center' }}>
-            <ResponsiveContainer width="100%" height={180}>
-              <PieChart>
-                <Pie
-                  data={[
-                    { name:'Members', value: statsData.users.member },
-                    { name:'Guests', value: statsData.users.guest },
-                    { name:'Admins', value: statsData.users.admin },
-                  ]}
-                  cx="50%" cy="50%" innerRadius={48} outerRadius={76}
-                  paddingAngle={3} dataKey="value"
-                >
-                  <Cell fill="#34d399" />
-                  <Cell fill="#60a5fa" />
-                  <Cell fill="#f87171" />
-                </Pie>
-                <Tooltip contentStyle={{ background:'#0f172a', border:'1px solid rgba(255,255,255,0.1)', borderRadius:8, color:'#fff', fontSize:12 }} />
-                <Legend formatter={(v) => <span style={{ color:'rgba(255,255,255,0.7)', fontSize:12 }}>{v}</span>} />
-              </PieChart>
-            </ResponsiveContainer>
-            <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(280px, 1fr))', gap:24, alignItems:'center' }}>
+            <div style={{ height:200 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={[
+                      { name:'Verified Members', value: statsData.users.member },
+                      { name:'Guest Scholars', value: statsData.users.guest },
+                      { name:'Consortium Admins', value: statsData.users.admin },
+                    ]}
+                    cx="50%" cy="50%" innerRadius={54} outerRadius={82}
+                    paddingAngle={4} dataKey="value"
+                  >
+                    <Cell fill="#34d399" />
+                    <Cell fill="#60a5fa" />
+                    <Cell fill="#f87171" />
+                  </Pie>
+                  <Tooltip contentStyle={{ background:'#0f172a', border:'1px solid rgba(255,255,255,0.15)', borderRadius:10, color:'#fff', fontSize:12 }} />
+                  <Legend formatter={(v) => <span style={{ color:'rgba(255,255,255,0.8)', fontSize:12, fontWeight:600 }}>{v}</span>} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
               {[
-                { label:'Members', value: statsData.users.member, color:'#34d399', pct: statsData.users.total > 0 ? Math.round(statsData.users.member/statsData.users.total*100) : 0 },
-                { label:'Guests',  value: statsData.users.guest,  color:'#60a5fa', pct: statsData.users.total > 0 ? Math.round(statsData.users.guest/statsData.users.total*100) : 0 },
-                { label:'Admins',  value: statsData.users.admin,  color:'#f87171', pct: statsData.users.total > 0 ? Math.round(statsData.users.admin/statsData.users.total*100) : 0 },
+                { label:'Verified Institutional Members', value: statsData.users.member, color:'#34d399', pct: statsData.users.total > 0 ? Math.round(statsData.users.member/statsData.users.total*100) : 0 },
+                { label:'Guest Researchers & Scholars',  value: statsData.users.guest,  color:'#60a5fa', pct: statsData.users.total > 0 ? Math.round(statsData.users.guest/statsData.users.total*100) : 0 },
+                { label:'Regional Consortium Administrators',  value: statsData.users.admin,  color:'#f87171', pct: statsData.users.total > 0 ? Math.round(statsData.users.admin/statsData.users.total*100) : 0 },
               ].map(r => (
-                <div key={r.label} style={{ display:'flex', alignItems:'center', gap:12 }}>
-                  <div style={{ width:10, height:10, borderRadius:'50%', background:r.color, flexShrink:0 }} />
-                  <div style={{ flex:1 }}>
-                    <div style={{ display:'flex', justifyContent:'space-between', marginBottom:3 }}>
-                      <span style={{ fontSize:12.5, color:'rgba(255,255,255,0.7)', fontWeight:600 }}>{r.label}</span>
-                      <span style={{ fontSize:12.5, fontWeight:800, color:'#fff' }}>{r.value} <span style={{ color:'rgba(255,255,255,0.4)', fontWeight:400 }}>({r.pct}%)</span></span>
+                <div key={r.label} style={{ background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:12, padding:'10px 14px' }}>
+                  <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:6 }}>
+                    <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                      <span style={{ width:10, height:10, borderRadius:'50%', background:r.color, boxShadow:`0 0 8px ${r.color}` }} />
+                      <span style={{ fontSize:12.5, color:'#fff', fontWeight:700 }}>{r.label}</span>
                     </div>
-                    <div style={{ height:5, background:'rgba(255,255,255,0.08)', borderRadius:3, overflow:'hidden' }}>
-                      <div style={{ height:'100%', width:`${r.pct}%`, background:r.color, borderRadius:3 }} />
-                    </div>
+                    <span style={{ fontSize:13, fontWeight:900, color:r.color }}>
+                      {r.value} <span style={{ color:'rgba(255,255,255,0.4)', fontWeight:500, fontSize:11.5 }}>({r.pct}%)</span>
+                    </span>
+                  </div>
+                  <div style={{ height:6, background:'rgba(255,255,255,0.06)', borderRadius:3, overflow:'hidden' }}>
+                    <div style={{ height:'100%', width:`${r.pct}%`, background:r.color, borderRadius:3, transition:'width .8s ease' }} />
                   </div>
                 </div>
               ))}
@@ -5957,18 +6021,28 @@ function ReportsTab({ showToast, onOpenReport }) {
         </div>
       )}
 
-      {/* Event fill rates BarChart */}
-      <div style={{ background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:16, padding:'22px 24px', marginBottom:22 }}>
-        <div style={{ fontSize:13, fontWeight:800, color:'rgba(255,255,255,0.6)', textTransform:'uppercase', letterSpacing:'.6px', marginBottom:16 }}>
-          📅 Event Fill Rates — {evRep?.summary?.overallFillRate || 0}% average
+      {/* ── Event Fill Rates Card ── */}
+      <div style={{
+        background: 'linear-gradient(145deg, rgba(15,23,42,0.85) 0%, rgba(11,19,38,0.92) 100%)',
+        border: '1px solid rgba(255,255,255,0.08)', borderRadius: 20, padding: '24px 26px', marginBottom: 22,
+        boxShadow: '0 12px 36px rgba(0,0,0,0.35)', position: 'relative', overflow: 'hidden'
+      }}>
+        <div style={{ position:'absolute', top:0, left:0, right:0, height:3, background:'linear-gradient(90deg, #a855f7, #6366f1, #3b82f6)', opacity:0.8 }} />
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:18, flexWrap:'wrap', gap:8 }}>
+          <div style={{ fontSize:13, fontWeight:900, color:'#fff', textTransform:'uppercase', letterSpacing:'.7px', display:'flex', alignItems:'center', gap:8 }}>
+            <span>📅</span> Consortium Event RSVP Capacity & Fill Rates
+          </div>
+          <span style={{ fontSize:12, fontWeight:800, color:'#a855f7', background:'rgba(168,85,247,0.15)', border:'1px solid rgba(168,85,247,0.3)', borderRadius:8, padding:'4px 10px' }}>
+            {evRep?.summary?.overallFillRate || 0}% Average Capacity Reached
+          </span>
         </div>
         {evRep?.events?.length > 0 ? (
-          <ResponsiveContainer width="100%" height={Math.max(140, evRep.events.length * 36)}>
-            <BarChart data={evRep.events.map(ev => ({ name: ev.title.length > 25 ? ev.title.slice(0,25)+'…' : ev.title, fillRate: ev.fillRate, enrolled: ev.enrolled, total: ev.total }))} layout="vertical" margin={{ left:10, right:30, top:0, bottom:0 }}>
-              <XAxis type="number" domain={[0,100]} tick={{ fill:'rgba(255,255,255,0.4)', fontSize:10 }} axisLine={false} tickLine={false} tickFormatter={v => `${v}%`} />
-              <YAxis type="category" dataKey="name" tick={{ fill:'rgba(255,255,255,0.65)', fontSize:11 }} axisLine={false} tickLine={false} width={150} />
-              <Tooltip contentStyle={{ background:'#0f172a', border:'1px solid rgba(255,255,255,0.1)', borderRadius:8, color:'#fff', fontSize:12 }} formatter={(v,n,p) => [`${v}% (${p.payload.enrolled}/${p.payload.total} registered)`, 'Fill Rate']} cursor={{ fill:'rgba(255,255,255,0.04)' }} />
-              <Bar dataKey="fillRate" radius={[0,4,4,0]}>
+          <ResponsiveContainer width="100%" height={Math.max(160, evRep.events.length * 40)}>
+            <BarChart data={evRep.events.map(ev => ({ name: ev.title.length > 28 ? ev.title.slice(0,28)+'…' : ev.title, fillRate: ev.fillRate, enrolled: ev.enrolled, total: ev.total }))} layout="vertical" margin={{ left:10, right:30, top:0, bottom:0 }}>
+              <XAxis type="number" domain={[0,100]} tick={{ fill:'rgba(255,255,255,0.45)', fontSize:11 }} axisLine={false} tickLine={false} tickFormatter={v => `${v}%`} />
+              <YAxis type="category" dataKey="name" tick={{ fill:'rgba(255,255,255,0.75)', fontSize:12, fontWeight:600 }} axisLine={false} tickLine={false} width={180} />
+              <Tooltip contentStyle={{ background:'#0f172a', border:'1px solid rgba(255,255,255,0.15)', borderRadius:10, color:'#fff', fontSize:12 }} formatter={(v,n,p) => [`${v}% (${p.payload.enrolled}/${p.payload.total} Registered Participants)`, 'Capacity Fill Rate']} cursor={{ fill:'rgba(255,255,255,0.04)' }} />
+              <Bar dataKey="fillRate" radius={[0,6,6,0]}>
                 {(evRep?.events||[]).map((ev, idx) => (
                   <Cell key={idx} fill={ev.fillRate >= 80 ? '#34d399' : ev.fillRate >= 50 ? '#f59e0b' : '#818cf8'} />
                 ))}
@@ -5976,22 +6050,32 @@ function ReportsTab({ showToast, onOpenReport }) {
             </BarChart>
           </ResponsiveContainer>
         ) : (
-          <div style={{ textAlign:'center', padding:'24px 0', color:'rgba(255,255,255,0.3)', fontSize:13 }}>No event data yet</div>
+          <div style={{ textAlign:'center', padding:'32px 0', color:'rgba(255,255,255,0.35)', fontSize:13 }}>No event registration data recorded yet</div>
         )}
       </div>
 
-      {/* Training enrollment BarChart */}
-      <div style={{ background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:16, padding:'22px 24px', marginBottom:22 }}>
-        <div style={{ fontSize:13, fontWeight:800, color:'rgba(255,255,255,0.6)', textTransform:'uppercase', letterSpacing:'.6px', marginBottom:16 }}>
-          🎓 Training Enrollment
+      {/* ── Training Enrollment Card ── */}
+      <div style={{
+        background: 'linear-gradient(145deg, rgba(15,23,42,0.85) 0%, rgba(11,19,38,0.92) 100%)',
+        border: '1px solid rgba(255,255,255,0.08)', borderRadius: 20, padding: '24px 26px', marginBottom: 22,
+        boxShadow: '0 12px 36px rgba(0,0,0,0.35)', position: 'relative', overflow: 'hidden'
+      }}>
+        <div style={{ position:'absolute', top:0, left:0, right:0, height:3, background:'linear-gradient(90deg, #f43f5e, #fb923c, #fbbf24)', opacity:0.8 }} />
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:18, flexWrap:'wrap', gap:8 }}>
+          <div style={{ fontSize:13, fontWeight:900, color:'#fff', textTransform:'uppercase', letterSpacing:'.7px', display:'flex', alignItems:'center', gap:8 }}>
+            <span>🎓</span> Faculty Development & Training Program Enrollment
+          </div>
+          <span style={{ fontSize:12, fontWeight:800, color:'#34d399', background:'rgba(52,211,153,0.15)', border:'1px solid rgba(52,211,153,0.3)', borderRadius:8, padding:'4px 10px' }}>
+            Consortium Cohort Telemetry
+          </span>
         </div>
         {trRep?.trainings?.length > 0 ? (
-          <ResponsiveContainer width="100%" height={Math.max(140, trRep.trainings.length * 36)}>
-            <BarChart data={trRep.trainings.map(t => ({ name: t.title.length > 25 ? t.title.slice(0,25)+'…' : t.title, fillRate: t.fillRate, enrolled: t.enrolled, total: t.total }))} layout="vertical" margin={{ left:10, right:30, top:0, bottom:0 }}>
-              <XAxis type="number" domain={[0,100]} tick={{ fill:'rgba(255,255,255,0.4)', fontSize:10 }} axisLine={false} tickLine={false} tickFormatter={v => `${v}%`} />
-              <YAxis type="category" dataKey="name" tick={{ fill:'rgba(255,255,255,0.65)', fontSize:11 }} axisLine={false} tickLine={false} width={150} />
-              <Tooltip contentStyle={{ background:'#0f172a', border:'1px solid rgba(255,255,255,0.1)', borderRadius:8, color:'#fff', fontSize:12 }} formatter={(v,n,p) => [`${v}% (${p.payload.enrolled}/${p.payload.total} enrolled)`, 'Fill Rate']} cursor={{ fill:'rgba(255,255,255,0.04)' }} />
-              <Bar dataKey="fillRate" radius={[0,4,4,0]}>
+          <ResponsiveContainer width="100%" height={Math.max(160, trRep.trainings.length * 40)}>
+            <BarChart data={trRep.trainings.map(t => ({ name: t.title.length > 28 ? t.title.slice(0,28)+'…' : t.title, fillRate: t.fillRate, enrolled: t.enrolled, total: t.total }))} layout="vertical" margin={{ left:10, right:30, top:0, bottom:0 }}>
+              <XAxis type="number" domain={[0,100]} tick={{ fill:'rgba(255,255,255,0.45)', fontSize:11 }} axisLine={false} tickLine={false} tickFormatter={v => `${v}%`} />
+              <YAxis type="category" dataKey="name" tick={{ fill:'rgba(255,255,255,0.75)', fontSize:12, fontWeight:600 }} axisLine={false} tickLine={false} width={180} />
+              <Tooltip contentStyle={{ background:'#0f172a', border:'1px solid rgba(255,255,255,0.15)', borderRadius:10, color:'#fff', fontSize:12 }} formatter={(v,n,p) => [`${v}% (${p.payload.enrolled}/${p.payload.total} Faculty Enrolled)`, 'Enrollment Fill Rate']} cursor={{ fill:'rgba(255,255,255,0.04)' }} />
+              <Bar dataKey="fillRate" radius={[0,6,6,0]}>
                 {(trRep?.trainings||[]).map((t, idx) => (
                   <Cell key={idx} fill={t.fillRate >= 80 ? '#34d399' : t.fillRate >= 50 ? '#fbbf24' : '#f43f5e'} />
                 ))}
@@ -5999,10 +6083,10 @@ function ReportsTab({ showToast, onOpenReport }) {
             </BarChart>
           </ResponsiveContainer>
         ) : (
-          <div style={{ textAlign:'center', padding:'24px 0', color:'rgba(255,255,255,0.3)', fontSize:13 }}>No training data yet</div>
+          <div style={{ textAlign:'center', padding:'32px 0', color:'rgba(255,255,255,0.35)', fontSize:13 }}>No training enrollment data recorded yet</div>
         )}
       </div>
-
+      
       {/* ── Unmatched Queries Intelligence & Knowledge Base Expansion ── */}
       {chatbot?.unmatchedQueries?.length > 0 && (() => {
         const rawList = chatbot.unmatchedQueries;
