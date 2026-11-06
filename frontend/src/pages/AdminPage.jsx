@@ -829,7 +829,7 @@ function downloadSystemAuditCSV(stats, telemetry = {}, showToast) {
     ['System Health', telemetry?.status === 'ok' ? 'Online' : 'Checking', `${telemetry?.latency ?? 0}ms RTT`],
     ['Statutory Compliance', 'Data Privacy Act (RA 10173)', '100% Certified · Zero Plaintext Storage'],
   ];
-  const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+  const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\r\n');
   const blob = new Blob([csv], { type: 'text/csv' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -1088,15 +1088,15 @@ function ConsortiumBroadcastModal({ onClose, showToast }) {
   const applyTemplate = (t) => {
     if (t === 'grant') {
       setSubject('URGENT: Call for Proposals — DOST Region VII Collaborative GIA Grants');
-      setMessage(`Greetings Consortium Colleagues,\n\nPlease be advised that the Department of Science and Technology Region VII (DOST-7) has officially opened the application window for the 2026 Regional Collaborative Grants-in-Aid (GIA).\n\nKey Dates:\n- Concept Submission Deadline: 30 days from notice\n- Target Sectors: AI in Agriculture, Climate Resilience, Digital Governance\n\nPlease submit all endorsed institutional drafts through the DASIG Portal.\n\nWarm regards,\nDASIG Consortium Secretariat`);
+      setMessage(`Greetings Consortium Colleagues,\r\n\r\nPlease be advised that the Department of Science and Technology Region VII (DOST-7) has officially opened the application window for the 2026 Regional Collaborative Grants-in-Aid (GIA).\r\n\r\nKey Dates:\r\n- Concept Submission Deadline: 30 days from notice\r\n- Target Sectors: AI in Agriculture, Climate Resilience, Digital Governance\r\n\r\nPlease submit all endorsed institutional drafts through the DASIG Portal.\r\n\r\nWarm regards,\r\nDASIG Consortium Secretariat`);
       setPriority('urgent');
     } else if (t === 'summit') {
       setSubject('Invitation & RSVP: Central Visayas Regional Computing Summit 2026');
-      setMessage(`Dear Consortium Faculty & Researchers,\n\nWe cordially invite your institutional delegation to participate in the upcoming Regional Computing & AI Summit hosted at Cebu Institute of Technology - University (CIT-U).\n\nRegistration and seating reservation are now open on your DASIG Portal dashboard.\n\nRespectfully,\nDASIG Events Committee`);
+      setMessage(`Dear Consortium Faculty & Researchers,\r\n\r\nWe cordially invite your institutional delegation to participate in the upcoming Regional Computing & AI Summit hosted at Cebu Institute of Technology - University (CIT-U).\r\n\r\nRegistration and seating reservation are now open on your DASIG Portal dashboard.\r\n\r\nRespectfully,\r\nDASIG Events Committee`);
       setPriority('normal');
     } else if (t === 'assembly') {
       setSubject('Official Notice: 1st Quarter Consortium Governance & MoA Assembly');
-      setMessage(`To all Designated Institutional Leads (CIT-U, UP Cebu, USC, CTU, DOST-7, DICT-7, DTI-7):\n\nThe Q1 Regional Consortium Presidium Meeting will convene to ratify amended bilateral MoA terms and review ongoing joint technology transfer initiatives.\n\nVenue: CIT-U Innovation Theater & Virtual Live Stream.\n\nConsortium Executive Office`);
+      setMessage(`To all Designated Institutional Leads (CIT-U, UP Cebu, USC, CTU, DOST-7, DICT-7, DTI-7):\r\n\r\nThe Q1 Regional Consortium Presidium Meeting will convene to ratify amended bilateral MoA terms and review ongoing joint technology transfer initiatives.\r\n\r\nVenue: CIT-U Innovation Theater & Virtual Live Stream.\r\n\r\nConsortium Executive Office`);
       setPriority('priority');
     }
   };
@@ -2752,7 +2752,7 @@ function UsersTab({ showToast }) {
     const rows = users.map(u => [
       u.name || u.email || '', u.email || '', u.institution || '', u.campus || '', u.role || '', u.status || '', u.tier || '', u.created_at?.slice(0,10) || ''
     ]);
-    const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+    const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\r\n');
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
     a.download = 'dasig_users_export.csv';
@@ -3109,7 +3109,7 @@ function ApplicationsTab({ showToast }) {
     const rows = filteredApps.map(a => [
       a.name || '', a.email || '', a.institution || '', a.campus || '', a.tier || 'Tier 2', a.applied_at?.slice(0, 10) || '', a.status || '', a.rejection_reason || ''
     ]);
-    const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\r\n');
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -3583,7 +3583,7 @@ function EventsTab({ showToast }) {
     const rows = items.map(e => [
       e.title || '', e.date || '', e.category || '', e.venue || '', e.organizer || '', e.enrolled || 0, e.total || 0, e.registration_deadline || ''
     ]);
-    const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+    const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\r\n');
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
     a.download = 'dasig_events_export.csv';
@@ -3745,7 +3745,7 @@ function EventsTab({ showToast }) {
                     r.created_at ? new Date(r.created_at).toLocaleDateString('en-PH') : '',
                   ])
                 ];
-                const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+                const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\r\n');
                 const a = document.createElement('a');
                 a.href = URL.createObjectURL(new Blob([csv], { type:'text/csv' }));
                 a.download = `${attnEvent.title.replace(/[^a-z0-9]/gi,'_')}_attendees.csv`;
@@ -4153,7 +4153,7 @@ function NewsTab({ showToast }) {
     const rows = items.map(n => [
       n.title || '', n.badge || '', n.date ? String(n.date).slice(0,10) : '', n.members_only ? 'Members Only' : 'Public', n.archived ? 'Archived' : 'Active', n.excerpt || ''
     ]);
-    const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+    const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\r\n');
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
     a.download = 'dasig_news_export.csv';
@@ -4476,7 +4476,7 @@ function TrainingTab({ showToast }) {
     const rows = items.map(t => [
       t.title || '', t.category || '', t.org || '', t.duration || '', t.level || '', t.enrolled || 0, t.total || 0, t.schedule || ''
     ]);
-    const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+    const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\r\n');
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
     a.download = 'dasig_training_export.csv';
@@ -4643,7 +4643,7 @@ function TrainingTab({ showToast }) {
                     en.created_at ? new Date(en.created_at).toLocaleDateString('en-PH') : '',
                   ])
                 ];
-                const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+                const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\r\n');
                 const a = document.createElement('a');
                 a.href = URL.createObjectURL(new Blob([csv], { type:'text/csv' }));
                 a.download = `${enrolEvent.title.replace(/[^a-z0-9]/gi,'_')}_enrollees.csv`;
@@ -4932,7 +4932,7 @@ function PoliciesTab({ showToast }) {
     const rows = filteredItems.map(p => [
       p.title || '', p.category || '', String(p.effective_date || '').slice(0, 10), p.members_only ? 'Members Only' : 'Public', p.archived ? 'Archived' : 'Active'
     ]);
-    const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\r\n');
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
     a.download = 'dasig_policies_export.csv';
@@ -5081,45 +5081,81 @@ function PoliciesTab({ showToast }) {
 const FU_BLANK = { title:'', category:'Scholarship', provider:'', amount:'', deadline:'', description:'', eligibility:'', status:'Open' };
 
 function FundingTab({ showToast }) {
-  const [items, setItems]     = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [modal, setModal]     = useState(null);
-  const [form, setForm]       = useState(FU_BLANK);
-  const [saving, setSaving]   = useState(false);
-  const [confirm, setConfirm] = useState(null);
-  const [search, setSearch]   = useState('');
-  const [statusF, setStatusF] = useState('All');
+  const [items, setItems]                 = useState([]);
+  const [loading, setLoading]             = useState(true);
+  const [modal, setModal]                 = useState(null);
+  const [detailFunding, setDetailFunding] = useState(null);
+  const [form, setForm]                   = useState(FU_BLANK);
+  const [saving, setSaving]               = useState(false);
+  const [confirm, setConfirm]             = useState(null);
+  const [search, setSearch]               = useState('');
+  const [statusF, setStatusF]             = useState('All');
 
-  const load = useCallback(() => { setLoading(true); api.funding.list({ limit: 1000 }).then(r => setItems(Array.isArray(r) ? r : (r?.data || []))).catch(() => showToast('Failed', false)).finally(() => setLoading(false)); }, []);
+  const load = useCallback(() => {
+    setLoading(true);
+    api.funding.list({ limit: 1000 })
+      .then(r => setItems(Array.isArray(r) ? r : (r?.data || [])))
+      .catch(() => showToast('Failed to load funding opportunities', false))
+      .finally(() => setLoading(false));
+  }, []);
+
   useEffect(load, [load]);
   const fc = e => setForm(p => ({ ...p, [e.target.name]: e.target.value }));
 
   async function save() {
-    if (!form.title || !form.provider || !form.deadline) { showToast('Fill required fields', false); return; }
+    if (!form.title || !form.provider || !form.deadline) {
+      showToast('Grant title, provider agency, and deadline are required', false);
+      return;
+    }
     setSaving(true);
     try {
-      if (modal === 'create') { await api.funding.create(form); showToast('Funding opportunity created successfully!', true, form.title); }
-      else { await api.funding.update(modal.id, form); showToast('Funding updated successfully!', true, form.title); }
+      if (modal === 'create') {
+        await api.funding.create(form);
+        showToast('Funding opportunity posted successfully!', true, form.title);
+      } else {
+        await api.funding.update(modal.id, form);
+        showToast('Funding opportunity updated successfully!', true, form.title);
+      }
       setModal(null);
       load();
-    } catch (e) { showToast(e.message, false); } finally { setSaving(false); }
+    } catch (e) {
+      showToast(e.message, false);
+    } finally {
+      setSaving(false);
+    }
   }
+
   async function del(id, title) {
-    try { await api.funding.delete(id); showToast('Funding deleted successfully!', true, title); setConfirm(null); load(); }
-    catch (e) { showToast(e.message, false); }
+    try {
+      await api.funding.delete(id);
+      showToast('Funding call deleted successfully', true, title);
+      setConfirm(null);
+      if (detailFunding?.id === id) setDetailFunding(null);
+      load();
+    } catch (e) {
+      showToast(e.message, false);
+    }
   }
 
   function exportFundingCSV() {
     if (!items.length) return;
-    const headers = ['Title', 'Category', 'Provider', 'Amount', 'Deadline', 'Status'];
+    const headers = ['Title', 'Category', 'Provider Agency', 'Amount / Ceiling', 'Deadline', 'Status', 'Description', 'Eligibility'];
     const rows = filteredItems.map(f => [
-      f.title || '', f.category || '', f.provider || '', f.amount || '', String(f.deadline || '').slice(0, 10), f.status || ''
+      f.title || '',
+      f.category || '',
+      f.provider || '',
+      f.amount || '',
+      String(f.deadline || '').slice(0, 10),
+      f.status || '',
+      (f.description || '').replace(/\r\n/g, ' '),
+      (f.eligibility || '').replace(/\r\n/g, ' ')
     ]);
-    const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\r\n');
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
-    a.download = 'dasig_funding_export.csv';
+    a.download = 'dasig_funding_opportunities.csv';
     a.click();
+    showToast('Exported funding directory to CSV', true);
   }
 
   const filteredItems = items.filter(f => {
@@ -5128,18 +5164,63 @@ function FundingTab({ showToast }) {
     const matchesSearch = !q || (
       (f.title || '').toLowerCase().includes(q) ||
       (f.provider || '').toLowerCase().includes(q) ||
-      (f.category || '').toLowerCase().includes(q)
+      (f.category || '').toLowerCase().includes(q) ||
+      (f.amount || '').toLowerCase().includes(q) ||
+      (f.description || '').toLowerCase().includes(q) ||
+      (f.eligibility || '').toLowerCase().includes(q)
     );
     return matchesStatus && matchesSearch;
   });
 
-  const SC = { Open:'#6ee7b7', Upcoming:'#93c5fd', Closed:'rgba(255,255,255,0.35)' };
+  const CATEGORY_CONFIG = {
+    'Research Grant':  { label: 'Research Grant',  color: '#c084fc', bg: 'rgba(192,132,252,0.14)', border: 'rgba(192,132,252,0.35)', icon: '🔬' },
+    'Scholarship':     { label: 'Scholarship',     color: '#38bdf8', bg: 'rgba(56,189,248,0.14)', border: 'rgba(56,189,248,0.35)', icon: '🎓' },
+    'Government Fund': { label: 'Government Fund', color: '#34d399', bg: 'rgba(52,211,153,0.14)', border: 'rgba(52,211,153,0.35)', icon: '🏛️' },
+    'Grant':           { label: 'Innovation Grant',color: '#fb923c', bg: 'rgba(251,146,60,0.14)', border: 'rgba(251,146,60,0.35)', icon: '💡' },
+  };
+
+  const STATUS_CONFIG = {
+    Open:     { label: 'Open Call',          color: '#34d399', bg: 'rgba(16,185,129,0.15)', border: 'rgba(16,185,129,0.3)', icon: '🟢' },
+    Upcoming: { label: 'Upcoming Call',      color: '#fbbf24', bg: 'rgba(245,158,11,0.15)', border: 'rgba(245,158,11,0.3)', icon: '⏳' },
+    Closed:   { label: 'Closed / Archived',  color: '#94a3b8', bg: 'rgba(148,163,184,0.12)', border: 'rgba(148,163,184,0.25)', icon: '🔒' },
+  };
+
+  function getAgencyAcronym(name, fallbackTitle) {
+    const raw = name || fallbackTitle || '';
+    if (!raw) return 'R&D';
+    const clean = raw.replace(/\([^)]*\)/g, '').replace(/—.*$/, '').replace(/-.*$/, '').trim();
+    const words = clean.split(/[\s]+/).filter(w => !['and','of','on','the','for','in'].includes(w.toLowerCase()));
+    if (words.length === 1) return words[0].slice(0, 4).toUpperCase();
+    return words.slice(0, 4).map(w => w[0]).join('').toUpperCase();
+  }
+
+  function getDeadlineBadge(deadlineStr, status) {
+    if (!deadlineStr) return { dateStr: '—', text: 'Continuous Call', color: 'rgba(255,255,255,0.45)', bg: 'rgba(255,255,255,0.05)' };
+    const d = new Date(deadlineStr);
+    const dateStr = d.toLocaleDateString('en-PH', { month:'short', day:'numeric', year:'numeric' });
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    const diffTime = d.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (status === 'Closed' || diffDays < 0) {
+      return { dateStr, text: 'Call Closed', color: '#94a3b8', bg: 'rgba(148,163,184,0.1)' };
+    }
+    if (diffDays === 0) {
+      return { dateStr, text: '⚠️ Closes Today', color: '#f87171', bg: 'rgba(239,68,68,0.15)' };
+    }
+    if (diffDays <= 7) {
+      return { dateStr, text: `⏳ ${diffDays}d left`, color: '#fb923c', bg: 'rgba(251,146,60,0.15)' };
+    }
+    return { dateStr, text: `${diffDays} days left`, color: '#34d399', bg: 'rgba(16,185,129,0.12)' };
+  }
 
   return (
     <div>
+      {/* ── Page Header ── */}
       <PageHeader
-        title="Funding Opportunities"
-        desc="Post grants, research funding calls, and scholarships"
+        title="Funding Opportunities & R&D Grants"
+        desc="Post and oversee research grants, institutional funding calls, scholarships, and innovation endowments"
         action={
           <div style={{ display:'flex', gap:10, alignItems:'center', flexWrap:'wrap' }}>
             {/* Status Segmented Filter */}
@@ -5149,25 +5230,26 @@ function FundingTab({ showToast }) {
             }}>
               {['All','Open','Upcoming','Closed'].map(s => {
                 const count = s === 'All' ? items.length : items.filter(f => f.status === s).length;
+                const isSelected = statusF === s;
                 return (
                   <button
                     key={s}
                     type="button"
                     onClick={() => setStatusF(s)}
                     style={{
-                      padding: '5px 11px', borderRadius: 7, border: 'none',
-                      background: statusF === s ? 'rgba(255,255,255,0.14)' : 'transparent',
-                      color: statusF === s ? '#fff' : 'rgba(255,255,255,0.55)',
-                      fontWeight: statusF === s ? 800 : 600,
+                      padding: '5px 12px', borderRadius: 7, border: 'none',
+                      background: isSelected ? 'rgba(255,255,255,0.15)' : 'transparent',
+                      color: isSelected ? '#fff' : 'rgba(255,255,255,0.55)',
+                      fontWeight: isSelected ? 800 : 600,
                       fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
                       transition: 'all .14s ease'
                     }}
                   >
                     <span>{s}</span>
                     <span style={{
-                      fontSize: 10, padding: '1px 5px', borderRadius: 99,
-                      background: statusF === s ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.06)',
-                      color: 'inherit', fontWeight: 800
+                      fontSize: 10, padding: '1px 6px', borderRadius: 99,
+                      background: isSelected ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.06)',
+                      color: isSelected ? '#fff' : 'rgba(255,255,255,0.45)', fontWeight: 800
                     }}>
                       {count}
                     </span>
@@ -5177,77 +5259,378 @@ function FundingTab({ showToast }) {
             </div>
 
             {/* Search Input with Clear Button */}
-            <div style={{ position: 'relative', width: 200 }}>
+            <div style={{ position: 'relative', width: 220 }}>
               <input
                 className="ap-input"
-                placeholder="Search grant, agency…"
+                placeholder="Search grant, agency, amount…"
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                style={{ paddingRight: search ? 28 : 12 }}
+                style={{ fontSize:12, padding:'7px 28px 7px 11px', background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.1)' }}
               />
-              {search && (
+              {search ? (
                 <button
                   type="button"
                   onClick={() => setSearch('')}
                   style={{
                     position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)',
                     background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)',
-                    cursor: 'pointer', fontSize: 13, padding: 0
+                    cursor: 'pointer', fontSize: 12, padding: 0
                   }}
                   title="Clear search"
                 >
                   ✕
                 </button>
+              ) : (
+                <span style={{ position:'absolute', right:8, top:'50%', transform:'translateY(-50%)', fontSize:12, opacity:0.4, pointerEvents:'none' }}>🔍</span>
               )}
             </div>
 
-            <button onClick={exportFundingCSV} className="ap-btn ap-btn-ghost" style={{ fontSize:12.5, whiteSpace:'nowrap' }}>⬇ Export CSV</button>
-            <AddBtn onClick={() => { setForm(FU_BLANK); setModal('create'); }} />
+            <button
+              onClick={exportFundingCSV}
+              className="ap-btn ap-btn-ghost"
+              style={{ fontSize:12.5, whiteSpace:'nowrap', padding:'7px 13px' }}
+              title="Download funding opportunities directory as CSV"
+            >
+              ⬇ Export CSV
+            </button>
+
+            <button
+              onClick={() => { setForm(FU_BLANK); setModal('create'); }}
+              className="ap-btn ap-btn-primary"
+              style={{ padding:'8px 16px', fontSize:12.5, fontWeight:800, whiteSpace:'nowrap', display:'flex', alignItems:'center', gap:5 }}
+            >
+              <span>＋</span> Post Funding Call
+            </button>
           </div>
         }
       />
-      {confirm && <ConfirmModal msg={`Delete "${confirm.title}"?`} onConfirm={() => del(confirm.id, confirm.title)} onCancel={() => setConfirm(null)} />}
+
+      {/* Delete Confirmation Modal */}
+      {confirm && (
+        <ConfirmModal
+          msg={`Are you sure you want to permanently delete funding call "${confirm.title}"?`}
+          onConfirm={() => del(confirm.id, confirm.title)}
+          onCancel={() => setConfirm(null)}
+        />
+      )}
+
+      {/* ── Funding Dossier Inspection Modal ── */}
+      {detailFunding && (
+        <Modal title="Funding Opportunity Dossier & Call Details" onClose={() => setDetailFunding(null)} wide>
+          <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
+            {/* Top Identity Card */}
+            <div style={{
+              display:'flex', alignItems:'center', justifyContent:'space-between',
+              padding:'18px 22px', background:'rgba(255,255,255,0.035)',
+              border:'1px solid rgba(255,255,255,0.08)', borderRadius:16, gap:16, flexWrap:'wrap'
+            }}>
+              <div style={{ display:'flex', alignItems:'center', gap:14 }}>
+                <div style={{
+                  width:54, height:54, borderRadius:14,
+                  background:'linear-gradient(135deg, #0d9488, #059669)',
+                  border:'1.5px solid rgba(255,255,255,0.18)',
+                  display:'flex', alignItems:'center', justifyContent:'center',
+                  fontSize:16, fontWeight:900, color:'#fff', flexShrink:0,
+                  boxShadow:'0 4px 18px rgba(13,148,136,0.35)'
+                }}>
+                  {getAgencyAcronym(detailFunding.provider, detailFunding.title)}
+                </div>
+                <div>
+                  <div style={{ color:'#fff', fontWeight:900, fontSize:17.5, lineHeight:1.3 }}>{detailFunding.title}</div>
+                  <div style={{ display:'flex', alignItems:'center', gap:8, marginTop:4, flexWrap:'wrap' }}>
+                    {(() => {
+                      const cat = CATEGORY_CONFIG[detailFunding.category] || CATEGORY_CONFIG['Scholarship'];
+                      return (
+                        <span style={{
+                          fontSize:11, fontWeight:800,
+                          color: cat.color, background: cat.bg,
+                          border: `1px solid ${cat.border}`,
+                          borderRadius:6, padding:'2px 8px'
+                        }}>
+                          {cat.icon} {cat.label}
+                        </span>
+                      );
+                    })()}
+                    <span style={{ fontSize:12, color:'rgba(255,255,255,0.5)' }}>· {detailFunding.provider}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                {(() => {
+                  const st = STATUS_CONFIG[detailFunding.status] || STATUS_CONFIG.Open;
+                  return (
+                    <span style={{
+                      display:'inline-flex', alignItems:'center', gap:6,
+                      background:st.bg, color:st.color, border:`1px solid ${st.border}`,
+                      borderRadius:8, padding:'5px 12px', fontSize:12.5, fontWeight:800
+                    }}>
+                      <span>{st.icon}</span>
+                      <span>{st.label}</span>
+                    </span>
+                  );
+                })()}
+              </div>
+            </div>
+
+            {/* Telemetry Metrics Grid */}
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(210px, 1fr))', gap:12 }}>
+              {[
+                {
+                  label: 'Grant Amount / Ceiling',
+                  value: detailFunding.amount || 'Disclosed upon approval',
+                  icon: '💰',
+                  color: '#34d399',
+                  highlight: true
+                },
+                {
+                  label: 'Funding Agency / Provider',
+                  value: detailFunding.provider || 'Regional Consortium Secretariat',
+                  icon: '🏛️',
+                  color: '#60a5fa'
+                },
+                {
+                  label: 'Application Deadline',
+                  value: detailFunding.deadline ? new Date(detailFunding.deadline).toLocaleDateString('en-PH', { dateStyle:'long' }) : 'Continuous Call',
+                  icon: '📅',
+                  color: '#fbbf24'
+                },
+                {
+                  label: 'Call Status & Window',
+                  value: getDeadlineBadge(detailFunding.deadline, detailFunding.status).text,
+                  icon: '⏱️',
+                  color: getDeadlineBadge(detailFunding.deadline, detailFunding.status).color
+                },
+              ].map(f => (
+                <div key={f.label} style={{
+                  background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.06)',
+                  borderRadius:12, padding:'12px 15px'
+                }}>
+                  <div style={{
+                    fontSize:10.5, fontWeight:800, color:'rgba(255,255,255,0.4)',
+                    textTransform:'uppercase', letterSpacing:'.5px', marginBottom:5,
+                    display:'flex', alignItems:'center', gap:6
+                  }}>
+                    <span>{f.icon}</span> {f.label}
+                  </div>
+                  <div style={{
+                    color: f.highlight ? f.color : '#fff',
+                    fontWeight: 800, fontSize: 13.5,
+                    overflow: 'hidden', textOverflow: 'ellipsis'
+                  }}>
+                    {f.value}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Opportunity Description */}
+            <div style={{ background:'rgba(255,255,255,0.025)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:14, padding:'16px 18px' }}>
+              <div style={{ fontSize:11, fontWeight:800, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', letterSpacing:'.6px', marginBottom:8, display:'flex', alignItems:'center', gap:6 }}>
+                <span>📋</span> Opportunity Overview & Objectives
+              </div>
+              <p style={{ color:'rgba(255,255,255,0.85)', fontSize:13, lineHeight:1.7, margin:0, whiteSpace:'pre-wrap' }}>
+                {detailFunding.description || 'Institutional research funding call dedicated to faculty scholars, advanced research clusters, and university innovation laboratories across Central Visayas.'}
+              </p>
+            </div>
+
+            {/* Eligibility Criteria */}
+            <div style={{ background:'rgba(255,255,255,0.025)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:14, padding:'16px 18px' }}>
+              <div style={{ fontSize:11, fontWeight:800, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', letterSpacing:'.6px', marginBottom:8, display:'flex', alignItems:'center', gap:6 }}>
+                <span>🎯</span> Eligibility & Application Criteria
+              </div>
+              <p style={{ color:'rgba(255,255,255,0.85)', fontSize:13, lineHeight:1.7, margin:0, whiteSpace:'pre-wrap' }}>
+                {detailFunding.eligibility || 'Open to affiliated academic personnel, full-time researchers, graduate degree holders, and verified institutional member universities under DASIG Consortium.'}
+              </p>
+            </div>
+
+            {/* Action Buttons */}
+            <div style={{ display:'flex', gap:10, marginTop:4, flexWrap:'wrap' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  const f = detailFunding;
+                  setDetailFunding(null);
+                  setForm({ ...f, deadline: String(f.deadline || '').slice(0, 10) });
+                  setModal(f);
+                }}
+                className="ap-btn ap-btn-blue"
+                style={{ flex: 2, padding:'11px', borderRadius:11, fontSize:13, fontWeight:800 }}
+              >
+                ✏️ Edit Funding Call
+              </button>
+              <button
+                type="button"
+                onClick={() => setDetailFunding(null)}
+                className="ap-btn ap-btn-ghost"
+                style={{ flex: 1, padding:'11px', borderRadius:11, fontSize:13 }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* ── Create / Edit Modal ── */}
       {modal && (
-        <Modal title={modal === 'create' ? 'Create Funding Call' : 'Edit Funding Call'} onClose={() => setModal(null)} wide>
+        <Modal title={modal === 'create' ? 'Post New Funding Opportunity' : 'Edit Funding Call'} onClose={() => setModal(null)} wide>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
             <DInput label="Grant / Call Title" name="title" value={form.title} onChange={fc} required span="1/-1" />
             <DInput label="Funding Category" name="category" value={form.category} onChange={fc} as="select" opts={['Scholarship','Grant','Government Fund','Research Grant']} />
             <DInput label="Application Status" name="status" value={form.status} onChange={fc} as="select" opts={['Open','Upcoming','Closed']} />
             <DInput label="Funding Agency / Provider" name="provider" value={form.provider} onChange={fc} required />
-            <DInput label="Grant Amount / Ceiling" name="amount" value={form.amount} onChange={fc} />
+            <DInput label="Grant Amount / Ceiling (e.g. PHP 500,000)" name="amount" value={form.amount} onChange={fc} />
             <DInput label="Application Deadline" name="deadline" value={form.deadline} onChange={fc} type="date" required />
             <DInput label="Opportunity Description" name="description" value={form.description} onChange={fc} as="textarea" span="1/-1" />
             <DInput label="Eligibility Criteria" name="eligibility" value={form.eligibility} onChange={fc} as="textarea" span="1/-1" />
           </div>
-          <FormActions onCancel={() => setModal(null)} onSave={save} saving={saving} saveLabel={modal === 'create' ? 'Create Funding' : 'Save Changes'} />
+          <FormActions onCancel={() => setModal(null)} onSave={save} saving={saving} saveLabel={modal === 'create' ? 'Post Funding Opportunity' : 'Save Changes'} />
         </Modal>
       )}
 
+      {/* ── Section KPIs ── */}
       <SectionKPIs items={[
         { label: 'Total Grants', value: items.length, icon: '💰', color: '#10b981' },
         { label: 'Open Opportunities', value: items.filter(f => f.status === 'Open').length, icon: '🟢', color: '#34d399' },
-        { label: 'Upcoming', value: items.filter(f => f.status === 'Upcoming').length, icon: '🟡', color: '#fbbf24' },
+        { label: 'Upcoming Calls', value: items.filter(f => f.status === 'Upcoming').length, icon: '⏳', color: '#fbbf24' },
         { label: 'Closed / Archived', value: items.filter(f => f.status === 'Closed').length, icon: '🔒', color: '#94a3b8' },
       ]} />
 
-      {loading ? <Loading /> : (
-        <DataTable head={['Title','Provider','Amount','Deadline','Status','Actions']}>
-          {filteredItems.length === 0 ? <EmptyTR cols={6} /> : filteredItems.map(f => {
-            const sc = SC[f.status] || '#6ee7b7';
+      {/* ── Table ── */}
+      {loading ? (
+        <Loading />
+      ) : (
+        <DataTable head={['Opportunity Title','Provider Agency','Funding Ceiling','Deadline & Window','Status','Actions']}>
+          {filteredItems.length === 0 ? (
+            <EmptyTR cols={6} title="No funding calls found" desc="No grant or scholarship opportunities match your current search or status filter." />
+          ) : filteredItems.map(f => {
+            const catInfo = CATEGORY_CONFIG[f.category] || CATEGORY_CONFIG['Scholarship'];
+            const statusInfo = STATUS_CONFIG[f.status] || STATUS_CONFIG.Open;
+            const acronym = getAgencyAcronym(f.provider, f.title);
+            const dl = getDeadlineBadge(f.deadline, f.status);
+
             return (
               <TR key={f.id}>
+                {/* Title & Category Column */}
                 <TD>
-                  <div style={{ fontWeight:700, color:'#fff' }}>{f.title}</div>
-                  <div style={{ fontSize:13, color:'rgba(255,255,255,0.55)', marginTop:2 }}>{f.category}</div>
+                  <div
+                    onClick={() => setDetailFunding(f)}
+                    style={{ display:'flex', alignItems:'center', gap:12, cursor:'pointer' }}
+                    title="View full funding call dossier"
+                  >
+                    <div style={{
+                      width:40, height:40, borderRadius:11,
+                      background:'linear-gradient(135deg, #0d9488, #059669)',
+                      border:'1.5px solid rgba(255,255,255,0.14)',
+                      display:'flex', alignItems:'center', justifyContent:'center',
+                      fontSize:12.5, fontWeight:900, color:'#fff', flexShrink:0,
+                      boxShadow:'0 2px 10px rgba(0,0,0,0.3)'
+                    }}>
+                      {acronym}
+                    </div>
+                    <div>
+                      <div style={{ fontWeight:800, color:'#fff', fontSize:13.5, lineHeight:1.3 }}>
+                        {f.title}
+                      </div>
+                      <div style={{ marginTop:3 }}>
+                        <span style={{
+                          display:'inline-flex', alignItems:'center', gap:4,
+                          background: catInfo.bg, color: catInfo.color,
+                          border: `1px solid ${catInfo.border}`,
+                          borderRadius: 6, padding: '1px 7px', fontSize: 10.5, fontWeight: 800
+                        }}>
+                          <span>{catInfo.icon}</span>
+                          <span>{catInfo.label}</span>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
                 </TD>
-                <TD muted>{f.provider}</TD>
-                <TD><span style={{ color:'#6ee7b7', fontWeight:700 }}>{f.amount || '—'}</span></TD>
-                <TD muted>{String(f.deadline || '').slice(0,10)}</TD>
-                <TD><span className="ap-pill" style={{ background:`${sc}1a`, color:sc }}>{f.status}</span></TD>
+
+                {/* Provider Column */}
                 <TD>
-                  <div style={{ display:'flex', gap:6 }}>
-                    <button onClick={() => { setForm({ ...f, deadline:String(f.deadline || '').slice(0,10) }); setModal(f); }} className="ap-btn ap-btn-blue">Edit</button>
-                    <button onClick={() => setConfirm(f)} className="ap-btn ap-btn-red">Delete</button>
+                  <div>
+                    <div style={{ color:'rgba(255,255,255,0.92)', fontWeight:700, fontSize:13 }}>
+                      {f.provider}
+                    </div>
+                    <div style={{ fontSize:11, color:'rgba(255,255,255,0.45)', marginTop:2 }}>
+                      Regional Granting Body
+                    </div>
+                  </div>
+                </TD>
+
+                {/* Funding Ceiling Column */}
+                <TD>
+                  <div style={{
+                    display:'inline-flex', alignItems:'center', gap:5,
+                    background:'rgba(16,185,129,0.12)', border:'1px solid rgba(16,185,129,0.28)',
+                    borderRadius:8, padding:'4px 9px', color:'#34d399', fontWeight:800, fontSize:12.5, whiteSpace:'nowrap'
+                  }}>
+                    <span>₱</span>
+                    <span>{f.amount || 'Variable Grant'}</span>
+                  </div>
+                </TD>
+
+                {/* Deadline & Window Column */}
+                <TD>
+                  <div style={{ display:'flex', flexDirection:'column', gap:2 }}>
+                    <span style={{ color:'#fff', fontWeight:700, fontSize:12.5 }}>
+                      📅 {dl.dateStr}
+                    </span>
+                    <span style={{
+                      display:'inline-block', fontSize:10.5, fontWeight:800,
+                      color: dl.color, background: dl.bg,
+                      borderRadius:6, padding:'1px 6px', width:'fit-content'
+                    }}>
+                      {dl.text}
+                    </span>
+                  </div>
+                </TD>
+
+                {/* Status Column */}
+                <TD>
+                  <span style={{
+                    display:'inline-flex', alignItems:'center', gap:5,
+                    background: statusInfo.bg, color: statusInfo.color,
+                    border: `1px solid ${statusInfo.border}`,
+                    borderRadius: 8, padding: '3px 9px', fontSize: 11, fontWeight: 800, whiteSpace:'nowrap'
+                  }}>
+                    <span>{statusInfo.icon}</span>
+                    <span>{statusInfo.label}</span>
+                  </span>
+                </TD>
+
+                {/* Actions Column */}
+                <TD>
+                  <div style={{ display:'flex', gap:6, alignItems:'center' }}>
+                    <button
+                      type="button"
+                      onClick={() => setDetailFunding(f)}
+                      className="ap-btn ap-btn-ghost"
+                      style={{ fontSize:11.5, padding:'5px 10px', borderRadius:8 }}
+                      title="Inspect full funding specifications"
+                    >
+                      Dossier
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setForm({ ...f, deadline:String(f.deadline || '').slice(0, 10) }); setModal(f); }}
+                      className="ap-btn ap-btn-blue"
+                      style={{ fontSize:11.5, padding:'5px 10px', borderRadius:8 }}
+                      title="Edit funding call"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setConfirm(f)}
+                      className="ap-btn ap-btn-red"
+                      style={{ fontSize:11.5, padding:'5px 8px', borderRadius:8 }}
+                      title="Delete opportunity"
+                    >
+                      🗑
+                    </button>
                   </div>
                 </TD>
               </TR>
@@ -5324,9 +5707,9 @@ function PartnershipsTab({ showToast }) {
       p.contact_person || '',
       p.contact_email || '',
       p.status || '',
-      (p.description || '').replace(/\n/g, ' ')
+      (p.description || '').replace(/\r\n/g, ' ')
     ]);
-    const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\r\n');
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
     a.download = 'dasig_partnerships_export.csv';
@@ -6732,7 +7115,7 @@ function exportCalendarICS(items, showToast) {
     const start = it.startDate || new Date();
     const end = it.endDate || new Date(start.getTime() + 8 * 3600 * 1000);
     const summary = (it.title || 'Consortium Event').replace(/[,;\\]/g, ' ');
-    const desc = (it.description || '').replace(/\n/g, '\\n').replace(/[,;\\]/g, ' ');
+    const desc = (it.description || '').replace(/\r\n/g, '\\r\n').replace(/[,;\\]/g, ' ');
     const loc = (it.venue || it.org || 'Region VII Central Visayas Node').replace(/[,;\\]/g, ' ');
 
     ics.push('BEGIN:VEVENT');
@@ -6749,7 +7132,7 @@ function exportCalendarICS(items, showToast) {
 
   ics.push('END:VCALENDAR');
 
-  const blob = new Blob([ics.join('\r\n')], { type: 'text/calendar;charset=utf-8' });
+  const blob = new Blob([ics.join('\r\r\n')], { type: 'text/calendar;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
@@ -7747,9 +8130,9 @@ function MessagesTab({ showToast, refreshOverviewStats }) {
       m.subject || '',
       m.created_at ? new Date(m.created_at).toISOString().slice(0, 10) : '',
       m.read ? 'Read' : 'Unread',
-      (m.message || '').replace(/\n/g, ' ')
+      (m.message || '').replace(/\r\n/g, ' ')
     ]);
-    const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\r\n');
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
     a.download = 'dasig_contact_messages.csv';
@@ -8000,7 +8383,7 @@ function MessagesTab({ showToast, refreshOverviewStats }) {
             {/* Action Bar */}
             <div style={{ display:'flex', gap:10, marginTop:4, flexWrap:'wrap' }}>
               <a
-                href={`mailto:${open.email}?subject=Re: ${encodeURIComponent(open.subject || 'DASIG Consortium Inquiry')}&body=${encodeURIComponent(`Dear ${open.name},\n\nThank you for reaching out to the DASIG Higher Education Innovation Consortium (Region VII).\n\nRegarding your inquiry: "\${open.subject}":\n\n`)}`}
+                href={`mailto:${open.email}?subject=Re: ${encodeURIComponent(open.subject || 'DASIG Consortium Inquiry')}&body=${encodeURIComponent(`Dear ${open.name},\r\n\r\nThank you for reaching out to the DASIG Higher Education Innovation Consortium (Region VII).\r\n\r\nRegarding your inquiry: "\${open.subject}":\r\n\r\n`)}`}
                 style={{
                   flex: 3, display:'flex', alignItems:'center', justifyContent:'center', gap:8,
                   background:'linear-gradient(90deg,#f97316,#e11d48)', color:'#fff', textDecoration:'none',
