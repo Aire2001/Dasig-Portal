@@ -3508,19 +3508,20 @@ function CategoryDropdown({ value, onChange, options }) {
 }
 
 function EventsTab({ showToast }) {
-  const [items, setItems]         = useState([]);
-  const [loading, setLoading]     = useState(true);
-  const [modal, setModal]         = useState(null);
-  const [form, setForm]           = useState(EV_BLANK);
-  const [saving, setSaving]       = useState(false);
-  const [confirm, setConfirm]     = useState(null);
-  const [search, setSearch]       = useState('');
-  const [catFilter, setCatFilter] = useState('All');
-  const [attnEvent, setAttnEvent] = useState(null);   // event object for attendees modal
-  const [attnList, setAttnList]   = useState([]);
-  const [attnLoading, setAttnLoading] = useState(false);
-  const [attnFilter, setAttnFilter] = useState('all');
-  const [attnSearch, setAttnSearch] = useState('');
+  const [items, setItems]               = useState([]);
+  const [loading, setLoading]           = useState(true);
+  const [modal, setModal]               = useState(null);
+  const [detailEvent, setDetailEvent]   = useState(null);
+  const [form, setForm]                 = useState(EV_BLANK);
+  const [saving, setSaving]             = useState(false);
+  const [confirm, setConfirm]           = useState(null);
+  const [search, setSearch]             = useState('');
+  const [catFilter, setCatFilter]       = useState('All');
+  const [attnEvent, setAttnEvent]       = useState(null);
+  const [attnList, setAttnList]         = useState([]);
+  const [attnLoading, setAttnLoading]   = useState(false);
+  const [attnFilter, setAttnFilter]     = useState('all');
+  const [attnSearch, setAttnSearch]     = useState('');
 
   const load = useCallback(() => {
     setLoading(true);
@@ -3542,71 +3543,110 @@ function EventsTab({ showToast }) {
     try {
       const data = await api.events.registrations(ev.id);
       setAttnList(data);
-    } catch (e) { showToast(e.message, false); } finally { setAttnLoading(false); }
+    } catch (e) {
+      showToast(e.message, false);
+    } finally {
+      setAttnLoading(false);
+    }
   }
 
   async function toggleAttendance(reg, attended) {
     try {
       await api.events.markAttendance(attnEvent.id, reg.user_id, attended);
       setAttnList(prev => prev.map(r => r.user_id === reg.user_id ? { ...r, attended } : r));
-      showToast(attended ? 'Attendance marked successfully!' : 'Marked as absent', attended, reg.users?.name);
-    } catch (e) { showToast(e.message, false); }
+      showToast(attended ? 'Attendance recorded successfully!' : 'Marked as absent', attended, reg.users?.name);
+    } catch (e) {
+      showToast(e.message, false);
+    }
   }
 
   async function reloadAttendees(ev) {
     setAttnLoading(true);
-    try { setAttnList(await api.events.registrations(ev.id)); }
-    catch (e) { showToast(e.message, false); }
-    finally { setAttnLoading(false); }
+    try {
+      setAttnList(await api.events.registrations(ev.id));
+    } catch (e) {
+      showToast(e.message, false);
+    } finally {
+      setAttnLoading(false);
+    }
   }
 
   async function save() {
-    if (!form.title || !form.date || !form.venue || !form.organizer) { showToast('Please fill all required fields', false); return; }
+    if (!form.title || !form.date || !form.venue || !form.organizer) {
+      showToast('Event title, date, venue, and host organizer are required', false);
+      return;
+    }
     setSaving(true);
     try {
       const body = { ...form, total: Number(form.total) || 50 };
-      if (modal === 'create') { await api.events.create(body); showToast('Event created successfully!', true, body.title); }
-      else { await api.events.update(modal.id, body); showToast('Event updated successfully!', true, body.title); }
+      if (modal === 'create') {
+        await api.events.create(body);
+        showToast('Event created successfully!', true, body.title);
+      } else {
+        await api.events.update(modal.id, body);
+        showToast('Event updated successfully!', true, body.title);
+      }
       setModal(null);
       load();
-    } catch (e) { showToast(e.message, false); } finally { setSaving(false); }
+    } catch (e) {
+      showToast(e.message, false);
+    } finally {
+      setSaving(false);
+    }
   }
 
   async function del(id, title) {
-    try { await api.events.delete(id); setItems(p => p.filter(x => x.id !== id)); showToast('Event deleted successfully!', true, title); setConfirm(null); }
-    catch (e) { showToast(e.message, false); }
+    try {
+      await api.events.delete(id);
+      setItems(p => p.filter(x => x.id !== id));
+      showToast('Event deleted successfully!', true, title);
+      setConfirm(null);
+      if (detailEvent?.id === id) setDetailEvent(null);
+    } catch (e) {
+      showToast(e.message, false);
+    }
   }
 
   function exportEventsCSV() {
     if (!items.length) return;
-    const headers = ['Title', 'Date', 'Category', 'Venue', 'Organizer', 'Enrolled', 'Total Capacity', 'Registration Deadline'];
-    const rows = items.map(e => [
-      e.title || '', e.date || '', e.category || '', e.venue || '', e.organizer || '', e.enrolled || 0, e.total || 0, e.registration_deadline || ''
+    const headers = ['Title', 'Date', 'Category', 'Venue', 'Organizer', 'Enrolled', 'Total Capacity', 'Registration Deadline', 'Description'];
+    const rows = filteredItems.map(e => [
+      e.title || '',
+      e.date || '',
+      e.category || '',
+      e.venue || '',
+      e.organizer || '',
+      e.enrolled || 0,
+      e.total || 0,
+      e.registration_deadline || '',
+      (e.description || '').replace(/\r?\n/g, ' ')
     ]);
-    const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\r\n');
+    const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
-    a.download = 'dasig_events_export.csv';
+    a.download = 'dasig_events_directory.csv';
     a.click();
+    showToast('Exported events directory to CSV', true);
   }
 
   const CAT = {
-    Summit:   { bg:'rgba(168,85,247,0.18)', color:'#c084fc', border:'rgba(168,85,247,0.35)', icon:'🦁' },
-    Workshop: { bg:'rgba(59,130,246,0.18)',  color:'#60a5fa', border:'rgba(59,130,246,0.35)',  icon:'🛠️' },
-    Seminar:  { bg:'rgba(244,114,182,0.18)', color:'#f472b6', border:'rgba(244,114,182,0.35)', icon:'🎙️' },
-    Funding:  { bg:'rgba(52,211,153,0.18)',  color:'#34d399', border:'rgba(52,211,153,0.35)',  icon:'💰' },
+    Summit:   { label:'Consortium Summit',  color:'#c084fc', bg:'rgba(192,132,252,0.14)', border:'rgba(192,132,252,0.32)', grad:'linear-gradient(135deg,#7c3aed,#a855f7)', icon:'🦁' },
+    Workshop: { label:'Technical Workshop', color:'#60a5fa', bg:'rgba(96,165,250,0.14)',  border:'rgba(96,165,250,0.32)',  grad:'linear-gradient(135deg,#1d4ed8,#3b82f6)', icon:'🛠️' },
+    Seminar:  { label:'Academic Seminar',   color:'#f472b6', bg:'rgba(244,114,182,0.14)', border:'rgba(244,114,182,0.32)', grad:'linear-gradient(135deg,#db2777,#f472b6)', icon:'🎙️' },
+    Funding:  { label:'Funding Briefing',   color:'#34d399', bg:'rgba(52,211,153,0.14)',  border:'rgba(52,211,153,0.32)',  grad:'linear-gradient(135deg,#059669,#10b981)', icon:'💰' },
   };
 
   const filteredItems = items.filter(ev => {
     if (catFilter !== 'All' && ev.category !== catFilter) return false;
-    if (search.trim()) {
-      const q = search.toLowerCase();
-      const title = (ev.title || '').toLowerCase();
-      const venue = (ev.venue || '').toLowerCase();
-      const org = (ev.organizer || '').toLowerCase();
-      if (!title.includes(q) && !venue.includes(q) && !org.includes(q)) return false;
-    }
-    return true;
+    const q = search.trim().toLowerCase();
+    if (!q) return true;
+    return (
+      (ev.title || '').toLowerCase().includes(q) ||
+      (ev.venue || '').toLowerCase().includes(q) ||
+      (ev.organizer || '').toLowerCase().includes(q) ||
+      (ev.category || '').toLowerCase().includes(q) ||
+      (ev.description || '').toLowerCase().includes(q)
+    );
   });
 
   const totalEnrolled = items.reduce((sum, e) => sum + (e.enrolled || 0), 0);
@@ -3635,9 +3675,10 @@ function EventsTab({ showToast }) {
 
   return (
     <div>
+      {/* ── Page Header ── */}
       <PageHeader
-        title="Events"
-        desc="Create, schedule, and oversee consortium summits, workshops, and seminars"
+        title="Consortium Events & Summits"
+        desc="Create, schedule, and oversee consortium summits, research symposiums, technical workshops, and partner briefings"
         action={
           <div style={{ display:'flex', gap:10, alignItems:'center', flexWrap:'wrap' }}>
             {/* Category Segmented Filter */}
@@ -3647,25 +3688,26 @@ function EventsTab({ showToast }) {
             }}>
               {['All','Summit','Workshop','Seminar','Funding'].map(c => {
                 const count = c === 'All' ? items.length : items.filter(e => e.category === c).length;
+                const isSelected = catFilter === c;
                 return (
                   <button
                     key={c}
                     type="button"
                     onClick={() => setCatFilter(c)}
                     style={{
-                      padding: '5px 10px', borderRadius: 7, border: 'none',
-                      background: catFilter === c ? 'rgba(255,255,255,0.14)' : 'transparent',
-                      color: catFilter === c ? '#fff' : 'rgba(255,255,255,0.55)',
-                      fontWeight: catFilter === c ? 800 : 600,
-                      fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5,
+                      padding: '5px 12px', borderRadius: 7, border: 'none',
+                      background: isSelected ? 'rgba(255,255,255,0.15)' : 'transparent',
+                      color: isSelected ? '#fff' : 'rgba(255,255,255,0.55)',
+                      fontWeight: isSelected ? 800 : 600,
+                      fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
                       transition: 'all .14s ease'
                     }}
                   >
                     <span>{c}</span>
                     <span style={{
-                      fontSize: 10, padding: '1px 5px', borderRadius: 99,
-                      background: catFilter === c ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.06)',
-                      color: 'inherit', fontWeight: 800
+                      fontSize: 10, padding: '1px 6px', borderRadius: 99,
+                      background: isSelected ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.06)',
+                      color: isSelected ? '#fff' : 'rgba(255,255,255,0.45)', fontWeight: 800
                     }}>
                       {count}
                     </span>
@@ -3675,43 +3717,208 @@ function EventsTab({ showToast }) {
             </div>
 
             {/* Search Input with Clear Button */}
-            <div style={{ position: 'relative', width: 210 }}>
+            <div style={{ position: 'relative', width: 220 }}>
               <input
                 className="ap-input"
                 placeholder="Search title, venue, host…"
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                style={{ paddingRight: search ? 28 : 12 }}
+                style={{ fontSize:12, padding:'7px 28px 7px 11px', background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.1)' }}
               />
-              {search && (
+              {search ? (
                 <button
                   type="button"
                   onClick={() => setSearch('')}
                   style={{
                     position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)',
                     background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)',
-                    cursor: 'pointer', fontSize: 13, padding: 0
+                    cursor: 'pointer', fontSize: 12, padding: 0
                   }}
                   title="Clear search"
                 >
                   ✕
                 </button>
+              ) : (
+                <span style={{ position:'absolute', right:8, top:'50%', transform:'translateY(-50%)', fontSize:12, opacity:0.4, pointerEvents:'none' }}>🔍</span>
               )}
             </div>
 
-            <button onClick={exportEventsCSV} className="ap-btn ap-btn-ghost" style={{ fontSize:12.5, whiteSpace:'nowrap' }}>⬇ Export CSV</button>
+            <button
+              onClick={exportEventsCSV}
+              className="ap-btn ap-btn-ghost"
+              style={{ fontSize:12.5, whiteSpace:'nowrap', padding:'7px 13px' }}
+              title="Download events directory as CSV"
+            >
+              ⬇ Export CSV
+            </button>
+
             <button
               onClick={() => { setForm(EV_BLANK); setModal('create'); }}
               className="ap-btn ap-btn-primary"
-              style={{ padding:'8px 16px', fontSize:13, fontWeight:800, whiteSpace:'nowrap' }}
+              style={{ padding:'8px 16px', fontSize:12.5, fontWeight:800, whiteSpace:'nowrap', display:'flex', alignItems:'center', gap:5 }}
             >
-              + Create Event
+              <span>＋</span> Create Event
             </button>
           </div>
         }
       />
 
-      {confirm && <ConfirmModal msg={`Are you sure you want to delete event "${confirm.title}"?`} onConfirm={() => del(confirm.id, confirm.title)} onCancel={() => setConfirm(null)} />}
+      {confirm && (
+        <ConfirmModal
+          msg={`Are you sure you want to permanently delete event "${confirm.title}"?`}
+          onConfirm={() => del(confirm.id, confirm.title)}
+          onCancel={() => setConfirm(null)}
+        />
+      )}
+
+      {/* ── Event Program Dossier Modal ── */}
+      {detailEvent && (
+        <Modal title="Event Briefing & Program Dossier" onClose={() => setDetailEvent(null)} wide>
+          <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
+            {/* Top Identity Card */}
+            <div style={{
+              display:'flex', alignItems:'center', justifyContent:'space-between',
+              padding:'18px 22px', background:'rgba(255,255,255,0.035)',
+              border:'1px solid rgba(255,255,255,0.08)', borderRadius:16, gap:16, flexWrap:'wrap'
+            }}>
+              <div style={{ display:'flex', alignItems:'center', gap:14 }}>
+                <div style={{
+                  width:54, height:54, borderRadius:14,
+                  background: (CAT[detailEvent.category] || CAT.Summit).grad,
+                  border:'1.5px solid rgba(255,255,255,0.2)',
+                  display:'flex', alignItems:'center', justifyContent:'center',
+                  fontSize:22, color:'#fff', flexShrink:0,
+                  boxShadow:'0 4px 18px rgba(0,0,0,0.35)'
+                }}>
+                  {(CAT[detailEvent.category] || CAT.Summit).icon}
+                </div>
+                <div>
+                  <div style={{ color:'#fff', fontWeight:900, fontSize:18, lineHeight:1.3 }}>{detailEvent.title}</div>
+                  <div style={{ display:'flex', alignItems:'center', gap:8, marginTop:4, flexWrap:'wrap' }}>
+                    {(() => {
+                      const cat = CAT[detailEvent.category] || CAT.Summit;
+                      return (
+                        <span style={{
+                          fontSize:11, fontWeight:800,
+                          color: cat.color, background: cat.bg,
+                          border: `1px solid ${cat.border}`,
+                          borderRadius:6, padding:'2px 8px'
+                        }}>
+                          {cat.icon} {cat.label}
+                        </span>
+                      );
+                    })()}
+                    <span style={{ fontSize:12, color:'rgba(255,255,255,0.5)' }}>· 🏛️ {detailEvent.organizer}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const e = detailEvent;
+                    setDetailEvent(null);
+                    openAttendees(e);
+                  }}
+                  className="ap-btn ap-btn-green"
+                  style={{ padding:'8px 14px', fontSize:12.5, fontWeight:800, display:'flex', alignItems:'center', gap:6 }}
+                >
+                  <span>👥</span> Attendees Roster ({detailEvent.enrolled || 0})
+                </button>
+              </div>
+            </div>
+
+            {/* Telemetry Metrics Grid */}
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(200px, 1fr))', gap:12 }}>
+              {[
+                {
+                  label: 'Event Registration',
+                  value: `${detailEvent.enrolled || 0} / ${detailEvent.total || 0} Registered`,
+                  sub: detailEvent.total > 0 ? `${Math.round((detailEvent.enrolled || 0) / detailEvent.total * 100)}% Fill Rate` : 'Open Capacity',
+                  icon: '👥',
+                  color: '#34d399'
+                },
+                {
+                  label: 'Date & Schedule',
+                  value: detailEvent.date || 'TBD',
+                  sub: detailEvent.start_time ? `⏰ ${detailEvent.start_time} - ${detailEvent.end_time || 'End'}` : 'Full Day Session',
+                  icon: '📅',
+                  color: '#60a5fa'
+                },
+                {
+                  label: 'Venue & Location',
+                  value: detailEvent.venue || 'Online / Virtual',
+                  sub: 'Designated Consortium Venue',
+                  icon: '📍',
+                  color: '#f472b6'
+                },
+                {
+                  label: 'Registration Deadline',
+                  value: detailEvent.registration_deadline ? new Date(detailEvent.registration_deadline).toLocaleDateString('en-PH', { dateStyle:'medium' }) : 'Open until capacity',
+                  sub: 'Online RSVP Portal',
+                  icon: '⏱️',
+                  color: '#fbbf24'
+                },
+              ].map(f => (
+                <div key={f.label} style={{
+                  background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.06)',
+                  borderRadius:12, padding:'12px 15px'
+                }}>
+                  <div style={{
+                    fontSize:10.5, fontWeight:800, color:'rgba(255,255,255,0.4)',
+                    textTransform:'uppercase', letterSpacing:'.5px', marginBottom:5,
+                    display:'flex', alignItems:'center', gap:6
+                  }}>
+                    <span>{f.icon}</span> {f.label}
+                  </div>
+                  <div style={{ color:'#fff', fontWeight:800, fontSize:13.5 }}>
+                    {f.value}
+                  </div>
+                  <div style={{ color:f.color, fontSize:11, fontWeight:700, marginTop:2 }}>
+                    {f.sub}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Event Overview & Official Agenda */}
+            <div style={{ background:'rgba(255,255,255,0.025)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:14, padding:'18px 20px' }}>
+              <div style={{ fontSize:11, fontWeight:800, color:'rgba(255,255,255,0.45)', textTransform:'uppercase', letterSpacing:'.6px', marginBottom:8, display:'flex', alignItems:'center', gap:6 }}>
+                <span>📋</span> Event Overview & Official Agenda
+              </div>
+              <p style={{ color:'rgba(255,255,255,0.88)', fontSize:13.5, lineHeight:1.75, margin:0, whiteSpace:'pre-wrap' }}>
+                {detailEvent.description || 'Regional consortium summit bringing together university chancellors, deans, faculty researchers, and industry leaders to discuss artificial intelligence, academic collaboration, and strategic development.'}
+              </p>
+            </div>
+
+            {/* Action Buttons */}
+            <div style={{ display:'flex', gap:10, marginTop:4, flexWrap:'wrap' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  const ev = detailEvent;
+                  setDetailEvent(null);
+                  setForm({ ...ev });
+                  setModal(ev);
+                }}
+                className="ap-btn ap-btn-blue"
+                style={{ flex: 2, padding:'11px', borderRadius:11, fontSize:13, fontWeight:800 }}
+              >
+                ✏️ Edit Event Details
+              </button>
+              <button
+                type="button"
+                onClick={() => setDetailEvent(null)}
+                className="ap-btn ap-btn-ghost"
+                style={{ flex: 1, padding:'11px', borderRadius:11, fontSize:13 }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
 
       {/* ── Attendees Modal ── */}
       {attnEvent && (
@@ -3745,13 +3952,14 @@ function EventsTab({ showToast }) {
                     r.created_at ? new Date(r.created_at).toLocaleDateString('en-PH') : '',
                   ])
                 ];
-                const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\r\n');
+                const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
                 const a = document.createElement('a');
                 a.href = URL.createObjectURL(new Blob([csv], { type:'text/csv' }));
                 a.download = `${attnEvent.title.replace(/[^a-z0-9]/gi,'_')}_attendees.csv`;
                 a.click();
-              }} className="ap-btn ap-btn-green" style={{ fontSize:12 }}>⬇ Export CSV</button>
-              <button onClick={() => reloadAttendees(attnEvent)} className="ap-btn ap-btn-ghost" style={{ fontSize:12.5 }}>↻ Refresh</button>
+                showToast('Exported attendee roster to CSV', true);
+              }} className="ap-btn ap-btn-green" style={{ fontSize:12, padding:'6px 12px' }}>⬇ Export CSV</button>
+              <button onClick={() => reloadAttendees(attnEvent)} className="ap-btn ap-btn-ghost" style={{ fontSize:12, padding:'6px 12px' }}>↻ Refresh</button>
             </div>
           </div>
 
@@ -3790,7 +3998,7 @@ function EventsTab({ showToast }) {
 
           {attnLoading ? <Loading /> : filteredAttn.length === 0 ? (
             <div style={{ textAlign:'center', padding:'28px 0', color:'rgba(255,255,255,0.5)', fontSize:13 }}>
-              {attnList.length === 0 ? 'No registrations yet' : 'No attendees match the selected filter'}
+              {attnList.length === 0 ? 'No registrations recorded for this event yet.' : 'No attendees match your current filter.'}
             </div>
           ) : (
             <div style={{ display:'flex', flexDirection:'column', gap:8, maxHeight:380, overflowY:'auto', paddingRight:4 }}>
@@ -3856,13 +4064,13 @@ function EventsTab({ showToast }) {
         </Modal>
       )}
 
+      {/* ── Create / Edit Modal ── */}
       {modal && (
         <Modal title={modal === 'create' ? 'Create Consortium Event' : 'Edit Consortium Event'} onClose={() => setModal(null)} wide>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
             <DInput label="Event Title" name="title" value={form.title} onChange={fc} required span="1/-1" />
             <DInput label="Event Date" name="date" value={form.date} onChange={fc} type="date" required />
             <DInput label="Registration Deadline" name="registration_deadline" value={form.registration_deadline} onChange={fc} type="date" />
-            {/* Start / End Time */}
             <div>
               <label style={{ display:'block', fontSize:11.5, fontWeight:800, color:'rgba(255,255,255,0.65)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:6 }}>Start Time</label>
               <input type="time" name="start_time" value={form.start_time || ''} onChange={fc} className="ap-input" style={{ cursor:'pointer' }} />
@@ -3873,7 +4081,6 @@ function EventsTab({ showToast }) {
             </div>
             <DInput label="Venue & Location" name="venue" value={form.venue} onChange={fc} required />
             <DInput label="Host Organizer" name="organizer" value={form.organizer} onChange={fc} required />
-            {/* Custom Category Dropdown */}
             <div>
               <label style={{ display:'block', fontSize:11.5, fontWeight:800, color:'rgba(255,255,255,0.65)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:6 }}>Category</label>
               <CategoryDropdown value={form.category} onChange={val => setForm(p => ({ ...p, category: val }))} options={EV_CAT_OPTIONS} />
@@ -3885,6 +4092,7 @@ function EventsTab({ showToast }) {
         </Modal>
       )}
 
+      {/* ── Section KPIs ── */}
       <SectionKPIs items={[
         { label: 'Total Events', value: items.length, icon: '📅', color: '#a855f7' },
         { label: 'Total Enrolled', value: totalEnrolled, icon: '👥', color: '#34d399' },
@@ -3892,83 +4100,140 @@ function EventsTab({ showToast }) {
         { label: 'Avg Fill Rate', value: `${avgFillRate}%`, icon: '📊', color: '#fbbf24' },
       ]} />
 
-      {loading ? <Loading /> : (
-        <DataTable head={['Event','Date','Category','Fill Rate','Actions']}>
-          {filteredItems.length === 0 ? <EmptyTR cols={5} /> : filteredItems.map(ev => {
+      {/* ── Table ── */}
+      {loading ? (
+        <Loading />
+      ) : (
+        <DataTable head={['Event Title & Host','Date & Schedule','Category','Fill Rate & Capacity','Actions']}>
+          {filteredItems.length === 0 ? (
+            <EmptyTR cols={5} title="No consortium events found" desc="No events match your current category filter or search query." />
+          ) : filteredItems.map(ev => {
             const fill = ev.total > 0 ? Math.round((ev.enrolled || 0) / ev.total * 100) : 0;
-            const catInfo = CAT[ev.category] || { bg:'rgba(168,85,247,0.18)', color:'#c084fc', border:'rgba(168,85,247,0.35)', icon:'📅' };
-            const isFull = fill >= 90;
-            const isMid = fill >= 50 && fill < 90;
-            const barGradient = isFull ? 'linear-gradient(90deg,#f43f5e,#fb7185)' : isMid ? 'linear-gradient(90deg,#f59e0b,#fbbf24)' : 'linear-gradient(90deg,#06b6d4,#3b82f6)';
-            
+            const catInfo = CAT[ev.category] || CAT.Summit;
+            const isFull = fill >= 95;
+            const isMid = fill >= 50 && fill < 95;
+            const barGradient = isFull
+              ? 'linear-gradient(90deg, #f43f5e, #fb7185)'
+              : isMid
+              ? 'linear-gradient(90deg, #f59e0b, #fbbf24)'
+              : 'linear-gradient(90deg, #06b6d4, #3b82f6)';
+
             return (
               <TR key={ev.id}>
+                {/* Event Title & Host */}
                 <TD>
-                  <div style={{ display:'flex', alignItems:'center', gap:12 }}>
-                    <div style={{ width:38, height:38, borderRadius:11, background:catInfo.bg, border:`1px solid ${catInfo.border}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:17, flexShrink:0, boxShadow:'0 2px 8px rgba(0,0,0,0.2)' }}>
+                  <div
+                    onClick={() => setDetailEvent(ev)}
+                    style={{ display:'flex', alignItems:'center', gap:12, cursor:'pointer' }}
+                    title="View event briefing & agenda dossier"
+                  >
+                    <div style={{
+                      width:42, height:42, borderRadius:12,
+                      background: catInfo.grad,
+                      border:'1.5px solid rgba(255,255,255,0.18)',
+                      display:'flex', alignItems:'center', justifyContent:'center',
+                      fontSize:18, color:'#fff', flexShrink:0,
+                      boxShadow:'0 3px 12px rgba(0,0,0,0.3)'
+                    }}>
                       {catInfo.icon}
                     </div>
                     <div>
-                      <div style={{ fontWeight:800, color:'#fff', fontSize:13.5 }}>{ev.title}</div>
-                      <div style={{ fontSize:12, color:'rgba(255,255,255,0.5)', marginTop:2, display:'flex', alignItems:'center', gap:6, flexWrap:'wrap' }}>
+                      <div style={{ fontWeight:800, color:'#fff', fontSize:13.5, lineHeight:1.3 }}>
+                        {ev.title}
+                      </div>
+                      <div style={{ fontSize:11.5, color:'rgba(255,255,255,0.48)', marginTop:3, display:'flex', alignItems:'center', gap:6, flexWrap:'wrap' }}>
                         <span>📍 {ev.venue}</span>
                         <span>·</span>
-                        <span style={{ color:'rgba(249,115,22,0.85)', fontWeight:600 }}>🏛️ {ev.organizer}</span>
+                        <span style={{ color:'rgba(251,146,60,0.9)', fontWeight:700 }}>🏛️ {ev.organizer}</span>
                       </div>
                     </div>
                   </div>
                 </TD>
+
+                {/* Date & Schedule */}
                 <TD>
                   <div style={{ display:'flex', flexDirection:'column', gap:2 }}>
-                    <span style={{ fontWeight:700, color:'#fff', fontSize:13 }}>📅 {ev.date}</span>
-                    {ev.start_time && (
-                      <span style={{ fontSize:11, color:'rgba(255,255,255,0.45)' }}>⏰ {ev.start_time}{ev.end_time ? ` – ${ev.end_time}` : ''}</span>
-                    )}
+                    <span style={{ fontWeight:700, color:'#fff', fontSize:12.5 }}>
+                      📅 {ev.date}
+                    </span>
+                    <span style={{ fontSize:11, color:'rgba(255,255,255,0.45)' }}>
+                      {ev.start_time ? `⏰ ${ev.start_time}${ev.end_time ? ` – ${ev.end_time}` : ''} PHT` : 'Consortium Session'}
+                    </span>
                   </div>
                 </TD>
+
+                {/* Category */}
                 <TD>
-                  <span className="ap-badge" style={{ background:catInfo.bg, color:catInfo.color, border:`1px solid ${catInfo.border}`, padding:'4px 10px', borderRadius:8, fontWeight:800, fontSize:12 }}>
-                    {catInfo.icon} {ev.category}
+                  <span style={{
+                    display:'inline-flex', alignItems:'center', gap:5,
+                    background: catInfo.bg, color: catInfo.color,
+                    border: `1px solid ${catInfo.border}`,
+                    borderRadius: 7, padding: '3px 9px', fontSize: 11, fontWeight: 800, whiteSpace:'nowrap'
+                  }}>
+                    <span>{catInfo.icon}</span>
+                    <span>{catInfo.label}</span>
                   </span>
                 </TD>
+
+                {/* Fill Rate & Capacity */}
                 <TD>
-                  <div style={{ minWidth:130 }}>
+                  <div style={{ minWidth:140 }}>
                     <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:4 }}>
-                      <span style={{ fontSize:11, fontWeight:800, color: isFull ? '#f87171' : isMid ? '#fbbf24' : '#60a5fa' }}>
-                        {fill}% Fill
+                      <span style={{
+                        fontSize:11, fontWeight:800,
+                        color: isFull ? '#f87171' : isMid ? '#fbbf24' : '#38bdf8'
+                      }}>
+                        {isFull ? '🔥 100% Full' : `${fill}% Fill`}
                       </span>
                       <span style={{ fontSize:11.5, color:'rgba(255,255,255,0.55)', fontWeight:700 }}>
                         {ev.enrolled || 0} / {ev.total || 0}
                       </span>
                     </div>
-                    <div style={{ height:6, background:'rgba(255,255,255,0.08)', borderRadius:4, overflow:'hidden', width:'100%' }}>
-                      <div style={{ height:'100%', width:`${Math.min(fill,100)}%`, background:barGradient, borderRadius:4, transition:'width 0.3s ease' }} />
+                    <div style={{ height:7, background:'rgba(255,255,255,0.08)', borderRadius:6, overflow:'hidden', width:'100%' }}>
+                      <div style={{ height:'100%', width:`${Math.min(fill, 100)}%`, background: barGradient, borderRadius:6, transition:'width 0.3s ease' }} />
+                    </div>
+                    <div style={{ fontSize:10.5, color:'rgba(255,255,255,0.38)', marginTop:3 }}>
+                      {Math.max((Number(ev.total) || 0) - (ev.enrolled || 0), 0)} seats remaining
                     </div>
                   </div>
                 </TD>
+
+                {/* Actions */}
                 <TD>
                   <div style={{ display:'flex', gap:6, alignItems:'center' }}>
                     <button
-                      onClick={() => openAttendees(ev)}
+                      type="button"
+                      onClick={() => setDetailEvent(ev)}
                       className="ap-btn ap-btn-ghost"
-                      style={{ padding:'6px 11px', fontSize:12, borderRadius:8, color:'#34d399', borderColor:'rgba(52,211,153,0.3)', background:'rgba(16,185,129,0.08)' }}
-                      title="View attendees list & mark attendance"
+                      style={{ fontSize:11.5, padding:'5px 9px', borderRadius:8 }}
+                      title="Inspect event agenda & briefing dossier"
                     >
-                      👥 Attendees ({ev.enrolled || 0})
+                      Dossier
                     </button>
                     <button
+                      type="button"
+                      onClick={() => openAttendees(ev)}
+                      className="ap-btn ap-btn-green"
+                      style={{ fontSize:11.5, padding:'5px 10px', borderRadius:8, fontWeight:800 }}
+                      title="Manage attendee registrations and mark attendance"
+                    >
+                      👥 Roster ({ev.enrolled || 0})
+                    </button>
+                    <button
+                      type="button"
                       onClick={() => { setForm({ ...ev }); setModal(ev); }}
                       className="ap-btn ap-btn-blue"
-                      style={{ padding:'6px 10px', fontSize:12, borderRadius:8 }}
+                      style={{ fontSize:11.5, padding:'5px 9px', borderRadius:8 }}
                       title="Edit event details"
                     >
-                      ✏️ Edit
+                      Edit
                     </button>
                     <button
+                      type="button"
                       onClick={() => setConfirm(ev)}
                       className="ap-btn ap-btn-red"
-                      style={{ padding:'6px 10px', fontSize:12, borderRadius:8 }}
-                      title="Delete event"
+                      style={{ fontSize:11.5, padding:'5px 8px', borderRadius:8 }}
+                      title="Delete event permanently"
                     >
                       🗑
                     </button>
