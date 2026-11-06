@@ -1461,6 +1461,8 @@ export default function AdminPage() {
   const [statsSummary, setStatsSummary] = useState(null);
   const [unreadCount, setUnreadCount] = useState(0);
   const [currentTimePHT, setCurrentTimePHT] = useState('');
+  const [reportModalOpen, setReportModalOpen] = useState(false);
+  const [broadcastModalOpen, setBroadcastModalOpen] = useState(false);
 
   const refreshOverviewStats = useCallback(() => {
     api.admin.stats().then(setStatsSummary).catch(() => {});
@@ -1571,8 +1573,31 @@ export default function AdminPage() {
       <div style={{ position:'relative', zIndex:1, display:'flex', flexDirection:'column', flex:1 }}>
       <style>{CSS}</style>
       {toast && <Toast msg={toast.msg} ok={toast.ok} sub={toast.sub} />}
-      {quickJumpOpen && <QuickJumpModal onClose={() => setQuickJumpOpen(false)} onSelectTab={setTab} />}
+      {quickJumpOpen && (
+        <QuickJumpModal
+          onClose={() => setQuickJumpOpen(false)}
+          onSelectTab={setTab}
+          onOpenReport={() => setReportModalOpen(true)}
+          onOpenBroadcast={() => setBroadcastModalOpen(true)}
+          onOpenHealth={() => setHealthModalOpen(true)}
+          onExportAuditCSV={() => downloadSystemAuditCSV(statsSummary, telemetry, showToast)}
+        />
+      )}
       {healthModalOpen && <SystemHealthModal telemetry={telemetry} onClose={() => setHealthModalOpen(false)} />}
+      {reportModalOpen && (
+        <ConsortiumReportModal
+          stats={statsSummary}
+          telemetry={telemetry}
+          onClose={() => setReportModalOpen(false)}
+          showToast={showToast}
+        />
+      )}
+      {broadcastModalOpen && (
+        <ConsortiumBroadcastModal
+          onClose={() => setBroadcastModalOpen(false)}
+          showToast={showToast}
+        />
+      )}
 
       {/* ── Top Bar ── */}
       <header style={{
