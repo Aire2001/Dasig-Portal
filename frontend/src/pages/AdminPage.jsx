@@ -2689,13 +2689,13 @@ function DashboardTab({ showToast, setTab, telemetry = {}, refreshOverviewStats,
 const PAGE_SIZE = 15;
 
 function UsersTab({ showToast }) {
-  const [users, setUsers]   = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
-  const [roleF, setRoleF]   = useState('All');
-  const [acting, setActing] = useState(null);
-  const [page, setPage]     = useState(1);
-  const [detailUser, setDetailUser] = useState(null);
+  const [users, setUsers]                 = useState([]);
+  const [loading, setLoading]             = useState(true);
+  const [search, setSearch]               = useState('');
+  const [roleF, setRoleF]                 = useState('All');
+  const [acting, setActing]               = useState(null);
+  const [page, setPage]                   = useState(1);
+  const [detailUser, setDetailUser]       = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
 
   const load = useCallback(() => {
@@ -2710,8 +2710,16 @@ function UsersTab({ showToast }) {
 
   async function changeRole(u, role) {
     setActing(u.id + 'r');
-    try { await api.admin.changeRole(u.id, role); setUsers(p => p.map(x => x.id === u.id ? { ...x, role } : x)); showToast('Role updated successfully!', true, `${u.name || u.email} is now ${role}`); }
-    catch (e) { showToast(e.message, false); } finally { setActing(null); }
+    try {
+      await api.admin.changeRole(u.id, role);
+      setUsers(p => p.map(x => x.id === u.id ? { ...x, role } : x));
+      if (detailUser && detailUser.id === u.id) setDetailUser(prev => ({ ...prev, role }));
+      showToast('Role updated successfully!', true, `${u.name || u.email} is now ${role}`);
+    } catch (e) {
+      showToast(e.message, false);
+    } finally {
+      setActing(null);
+    }
   }
 
   async function toggleStatus(u) {
@@ -2728,7 +2736,11 @@ function UsersTab({ showToast }) {
         if (detailUser && detailUser.id === u.id) setDetailUser(prev => ({ ...prev, status: 'INACTIVE' }));
         showToast('Account suspended', false, `${u.name || u.email} has been suspended`);
       }
-    } catch (e) { showToast(e.message, false); } finally { setActing(null); }
+    } catch (e) {
+      showToast(e.message, false);
+    } finally {
+      setActing(null);
+    }
   }
 
   async function handleDeleteUser(u) {
@@ -2750,24 +2762,51 @@ function UsersTab({ showToast }) {
     if (!users.length) return;
     const headers = ['Name','Email','Institution','Campus','Role','Status','Tier','Joined'];
     const rows = users.map(u => [
-      u.name || u.email || '', u.email || '', u.institution || '', u.campus || '', u.role || '', u.status || '', u.tier || '', u.created_at?.slice(0,10) || ''
+      u.name || u.email || '',
+      u.email || '',
+      u.institution || '',
+      u.campus || '',
+      u.role || '',
+      u.status || '',
+      u.tier || '',
+      u.created_at?.slice(0, 10) || ''
     ]);
-    const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\r\n');
+    const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
-    a.download = 'dasig_users_export.csv';
+    a.download = 'dasig_users_directory.csv';
     a.click();
+    showToast('Exported users directory to CSV', true);
   }
 
-  const ROLE_STYLE = {
-    ADMIN:  { bg:'rgba(225,29,72,.18)',   color:'#fca5a5' },
-    MEMBER: { bg:'rgba(16,185,129,.15)',  color:'#6ee7b7' },
-    GUEST:  { bg:'rgba(255,255,255,.07)', color:'rgba(255,255,255,.45)' },
+  const ROLE_CONFIG = {
+    ADMIN:  { label:'Administrator',  short:'ADMIN',  color:'#f87171', bg:'rgba(239,68,68,0.14)',   border:'rgba(239,68,68,0.32)',   grad:'linear-gradient(135deg, #e11d48, #9f1239)', icon:'🛡️' },
+    MEMBER: { label:'Verified Member',short:'MEMBER', color:'#34d399', bg:'rgba(16,185,129,0.14)',  border:'rgba(16,185,129,0.32)',  grad:'linear-gradient(135deg, #059669, #10b981)', icon:'👤' },
+    GUEST:  { label:'Guest User',     short:'GUEST',  color:'#93c5fd', bg:'rgba(147,197,253,0.12)', border:'rgba(147,197,253,0.28)', grad:'linear-gradient(135deg, #1e3a8a, #3b82f6)', icon:'🌐' },
   };
+
+  const STATUS_CONFIG = {
+    ACTIVE:   { label:'Active Account', color:'#34d399', bg:'rgba(16,185,129,0.15)', border:'rgba(16,185,129,0.3)', icon:'🟢' },
+    INACTIVE: { label:'Suspended',      color:'#94a3b8', bg:'rgba(148,163,184,0.12)', border:'rgba(148,163,184,0.25)', icon:'⚪' },
+  };
+
+  function getUserInitials(name, email) {
+    const raw = (name || email || 'U').trim();
+    const parts = raw.split(/[\s_.-]+/).filter(Boolean);
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
+
+  function formatJoinedDate(dateStr) {
+    if (!dateStr) return { dateStr: '—', subtitle: 'Joined recently' };
+    const d = new Date(dateStr);
+    const formatted = d.toLocaleDateString('en-PH', { month:'short', day:'numeric', year:'numeric' });
+    return { dateStr: formatted, subtitle: 'Enrolled Member' };
+  }
 
   return (
     <div>
-      {/* Delete User Confirmation Modal */}
+      {/* ── Delete User Confirmation Modal ── */}
       {deleteConfirm && (
         <Modal title="Delete User Account" onClose={() => setDeleteConfirm(null)}>
           <div style={{ display:'flex', flexDirection:'column', gap:16, textAlign:'center', padding:'10px 0' }}>
@@ -2778,7 +2817,7 @@ function UsersTab({ showToast }) {
               </div>
               <div style={{ color:'rgba(255,255,255,0.6)', fontSize:13.5, lineHeight:1.5 }}>
                 Are you sure you want to permanently delete this user account (<span style={{ color:'#f87171', fontWeight:700 }}>{deleteConfirm.email}</span>)?
-                <br />This will remove their registrations and cannot be undone.
+                <br />This will remove their event registrations and cannot be undone.
               </div>
             </div>
             <div style={{ display:'flex', gap:10, marginTop:12 }}>
@@ -2802,60 +2841,125 @@ function UsersTab({ showToast }) {
         </Modal>
       )}
 
-      {/* User Detail Modal */}
+      {/* ── User Detail & Governance Modal ── */}
       {detailUser && (
-        <Modal title="User Details & Management" onClose={() => setDetailUser(null)}>
+        <Modal title="User Profile & Consortium Credentials" onClose={() => setDetailUser(null)} wide>
           <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
-            <div style={{ display:'flex', alignItems:'center', gap:14, padding:'4px 0' }}>
-              <div style={{ width:56, height:56, borderRadius:16, overflow:'hidden', border:'2px solid rgba(255,255,255,0.2)', boxShadow:'0 4px 16px rgba(0,0,0,0.4)', flexShrink:0 }}>
-                {detailUser.avatar_url ? (
-                  <img src={detailUser.avatar_url} alt="" style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }} />
-                ) : (
-                  <div style={{ width:'100%', height:'100%', background:'linear-gradient(135deg,#1e3a8a,#4f46e5)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:18, fontWeight:900, color:'#fff' }}>
-                    {((detailUser.name || detailUser.email) || 'U').split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase()}
+            {/* Top Identity Card */}
+            <div style={{
+              display:'flex', alignItems:'center', justifyContent:'space-between',
+              padding:'18px 22px', background:'rgba(255,255,255,0.035)',
+              border:'1px solid rgba(255,255,255,0.08)', borderRadius:16, gap:16, flexWrap:'wrap'
+            }}>
+              <div style={{ display:'flex', alignItems:'center', gap:14 }}>
+                <div style={{
+                  width:56, height:56, borderRadius:16, overflow:'hidden',
+                  border:'2px solid rgba(255,255,255,0.2)',
+                  boxShadow:'0 4px 18px rgba(0,0,0,0.4)', flexShrink:0
+                }}>
+                  {detailUser.avatar_url ? (
+                    <img src={detailUser.avatar_url} alt="" style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }} />
+                  ) : (
+                    <div style={{
+                      width:'100%', height:'100%',
+                      background: (ROLE_CONFIG[detailUser.role] || ROLE_CONFIG.GUEST).grad,
+                      display:'flex', alignItems:'center', justifyContent:'center',
+                      fontSize:18, fontWeight:900, color:'#fff'
+                    }}>
+                      {getUserInitials(detailUser.name, detailUser.email)}
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <div style={{ color:'#fff', fontWeight:900, fontSize:18, lineHeight:1.3 }}>
+                    {detailUser.name || detailUser.email}
                   </div>
-                )}
+                  <div style={{ color:'rgba(255,255,255,0.5)', fontSize:12.5, marginTop:2 }}>
+                    {detailUser.email}
+                  </div>
+                  <div style={{ display:'flex', alignItems:'center', gap:8, marginTop:4, flexWrap:'wrap' }}>
+                    {(() => {
+                      const rc = ROLE_CONFIG[detailUser.role] || ROLE_CONFIG.GUEST;
+                      return (
+                        <span style={{
+                          fontSize:11, fontWeight:800,
+                          color: rc.color, background: rc.bg,
+                          border: `1px solid ${rc.border}`,
+                          borderRadius:6, padding:'2px 8px'
+                        }}>
+                          {rc.icon} {rc.label}
+                        </span>
+                      );
+                    })()}
+                    <span style={{ fontSize:12, color:'rgba(255,255,255,0.5)' }}>· 🏛️ {detailUser.institution || 'Individual Scholar'}</span>
+                  </div>
+                </div>
               </div>
-              <div style={{ flex:1 }}>
-                <div style={{ color:'#fff', fontWeight:900, fontSize:17 }}>{detailUser.name || detailUser.email}</div>
-                <div style={{ color:'rgba(255,255,255,0.5)', fontSize:13 }}>{detailUser.email}</div>
+
+              <div>
+                {(() => {
+                  const st = STATUS_CONFIG[detailUser.status] || STATUS_CONFIG.ACTIVE;
+                  return (
+                    <span style={{
+                      display:'inline-flex', alignItems:'center', gap:6,
+                      background: st.bg, color: st.color, border: `1px solid ${st.border}`,
+                      borderRadius: 8, padding: '5px 12px', fontSize: 12.5, fontWeight: 800
+                    }}>
+                      <span>{st.icon}</span>
+                      <span>{st.label}</span>
+                    </span>
+                  );
+                })()}
               </div>
             </div>
 
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
+            {/* Telemetry Metrics Grid */}
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(200px, 1fr))', gap:12 }}>
               {[
-                { l:'Role', v:detailUser.role },
-                { l:'Status', v:detailUser.status },
-                { l:'Institution', v:detailUser.institution || '—' },
-                { l:'Campus', v:detailUser.campus || '—' },
-                { l:'Phone', v:detailUser.phone || '—' },
-                { l:'Tier', v:detailUser.tier || '—' },
-                { l:'Joined Date', v:detailUser.created_at?.slice(0,10) || '—' },
-                { l:'Renewal Due', v:detailUser.renewal_due || '—' },
+                { label: 'Consortium Role', value: (ROLE_CONFIG[detailUser.role] || ROLE_CONFIG.GUEST).label, icon: (ROLE_CONFIG[detailUser.role] || ROLE_CONFIG.GUEST).icon, color: (ROLE_CONFIG[detailUser.role] || ROLE_CONFIG.GUEST).color },
+                { label: 'Account Status', value: (STATUS_CONFIG[detailUser.status] || STATUS_CONFIG.ACTIVE).label, icon: (STATUS_CONFIG[detailUser.status] || STATUS_CONFIG.ACTIVE).icon, color: (STATUS_CONFIG[detailUser.status] || STATUS_CONFIG.ACTIVE).color },
+                { label: 'Institution & Node', value: detailUser.institution || 'Individual Scholar', icon: '🏛️', color: '#60a5fa' },
+                { label: 'Campus / Center', value: detailUser.campus || 'Main Campus', icon: '📍', color: '#f472b6' },
+                { label: 'Membership Tier', value: detailUser.tier || 'Standard Tier', icon: '👑', color: '#fbbf24' },
+                { label: 'Official Phone', value: detailUser.phone || 'Not provided', icon: '📞', color: '#38bdf8' },
+                { label: 'Registration Date', value: detailUser.created_at ? new Date(detailUser.created_at).toLocaleDateString('en-PH', { dateStyle:'long' }) : '—', icon: '📅', color: '#34d399' },
+                { label: 'Annual Renewal Due', value: detailUser.renewal_due ? new Date(detailUser.renewal_due).toLocaleDateString('en-PH', { dateStyle:'long' }) : 'Continuous Active', icon: '⏳', color: '#c084fc' },
               ].map(r => (
-                <div key={r.l} style={{ background:'rgba(255,255,255,0.04)', borderRadius:10, padding:'10px 12px', border:'1px solid rgba(255,255,255,0.06)' }}>
-                  <div style={{ fontSize:10.5, fontWeight:800, color:'rgba(255,255,255,0.38)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:3 }}>{r.l}</div>
-                  <div style={{ fontSize:13.5, color:'#fff', fontWeight:600 }}>{r.v}</div>
+                <div key={r.label} style={{
+                  background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.06)',
+                  borderRadius:12, padding:'12px 15px'
+                }}>
+                  <div style={{
+                    fontSize:10.5, fontWeight:800, color:'rgba(255,255,255,0.4)',
+                    textTransform:'uppercase', letterSpacing:'.5px', marginBottom:5,
+                    display:'flex', alignItems:'center', gap:6
+                  }}>
+                    <span>{r.icon}</span> {r.label}
+                  </div>
+                  <div style={{ color:'#fff', fontWeight:800, fontSize:13.5 }}>
+                    {r.value}
+                  </div>
                 </div>
               ))}
             </div>
 
-            <div style={{ display:'flex', gap:10, marginTop:8, flexWrap:'wrap' }}>
+            {/* Action Buttons */}
+            <div style={{ display:'flex', gap:10, marginTop:4, flexWrap:'wrap' }}>
               <button
                 onClick={() => toggleStatus(detailUser)}
                 className={`ap-btn ${detailUser.status === 'INACTIVE' ? 'ap-btn-green' : 'ap-btn-ghost'}`}
-                style={{ flex:1, padding:'11px', fontSize:13 }}
+                style={{ flex: 1.5, padding:'11px', fontSize:13, fontWeight:800 }}
               >
-                {acting === detailUser.id + 's' ? '…' : detailUser.status === 'INACTIVE' ? 'Activate Account' : 'Suspend Account'}
+                {acting === detailUser.id + 's' ? '…' : detailUser.status === 'INACTIVE' ? '✓ Activate Account' : '⏸ Suspend Account'}
               </button>
               <button
-                onClick={() => { setDetailUser(null); setDeleteConfirm(detailUser); }}
+                onClick={() => { const u = detailUser; setDetailUser(null); setDeleteConfirm(u); }}
                 className="ap-btn ap-btn-red"
-                style={{ flex:1, padding:'11px', fontSize:13 }}
+                style={{ flex: 1, padding:'11px', fontSize:13 }}
               >
                 🗑 Delete User
               </button>
-              <button onClick={() => setDetailUser(null)} className="ap-btn ap-btn-ghost" style={{ padding:'11px 18px', fontSize:13 }}>
+              <button onClick={() => setDetailUser(null)} className="ap-btn ap-btn-ghost" style={{ flex: 1, padding:'11px', fontSize:13 }}>
                 Close
               </button>
             </div>
@@ -2863,73 +2967,86 @@ function UsersTab({ showToast }) {
         </Modal>
       )}
 
-      <PageHeader title="Users" desc="Manage consortium roles, institutional directory, and account activations" action={
-        <div style={{ display:'flex', gap:10, alignItems:'center', flexWrap:'wrap' }}>
-          {/* Segmented Role Filter Pills */}
-          <div style={{
-            display: 'flex', background: 'rgba(255,255,255,0.05)',
-            border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: 3, gap: 2
-          }}>
-            {[
-              { id: 'All', label: 'All', count: users.length },
-              { id: 'MEMBER', label: 'Members', count: users.filter(u => u.role === 'MEMBER').length, color: '#34d399' },
-              { id: 'ADMIN', label: 'Admins', count: users.filter(u => u.role === 'ADMIN').length, color: '#f87171' },
-              { id: 'GUEST', label: 'Guests', count: users.filter(u => u.role === 'GUEST').length, color: '#93c5fd' },
-            ].map(tabItem => (
-              <button
-                key={tabItem.id}
-                type="button"
-                onClick={() => setRoleF(tabItem.id)}
-                style={{
-                  padding: '5px 11px', borderRadius: 7, border: 'none',
-                  background: roleF === tabItem.id ? 'rgba(255,255,255,0.14)' : 'transparent',
-                  color: roleF === tabItem.id ? '#fff' : 'rgba(255,255,255,0.55)',
-                  fontWeight: roleF === tabItem.id ? 800 : 600,
-                  fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
-                  transition: 'all .14s ease'
-                }}
-              >
-                <span>{tabItem.label}</span>
-                <span style={{
-                  fontSize: 10, padding: '1px 5px', borderRadius: 99,
-                  background: roleF === tabItem.id ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.06)',
-                  color: tabItem.color || 'inherit', fontWeight: 800
-                }}>
-                  {tabItem.count}
-                </span>
-              </button>
-            ))}
+      {/* ── Page Header ── */}
+      <PageHeader
+        title="Consortium User Directory"
+        desc="Manage member university personnel, consortium administrators, roles, permissions, and account access statuses"
+        action={
+          <div style={{ display:'flex', gap:10, alignItems:'center', flexWrap:'wrap' }}>
+            {/* Segmented Role Filter Pills */}
+            <div style={{
+              display: 'flex', background: 'rgba(255,255,255,0.05)',
+              border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: 3, gap: 2
+            }}>
+              {[
+                { id: 'All', label: 'All', count: users.length },
+                { id: 'MEMBER', label: 'Members', count: users.filter(u => u.role === 'MEMBER').length, color: '#34d399' },
+                { id: 'ADMIN', label: 'Admins', count: users.filter(u => u.role === 'ADMIN').length, color: '#f87171' },
+                { id: 'GUEST', label: 'Guests', count: users.filter(u => u.role === 'GUEST').length, color: '#93c5fd' },
+              ].map(tabItem => {
+                const isSelected = roleF === tabItem.id;
+                return (
+                  <button
+                    key={tabItem.id}
+                    type="button"
+                    onClick={() => setRoleF(tabItem.id)}
+                    style={{
+                      padding: '5px 12px', borderRadius: 7, border: 'none',
+                      background: isSelected ? 'rgba(255,255,255,0.15)' : 'transparent',
+                      color: isSelected ? '#fff' : 'rgba(255,255,255,0.55)',
+                      fontWeight: isSelected ? 800 : 600,
+                      fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
+                      transition: 'all .14s ease'
+                    }}
+                  >
+                    <span>{tabItem.label}</span>
+                    <span style={{
+                      fontSize: 10, padding: '1px 6px', borderRadius: 99,
+                      background: isSelected ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.06)',
+                      color: tabItem.color || 'inherit', fontWeight: 800
+                    }}>
+                      {tabItem.count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Search Input with Clear Button */}
+            <div style={{ position: 'relative', width: 230 }}>
+              <input
+                className="ap-input"
+                placeholder="Search name, email, institution…"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                style={{ fontSize:12, padding:'7px 28px 7px 11px', background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.1)' }}
+              />
+              {search ? (
+                <button
+                  type="button"
+                  onClick={() => setSearch('')}
+                  style={{
+                    position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)',
+                    background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)',
+                    cursor: 'pointer', fontSize: 12, padding: 0
+                  }}
+                  title="Clear search"
+                >
+                  ✕
+                </button>
+              ) : (
+                <span style={{ position:'absolute', right:8, top:'50%', transform:'translateY(-50%)', fontSize:12, opacity:0.4, pointerEvents:'none' }}>🔍</span>
+              )}
+            </div>
+
+            <button onClick={exportUsersCSV} className="ap-btn ap-btn-ghost" style={{ fontSize:12.5, whiteSpace:'nowrap', padding:'7px 13px' }}>
+              ⬇ Export CSV
+            </button>
           </div>
+        }
+      />
 
-          {/* Search Input with Clear Button */}
-          <div style={{ position: 'relative', width: 230 }}>
-            <input
-              className="ap-input"
-              placeholder="Search name, email, institution…"
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              style={{ paddingRight: search ? 28 : 12 }}
-            />
-            {search && (
-              <button
-                type="button"
-                onClick={() => setSearch('')}
-                style={{
-                  position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)',
-                  background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)',
-                  cursor: 'pointer', fontSize: 13, padding: 0
-                }}
-                title="Clear search"
-              >
-                ✕
-              </button>
-            )}
-          </div>
-
-          <button onClick={exportUsersCSV} className="ap-btn ap-btn-ghost" style={{ fontSize:12.5, whiteSpace:'nowrap' }}>⬇ Export CSV</button>
-        </div>
-      } />
-
+      {/* ── Section KPIs ── */}
       <SectionKPIs items={[
         { label: 'Total Accounts', value: users.length, icon: '👥', color: '#60a5fa' },
         { label: 'Verified Members', value: users.filter(u => u.role === 'MEMBER').length, icon: '🎓', color: '#34d399' },
@@ -2937,109 +3054,199 @@ function UsersTab({ showToast }) {
         { label: 'Active Status', value: users.filter(u => u.status === 'ACTIVE').length, icon: '🟢', color: '#fbbf24' },
       ]} />
 
-      {loading ? <Loading /> : (() => {
+      {/* ── Table ── */}
+      {loading ? (
+        <Loading />
+      ) : (() => {
         const totalPages = Math.max(1, Math.ceil(users.length / PAGE_SIZE));
         const paged = users.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-        return (<>
-        <DataTable head={['User','Institution','Role','Status','Joined','Actions']}>
-          {users.length === 0 ? <EmptyTR cols={6} /> : paged.map(u => {
-            const rs = ROLE_STYLE[u.role] || ROLE_STYLE.GUEST;
-            const displayName = u.name || u.email;
-            return (
-              <TR key={u.id}>
-                <TD>
-                  <div
-                    onClick={() => setDetailUser(u)}
-                    title="Click to view details"
-                    style={{ display:'flex', alignItems:'center', gap:12, cursor:'pointer' }}
-                  >
-                    <div style={{ width:38, height:38, borderRadius:11, overflow:'hidden', flexShrink:0, border:'1.5px solid rgba(255,255,255,0.12)', boxShadow:'0 2px 8px rgba(0,0,0,0.25)' }}>
-                      {u.avatar_url ? (
-                        <img src={u.avatar_url} alt="" style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }} />
-                      ) : (
-                        <div style={{
-                          width:'100%', height:'100%',
-                          background: u.role==='ADMIN' ? 'linear-gradient(135deg,#e11d48,#9f1239)' : u.role==='MEMBER' ? 'linear-gradient(135deg,#10b981,#059669)' : 'linear-gradient(135deg,#1e3a8a,#3b82f6)',
-                          display:'flex', alignItems:'center', justifyContent:'center', fontSize:12.5, fontWeight:900, color:'#fff'
-                        }}>
-                          {(displayName || 'U').split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase()}
-                        </div>
-                      )}
-                    </div>
-                    <div>
-                      <div style={{ fontWeight:800, color:'#fff', fontSize:13.5, display:'flex', alignItems:'center', gap:6 }}>
-                        {displayName}
-                        <span style={{ fontSize:10, color:'rgba(249,115,22,0.8)', fontWeight:700 }}>🔍</span>
-                      </div>
+        return (
+          <>
+            <DataTable head={['User & Credentials','Institution & Node','Consortium Role','Account Status','Joined Date','Actions']}>
+              {users.length === 0 ? (
+                <EmptyTR cols={6} title="No users found" desc="No consortium user accounts match your search or role filter." />
+              ) : paged.map(u => {
+                const rc = ROLE_CONFIG[u.role] || ROLE_CONFIG.GUEST;
+                const sc = STATUS_CONFIG[u.status] || STATUS_CONFIG.ACTIVE;
+                const displayName = u.name || u.email;
+                const initials = getUserInitials(u.name, u.email);
+                const joined = formatJoinedDate(u.created_at);
+
+                return (
+                  <TR key={u.id}>
+                    {/* User Column */}
+                    <TD>
                       <div
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (navigator.clipboard) {
-                            navigator.clipboard.writeText(u.email);
-                            showToast('Copied email to clipboard!', true, u.email);
-                          }
-                        }}
-                        title="Click to copy email"
-                        style={{ fontSize:12, color:'rgba(255,255,255,0.5)', display:'flex', alignItems:'center', gap:5, cursor:'pointer' }}
+                        onClick={() => setDetailUser(u)}
+                        title="Click to inspect user dossier"
+                        style={{ display:'flex', alignItems:'center', gap:12, cursor:'pointer' }}
                       >
-                        <span>{u.email}</span>
-                        <span style={{ fontSize:10, opacity:0.6 }}>📋</span>
+                        <div style={{
+                          width:42, height:42, borderRadius:12, overflow:'hidden', flexShrink:0,
+                          border:'1.5px solid rgba(255,255,255,0.18)', boxShadow:'0 3px 10px rgba(0,0,0,0.3)'
+                        }}>
+                          {u.avatar_url ? (
+                            <img src={u.avatar_url} alt="" style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }} />
+                          ) : (
+                            <div style={{
+                              width:'100%', height:'100%',
+                              background: rc.grad,
+                              display:'flex', alignItems:'center', justifyContent:'center',
+                              fontSize:13.5, fontWeight:900, color:'#fff'
+                            }}>
+                              {initials}
+                            </div>
+                          )}
+                        </div>
+                        <div>
+                          <div style={{ fontWeight:800, color:'#fff', fontSize:13.5, lineHeight:1.3 }}>
+                            {displayName}
+                          </div>
+                          <div
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (navigator.clipboard) {
+                                navigator.clipboard.writeText(u.email);
+                                showToast('Copied email to clipboard!', true, u.email);
+                              }
+                            }}
+                            title="Click to copy email address"
+                            style={{ fontSize:11.5, color:'rgba(255,255,255,0.48)', marginTop:2, display:'flex', alignItems:'center', gap:5, cursor:'pointer' }}
+                          >
+                            <span>{u.email}</span>
+                            <span style={{ fontSize:10, opacity:0.6 }}>📋</span>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                </TD>
-                <TD muted>{u.institution || '—'}{u.campus ? `, ${u.campus}` : ''}</TD>
-                <TD>
-                  <select onChange={e => changeRole(u, e.target.value)} value={u.role} disabled={!!acting}
-                    style={{ background:rs.bg, color:rs.color, border:`1px solid ${rs.color}44`, borderRadius:8, padding:'5px 10px', fontSize:12.5, fontWeight:800, cursor:'pointer', fontFamily:'inherit', outline:'none' }}>
-                    {['ADMIN','MEMBER','GUEST'].map(r => <option key={r} value={r} style={{ background:'#0f172a' }}>{r}</option>)}
-                  </select>
-                </TD>
-                <TD>
-                  <span className="ap-pill" style={{ background: u.status === 'ACTIVE' ? 'rgba(16,185,129,.15)' : 'rgba(255,255,255,.06)', color: u.status === 'ACTIVE' ? '#6ee7b7' : 'rgba(255,255,255,.38)', border: `1px solid ${u.status === 'ACTIVE' ? 'rgba(16,185,129,.3)' : 'rgba(255,255,255,.1)'}` }}>
-                    {u.status === 'ACTIVE' ? '● Active' : '● Inactive'}
-                  </span>
-                </TD>
-                <TD muted>{u.created_at?.slice(0,10) || '—'}</TD>
-                <TD>
-                  <div style={{ display:'flex', gap:6, alignItems:'center' }}>
-                    <button
-                      onClick={() => toggleStatus(u)}
-                      disabled={!!acting}
-                      className={`ap-btn ${u.status === 'INACTIVE' ? 'ap-btn-green' : 'ap-btn-ghost'}`}
-                    >
-                      {acting === u.id + 's' ? '…' : u.status === 'INACTIVE' ? 'Activate' : 'Suspend'}
-                    </button>
-                    <button
-                      onClick={() => setDeleteConfirm(u)}
-                      disabled={acting === u.id + 'd'}
-                      className="ap-btn ap-btn-red"
-                      style={{ padding:'6px 11px', fontSize:13, borderRadius:8 }}
-                      title="Delete user account"
-                    >
-                      🗑
-                    </button>
-                  </div>
-                </TD>
-              </TR>
-            );
-          })}
-        </DataTable>
-        {totalPages > 1 && (
-          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginTop:16, flexWrap:'wrap', gap:8 }}>
-            <span style={{ fontSize:12.5, color:'rgba(255,255,255,0.4)' }}>
-              Showing {(page-1)*PAGE_SIZE+1}–{Math.min(page*PAGE_SIZE, users.length)} of {users.length} users
-            </span>
-            <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
-              <button onClick={() => setPage(p => Math.max(1,p-1))} disabled={page===1} className="ap-btn ap-btn-ghost" style={{ opacity:page===1?0.4:1 }}>← Prev</button>
-              {Array.from({length:totalPages},(_,i)=>i+1).map(p => (
-                <button key={p} onClick={() => setPage(p)} className={`ap-btn ${p===page?'ap-btn-primary':'ap-btn-ghost'}`} style={{ minWidth:34 }}>{p}</button>
-              ))}
-              <button onClick={() => setPage(p => Math.min(totalPages,p+1))} disabled={page===totalPages} className="ap-btn ap-btn-ghost" style={{ opacity:page===totalPages?0.4:1 }}>Next →</button>
-            </div>
-          </div>
-        )}
-        </>);
+                    </TD>
+
+                    {/* Institution Column */}
+                    <TD>
+                      <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                        <span style={{ fontSize:15, opacity:0.8 }}>🏛️</span>
+                        <div>
+                          <div style={{ color:'rgba(255,255,255,0.92)', fontWeight:700, fontSize:13 }}>
+                            {u.institution || 'Individual Scholar'}
+                          </div>
+                          <div style={{ fontSize:11, color:'rgba(255,255,255,0.45)', marginTop:2 }}>
+                            {u.campus || 'Regional Node Campus'}
+                          </div>
+                        </div>
+                      </div>
+                    </TD>
+
+                    {/* Role Column */}
+                    <TD>
+                      <div style={{ position:'relative', display:'inline-block' }}>
+                        <select
+                          onChange={e => changeRole(u, e.target.value)}
+                          value={u.role}
+                          disabled={!!acting}
+                          style={{
+                            background: rc.bg,
+                            color: rc.color,
+                            border: `1px solid ${rc.border}`,
+                            borderRadius: 8,
+                            padding: '4px 10px',
+                            fontSize: 11.5,
+                            fontWeight: 800,
+                            cursor: 'pointer',
+                            fontFamily: 'inherit',
+                            outline: 'none',
+                            appearance: 'none',
+                            WebkitAppearance: 'none',
+                            paddingRight: 24,
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
+                          }}
+                        >
+                          <option value="MEMBER" style={{ background:'#0f172a', color:'#34d399' }}>👤 MEMBER</option>
+                          <option value="ADMIN" style={{ background:'#0f172a', color:'#f87171' }}>🛡️ ADMIN</option>
+                          <option value="GUEST" style={{ background:'#0f172a', color:'#93c5fd' }}>🌐 GUEST</option>
+                        </select>
+                        <span style={{
+                          position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)',
+                          fontSize: 9, pointerEvents: 'none', color: rc.color, opacity: 0.8
+                        }}>▼</span>
+                      </div>
+                    </TD>
+
+                    {/* Status Column */}
+                    <TD>
+                      <span style={{
+                        display:'inline-flex', alignItems:'center', gap:5,
+                        background: sc.bg, color: sc.color,
+                        border: `1px solid ${sc.border}`,
+                        borderRadius: 8, padding: '3px 9px', fontSize: 11, fontWeight: 800, whiteSpace:'nowrap'
+                      }}>
+                        <span>{sc.icon}</span>
+                        <span>{sc.label}</span>
+                      </span>
+                    </TD>
+
+                    {/* Joined Date Column */}
+                    <TD>
+                      <div style={{ display:'flex', flexDirection:'column', gap:2 }}>
+                        <span style={{ color:'#fff', fontWeight:700, fontSize:12.5 }}>
+                          📅 {joined.dateStr}
+                        </span>
+                        <span style={{ fontSize:11, color:'rgba(255,255,255,0.45)' }}>
+                          {joined.subtitle}
+                        </span>
+                      </div>
+                    </TD>
+
+                    {/* Actions Column */}
+                    <TD>
+                      <div style={{ display:'flex', gap:6, alignItems:'center' }}>
+                        <button
+                          type="button"
+                          onClick={() => setDetailUser(u)}
+                          className="ap-btn ap-btn-ghost"
+                          style={{ fontSize:11.5, padding:'5px 10px', borderRadius:8 }}
+                          title="Inspect user dossier & credentials"
+                        >
+                          Dossier
+                        </button>
+                        <button
+                          onClick={() => toggleStatus(u)}
+                          disabled={!!acting}
+                          className={`ap-btn ${u.status === 'INACTIVE' ? 'ap-btn-green' : 'ap-btn-ghost'}`}
+                          style={{ fontSize:11.5, padding:'5px 10px', borderRadius:8 }}
+                        >
+                          {acting === u.id + 's' ? '…' : u.status === 'INACTIVE' ? 'Activate' : 'Suspend'}
+                        </button>
+                        <button
+                          onClick={() => setDeleteConfirm(u)}
+                          disabled={acting === u.id + 'd'}
+                          className="ap-btn ap-btn-red"
+                          style={{ padding:'5px 8px', fontSize:12, borderRadius:8 }}
+                          title="Delete user account"
+                        >
+                          🗑
+                        </button>
+                      </div>
+                    </TD>
+                  </TR>
+                );
+              })}
+            </DataTable>
+
+            {totalPages > 1 && (
+              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginTop:16, flexWrap:'wrap', gap:8 }}>
+                <span style={{ fontSize:12.5, color:'rgba(255,255,255,0.4)' }}>
+                  Showing {(page-1)*PAGE_SIZE+1}–{Math.min(page*PAGE_SIZE, users.length)} of {users.length} users
+                </span>
+                <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
+                  <button onClick={() => setPage(p => Math.max(1,p-1))} disabled={page===1} className="ap-btn ap-btn-ghost" style={{ opacity:page===1?0.4:1 }}>← Prev</button>
+                  {Array.from({length:totalPages},(_,i)=>i+1).map(p => (
+                    <button key={p} onClick={() => setPage(p)} className={`ap-btn ${p===page?'ap-btn-primary':'ap-btn-ghost'}`} style={{ minWidth:34 }}>{p}</button>
+                  ))}
+                  <button onClick={() => setPage(p => Math.min(totalPages,p+1))} disabled={page===totalPages} className="ap-btn ap-btn-ghost" style={{ opacity:page===totalPages?0.4:1 }}>Next →</button>
+                </div>
+              </div>
+            )}
+          </>
+        );
       })()}
     </div>
   );
