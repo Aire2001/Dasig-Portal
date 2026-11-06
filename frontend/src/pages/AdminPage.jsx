@@ -4392,19 +4392,20 @@ const TR_BLANK = { icon:'💻', category:'Technology', title:'', org:'', duratio
 const TR_DURATIONS = ['1 week','2 weeks','3 weeks','4 weeks','5 weeks','6 weeks','8 weeks','10 weeks','12 weeks','3 months','4 months','6 months'];
 
 function TrainingTab({ showToast }) {
-  const [items, setItems]           = useState([]);
-  const [loading, setLoading]       = useState(true);
-  const [modal, setModal]           = useState(null);
-  const [form, setForm]             = useState(TR_BLANK);
-  const [saving, setSaving]         = useState(false);
-  const [confirm, setConfirm]       = useState(null);
-  const [search, setSearch]         = useState('');
-  const [catFilter, setCatFilter]   = useState('All');
-  const [enrolEvent, setEnrolEvent] = useState(null);
-  const [enrolList, setEnrolList]   = useState([]);
+  const [items, setItems]               = useState([]);
+  const [loading, setLoading]           = useState(true);
+  const [modal, setModal]               = useState(null);
+  const [detailTraining, setDetailTraining] = useState(null);
+  const [form, setForm]                 = useState(TR_BLANK);
+  const [saving, setSaving]             = useState(false);
+  const [confirm, setConfirm]           = useState(null);
+  const [search, setSearch]             = useState('');
+  const [catFilter, setCatFilter]       = useState('All');
+  const [enrolEvent, setEnrolEvent]     = useState(null);
+  const [enrolList, setEnrolList]       = useState([]);
   const [enrolLoading, setEnrolLoading] = useState(false);
-  const [enrolFilter, setEnrolFilter] = useState('all');
-  const [enrolSearch, setEnrolSearch] = useState('');
+  const [enrolFilter, setEnrolFilter]   = useState('all');
+  const [enrolSearch, setEnrolSearch]   = useState('');
 
   const load = useCallback(() => {
     setLoading(true);
@@ -4422,7 +4423,9 @@ function TrainingTab({ showToast }) {
       await api.training.markAttendance(enrolEvent.id, reg.user_id, attended);
       setEnrolList(prev => prev.map(r => r.user_id === reg.user_id ? { ...r, attended } : r));
       showToast(attended ? 'Attendance marked successfully!' : 'Marked as absent', attended, reg.users?.name);
-    } catch (e) { showToast(e.message, false); }
+    } catch (e) {
+      showToast(e.message, false);
+    }
   }
 
   async function openEnrollments(t) {
@@ -4454,57 +4457,86 @@ function TrainingTab({ showToast }) {
   }
 
   async function save() {
-    if (!form.title || !form.org || !form.duration) { showToast('Please fill all required fields', false); return; }
+    if (!form.title || !form.org || !form.duration) {
+      showToast('Program title, host institution, and duration are required', false);
+      return;
+    }
     setSaving(true);
     try {
       const body = { ...form, total: Number(form.total) || 20 };
-      if (modal === 'create') { await api.training.create(body); showToast('Training program created successfully!', true, body.title); }
-      else { await api.training.update(modal.id, body); showToast('Training program updated successfully!', true, body.title); }
+      if (modal === 'create') {
+        await api.training.create(body);
+        showToast('Training program created successfully!', true, body.title);
+      } else {
+        await api.training.update(modal.id, body);
+        showToast('Training program updated successfully!', true, body.title);
+      }
       setModal(null);
       load();
-    } catch (e) { showToast(e.message, false); } finally { setSaving(false); }
+    } catch (e) {
+      showToast(e.message, false);
+    } finally {
+      setSaving(false);
+    }
   }
 
   async function del(id, title) {
-    try { await api.training.delete(id); setItems(p => p.filter(x => x.id !== id)); showToast('Training program deleted successfully!', true, title); setConfirm(null); }
-    catch (e) { showToast(e.message, false); }
+    try {
+      await api.training.delete(id);
+      setItems(p => p.filter(x => x.id !== id));
+      showToast('Training program deleted successfully!', true, title);
+      setConfirm(null);
+      if (detailTraining?.id === id) setDetailTraining(null);
+    } catch (e) {
+      showToast(e.message, false);
+    }
   }
 
   function exportTrainingCSV() {
     if (!items.length) return;
     const headers = ['Title', 'Category', 'Host Institution', 'Duration', 'Level', 'Enrolled', 'Total Capacity', 'Schedule'];
-    const rows = items.map(t => [
-      t.title || '', t.category || '', t.org || '', t.duration || '', t.level || '', t.enrolled || 0, t.total || 0, t.schedule || ''
+    const rows = filteredItems.map(t => [
+      t.title || '',
+      t.category || '',
+      t.org || '',
+      t.duration || '',
+      t.level || '',
+      t.enrolled || 0,
+      t.total || 0,
+      t.schedule || ''
     ]);
-    const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\r\n');
+    const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
-    a.download = 'dasig_training_export.csv';
+    a.download = 'dasig_training_programs.csv';
     a.click();
+    showToast('Exported training catalog to CSV', true);
   }
 
   const CC = {
-    Technology: { color:'#60a5fa', bg:'rgba(96,165,250,0.18)',  border:'rgba(96,165,250,0.35)',  icon:'💻' },
-    Research:   { color:'#6ee7b7', bg:'rgba(110,231,183,0.18)', border:'rgba(110,231,183,0.35)', icon:'🔬' },
-    Leadership: { color:'#fcd34d', bg:'rgba(252,211,77,0.18)',  border:'rgba(252,211,77,0.35)',  icon:'🎯' },
-    Governance: { color:'#c4b5fd', bg:'rgba(196,181,253,0.18)', border:'rgba(196,181,253,0.35)', icon:'📋' },
+    Technology: { color:'#60a5fa', bg:'rgba(96,165,250,0.14)',  border:'rgba(96,165,250,0.32)',  grad:'linear-gradient(135deg,#1d4ed8,#3b82f6)', icon:'💻' },
+    Research:   { color:'#34d399', bg:'rgba(52,211,153,0.14)',  border:'rgba(52,211,153,0.32)',  grad:'linear-gradient(135deg,#059669,#10b981)', icon:'🔬' },
+    Leadership: { color:'#fbbf24', bg:'rgba(251,191,36,0.14)',  border:'rgba(251,191,36,0.32)',  grad:'linear-gradient(135deg,#d97706,#f59e0b)', icon:'🎯' },
+    Governance: { color:'#c084fc', bg:'rgba(192,132,252,0.14)', border:'rgba(192,132,252,0.32)', grad:'linear-gradient(135deg,#6d28d9,#8b5cf6)', icon:'📋' },
   };
 
   const LC = {
-    Beginner:     { color:'#6ee7b7', bg:'rgba(110,231,183,0.15)', border:'rgba(110,231,183,0.3)' },
-    Intermediate: { color:'#fcd34d', bg:'rgba(252,211,77,0.15)',  border:'rgba(252,211,77,0.3)' },
-    Advanced:     { color:'#fca5a5', bg:'rgba(252,165,165,0.15)', border:'rgba(252,165,165,0.3)' },
+    Beginner:     { label:'Beginner Track',     color:'#34d399', bg:'rgba(16,185,129,0.14)', border:'rgba(16,185,129,0.28)', icon:'🟢' },
+    Intermediate: { label:'Intermediate Track', color:'#fbbf24', bg:'rgba(245,158,11,0.14)', border:'rgba(245,158,11,0.28)', icon:'🟡' },
+    Advanced:     { label:'Advanced Track',     color:'#f43f5e', bg:'rgba(244,63,94,0.14)',  border:'rgba(244,63,94,0.28)',  icon:'🔴' },
   };
 
   const filteredItems = items.filter(t => {
     if (catFilter !== 'All' && t.category !== catFilter) return false;
-    if (search.trim()) {
-      const q = search.toLowerCase();
-      const title = (t.title || '').toLowerCase();
-      const org = (t.org || '').toLowerCase();
-      if (!title.includes(q) && !org.includes(q)) return false;
-    }
-    return true;
+    const q = search.trim().toLowerCase();
+    if (!q) return true;
+    return (
+      (t.title || '').toLowerCase().includes(q) ||
+      (t.org || '').toLowerCase().includes(q) ||
+      (t.category || '').toLowerCase().includes(q) ||
+      (t.level || '').toLowerCase().includes(q) ||
+      (t.description || '').toLowerCase().includes(q)
+    );
   });
 
   const totalEnrolled = items.reduce((sum, t) => sum + (t.enrolled || 0), 0);
@@ -4533,9 +4565,10 @@ function TrainingTab({ showToast }) {
 
   return (
     <div>
+      {/* ── Page Header ── */}
       <PageHeader
-        title="Training Programs"
-        desc="Offer, organize, and track consortium certifications and faculty development programs"
+        title="Training & Certification Programs"
+        desc="Offer, organize, and track consortium certifications, workshops, and faculty development cohorts"
         action={
           <div style={{ display:'flex', gap:10, alignItems:'center', flexWrap:'wrap' }}>
             {/* Category Segmented Filter */}
@@ -4545,25 +4578,26 @@ function TrainingTab({ showToast }) {
             }}>
               {['All','Technology','Research','Leadership','Governance'].map(c => {
                 const count = c === 'All' ? items.length : items.filter(t => t.category === c).length;
+                const isSelected = catFilter === c;
                 return (
                   <button
                     key={c}
                     type="button"
                     onClick={() => setCatFilter(c)}
                     style={{
-                      padding: '5px 10px', borderRadius: 7, border: 'none',
-                      background: catFilter === c ? 'rgba(255,255,255,0.14)' : 'transparent',
-                      color: catFilter === c ? '#fff' : 'rgba(255,255,255,0.55)',
-                      fontWeight: catFilter === c ? 800 : 600,
-                      fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5,
+                      padding: '5px 12px', borderRadius: 7, border: 'none',
+                      background: isSelected ? 'rgba(255,255,255,0.15)' : 'transparent',
+                      color: isSelected ? '#fff' : 'rgba(255,255,255,0.55)',
+                      fontWeight: isSelected ? 800 : 600,
+                      fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
                       transition: 'all .14s ease'
                     }}
                   >
                     <span>{c}</span>
                     <span style={{
-                      fontSize: 10, padding: '1px 5px', borderRadius: 99,
-                      background: catFilter === c ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.06)',
-                      color: 'inherit', fontWeight: 800
+                      fontSize: 10, padding: '1px 6px', borderRadius: 99,
+                      background: isSelected ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.06)',
+                      color: isSelected ? '#fff' : 'rgba(255,255,255,0.45)', fontWeight: 800
                     }}>
                       {count}
                     </span>
@@ -4573,45 +4607,223 @@ function TrainingTab({ showToast }) {
             </div>
 
             {/* Search Input with Clear Button */}
-            <div style={{ position: 'relative', width: 200 }}>
+            <div style={{ position: 'relative', width: 220 }}>
               <input
                 className="ap-input"
-                placeholder="Search program, host…"
+                placeholder="Search program, host, track…"
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                style={{ paddingRight: search ? 28 : 12 }}
+                style={{ fontSize:12, padding:'7px 28px 7px 11px', background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.1)' }}
               />
-              {search && (
+              {search ? (
                 <button
                   type="button"
                   onClick={() => setSearch('')}
                   style={{
                     position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)',
                     background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)',
-                    cursor: 'pointer', fontSize: 13, padding: 0
+                    cursor: 'pointer', fontSize: 12, padding: 0
                   }}
                   title="Clear search"
                 >
                   ✕
                 </button>
+              ) : (
+                <span style={{ position:'absolute', right:8, top:'50%', transform:'translateY(-50%)', fontSize:12, opacity:0.4, pointerEvents:'none' }}>🔍</span>
               )}
             </div>
 
-            <button onClick={exportTrainingCSV} className="ap-btn ap-btn-ghost" style={{ fontSize:12.5, whiteSpace:'nowrap' }}>⬇ Export CSV</button>
+            <button
+              onClick={exportTrainingCSV}
+              className="ap-btn ap-btn-ghost"
+              style={{ fontSize:12.5, whiteSpace:'nowrap', padding:'7px 13px' }}
+              title="Download training catalog as CSV"
+            >
+              ⬇ Export CSV
+            </button>
+
             <button
               onClick={() => { setForm(TR_BLANK); setModal('create'); }}
               className="ap-btn ap-btn-primary"
-              style={{ padding:'8px 16px', fontSize:13, fontWeight:800, whiteSpace:'nowrap' }}
+              style={{ padding:'8px 16px', fontSize:12.5, fontWeight:800, whiteSpace:'nowrap', display:'flex', alignItems:'center', gap:5 }}
             >
-              + Create Program
+              <span>＋</span> Create Program
             </button>
           </div>
         }
       />
 
-      {confirm && <ConfirmModal msg={`Are you sure you want to delete training program "${confirm.title}"?`} onConfirm={() => del(confirm.id, confirm.title)} onCancel={() => setConfirm(null)} />}
+      {confirm && (
+        <ConfirmModal
+          msg={`Are you sure you want to permanently delete training program "${confirm.title}"?`}
+          onConfirm={() => del(confirm.id, confirm.title)}
+          onCancel={() => setConfirm(null)}
+        />
+      )}
 
-      {/* Enrollments Modal */}
+      {/* ── Training Program Syllabus & Dossier Modal ── */}
+      {detailTraining && (
+        <Modal title="Training Program Syllabus & Cohort Dossier" onClose={() => setDetailTraining(null)} wide>
+          <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
+            {/* Top Identity Card */}
+            <div style={{
+              display:'flex', alignItems:'center', justifyContent:'space-between',
+              padding:'18px 22px', background:'rgba(255,255,255,0.035)',
+              border:'1px solid rgba(255,255,255,0.08)', borderRadius:16, gap:16, flexWrap:'wrap'
+            }}>
+              <div style={{ display:'flex', alignItems:'center', gap:14 }}>
+                <div style={{
+                  width:54, height:54, borderRadius:14,
+                  background: (CC[detailTraining.category] || CC.Technology).grad,
+                  border:'1.5px solid rgba(255,255,255,0.2)',
+                  display:'flex', alignItems:'center', justifyContent:'center',
+                  fontSize:22, color:'#fff', flexShrink:0,
+                  boxShadow:'0 4px 18px rgba(0,0,0,0.35)'
+                }}>
+                  {(CC[detailTraining.category] || CC.Technology).icon}
+                </div>
+                <div>
+                  <div style={{ color:'#fff', fontWeight:900, fontSize:18, lineHeight:1.3 }}>{detailTraining.title}</div>
+                  <div style={{ display:'flex', alignItems:'center', gap:8, marginTop:4, flexWrap:'wrap' }}>
+                    {(() => {
+                      const cc = CC[detailTraining.category] || CC.Technology;
+                      return (
+                        <span style={{
+                          fontSize:11, fontWeight:800,
+                          color: cc.color, background: cc.bg,
+                          border: `1px solid ${cc.border}`,
+                          borderRadius:6, padding:'2px 8px'
+                        }}>
+                          {cc.icon} {detailTraining.category}
+                        </span>
+                      );
+                    })()}
+                    {(() => {
+                      const lc = LC[detailTraining.level] || LC.Beginner;
+                      return (
+                        <span style={{
+                          fontSize:11, fontWeight:800,
+                          color: lc.color, background: lc.bg,
+                          border: `1px solid ${lc.border}`,
+                          borderRadius:6, padding:'2px 8px'
+                        }}>
+                          {lc.label}
+                        </span>
+                      );
+                    })()}
+                    <span style={{ fontSize:12, color:'rgba(255,255,255,0.5)' }}>· 🏛️ {detailTraining.org}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const t = detailTraining;
+                    setDetailTraining(null);
+                    openEnrollments(t);
+                  }}
+                  className="ap-btn ap-btn-green"
+                  style={{ padding:'8px 14px', fontSize:12.5, fontWeight:800, display:'flex', alignItems:'center', gap:6 }}
+                >
+                  <span>👥</span> Attendees Roster ({detailTraining.enrolled || 0})
+                </button>
+              </div>
+            </div>
+
+            {/* Telemetry Metrics Grid */}
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(200px, 1fr))', gap:12 }}>
+              {[
+                {
+                  label: 'Cohort Enrollment',
+                  value: `${detailTraining.enrolled || 0} / ${detailTraining.total || 0} Enrolled`,
+                  sub: detailTraining.total > 0 ? `${Math.round((detailTraining.enrolled || 0) / detailTraining.total * 100)}% Fill Rate` : 'Open Enrollment',
+                  icon: '👥',
+                  color: '#34d399'
+                },
+                {
+                  label: 'Program Duration',
+                  value: detailTraining.duration || 'Flexible Timeline',
+                  sub: 'Curated Consortium Syllabus',
+                  icon: '⏱️',
+                  color: '#fb923c'
+                },
+                {
+                  label: 'Host Institution',
+                  value: detailTraining.org || 'Regional Academic Node',
+                  sub: 'Accredited Training Partner',
+                  icon: '🏛️',
+                  color: '#60a5fa'
+                },
+                {
+                  label: 'Schedule & Timing',
+                  value: detailTraining.schedule ? new Date(detailTraining.schedule).toLocaleDateString('en-PH', { dateStyle:'medium' }) : 'Self-paced / On-demand',
+                  sub: detailTraining.session_start_time ? `${detailTraining.session_start_time} - ${detailTraining.session_end_time || 'End'}` : 'Flexible Hours',
+                  icon: '📅',
+                  color: '#fbbf24'
+                },
+              ].map(f => (
+                <div key={f.label} style={{
+                  background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.06)',
+                  borderRadius:12, padding:'12px 15px'
+                }}>
+                  <div style={{
+                    fontSize:10.5, fontWeight:800, color:'rgba(255,255,255,0.4)',
+                    textTransform:'uppercase', letterSpacing:'.5px', marginBottom:5,
+                    display:'flex', alignItems:'center', gap:6
+                  }}>
+                    <span>{f.icon}</span> {f.label}
+                  </div>
+                  <div style={{ color:'#fff', fontWeight:800, fontSize:13.5 }}>
+                    {f.value}
+                  </div>
+                  <div style={{ color:f.color, fontSize:11, fontWeight:700, marginTop:2 }}>
+                    {f.sub}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Course Syllabus & Objectives */}
+            <div style={{ background:'rgba(255,255,255,0.025)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:14, padding:'18px 20px' }}>
+              <div style={{ fontSize:11, fontWeight:800, color:'rgba(255,255,255,0.45)', textTransform:'uppercase', letterSpacing:'.6px', marginBottom:8, display:'flex', alignItems:'center', gap:6 }}>
+                <span>📖</span> Course Syllabus & Learning Objectives
+              </div>
+              <p style={{ color:'rgba(255,255,255,0.88)', fontSize:13.5, lineHeight:1.75, margin:0, whiteSpace:'pre-wrap' }}>
+                {detailTraining.description || 'Specialized consortium faculty development module covering hands-on technical skills, research methodologies, and collaborative academic innovation.'}
+              </p>
+            </div>
+
+            {/* Action Buttons */}
+            <div style={{ display:'flex', gap:10, marginTop:4, flexWrap:'wrap' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  const t = detailTraining;
+                  setDetailTraining(null);
+                  setForm({ ...t });
+                  setModal(t);
+                }}
+                className="ap-btn ap-btn-blue"
+                style={{ flex: 2, padding:'11px', borderRadius:11, fontSize:13, fontWeight:800 }}
+              >
+                ✏️ Edit Program
+              </button>
+              <button
+                type="button"
+                onClick={() => setDetailTraining(null)}
+                className="ap-btn ap-btn-ghost"
+                style={{ flex: 1, padding:'11px', borderRadius:11, fontSize:13 }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* ── Enrollments & Attendance Modal ── */}
       {enrolEvent && (
         <Modal title={`Attendance & Roster — ${enrolEvent.title}`} onClose={() => { setEnrolEvent(null); load(); }} wide>
           {/* Header Summary & Actions */}
@@ -4643,13 +4855,14 @@ function TrainingTab({ showToast }) {
                     en.created_at ? new Date(en.created_at).toLocaleDateString('en-PH') : '',
                   ])
                 ];
-                const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\r\n');
+                const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
                 const a = document.createElement('a');
                 a.href = URL.createObjectURL(new Blob([csv], { type:'text/csv' }));
                 a.download = `${enrolEvent.title.replace(/[^a-z0-9]/gi,'_')}_enrollees.csv`;
                 a.click();
-              }} className="ap-btn ap-btn-green" style={{ fontSize:12 }}>⬇ Export CSV</button>
-              <button onClick={() => reloadEnrollments(enrolEvent)} className="ap-btn ap-btn-ghost" style={{ fontSize:12.5 }}>↻ Refresh</button>
+                showToast('Exported roster to CSV', true);
+              }} className="ap-btn ap-btn-green" style={{ fontSize:12, padding:'6px 12px' }}>⬇ Export CSV</button>
+              <button onClick={() => reloadEnrollments(enrolEvent)} className="ap-btn ap-btn-ghost" style={{ fontSize:12, padding:'6px 12px' }}>↻ Refresh</button>
             </div>
           </div>
 
@@ -4688,7 +4901,7 @@ function TrainingTab({ showToast }) {
 
           {enrolLoading ? <Loading /> : filteredEnrollees.length === 0 ? (
             <div style={{ textAlign:'center', padding:'28px 0', color:'rgba(255,255,255,0.5)', fontSize:13 }}>
-              {enrolList.length === 0 ? 'No enrollments yet' : 'No enrollees match the selected filter'}
+              {enrolList.length === 0 ? 'No enrollments recorded for this program yet.' : 'No enrollees match your current search or filter.'}
             </div>
           ) : (
             <div style={{ display:'flex', flexDirection:'column', gap:8, maxHeight:380, overflowY:'auto', paddingRight:4 }}>
@@ -4754,13 +4967,13 @@ function TrainingTab({ showToast }) {
         </Modal>
       )}
 
+      {/* ── Create / Edit Modal ── */}
       {modal && (
         <Modal title={modal === 'create' ? 'Create Training Program' : 'Edit Training Program'} onClose={() => setModal(null)} wide>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
             <DInput label="Program Title" name="title" value={form.title} onChange={fc} required span="1/-1" />
             <DInput label="Host Institution" name="org" value={form.org} onChange={fc} required />
             <DInput label="Program Duration" name="duration" value={form.duration} onChange={fc} as="select" opts={TR_DURATIONS} required />
-            {/* Custom Category Dropdown */}
             <div>
               <label style={{ display:'block', fontSize:11.5, fontWeight:800, color:'rgba(255,255,255,0.65)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:6 }}>Category</label>
               <CategoryDropdown value={form.category} onChange={val => setForm(p => ({ ...p, category: val }))} options={TR_CAT_OPTIONS} />
@@ -4769,7 +4982,6 @@ function TrainingTab({ showToast }) {
             <DInput label="Enrollment Capacity" name="total" value={form.total} onChange={fc} type="number" />
             <DInput label="Start Date" name="schedule" value={form.schedule} onChange={fc} type="date" />
             <div />
-            {/* Session Times */}
             <div>
               <label style={{ display:'block', fontSize:11.5, fontWeight:800, color:'rgba(255,255,255,0.65)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:6 }}>Session Start Time</label>
               <input type="time" name="session_start_time" value={form.session_start_time || ''} onChange={fc} className="ap-input" style={{ cursor:'pointer' }} />
@@ -4784,95 +4996,159 @@ function TrainingTab({ showToast }) {
         </Modal>
       )}
 
+      {/* ── Section KPIs ── */}
       <SectionKPIs items={[
-        { label: 'Total Programs', value: items.length, icon: '🎓', color: '#f43f5e' },
+        { label: 'Total Programs', value: items.length, icon: '🎓', color: '#8b5cf6' },
         { label: 'Total Enrolled', value: totalEnrolled, icon: '👥', color: '#34d399' },
         { label: 'Total Capacity', value: totalCapacity, icon: '💺', color: '#60a5fa' },
         { label: 'Avg Fill Rate', value: `${avgFillRate}%`, icon: '📊', color: '#fbbf24' },
       ]} />
 
-      {loading ? <Loading /> : (
-        <DataTable head={['Program','Date & Duration','Category','Fill Rate','Actions']}>
-          {filteredItems.length === 0 ? <EmptyTR cols={5} /> : filteredItems.map(t => {
+      {/* ── Table ── */}
+      {loading ? (
+        <Loading />
+      ) : (
+        <DataTable head={['Training Program','Date & Schedule','Category & Track','Fill Rate & Seats','Actions']}>
+          {filteredItems.length === 0 ? (
+            <EmptyTR cols={5} title="No training programs found" desc="No programs match your current track filter or search query." />
+          ) : filteredItems.map(t => {
             const fill = t.total > 0 ? Math.round((t.enrolled || 0) / t.total * 100) : 0;
-            const cc = CC[t.category] || { color:'#60a5fa', bg:'rgba(96,165,250,0.18)', border:'rgba(96,165,250,0.35)', icon:'💻' };
-            const lc = LC[t.level] || { color:'#6ee7b7', bg:'rgba(110,231,183,0.15)', border:'rgba(110,231,183,0.3)' };
-            const isFull = fill >= 90;
-            const isMid = fill >= 50 && fill < 90;
-            const barGradient = isFull ? 'linear-gradient(90deg,#f43f5e,#fb7185)' : isMid ? 'linear-gradient(90deg,#f59e0b,#fbbf24)' : 'linear-gradient(90deg,#06b6d4,#3b82f6)';
+            const cc = CC[t.category] || CC.Technology;
+            const lc = LC[t.level] || LC.Beginner;
+            const isFull = fill >= 95;
+            const isMid = fill >= 50 && fill < 95;
+            const barGradient = isFull
+              ? 'linear-gradient(90deg, #f43f5e, #fb7185)'
+              : isMid
+              ? 'linear-gradient(90deg, #f59e0b, #fbbf24)'
+              : 'linear-gradient(90deg, #06b6d4, #3b82f6)';
 
             return (
               <TR key={t.id}>
+                {/* Program Column */}
                 <TD>
-                  <div style={{ display:'flex', alignItems:'center', gap:12 }}>
-                    <div style={{ width:38, height:38, borderRadius:11, background:cc.bg, border:`1px solid ${cc.border}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:17, flexShrink:0, boxShadow:'0 2px 8px rgba(0,0,0,0.2)' }}>
+                  <div
+                    onClick={() => setDetailTraining(t)}
+                    style={{ display:'flex', alignItems:'center', gap:12, cursor:'pointer' }}
+                    title="View syllabus & cohort specifications"
+                  >
+                    <div style={{
+                      width:42, height:42, borderRadius:12,
+                      background: cc.grad,
+                      border:'1.5px solid rgba(255,255,255,0.18)',
+                      display:'flex', alignItems:'center', justifyContent:'center',
+                      fontSize:18, color:'#fff', flexShrink:0,
+                      boxShadow:'0 3px 12px rgba(0,0,0,0.3)'
+                    }}>
                       {cc.icon}
                     </div>
                     <div>
-                      <div style={{ fontWeight:800, color:'#fff', fontSize:13.5 }}>{t.title}</div>
-                      <div style={{ fontSize:12, color:'rgba(255,255,255,0.5)', marginTop:2, display:'flex', alignItems:'center', gap:6, flexWrap:'wrap' }}>
+                      <div style={{ fontWeight:800, color:'#fff', fontSize:13.5, lineHeight:1.3 }}>
+                        {t.title}
+                      </div>
+                      <div style={{ fontSize:11.5, color:'rgba(255,255,255,0.48)', marginTop:3, display:'flex', alignItems:'center', gap:6, flexWrap:'wrap' }}>
                         <span>🏛️ {t.org}</span>
                         <span>·</span>
-                        <span style={{ color:'rgba(249,115,22,0.85)', fontWeight:600 }}>⏱️ {t.duration}</span>
+                        <span style={{ color:'rgba(251,146,60,0.9)', fontWeight:700 }}>⏱️ {t.duration}</span>
                       </div>
                     </div>
                   </div>
                 </TD>
+
+                {/* Date & Schedule Column */}
                 <TD>
                   <div style={{ display:'flex', flexDirection:'column', gap:2 }}>
-                    <span style={{ fontWeight:700, color:'#fff', fontSize:13 }}>📅 {t.schedule || 'Self-paced'}</span>
-                    {t.session_start_time && (
-                      <span style={{ fontSize:11, color:'rgba(255,255,255,0.45)' }}>⏰ {t.session_start_time}{t.session_end_time ? ` – ${t.session_end_time}` : ''}</span>
-                    )}
+                    <span style={{ fontWeight:700, color:'#fff', fontSize:12.5 }}>
+                      📅 {t.schedule ? new Date(t.schedule).toLocaleDateString('en-PH', { month:'short', day:'numeric', year:'numeric' }) : 'Self-paced'}
+                    </span>
+                    <span style={{ fontSize:11, color:'rgba(255,255,255,0.45)' }}>
+                      {t.session_start_time ? `⏰ ${t.session_start_time} - ${t.session_end_time || 'End'}` : 'Asynchronous / On-demand'}
+                    </span>
                   </div>
                 </TD>
+
+                {/* Category & Track Column */}
                 <TD>
                   <div style={{ display:'flex', alignItems:'center', gap:6, flexWrap:'wrap' }}>
-                    <span className="ap-badge" style={{ background:cc.bg, color:cc.color, border:`1px solid ${cc.border}`, padding:'4px 10px', borderRadius:8, fontWeight:800, fontSize:12 }}>
-                      {cc.icon} {t.category}
+                    <span style={{
+                      display:'inline-flex', alignItems:'center', gap:4,
+                      background: cc.bg, color: cc.color,
+                      border: `1px solid ${cc.border}`,
+                      borderRadius: 7, padding: '3px 8px', fontSize: 11, fontWeight: 800, whiteSpace:'nowrap'
+                    }}>
+                      <span>{cc.icon}</span>
+                      <span>{t.category}</span>
                     </span>
-                    <span className="ap-badge" style={{ background:lc.bg, color:lc.color, border:`1px solid ${lc.border}`, padding:'3px 8px', borderRadius:7, fontWeight:800, fontSize:11 }}>
-                      {t.level}
+                    <span style={{
+                      display:'inline-flex', alignItems:'center', gap:4,
+                      background: lc.bg, color: lc.color,
+                      border: `1px solid ${lc.border}`,
+                      borderRadius: 7, padding: '3px 7px', fontSize: 10.5, fontWeight: 800, whiteSpace:'nowrap'
+                    }}>
+                      <span>{lc.icon}</span>
+                      <span>{t.level}</span>
                     </span>
                   </div>
                 </TD>
+
+                {/* Fill Rate & Capacity Column */}
                 <TD>
-                  <div style={{ minWidth:130 }}>
+                  <div style={{ minWidth:140 }}>
                     <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:4 }}>
-                      <span style={{ fontSize:11, fontWeight:800, color: isFull ? '#f87171' : isMid ? '#fbbf24' : '#60a5fa' }}>
-                        {fill}% Fill
+                      <span style={{
+                        fontSize:11, fontWeight:800,
+                        color: isFull ? '#f87171' : isMid ? '#fbbf24' : '#38bdf8'
+                      }}>
+                        {isFull ? '🔥 100% Full' : `${fill}% Fill`}
                       </span>
                       <span style={{ fontSize:11.5, color:'rgba(255,255,255,0.55)', fontWeight:700 }}>
                         {t.enrolled || 0} / {t.total || 0}
                       </span>
                     </div>
-                    <div style={{ height:6, background:'rgba(255,255,255,0.08)', borderRadius:4, overflow:'hidden', width:'100%' }}>
-                      <div style={{ height:'100%', width:`${Math.min(fill,100)}%`, background:barGradient, borderRadius:4, transition:'width 0.3s ease' }} />
+                    <div style={{ height:7, background:'rgba(255,255,255,0.08)', borderRadius:6, overflow:'hidden', width:'100%' }}>
+                      <div style={{ height:'100%', width:`${Math.min(fill, 100)}%`, background: barGradient, borderRadius:6, transition:'width 0.3s ease' }} />
+                    </div>
+                    <div style={{ fontSize:10.5, color:'rgba(255,255,255,0.38)', marginTop:3 }}>
+                      {Math.max((Number(t.total) || 0) - (t.enrolled || 0), 0)} seats remaining
                     </div>
                   </div>
                 </TD>
+
+                {/* Actions Column */}
                 <TD>
                   <div style={{ display:'flex', gap:6, alignItems:'center' }}>
                     <button
-                      onClick={() => openEnrollments(t)}
+                      type="button"
+                      onClick={() => setDetailTraining(t)}
                       className="ap-btn ap-btn-ghost"
-                      style={{ padding:'6px 11px', fontSize:12, borderRadius:8, color:'#34d399', borderColor:'rgba(52,211,153,0.3)', background:'rgba(16,185,129,0.08)' }}
-                      title="View attendees list & mark attendance"
+                      style={{ fontSize:11.5, padding:'5px 9px', borderRadius:8 }}
+                      title="Inspect syllabus and learning objectives"
                     >
-                      👥 Attendees ({t.enrolled || 0})
+                      Dossier
                     </button>
                     <button
+                      type="button"
+                      onClick={() => openEnrollments(t)}
+                      className="ap-btn ap-btn-green"
+                      style={{ fontSize:11.5, padding:'5px 10px', borderRadius:8, fontWeight:800 }}
+                      title="Manage student cohort and attendance"
+                    >
+                      👥 Roster ({t.enrolled || 0})
+                    </button>
+                    <button
+                      type="button"
                       onClick={() => { setForm({ ...t }); setModal(t); }}
                       className="ap-btn ap-btn-blue"
-                      style={{ padding:'6px 10px', fontSize:12, borderRadius:8 }}
+                      style={{ fontSize:11.5, padding:'5px 9px', borderRadius:8 }}
                       title="Edit training program"
                     >
-                      ✏️ Edit
+                      Edit
                     </button>
                     <button
+                      type="button"
                       onClick={() => setConfirm(t)}
                       className="ap-btn ap-btn-red"
-                      style={{ padding:'6px 10px', fontSize:12, borderRadius:8 }}
+                      style={{ fontSize:11.5, padding:'5px 8px', borderRadius:8 }}
                       title="Delete training program"
                     >
                       🗑
