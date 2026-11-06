@@ -3049,17 +3049,20 @@ function UsersTab({ showToast }) {
    APPLICATIONS
 ═══════════════════════════════════════════════════════════════════ */
 function ApplicationsTab({ showToast }) {
-  const [apps, setApps]         = useState([]);
-  const [loading, setLoading]   = useState(true);
-  const [acting, setActing]     = useState(null);
-  const [statusF, setStatusF]   = useState('All');
-  const [search, setSearch]     = useState('');
+  const [apps, setApps]                 = useState([]);
+  const [loading, setLoading]           = useState(true);
+  const [acting, setActing]             = useState(null);
+  const [statusF, setStatusF]           = useState('All');
+  const [search, setSearch]             = useState('');
   const [rejectTarget, setRejectTarget] = useState(null);
   const [rejectReason, setRejectReason] = useState('');
   const [detailApp, setDetailApp]       = useState(null);
 
   useEffect(() => {
-    api.membership.applications().then(setApps).catch(() => showToast('Failed to load applications', false)).finally(() => setLoading(false));
+    api.membership.applications()
+      .then(setApps)
+      .catch(() => showToast('Failed to load membership applications', false))
+      .finally(() => setLoading(false));
   }, []);
 
   async function approve(a) {
@@ -3107,9 +3110,16 @@ function ApplicationsTab({ showToast }) {
     if (!filteredApps.length) return;
     const headers = ['Applicant Name', 'Email', 'Institution', 'Campus', 'Tier', 'Applied Date', 'Status', 'Rejection Reason'];
     const rows = filteredApps.map(a => [
-      a.name || '', a.email || '', a.institution || '', a.campus || '', a.tier || 'Tier 2', a.applied_at?.slice(0, 10) || '', a.status || '', a.rejection_reason || ''
+      a.name || '',
+      a.email || '',
+      a.institution || '',
+      a.campus || '',
+      a.tier || 'Tier 2',
+      a.applied_at?.slice(0, 10) || '',
+      a.status || '',
+      (a.rejection_reason || '').replace(/\r?\n/g, ' ')
     ]);
-    const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\r\n');
+    const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -3117,13 +3127,34 @@ function ApplicationsTab({ showToast }) {
     a.download = 'dasig_membership_applications.csv';
     a.click();
     URL.revokeObjectURL(url);
+    showToast('Exported membership applications to CSV', true);
   }
 
   const STATUS = {
-    PENDING:  { bg:'rgba(245,158,11,.18)',  color:'#fcd34d' },
-    APPROVED: { bg:'rgba(16,185,129,.15)',  color:'#6ee7b7' },
-    REJECTED: { bg:'rgba(225,29,72,.15)',   color:'#fca5a5' },
+    PENDING:  { label:'Pending Review', color:'#fbbf24', bg:'rgba(245,158,11,0.15)', border:'rgba(245,158,11,0.3)', icon:'⏳' },
+    APPROVED: { label:'Approved & Active', color:'#34d399', bg:'rgba(16,185,129,0.15)', border:'rgba(16,185,129,0.3)', icon:'🟢' },
+    REJECTED: { label:'Declined', color:'#f87171', bg:'rgba(244,63,94,0.15)', border:'rgba(244,63,94,0.3)', icon:'🔴' },
   };
+
+  const TIER_CONFIG = {
+    'Tier 1': { label:'Tier 1 - Founding', color:'#f59e0b', bg:'rgba(245,158,11,0.14)', border:'rgba(245,158,11,0.35)', icon:'👑' },
+    'Tier 2': { label:'Tier 2 - Partner',  color:'#38bdf8', bg:'rgba(56,189,248,0.14)', border:'rgba(56,189,248,0.35)', icon:'🏛️' },
+    'Tier 3': { label:'Tier 3 - Affiliate',color:'#c084fc', bg:'rgba(192,132,252,0.14)', border:'rgba(192,132,252,0.35)', icon:'🌱' },
+  };
+
+  function getInitials(name, email) {
+    const raw = (name || email || 'A').trim();
+    const parts = raw.split(/[\s_.-]+/).filter(Boolean);
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
+
+  function formatAppliedDate(dateStr) {
+    if (!dateStr) return { dateStr: '—', subtitle: 'Submission pending' };
+    const d = new Date(dateStr);
+    const formatted = d.toLocaleDateString('en-PH', { month:'short', day:'numeric', year:'numeric' });
+    return { dateStr: formatted, subtitle: 'Verified submission' };
+  }
 
   const filteredApps = apps.filter(a => {
     const matchesStatus = statusF === 'All' || a.status === statusF;
@@ -3132,126 +3163,19 @@ function ApplicationsTab({ showToast }) {
       (a.name || '').toLowerCase().includes(q) ||
       (a.email || '').toLowerCase().includes(q) ||
       (a.institution || '').toLowerCase().includes(q) ||
-      (a.campus || '').toLowerCase().includes(q)
+      (a.campus || '').toLowerCase().includes(q) ||
+      (a.tier || '').toLowerCase().includes(q) ||
+      (a.designation || '').toLowerCase().includes(q)
     );
     return matchesStatus && matchesSearch;
   });
 
   return (
     <div>
-      {/* Detail Modal */}
-      {detailApp && (
-        <Modal title="Membership Application Details" onClose={() => setDetailApp(null)}>
-          <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
-            <div style={{ display:'flex', alignItems:'center', gap:14, padding:'4px 0' }}>
-              <div style={{ width:54, height:54, borderRadius:14, background:'linear-gradient(135deg,#1e3a8a,#4f46e5)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:18, fontWeight:900, color:'#fff', flexShrink:0 }}>
-                {((detailApp.name || detailApp.email) || 'A').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()}
-              </div>
-              <div style={{ flex:1 }}>
-                <div style={{ color:'#fff', fontWeight:900, fontSize:17 }}>{detailApp.name}</div>
-                <div style={{ color:'rgba(255,255,255,0.5)', fontSize:13 }}>{detailApp.email}</div>
-              </div>
-              <span className="ap-pill" style={{ background:(STATUS[detailApp.status] || STATUS.PENDING).bg, color:(STATUS[detailApp.status] || STATUS.PENDING).color, fontSize:12 }}>
-                {detailApp.status}
-              </span>
-            </div>
-
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(180px, 1fr))', gap:10 }}>
-              {[
-                { l:'Institution', v:detailApp.institution || '—' },
-                { l:'Campus', v:detailApp.campus || '—' },
-                { l:'Applied Tier', v:detailApp.tier || 'Tier 2' },
-                { l:'Applied Date', v:detailApp.applied_at?.slice(0,10) || '—' },
-                { l:'Designation/Role', v:detailApp.designation || 'Faculty / Researcher' },
-                { l:'Contact Phone', v:detailApp.phone || '—' },
-              ].map(r => (
-                <div key={r.l} style={{ background:'rgba(255,255,255,0.04)', borderRadius:10, padding:'10px 12px', border:'1px solid rgba(255,255,255,0.06)' }}>
-                  <div style={{ fontSize:10.5, fontWeight:800, color:'rgba(255,255,255,0.38)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:3 }}>{r.l}</div>
-                  <div style={{ fontSize:13.5, color:'#fff', fontWeight:600 }}>{r.v}</div>
-                </div>
-              ))}
-            </div>
-
-            {detailApp.rejection_reason && (
-              <div style={{ background:'rgba(225,29,72,0.1)', border:'1px solid rgba(225,29,72,0.3)', borderRadius:10, padding:'12px 14px' }}>
-                <div style={{ fontSize:11, fontWeight:800, color:'#f87171', textTransform:'uppercase', marginBottom:4 }}>Rejection Reason</div>
-                <div style={{ color:'rgba(255,255,255,0.85)', fontSize:13 }}>{detailApp.rejection_reason}</div>
-              </div>
-            )}
-
-            <div style={{ display:'flex', gap:10, marginTop:8, flexWrap:'wrap' }}>
-              {detailApp.status === 'PENDING' ? (
-                <>
-                  <button
-                    onClick={() => { approve(detailApp); setDetailApp(null); }}
-                    disabled={acting === detailApp.id}
-                    className="ap-btn ap-btn-green"
-                    style={{ flex:1, padding:'11px', fontSize:13 }}
-                  >
-                    {acting === detailApp.id ? 'Approving & Sending Email…' : '✓ Approve & Send Email'}
-                  </button>
-                  <button
-                    onClick={() => { const d = detailApp; setDetailApp(null); setRejectTarget(d); setRejectReason(''); }}
-                    disabled={acting === detailApp.id}
-                    className="ap-btn ap-btn-red"
-                    style={{ flex:1, padding:'11px', fontSize:13 }}
-                  >
-                    ✕ Decline / Reject
-                  </button>
-                </>
-              ) : detailApp.status === 'APPROVED' ? (
-                <button
-                  onClick={() => approve(detailApp)}
-                  disabled={acting === detailApp.id}
-                  className="ap-btn"
-                  style={{ flex:1, padding:'11px', fontSize:13, background:'linear-gradient(135deg,#059669,#10b981)', color:'#fff', fontWeight:700 }}
-                >
-                  {acting === detailApp.id ? 'Dispatching Email…' : '✉ Resend Approval Email'}
-                </button>
-              ) : null}
-              <button onClick={() => setDetailApp(null)} className="ap-btn ap-btn-ghost" style={{ flex: detailApp.status === 'PENDING' ? 'none' : 1, padding:'11px 20px', fontSize:13 }}>
-                Close
-              </button>
-            </div>
-          </div>
-        </Modal>
-      )}
-
-      {/* Rejection Modal */}
-      {rejectTarget && (
-        <Modal title="Reject Application" onClose={() => { setRejectTarget(null); setRejectReason(''); }}>
-          <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
-            <p style={{ color:'rgba(255,255,255,0.75)', fontSize:13.5, margin:0, lineHeight:1.6 }}>
-              Rejecting membership application for <strong style={{ color:'#fff' }}>{rejectTarget.name}</strong> ({rejectTarget.institution}). Optionally specify a reason:
-            </p>
-            <div>
-              <label style={{ display:'block', fontSize:11.5, fontWeight:800, color:'rgba(255,255,255,0.5)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:6 }}>Rejection Reason (Optional)</label>
-              <textarea
-                className="ap-input"
-                value={rejectReason}
-                onChange={e => setRejectReason(e.target.value)}
-                placeholder="e.g., Incomplete institutional accreditation documents..."
-                style={{ resize:'vertical' }}
-              />
-            </div>
-            <div style={{ display:'flex', gap:10, marginTop:6 }}>
-              <button onClick={() => { setRejectTarget(null); setRejectReason(''); }} className="ap-btn ap-btn-ghost" style={{ flex:1, padding:'11px' }}>Cancel</button>
-              <button
-                onClick={confirmReject}
-                disabled={acting === rejectTarget.id}
-                className="ap-btn"
-                style={{ flex:2, padding:'11px', background:'linear-gradient(90deg,#e11d48,#be123c)', color:'#fff', fontWeight:800 }}
-              >
-                {acting === rejectTarget.id ? '…' : 'Confirm Rejection'}
-              </button>
-            </div>
-          </div>
-        </Modal>
-      )}
-
+      {/* ── Page Header ── */}
       <PageHeader
-        title="Applications"
-        desc="Review, approve, or reject consortium institutional membership requests"
+        title="Institutional Membership Applications"
+        desc="Review, approve, or reject consortium institutional membership requests and dispatch automated onboarding credentials"
         action={
           <div style={{ display:'flex', alignItems:'center', gap:10, flexWrap:'wrap' }}>
             {/* Segmented Filter Pills */}
@@ -3264,30 +3188,33 @@ function ApplicationsTab({ showToast }) {
                 { id: 'PENDING', label: 'Pending', count: apps.filter(a => a.status === 'PENDING').length, color: '#fbbf24' },
                 { id: 'APPROVED', label: 'Approved', count: apps.filter(a => a.status === 'APPROVED').length, color: '#34d399' },
                 { id: 'REJECTED', label: 'Declined', count: apps.filter(a => a.status === 'REJECTED').length, color: '#f87171' },
-              ].map(tabItem => (
-                <button
-                  key={tabItem.id}
-                  type="button"
-                  onClick={() => setStatusF(tabItem.id)}
-                  style={{
-                    padding: '5px 11px', borderRadius: 7, border: 'none',
-                    background: statusF === tabItem.id ? 'rgba(255,255,255,0.14)' : 'transparent',
-                    color: statusF === tabItem.id ? '#fff' : 'rgba(255,255,255,0.55)',
-                    fontWeight: statusF === tabItem.id ? 800 : 600,
-                    fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
-                    transition: 'all .14s ease'
-                  }}
-                >
-                  <span>{tabItem.label}</span>
-                  <span style={{
-                    fontSize: 10, padding: '1px 5px', borderRadius: 99,
-                    background: statusF === tabItem.id ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.06)',
-                    color: tabItem.color || 'inherit', fontWeight: 800
-                  }}>
-                    {tabItem.count}
-                  </span>
-                </button>
-              ))}
+              ].map(tabItem => {
+                const isSelected = statusF === tabItem.id;
+                return (
+                  <button
+                    key={tabItem.id}
+                    type="button"
+                    onClick={() => setStatusF(tabItem.id)}
+                    style={{
+                      padding: '5px 12px', borderRadius: 7, border: 'none',
+                      background: isSelected ? 'rgba(255,255,255,0.15)' : 'transparent',
+                      color: isSelected ? '#fff' : 'rgba(255,255,255,0.55)',
+                      fontWeight: isSelected ? 800 : 600,
+                      fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
+                      transition: 'all .14s ease'
+                    }}
+                  >
+                    <span>{tabItem.label}</span>
+                    <span style={{
+                      fontSize: 10, padding: '1px 6px', borderRadius: 99,
+                      background: isSelected ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.06)',
+                      color: tabItem.color || 'inherit', fontWeight: 800
+                    }}>
+                      {tabItem.count}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
 
             {/* Search Input with Clear Button */}
@@ -3297,103 +3224,322 @@ function ApplicationsTab({ showToast }) {
                 placeholder="Search applicant, institution…"
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                style={{ paddingRight: search ? 28 : 12 }}
+                style={{ fontSize:12, padding:'7px 28px 7px 11px', background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.1)' }}
               />
-              {search && (
+              {search ? (
                 <button
                   type="button"
                   onClick={() => setSearch('')}
                   style={{
                     position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)',
                     background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)',
-                    cursor: 'pointer', fontSize: 13, padding: 0
+                    cursor: 'pointer', fontSize: 12, padding: 0
                   }}
                   title="Clear search"
                 >
                   ✕
                 </button>
+              ) : (
+                <span style={{ position:'absolute', right:8, top:'50%', transform:'translateY(-50%)', fontSize:12, opacity:0.4, pointerEvents:'none' }}>🔍</span>
               )}
             </div>
 
-            <button onClick={exportAppsCSV} className="ap-btn ap-btn-ghost" style={{ fontSize:12.5, whiteSpace:'nowrap' }}>
+            <button onClick={exportAppsCSV} className="ap-btn ap-btn-ghost" style={{ fontSize:12.5, whiteSpace:'nowrap', padding:'7px 13px' }}>
               ⬇ Export CSV
             </button>
           </div>
         }
       />
 
+      {/* ── Detail Modal ── */}
+      {detailApp && (
+        <Modal title="Membership Application & Institutional Dossier" onClose={() => setDetailApp(null)} wide>
+          <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
+            {/* Top Identity Card */}
+            <div style={{
+              display:'flex', alignItems:'center', justifyContent:'space-between',
+              padding:'18px 22px', background:'rgba(255,255,255,0.035)',
+              border:'1px solid rgba(255,255,255,0.08)', borderRadius:16, gap:16, flexWrap:'wrap'
+            }}>
+              <div style={{ display:'flex', alignItems:'center', gap:14 }}>
+                <div style={{
+                  width:54, height:54, borderRadius:14,
+                  background: detailApp.status === 'APPROVED' ? 'linear-gradient(135deg, #059669, #10b981)' : detailApp.status === 'PENDING' ? 'linear-gradient(135deg, #d97706, #f59e0b)' : 'linear-gradient(135deg, #e11d48, #f43f5e)',
+                  border:'1.5px solid rgba(255,255,255,0.2)',
+                  display:'flex', alignItems:'center', justifyContent:'center',
+                  fontSize:18, fontWeight:900, color:'#fff', flexShrink:0,
+                  boxShadow:'0 4px 18px rgba(0,0,0,0.35)'
+                }}>
+                  {getInitials(detailApp.name, detailApp.email)}
+                </div>
+                <div>
+                  <div style={{ color:'#fff', fontWeight:900, fontSize:18, lineHeight:1.3 }}>{detailApp.name}</div>
+                  <div style={{ color:'rgba(255,255,255,0.5)', fontSize:12.5, marginTop:2 }}>{detailApp.email}</div>
+                  <div style={{ display:'flex', alignItems:'center', gap:8, marginTop:4, flexWrap:'wrap' }}>
+                    {(() => {
+                      const tc = TIER_CONFIG[detailApp.tier] || TIER_CONFIG['Tier 2'];
+                      return (
+                        <span style={{
+                          fontSize:11, fontWeight:800,
+                          color: tc.color, background: tc.bg,
+                          border: `1px solid ${tc.border}`,
+                          borderRadius:6, padding:'2px 8px'
+                        }}>
+                          {tc.icon} {tc.label}
+                        </span>
+                      );
+                    })()}
+                    <span style={{ fontSize:12, color:'rgba(255,255,255,0.5)' }}>· 🏛️ {detailApp.institution}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                {(() => {
+                  const st = STATUS[detailApp.status] || STATUS.PENDING;
+                  return (
+                    <span style={{
+                      display:'inline-flex', alignItems:'center', gap:6,
+                      background: st.bg, color: st.color, border: `1px solid ${st.border}`,
+                      borderRadius: 8, padding: '5px 12px', fontSize: 12.5, fontWeight: 800
+                    }}>
+                      <span>{st.icon}</span>
+                      <span>{st.label}</span>
+                    </span>
+                  );
+                })()}
+              </div>
+            </div>
+
+            {/* Telemetry Metrics Grid */}
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(200px, 1fr))', gap:12 }}>
+              {[
+                { label: 'Institution & Organization', value: detailApp.institution || 'Individual Scholar', icon: '🏛️', color: '#60a5fa' },
+                { label: 'Campus / Department', value: detailApp.campus || 'Main Campus', icon: '📍', color: '#f472b6' },
+                { label: 'Requested Membership Tier', value: (TIER_CONFIG[detailApp.tier] || TIER_CONFIG['Tier 2']).label, icon: '👑', color: '#fbbf24' },
+                { label: 'Application Submission Date', value: detailApp.applied_at ? new Date(detailApp.applied_at).toLocaleDateString('en-PH', { dateStyle:'long' }) : '—', icon: '📅', color: '#34d399' },
+                { label: 'Designation / Title', value: detailApp.designation || 'Faculty Member / Researcher', icon: '👤', color: '#c084fc' },
+                { label: 'Official Contact Phone', value: detailApp.phone || 'Not provided', icon: '📞', color: '#38bdf8' },
+              ].map(r => (
+                <div key={r.label} style={{
+                  background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.06)',
+                  borderRadius:12, padding:'12px 15px'
+                }}>
+                  <div style={{
+                    fontSize:10.5, fontWeight:800, color:'rgba(255,255,255,0.4)',
+                    textTransform:'uppercase', letterSpacing:'.5px', marginBottom:5,
+                    display:'flex', alignItems:'center', gap:6
+                  }}>
+                    <span>{r.icon}</span> {r.label}
+                  </div>
+                  <div style={{ color:'#fff', fontWeight:800, fontSize:13.5 }}>
+                    {r.value}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Rejection notice box if rejected */}
+            {detailApp.rejection_reason && (
+              <div style={{ background:'rgba(225,29,72,0.08)', border:'1px solid rgba(225,29,72,0.28)', borderRadius:12, padding:'14px 16px' }}>
+                <div style={{ fontSize:11, fontWeight:800, color:'#f87171', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:4 }}>
+                  Official Rejection Notice Reason
+                </div>
+                <div style={{ color:'rgba(255,255,255,0.85)', fontSize:13, lineHeight:1.6 }}>
+                  {detailApp.rejection_reason}
+                </div>
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div style={{ display:'flex', gap:10, marginTop:4, flexWrap:'wrap' }}>
+              {detailApp.status === 'PENDING' ? (
+                <>
+                  <button
+                    onClick={() => { approve(detailApp); setDetailApp(null); }}
+                    disabled={acting === detailApp.id}
+                    className="ap-btn ap-btn-green"
+                    style={{ flex: 2, padding:'11px', fontSize:13, fontWeight:800 }}
+                  >
+                    {acting === detailApp.id ? 'Approving & Dispatching Email…' : '✓ Approve & Dispatch Welcome Email'}
+                  </button>
+                  <button
+                    onClick={() => { const d = detailApp; setDetailApp(null); setRejectTarget(d); setRejectReason(''); }}
+                    disabled={acting === detailApp.id}
+                    className="ap-btn ap-btn-red"
+                    style={{ flex: 1.5, padding:'11px', fontSize:13 }}
+                  >
+                    ✕ Decline Request
+                  </button>
+                </>
+              ) : detailApp.status === 'APPROVED' ? (
+                <button
+                  onClick={() => approve(detailApp)}
+                  disabled={acting === detailApp.id}
+                  className="ap-btn"
+                  style={{
+                    flex: 2, padding:'11px', fontSize:13, fontWeight:800,
+                    background:'linear-gradient(135deg, #059669, #10b981)', color:'#fff'
+                  }}
+                >
+                  {acting === detailApp.id ? 'Dispatching Email…' : '✉ Resend Official Approval Email'}
+                </button>
+              ) : null}
+              <button
+                onClick={() => setDetailApp(null)}
+                className="ap-btn ap-btn-ghost"
+                style={{ flex: detailApp.status === 'PENDING' ? 1 : 1, padding:'11px', fontSize:13 }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* Rejection Modal */}
+      {rejectTarget && (
+        <Modal title="Decline Membership Application" onClose={() => { setRejectTarget(null); setRejectReason(''); }}>
+          <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
+            <p style={{ color:'rgba(255,255,255,0.75)', fontSize:13.5, margin:0, lineHeight:1.6 }}>
+              Declining membership application for <strong style={{ color:'#fff' }}>{rejectTarget.name}</strong> ({rejectTarget.institution}). Specify the official reason to be included in their notification:
+            </p>
+            <div>
+              <label style={{ display:'block', fontSize:11.5, fontWeight:800, color:'rgba(255,255,255,0.5)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:6 }}>
+                Decline Reason & Feedback (Optional)
+              </label>
+              <textarea
+                className="ap-input"
+                value={rejectReason}
+                onChange={e => setRejectReason(e.target.value)}
+                placeholder="e.g., Incomplete institutional accreditation documents or institutional signatory authorization pending..."
+                style={{ resize:'vertical', minHeight:90 }}
+              />
+            </div>
+            <div style={{ display:'flex', gap:10, marginTop:6 }}>
+              <button onClick={() => { setRejectTarget(null); setRejectReason(''); }} className="ap-btn ap-btn-ghost" style={{ flex:1, padding:'11px' }}>Cancel</button>
+              <button
+                onClick={confirmReject}
+                disabled={acting === rejectTarget.id}
+                className="ap-btn ap-btn-red"
+                style={{ flex:2, padding:'11px', fontWeight:800 }}
+              >
+                {acting === rejectTarget.id ? 'Processing…' : 'Confirm Rejection Notice'}
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* ── Section KPIs ── */}
       <SectionKPIs items={[
         { label: 'Pending Review', value: apps.filter(a => a.status === 'PENDING').length, icon: '⏳', color: '#fbbf24' },
         { label: 'Approved Tiers', value: apps.filter(a => a.status === 'APPROVED').length, icon: '✅', color: '#34d399' },
         { label: 'Declined', value: apps.filter(a => a.status === 'REJECTED').length, icon: '❌', color: '#f87171' },
         { label: 'Total Received', value: apps.length, icon: '📋', color: '#60a5fa' },
       ]} />
-      {loading ? <Loading /> : (
-        <DataTable head={['Applicant','Institution','Tier','Applied','Status','Actions']}>
-          {filteredApps.length === 0 ? <EmptyTR cols={6} /> : filteredApps.map(a => {
+
+      {/* ── Table ── */}
+      {loading ? (
+        <Loading />
+      ) : (
+        <DataTable head={['Applicant & Representative','Institution & Campus','Membership Tier','Applied Date','Status','Actions']}>
+          {filteredApps.length === 0 ? (
+            <EmptyTR cols={6} title="No applications found" desc="No membership requests match your current filter or search criteria." />
+          ) : filteredApps.map(a => {
             const isApproved = a.status === 'APPROVED';
             const isPending  = a.status === 'PENDING';
             const isRejected = a.status === 'REJECTED';
             
-            const tierColor = a.tier === 'Tier 1' ? '#f59e0b' : a.tier === 'Tier 3' ? '#c084fc' : '#38bdf8';
-            const tierBg = a.tier === 'Tier 1' ? 'rgba(245,158,11,0.14)' : a.tier === 'Tier 3' ? 'rgba(192,132,252,0.14)' : 'rgba(56,189,248,0.14)';
-            const tierBorder = a.tier === 'Tier 1' ? 'rgba(245,158,11,0.35)' : a.tier === 'Tier 3' ? 'rgba(192,132,252,0.35)' : 'rgba(56,189,248,0.35)';
+            const tierConfig = TIER_CONFIG[a.tier] || TIER_CONFIG['Tier 2'];
+            const statusConfig = STATUS[a.status] || STATUS.PENDING;
+            const initials = getInitials(a.name, a.email);
+            const appliedDate = formatAppliedDate(a.applied_at);
 
             return (
               <TR key={a.id}>
+                {/* Applicant Column */}
                 <TD>
-                  <div style={{ display:'flex', alignItems:'center', gap:12, cursor:'pointer' }} onClick={() => setDetailApp(a)} title="View application details">
+                  <div
+                    style={{ display:'flex', alignItems:'center', gap:12, cursor:'pointer' }}
+                    onClick={() => setDetailApp(a)}
+                    title="View full application dossier"
+                  >
                     <div style={{
-                      width:38, height:38, borderRadius:11,
-                      background: isApproved ? 'linear-gradient(135deg,#065f46,#10b981)' : isPending ? 'linear-gradient(135deg,#92400e,#f59e0b)' : 'linear-gradient(135deg,#1e3a8a,#3b82f6)',
-                      border:'1.5px solid rgba(255,255,255,0.12)',
-                      display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, fontWeight:900, color:'#fff', flexShrink:0,
-                      boxShadow:'0 2px 8px rgba(0,0,0,0.3)'
+                      width:42, height:42, borderRadius:12,
+                      background: isApproved ? 'linear-gradient(135deg, #059669, #10b981)' : isPending ? 'linear-gradient(135deg, #d97706, #f59e0b)' : 'linear-gradient(135deg, #e11d48, #f43f5e)',
+                      border:'1.5px solid rgba(255,255,255,0.18)',
+                      display:'flex', alignItems:'center', justifyContent:'center',
+                      fontSize:13.5, fontWeight:900, color:'#fff', flexShrink:0,
+                      boxShadow:'0 3px 10px rgba(0,0,0,0.3)'
                     }}>
-                      {(a.name || 'U').split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase()}
+                      {initials}
                     </div>
                     <div>
-                      <div style={{ fontWeight:800, color:'#fff', fontSize:13.5 }}>{a.name}</div>
-                      <div style={{ fontSize:12, color:'rgba(255,255,255,0.5)', marginTop:1 }}>{a.email}</div>
+                      <div style={{ fontWeight:800, color:'#fff', fontSize:13.5, lineHeight:1.3 }}>
+                        {a.name}
+                      </div>
+                      <div style={{ fontSize:11.5, color:'rgba(255,255,255,0.48)', marginTop:2 }}>
+                        {a.email}
+                      </div>
                     </div>
                   </div>
                 </TD>
+
+                {/* Institution Column */}
                 <TD>
-                  <div style={{ display:'flex', alignItems:'center', gap:7 }}>
-                    <span style={{ fontSize:14, opacity:0.75 }}>🏛️</span>
+                  <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                    <span style={{ fontSize:15, opacity:0.8 }}>🏛️</span>
                     <div>
-                      <div style={{ color:'rgba(255,255,255,0.88)', fontWeight:600, fontSize:12.5 }}>
+                      <div style={{ color:'rgba(255,255,255,0.92)', fontWeight:700, fontSize:13 }}>
                         {a.institution || 'Individual Scholar'}
                       </div>
-                      {a.campus && (
-                        <div style={{ fontSize:11, color:'rgba(255,255,255,0.45)', marginTop:1 }}>
-                          {a.campus}
-                        </div>
-                      )}
+                      <div style={{ fontSize:11, color:'rgba(255,255,255,0.45)', marginTop:2 }}>
+                        {a.campus || 'Regional Node Main Campus'}
+                      </div>
                     </div>
                   </div>
                 </TD>
-                <TD>
-                  <span style={{
-                    background: tierBg, color: tierColor, border: `1px solid ${tierBorder}`,
-                    borderRadius: 7, padding: '3px 8px', fontSize: 11, fontWeight: 800, letterSpacing: '.4px'
-                  }}>
-                    {a.tier || 'Tier 2'}
-                  </span>
-                </TD>
-                <TD muted>{a.applied_at?.slice(0,10)}</TD>
+
+                {/* Tier Column */}
                 <TD>
                   <span style={{
                     display:'inline-flex', alignItems:'center', gap:5,
-                    background: isApproved ? 'rgba(16,185,129,0.15)' : isPending ? 'rgba(245,158,11,0.15)' : 'rgba(244,63,94,0.15)',
-                    color: isApproved ? '#34d399' : isPending ? '#fbbf24' : '#f87171',
-                    border: `1px solid ${isApproved ? 'rgba(16,185,129,0.3)' : isPending ? 'rgba(245,158,11,0.3)' : 'rgba(244,63,94,0.3)'}`,
-                    borderRadius: 8, padding: '3px 9px', fontSize: 11, fontWeight: 800, letterSpacing: '.4px'
+                    background: tierConfig.bg, color: tierConfig.color,
+                    border: `1px solid ${tierConfig.border}`,
+                    borderRadius: 7, padding: '3px 9px', fontSize: 11, fontWeight: 800, whiteSpace:'nowrap'
                   }}>
-                    <span>{isApproved ? '✓' : isPending ? '⏳' : '✕'}</span>
-                    <span>{a.status}</span>
+                    <span>{tierConfig.icon}</span>
+                    <span>{a.tier || 'Tier 2'}</span>
                   </span>
                 </TD>
+
+                {/* Applied Date Column */}
+                <TD>
+                  <div style={{ display:'flex', flexDirection:'column', gap:2 }}>
+                    <span style={{ color:'#fff', fontWeight:700, fontSize:12.5 }}>
+                      📅 {appliedDate.dateStr}
+                    </span>
+                    <span style={{ fontSize:11, color:'rgba(255,255,255,0.45)' }}>
+                      {appliedDate.subtitle}
+                    </span>
+                  </div>
+                </TD>
+
+                {/* Status Column */}
+                <TD>
+                  <span style={{
+                    display:'inline-flex', alignItems:'center', gap:5,
+                    background: statusConfig.bg, color: statusConfig.color,
+                    border: `1px solid ${statusConfig.border}`,
+                    borderRadius: 8, padding: '3px 9px', fontSize: 11, fontWeight: 800, whiteSpace:'nowrap'
+                  }}>
+                    <span>{statusConfig.icon}</span>
+                    <span>{statusConfig.label}</span>
+                  </span>
+                </TD>
+
+                {/* Actions Column */}
                 <TD>
                   <div style={{ display:'flex', gap:6, alignItems:'center' }}>
                     {isPending ? (
@@ -3419,8 +3565,13 @@ function ApplicationsTab({ showToast }) {
                       </>
                     ) : (
                       <div style={{ display:'flex', gap:6, alignItems:'center' }}>
-                        <button onClick={() => setDetailApp(a)} className="ap-btn ap-btn-ghost" style={{ fontSize:11.5, padding:'5px 11px', borderRadius:8 }}>
-                          Details
+                        <button
+                          onClick={() => setDetailApp(a)}
+                          className="ap-btn ap-btn-ghost"
+                          style={{ fontSize:11.5, padding:'5px 10px', borderRadius:8 }}
+                          title="Inspect application dossier"
+                        >
+                          Dossier
                         </button>
                         {isApproved && (
                           <button
