@@ -1814,14 +1814,14 @@ function DashboardTab({ showToast, setTab, telemetry = {}, refreshOverviewStats,
   if (!stats) return <Loading />;
 
   const CARDS = [
-    { label:'Total Registered Users', value:stats.users.total,          sub:`${stats.users.member} Verified Members`, icon:'👥', color:'#3b82f6', secondaryColor:'#60a5fa', tab:'users',        tag:'Accounts' },
-    { label:'Pending Applications',   value:stats.applications.pending, sub:stats.applications.pending > 0 ? 'Requires Administrative Review' : 'All Rosters Cleared', icon:'⏳', color:'#f59e0b', secondaryColor:'#fbbf24', tab:'applications', tag: stats.applications.pending > 0 ? 'Action Req' : 'Up to Date' },
-    { label:'Consortium Summits',     value:stats.events.total,         sub:`${stats.events.totalEnrolled} Confirmed RSVPs`, icon:'📅', color:'#8b5cf6', secondaryColor:'#c084fc', tab:'events',        tag:'Live Summits' },
-    { label:'Training Programs',      value:stats.trainings.total,      sub:`${stats.trainings.totalEnrolled} Faculty Enrolled`, icon:'🎓', color:'#f43f5e', secondaryColor:'#fb7185', tab:'training',     tag:'Faculty Dev' },
-    { label:'News & Media Releases',  value:stats.news.total,           sub:'Published Regional Articles',       icon:'📰', color:'#14b8a6', secondaryColor:'#2dd4bf', tab:'news',          tag:'Public Press' },
-    { label:'Active HEI Alliances',   value:stats.partnerships.active,  sub:`${stats.partnerships.total} Total Regional MOUs`,   icon:'🤝', color:'#6366f1', secondaryColor:'#a5b4fc', tab:'partnerships',  tag:'HEI Network' },
-    { label:'R&D Funding & Grants',   value:stats.funding.open,         sub:`${stats.funding.total} Available Grants`,      icon:'💰', color:'#10b981', secondaryColor:'#34d399', tab:'funding',       tag:'DOST/CHED Calls' },
-    { label:'Governance Policies',    value:stats.policies.active,      sub:`${stats.policies.archived} Archived Bylaws`,       icon:'📜', color:'#0ea5e9', secondaryColor:'#38bdf8', tab:'policies',      tag:'Active Policies' },
+    { label:'Registered Users',       value:stats.users.total,          sub:`${stats.users.member} Verified Members`, icon:'👥', color:'#3b82f6', tab:'users',        tag:'Accounts' },
+    { label:'Pending Applications',   value:stats.applications.pending, sub:stats.applications.pending > 0 ? 'Requires Administrative Review' : 'All Rosters Cleared', icon:'⏳', color:'#f59e0b', tab:'applications', tag: stats.applications.pending > 0 ? 'Action Req' : 'Up to Date' },
+    { label:'Consortium Summits',     value:stats.events.total,         sub:`${stats.events.totalEnrolled} Confirmed RSVPs`, icon:'📅', color:'#8b5cf6', tab:'events',        tag:'Live Summits' },
+    { label:'Capacity Programs',      value:stats.trainings.total,      sub:`${stats.trainings.totalEnrolled} Faculty Enrolled`, icon:'🎓', color:'#f43f5e', tab:'training',     tag:'Faculty Dev' },
+    { label:'News & Media Releases',  value:stats.news.total,           sub:'Published Regional Articles',       icon:'📰', color:'#14b8a6', tab:'news',          tag:'Press Releases' },
+    { label:'Active Alliances',       value:stats.partnerships.active,  sub:`${stats.partnerships.total} Regional MOUs in Effect`, icon:'🤝', color:'#6366f1', tab:'partnerships',  tag:'HEI Network' },
+    { label:'R&D Funding & Grants',   value:stats.funding.open,         sub:`${stats.funding.total} Available Grant Calls`,    icon:'💰', color:'#10b981', tab:'funding',       tag:'DOST/CHED Calls' },
+    { label:'Governance Charters',    value:stats.policies.active,      sub:`${stats.policies.archived} Archived Charters`,     icon:'📜', color:'#0ea5e9', tab:'policies',      tag:'Active Charters' },
   ];
 
   const evFill    = stats.events.totalCapacity   > 0 ? Math.round(stats.events.totalEnrolled   / stats.events.totalCapacity   * 100) : 0;
@@ -1835,58 +1835,38 @@ function DashboardTab({ showToast, setTab, telemetry = {}, refreshOverviewStats,
   ].filter(d => d.value > 0);
 
   return (
-    <div style={{ maxWidth: 1280, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 22 }}>
-      {/* ── 🌈 Hero Executive Command Deck with Colorful Radiant Ambient Glow ── */}
+    <div style={{ maxWidth: 1280, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 18 }}>
+      {/* ── Real & Clean Executive Command Header ── */}
       <div style={{
-        background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(24, 30, 68, 0.88) 50%, rgba(13, 27, 62, 0.92) 100%)',
-        border: '1.5px solid rgba(249, 115, 22, 0.3)',
-        borderRadius: 20, padding: '24px 28px',
-        boxShadow: '0 12px 40px rgba(0, 0, 0, 0.4), 0 0 35px rgba(249, 115, 22, 0.1)',
+        background: '#0d1527',
+        border: '1px solid rgba(255, 255, 255, 0.08)',
+        borderRadius: 16, padding: '20px 24px',
+        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.25)',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        flexWrap: 'wrap', gap: 18, position: 'relative', overflow: 'hidden'
+        flexWrap: 'wrap', gap: 16, position: 'relative'
       }}>
-        {/* Colorful multi-spectral radiant top border line */}
-        <div style={{
-          position: 'absolute', top: 0, left: 0, right: 0, height: 3.5,
-          background: 'linear-gradient(90deg, #f97316 0%, #ec4899 25%, #8b5cf6 50%, #3b82f6 75%, #10b981 100%)'
-        }} />
-
-        {/* Ambient background glow dots */}
-        <div style={{ position: 'absolute', top: -40, right: -40, width: 180, height: 180, borderRadius: '50%', background: 'radial-gradient(circle, rgba(59,130,246,0.18) 0%, transparent 70%)', pointerEvents: 'none' }} />
-        <div style={{ position: 'absolute', bottom: -50, left: 100, width: 220, height: 220, borderRadius: '50%', background: 'radial-gradient(circle, rgba(249,115,22,0.12) 0%, transparent 70%)', pointerEvents: 'none' }} />
-
-        <div style={{ position: 'relative', zIndex: 1 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-            <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#10b981', boxShadow: '0 0 12px #10b981', display: 'inline-block' }} />
-            <span style={{ fontSize: 11, fontWeight: 900, color: '#34d399', textTransform: 'uppercase', letterSpacing: '1.4px' }}>
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 }}>
+            <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#10b981', display: 'inline-block' }} />
+            <span style={{ fontSize: 11, fontWeight: 800, color: '#34d399', textTransform: 'uppercase', letterSpacing: '1px' }}>
               Region VII Central Node · Live PostgreSQL Sync · CIT-University Host
             </span>
           </div>
-          <h1 style={{
-            fontSize: 28, fontWeight: 900, letterSpacing: '-0.6px', margin: 0,
-            background: 'linear-gradient(135deg, #ffffff 40%, #fed7aa 100%)',
-            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent'
-          }}>
-            Executive Operations Dashboard
+          <h1 style={{ color: '#ffffff', fontSize: 24, fontWeight: 800, letterSpacing: '-0.4px', margin: 0 }}>
+            Executive Command Dashboard
           </h1>
-          <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13, marginTop: 4 }}>
-            Central Visayas Academic &amp; Research Consortium · 7 Institutional Nodes Connected
+          <div style={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: 12.5, marginTop: 3 }}>
+            Central Visayas Academic Consortium Operations · 7 Institutional Nodes Connected
           </div>
         </div>
 
-        {/* Colorful Action Buttons Group */}
-        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center', position: 'relative', zIndex: 1 }}>
+        {/* Clean Action Buttons */}
+        <div style={{ display: 'flex', gap: 9, flexWrap: 'wrap', alignItems: 'center' }}>
           <button
             type="button"
             onClick={() => onOpenReport?.()}
-            className="ap-btn"
-            style={{
-              padding: '10px 16px', fontSize: 12.5, fontWeight: 800, borderRadius: 11,
-              background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.22), rgba(37, 99, 235, 0.12))',
-              color: '#93c5fd', border: '1px solid rgba(59, 130, 246, 0.45)',
-              boxShadow: '0 4px 14px rgba(59, 130, 246, 0.2)',
-              display: 'flex', alignItems: 'center', gap: 7, cursor: 'pointer', transition: 'all .18s'
-            }}
+            className="ap-btn ap-btn-ghost"
+            style={{ padding: '8px 14px', fontSize: 12.5, fontWeight: 700, borderRadius: 8, display: 'flex', alignItems: 'center', gap: 6 }}
             title="Generate official CHED / DOST Regional Accreditation Dossier"
           >
             <span>📄</span>
@@ -1896,14 +1876,8 @@ function DashboardTab({ showToast, setTab, telemetry = {}, refreshOverviewStats,
           <button
             type="button"
             onClick={() => onOpenBroadcast?.()}
-            className="ap-btn"
-            style={{
-              padding: '10px 16px', fontSize: 12.5, fontWeight: 800, borderRadius: 11,
-              background: 'linear-gradient(135deg, #f59e0b, #d97706)',
-              color: '#ffffff', border: '1px solid rgba(245, 158, 11, 0.6)',
-              boxShadow: '0 4px 16px rgba(245, 158, 11, 0.35)',
-              display: 'flex', alignItems: 'center', gap: 7, cursor: 'pointer', transition: 'all .18s'
-            }}
+            className="ap-btn ap-btn-amber"
+            style={{ padding: '8px 14px', fontSize: 12.5, fontWeight: 800, borderRadius: 8, display: 'flex', alignItems: 'center', gap: 6 }}
             title="Transmit emergency broadcast to Region VII HEIs"
           >
             <span>📢</span>
@@ -1914,11 +1888,7 @@ function DashboardTab({ showToast, setTab, telemetry = {}, refreshOverviewStats,
             type="button"
             onClick={() => setTab('events')}
             className="ap-btn ap-btn-primary"
-            style={{
-              padding: '10px 18px', fontSize: 12.5, fontWeight: 800, borderRadius: 11,
-              boxShadow: '0 4px 16px rgba(249, 115, 22, 0.35)',
-              display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer'
-            }}
+            style={{ padding: '8px 16px', fontSize: 12.5, fontWeight: 800, borderRadius: 8, display: 'flex', alignItems: 'center', gap: 5 }}
           >
             <span>+</span>
             <span>New Event</span>
@@ -1929,12 +1899,11 @@ function DashboardTab({ showToast, setTab, telemetry = {}, refreshOverviewStats,
             onClick={() => setTab('applications')}
             className="ap-btn"
             style={{
-              padding: '10px 16px', fontSize: 12.5, fontWeight: 800, borderRadius: 11,
-              background: stats.applications.pending > 0 ? 'rgba(245,158,11,0.22)' : 'rgba(255,255,255,0.06)',
+              padding: '8px 14px', fontSize: 12.5, fontWeight: 800, borderRadius: 8,
+              background: stats.applications.pending > 0 ? 'rgba(245,158,11,0.18)' : 'rgba(255,255,255,0.06)',
               color: stats.applications.pending > 0 ? '#fbbf24' : 'rgba(255,255,255,0.85)',
-              border: `1.5px solid ${stats.applications.pending > 0 ? '#f59e0b' : 'rgba(255,255,255,0.12)'}`,
-              boxShadow: stats.applications.pending > 0 ? '0 0 16px rgba(245,158,11,0.3)' : 'none',
-              display: 'flex', alignItems: 'center', gap: 7, cursor: 'pointer'
+              border: `1px solid ${stats.applications.pending > 0 ? 'rgba(245,158,11,0.45)' : 'rgba(255,255,255,0.12)'}`,
+              display: 'flex', alignItems: 'center', gap: 6
             }}
           >
             <span>📋</span>
@@ -1945,10 +1914,7 @@ function DashboardTab({ showToast, setTab, telemetry = {}, refreshOverviewStats,
             type="button"
             onClick={() => downloadSystemAuditCSV(stats, telemetry, showToast)}
             className="ap-btn ap-btn-ghost"
-            style={{
-              padding: '10px 13px', fontSize: 12.5, fontWeight: 700, borderRadius: 11,
-              display: 'flex', alignItems: 'center', gap: 5, cursor: 'pointer'
-            }}
+            style={{ padding: '8px 11px', fontSize: 12.5, fontWeight: 700, borderRadius: 8, display: 'flex', alignItems: 'center', gap: 5 }}
             title="Download complete administrative audit CSV"
           >
             <span>📥</span>
@@ -1957,9 +1923,9 @@ function DashboardTab({ showToast, setTab, telemetry = {}, refreshOverviewStats,
         </div>
       </div>
 
-      {/* ── ⚡ 3 Vibrant Regional Telemetry & Governance Cards ── */}
+      {/* ── 3 Clean Telemetry & System Status Cards ── */}
       <div style={{
-        display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 14
+        display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 12
       }}>
         {[
           {
@@ -1967,163 +1933,151 @@ function DashboardTab({ showToast, setTab, telemetry = {}, refreshOverviewStats,
             label: 'Central Host Node',
             val: 'Cebu Institute of Technology - University',
             sub: 'Region VII Engineering & Computing Hub',
-            color: '#fb923c',
-            bgGradient: 'linear-gradient(135deg, rgba(249,115,22,0.14) 0%, rgba(15,23,42,0.8) 100%)',
-            borderColor: 'rgba(249,115,22,0.35)'
+            color: '#fb923c'
           },
           {
             icon: '🛡️',
             label: 'Statutory Data Privacy',
             val: 'Republic Act 10173 Certified',
             sub: 'Zero Plaintext PII · Strict TLS 1.3 Transport',
-            color: '#34d399',
-            bgGradient: 'linear-gradient(135deg, rgba(16,185,129,0.14) 0%, rgba(15,23,42,0.8) 100%)',
-            borderColor: 'rgba(16,185,129,0.35)'
+            color: '#34d399'
           },
           {
             icon: '⚡',
             label: 'PostgreSQL Sync Engine',
             val: telemetry.latency !== null ? `${telemetry.latency}ms Live Round-Trip` : 'Node VII Active',
             sub: 'Multi-Region Continuous WAL-G Snapshots',
-            color: '#60a5fa',
-            bgGradient: 'linear-gradient(135deg, rgba(59,130,246,0.14) 0%, rgba(15,23,42,0.8) 100%)',
-            borderColor: 'rgba(59,130,246,0.35)'
+            color: '#60a5fa'
           },
         ].map(t => (
           <div key={t.label} style={{
-            background: t.bgGradient,
-            border: `1px solid ${t.borderColor}`,
-            borderRadius: 16, padding: '14px 18px',
-            display: 'flex', alignItems: 'center', gap: 14,
-            backdropFilter: 'blur(16px)',
-            boxShadow: '0 4px 18px rgba(0,0,0,0.22)'
+            background: '#0d1527',
+            border: '1px solid rgba(255, 255, 255, 0.07)',
+            borderRadius: 14, padding: '13px 16px',
+            display: 'flex', alignItems: 'center', gap: 12,
+            boxShadow: '0 2px 10px rgba(0,0,0,0.15)'
           }}>
             <div style={{
-              width: 38, height: 38, borderRadius: 10,
-              background: `${t.color}20`, border: `1.5px solid ${t.color}45`,
+              width: 36, height: 36, borderRadius: 8,
+              background: `${t.color}15`, border: `1px solid ${t.color}35`,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 18, flexShrink: 0, boxShadow: `0 0 12px ${t.color}25`
+              fontSize: 17, flexShrink: 0
             }}>
               {t.icon}
             </div>
             <div style={{ minWidth: 0, flex: 1 }}>
-              <div style={{ fontSize: 10.5, fontWeight: 900, color: t.color, textTransform: 'uppercase', letterSpacing: '0.6px' }}>{t.label}</div>
-              <div style={{ fontSize: 13.5, fontWeight: 800, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: 1 }}>{t.val}</div>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: 1 }}>{t.sub}</div>
+              <div style={{ fontSize: 10.5, fontWeight: 800, color: t.color, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{t.label}</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: 1 }}>{t.val}</div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: 1 }}>{t.sub}</div>
             </div>
           </div>
         ))}
       </div>
 
-      {/* ── 🌟 8 Radiant KPI Bento Cards (4x2 Vibrant Grid with Colorful Glows) ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 15 }}>
+      {/* ── 8 Clean Bento KPI Cards (Solid High-Contrast Typography) ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 12 }}>
         {CARDS.map((c) => (
           <div
             key={c.label}
             onClick={() => setTab(c.tab)}
             style={{
-              background: `radial-gradient(circle at 85% 15%, ${c.color}18 0%, rgba(15, 23, 42, 0.88) 60%, rgba(10, 16, 32, 0.95) 100%)`,
-              backdropFilter: 'blur(18px)',
-              border: `1px solid ${c.color}35`,
-              borderRadius: 18, padding: '20px 22px', cursor: 'pointer',
+              background: '#0d1527',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              borderRadius: 14, padding: '18px 20px', cursor: 'pointer',
               position: 'relative', overflow: 'hidden',
               display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-              minHeight: 154,
-              transition: 'all 0.24s cubic-bezier(0.16, 1, 0.3, 1)',
-              boxShadow: `0 8px 24px -6px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08)`,
+              minHeight: 144,
+              transition: 'all 0.18s ease',
+              boxShadow: '0 2px 12px rgba(0, 0, 0, 0.18)',
             }}
             onMouseEnter={e => {
-              e.currentTarget.style.transform = 'translateY(-4px)';
-              e.currentTarget.style.boxShadow = `0 16px 36px -8px ${c.color}45, 0 0 24px ${c.color}25, inset 0 1px 0 rgba(255, 255, 255, 0.2)`;
-              e.currentTarget.style.borderColor = `${c.color}80`;
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.borderColor = `${c.color}55`;
+              e.currentTarget.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.3)';
             }}
             onMouseLeave={e => {
               e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = `0 8px 24px -6px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08)`;
-              e.currentTarget.style.borderColor = `${c.color}35`;
+              e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.08)';
+              e.currentTarget.style.boxShadow = '0 2px 12px rgba(0, 0, 0, 0.18)';
             }}
           >
-            {/* Top vivid accent gradient line */}
+            {/* Top thin solid accent line */}
             <div style={{
-              position: 'absolute', top: 0, left: 0, right: 0, height: 3,
-              background: `linear-gradient(90deg, transparent 5%, ${c.color} 50%, transparent 95%)`
+              position: 'absolute', top: 0, left: 0, right: 0, height: 2.5,
+              background: c.color
             }} />
 
             <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
                 <div style={{
-                  width: 40, height: 40, borderRadius: 11,
-                  background: `${c.color}18`, border: `1.5px solid ${c.color}45`,
+                  width: 34, height: 34, borderRadius: 8,
+                  background: `${c.color}15`, border: `1px solid ${c.color}35`,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 18, flexShrink: 0, boxShadow: `0 0 12px ${c.color}25`
+                  fontSize: 16, flexShrink: 0
                 }}>
                   {c.icon}
                 </div>
                 <span style={{
-                  fontSize: 10.5, fontWeight: 800, color: c.color,
-                  background: `${c.color}15`, border: `1px solid ${c.color}40`,
-                  borderRadius: 99, padding: '3px 10px', letterSpacing: '0.6px', textTransform: 'uppercase',
-                  boxShadow: `0 0 10px ${c.color}18`
+                  fontSize: 10, fontWeight: 700, color: c.color,
+                  background: `${c.color}12`, border: `1px solid ${c.color}30`,
+                  borderRadius: 6, padding: '2px 8px', letterSpacing: '0.4px', textTransform: 'uppercase'
                 }}>
                   {c.tag}
                 </span>
               </div>
 
-              {/* Radiant gradient metric typography */}
+              {/* Real, solid, high-contrast white metric */}
               <div style={{
-                fontSize: 34, fontWeight: 900,
-                background: `linear-gradient(135deg, #ffffff 40%, ${c.secondaryColor} 100%)`,
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                letterSpacing: '-1.2px', lineHeight: 1, marginBottom: 6
+                fontSize: 30, fontWeight: 800, color: '#ffffff',
+                letterSpacing: '-0.8px', lineHeight: 1, marginBottom: 5
               }}>
                 {c.value}
               </div>
-              <div style={{ fontSize: 13.5, fontWeight: 800, color: 'rgba(255,255,255,0.92)' }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255, 255, 255, 0.88)' }}>
                 {c.label}
               </div>
             </div>
 
             <div style={{
-              fontSize: 11.5, color: 'rgba(255,255,255,0.52)', fontWeight: 600,
-              borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 10, marginTop: 12,
+              fontSize: 11.5, color: 'rgba(255, 255, 255, 0.45)', fontWeight: 500,
+              borderTop: '1px solid rgba(255, 255, 255, 0.05)', paddingTop: 9, marginTop: 10,
               display: 'flex', alignItems: 'center', justifyContent: 'space-between'
             }}>
               <span>{c.sub}</span>
-              <span style={{ fontSize: 11, color: c.color, fontWeight: 800 }}>Explore →</span>
+              <span style={{ fontSize: 11, color: c.color, fontWeight: 700 }}>Open →</span>
             </div>
           </div>
         ))}
       </div>
 
-      {/* ── 📊 Visual Analytics & Progress Gauges (Colorful Donut + Vibrantly Styled Meters) ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: 16 }}>
+      {/* ── Clean Analytics & Progress Section (Donut + Clean Capacity Meters) ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 14 }}>
         {/* User Distribution Donut */}
         <div style={{
-          background: 'radial-gradient(circle at 10% 10%, rgba(59,130,246,0.12) 0%, rgba(13, 20, 38, 0.85) 60%)',
-          border: '1.5px solid rgba(59, 130, 246, 0.25)',
-          borderRadius: 20, padding: '24px', backdropFilter: 'blur(18px)',
-          boxShadow: '0 8px 28px rgba(0,0,0,0.35)'
+          background: '#0d1527',
+          border: '1px solid rgba(255, 255, 255, 0.08)',
+          borderRadius: 16, padding: '20px 22px',
+          boxShadow: '0 4px 18px rgba(0,0,0,0.2)'
         }}>
-          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom: 20 }}>
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom: 16 }}>
             <div>
-              <div style={{ fontSize: 13.5, fontWeight: 900, color: '#fff', textTransform: 'uppercase', letterSpacing: '.7px', display:'flex', alignItems:'center', gap:7 }}>
-                <span>👥</span> Consortium User Mix
+              <div style={{ fontSize: 13, fontWeight: 700, color: '#fff', textTransform: 'uppercase', letterSpacing: '.5px', display:'flex', alignItems:'center', gap:7 }}>
+                <span>👥</span> Consortium User Directory Mix
               </div>
-              <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.5)', marginTop: 2 }}>
-                Verified institutional researchers vs. registered guests
+              <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.45)', marginTop: 2 }}>
+                Verified academic members vs. registered accounts
               </div>
             </div>
-            <span style={{ fontSize: 11, color: '#60a5fa', background: 'rgba(96,165,250,0.15)', border: '1px solid rgba(96,165,250,0.35)', borderRadius: 99, padding: '3px 10px', fontWeight: 800 }}>
-              {stats.users.total} Total Accounts
+            <span style={{ fontSize: 11, color: '#60a5fa', background: 'rgba(96,165,250,0.12)', border: '1px solid rgba(96,165,250,0.25)', borderRadius: 6, padding: '2px 8px', fontWeight: 700 }}>
+              {stats.users.total} Total
             </span>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '150px 1fr', alignItems: 'center', gap: 22 }}>
-            <div style={{ width: 150, height: 150, position: 'relative' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr', alignItems: 'center', gap: 18 }}>
+            <div style={{ width: 140, height: 140, position: 'relative' }}>
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie data={roleChartData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={44} outerRadius={68} paddingAngle={4}>
+                  <Pie data={roleChartData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={42} outerRadius={64} paddingAngle={3}>
                     {roleChartData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
@@ -2132,19 +2086,19 @@ function DashboardTab({ showToast, setTab, telemetry = {}, refreshOverviewStats,
                 </PieChart>
               </ResponsiveContainer>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {roleChartData.map(r => (
-                <div key={r.name} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <div style={{ width: 10, height: 10, borderRadius: '50%', background: r.color, flexShrink: 0, boxShadow: `0 0 8px ${r.color}55` }} />
+                <div key={r.name} style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+                  <div style={{ width: 9, height: 9, borderRadius: '50%', background: r.color, flexShrink: 0 }} />
                   <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
-                      <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.9)', fontWeight: 700 }}>{r.name}</span>
-                      <span style={{ fontSize: 13, fontWeight: 900, color: '#fff' }}>
-                        {r.value} <span style={{ color: 'rgba(255,255,255,0.45)', fontWeight: 600, fontSize: 11.5 }}>({Math.round((r.value / stats.users.total) * 100)}%)</span>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                      <span style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.85)', fontWeight: 600 }}>{r.name}</span>
+                      <span style={{ fontSize: 12.5, fontWeight: 700, color: '#fff' }}>
+                        {r.value} <span style={{ color: 'rgba(255,255,255,0.4)', fontWeight: 500, fontSize: 11 }}>({Math.round((r.value / stats.users.total) * 100)}%)</span>
                       </span>
                     </div>
-                    <div style={{ height: 6, background: 'rgba(255,255,255,0.08)', borderRadius: 4, overflow: 'hidden' }}>
-                      <div style={{ height: '100%', width: `${Math.round((r.value / stats.users.total) * 100)}%`, background: `linear-gradient(90deg, ${r.color}, ${r.color}dd)`, borderRadius: 4 }} />
+                    <div style={{ height: 5, background: 'rgba(255,255,255,0.08)', borderRadius: 3, overflow: 'hidden' }}>
+                      <div style={{ height: '100%', width: `${Math.round((r.value / stats.users.total) * 100)}%`, background: r.color, borderRadius: 3 }} />
                     </div>
                   </div>
                 </div>
@@ -2155,41 +2109,41 @@ function DashboardTab({ showToast, setTab, telemetry = {}, refreshOverviewStats,
 
         {/* Progress Capacity Gauges */}
         <div style={{
-          background: 'radial-gradient(circle at 10% 10%, rgba(139,92,246,0.12) 0%, rgba(13, 20, 38, 0.85) 60%)',
-          border: '1.5px solid rgba(139, 92, 246, 0.25)',
-          borderRadius: 20, padding: '24px', backdropFilter: 'blur(18px)',
+          background: '#0d1527',
+          border: '1px solid rgba(255, 255, 255, 0.08)',
+          borderRadius: 16, padding: '20px 22px',
           display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-          boxShadow: '0 8px 28px rgba(0,0,0,0.35)'
+          boxShadow: '0 4px 18px rgba(0,0,0,0.2)'
         }}>
-          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom: 20 }}>
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom: 16 }}>
             <div>
-              <div style={{ fontSize: 13.5, fontWeight: 900, color: '#fff', textTransform: 'uppercase', letterSpacing: '.7px', display:'flex', alignItems:'center', gap:7 }}>
-                <span>📊</span> Capacity &amp; Engagement Fill Rates
+              <div style={{ fontSize: 13, fontWeight: 700, color: '#fff', textTransform: 'uppercase', letterSpacing: '.5px', display:'flex', alignItems:'center', gap:7 }}>
+                <span>📊</span> Regional Capacity &amp; Fill Rates
               </div>
-              <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.5)', marginTop: 2 }}>
+              <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.45)', marginTop: 2 }}>
                 Real-time regional seat &amp; verification utilization
               </div>
             </div>
-            <span style={{ fontSize: 11, color: '#34d399', background: 'rgba(52,211,153,0.15)', border: '1px solid rgba(52,211,153,0.35)', borderRadius: 99, padding: '3px 10px', fontWeight: 800 }}>
+            <span style={{ fontSize: 11, color: '#34d399', background: 'rgba(52,211,153,0.12)', border: '1px solid rgba(52,211,153,0.25)', borderRadius: 6, padding: '2px 8px', fontWeight: 700 }}>
               Live Telemetry
             </span>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {[
-              { label:'Event Seat Utilization',    pct:evFill,    color:'#8b5cf6', secondary:'#d946ef', count: `${stats.events.totalEnrolled} / ${stats.events.totalCapacity} seats` },
-              { label:'Training Faculty Enrolled', pct:trFill,    color:'#f43f5e', secondary:'#fb923c', count: `${stats.trainings.totalEnrolled} / ${stats.trainings.totalCapacity || 80} faculty` },
-              { label:'Member Verification Ratio', pct:memberPct, color:'#3b82f6', secondary:'#38bdf8', count: `${stats.users.member} of ${stats.users.total} accounts` },
+              { label:'Event Seat Utilization',    pct:evFill,    color:'#8b5cf6', count: `${stats.events.totalEnrolled} / ${stats.events.totalCapacity} seats` },
+              { label:'Training Faculty Enrolled', pct:trFill,    color:'#f43f5e', count: `${stats.trainings.totalEnrolled} / ${stats.trainings.totalCapacity || 80} faculty` },
+              { label:'Member Verification Ratio', pct:memberPct, color:'#3b82f6', count: `${stats.users.member} of ${stats.users.total} accounts` },
             ].map(b => (
-              <div key={b.label} style={{ background:'rgba(255,255,255,0.035)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:14, padding:'12px 16px' }}>
-                <div style={{ display:'flex', justifyContent:'space-between', marginBottom:7 }}>
-                  <span style={{ fontSize:12.5, color:'rgba(255,255,255,0.9)', fontWeight:700 }}>{b.label}</span>
-                  <span style={{ fontSize:13, fontWeight:900, color:'#fff' }}>
-                    {Math.min(b.pct, 100)}% <span style={{ color:'rgba(255,255,255,0.45)', fontWeight:600, fontSize:11.5 }}>({b.count})</span>
+              <div key={b.label} style={{ background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:11, padding:'11px 14px' }}>
+                <div style={{ display:'flex', justifyContent:'space-between', marginBottom:6 }}>
+                  <span style={{ fontSize:12, color:'rgba(255,255,255,0.85)', fontWeight:600 }}>{b.label}</span>
+                  <span style={{ fontSize:12.5, fontWeight:700, color:'#fff' }}>
+                    {Math.min(b.pct, 100)}% <span style={{ color:'rgba(255,255,255,0.4)', fontWeight:500, fontSize:11 }}>({b.count})</span>
                   </span>
                 </div>
-                <div style={{ height:7, background: 'rgba(255,255,255,0.08)', borderRadius:4, overflow:'hidden' }}>
-                  <div style={{ height:'100%', width:`${Math.min(b.pct, 100)}%`, background:`linear-gradient(90deg, ${b.color}, ${b.secondary})`, borderRadius:4, transition:'width .8s ease' }} />
+                <div style={{ height:6, background: 'rgba(255,255,255,0.08)', borderRadius:3, overflow:'hidden' }}>
+                  <div style={{ height:'100%', width:`${Math.min(b.pct, 100)}%`, background: b.color, borderRadius:3, transition:'width .6s ease' }} />
                 </div>
               </div>
             ))}
@@ -2197,48 +2151,44 @@ function DashboardTab({ showToast, setTab, telemetry = {}, refreshOverviewStats,
         </div>
       </div>
 
-      {/* ── 🏛️ Region VII Institutional MoA Expiration & Alliance Radar (Vibrant Badges & Countdown) ── */}
+      {/* ── 🏛️ Region VII Institutional MoA Expiration & Alliance Radar ── */}
       <div style={{
-        background: 'linear-gradient(135deg, rgba(13, 20, 38, 0.9) 0%, rgba(20, 30, 60, 0.85) 100%)',
-        border: '1.5px solid rgba(255,255,255,0.1)',
-        borderRadius: 20, padding: '24px', backdropFilter: 'blur(18px)',
-        boxShadow: '0 8px 30px rgba(0,0,0,0.35)'
+        background: '#0d1527',
+        border: '1px solid rgba(255, 255, 255, 0.08)',
+        borderRadius: 16, padding: '20px 22px',
+        boxShadow: '0 4px 18px rgba(0,0,0,0.2)'
       }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18, flexWrap: 'wrap', gap: 12 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{ width: 40, height: 40, borderRadius: 11, background: 'rgba(249,115,22,0.18)', border: '1.5px solid rgba(249,115,22,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, boxShadow: '0 0 14px rgba(249,115,22,0.2)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ width: 36, height: 36, borderRadius: 8, background: 'rgba(249,115,22,0.15)', border: '1px solid rgba(249,115,22,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>
               🤝
             </div>
             <div>
-              <div style={{ color: '#fff', fontSize: 15, fontWeight: 900, letterSpacing: '-0.2px' }}>
+              <div style={{ color: '#fff', fontSize: 14.5, fontWeight: 700, letterSpacing: '-0.2px' }}>
                 Region VII Institutional MoA Expiration &amp; Alliance Radar
               </div>
-              <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12 }}>
+              <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11.5 }}>
                 Proactive memorandum tracking &amp; renewal management across Central Visayas HEIs &amp; line agencies
               </div>
             </div>
           </div>
-          <div style={{ display: 'flex', gap: 9, alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             <button
               type="button"
               onClick={() => onOpenReport?.()}
-              className="ap-btn"
-              style={{
-                fontSize: 12, padding: '7px 14px', fontWeight: 800,
-                background: 'rgba(59,130,246,0.15)', color: '#93c5fd', border: '1px solid rgba(59,130,246,0.35)',
-                borderRadius: 9, display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer'
-              }}
+              className="ap-btn ap-btn-ghost"
+              style={{ fontSize: 11.5, padding: '6px 12px', display: 'flex', alignItems: 'center', gap: 6 }}
             >
               <span>📄</span>
               <span>Accreditation Dossier</span>
             </button>
-            <span style={{ fontSize: 11, color: '#34d399', background: 'rgba(52,211,153,0.15)', border: '1px solid rgba(52,211,153,0.35)', borderRadius: 99, padding: '4px 11px', fontWeight: 900 }}>
+            <span style={{ fontSize: 11, color: '#34d399', background: 'rgba(52,211,153,0.12)', border: '1px solid rgba(52,211,153,0.3)', borderRadius: 6, padding: '3px 9px', fontWeight: 700 }}>
               7 Active Nodes
             </span>
           </div>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {[
             {
               name: 'Cebu Institute of Technology - University (CIT-U)',
@@ -2310,57 +2260,53 @@ function DashboardTab({ showToast, setTab, telemetry = {}, refreshOverviewStats,
             <div
               key={m.name}
               style={{
-                background: 'rgba(255,255,255,0.025)',
-                border: '1px solid rgba(255,255,255,0.07)',
-                borderRadius: 14, padding: '12px 18px',
+                background: 'rgba(255,255,255,0.02)',
+                border: '1px solid rgba(255,255,255,0.05)',
+                borderRadius: 11, padding: '11px 16px',
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                flexWrap: 'wrap', gap: 12, transition: 'all .16s ease'
+                flexWrap: 'wrap', gap: 10, transition: 'all .14s ease'
               }}
               onMouseEnter={e => {
-                e.currentTarget.style.background = 'rgba(255,255,255,0.055)';
-                e.currentTarget.style.borderColor = `${m.color}65`;
+                e.currentTarget.style.background = 'rgba(255,255,255,0.04)';
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
               }}
               onMouseLeave={e => {
-                e.currentTarget.style.background = 'rgba(255,255,255,0.025)';
-                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)';
+                e.currentTarget.style.background = 'rgba(255,255,255,0.02)';
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.05)';
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 14, minWidth: 260 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 260 }}>
                 <div style={{
-                  width: 38, height: 38, borderRadius: 10,
-                  background: `${m.color}18`, border: `1.5px solid ${m.color}45`,
+                  width: 32, height: 32, borderRadius: 8,
+                  background: `${m.color}15`, border: `1px solid ${m.color}35`,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 18, flexShrink: 0, boxShadow: `0 0 10px ${m.color}20`
+                  fontSize: 16, flexShrink: 0
                 }}>
                   {m.icon}
                 </div>
                 <div>
-                  <div style={{ fontSize: 13.5, fontWeight: 900, color: '#fff', marginBottom: 2 }}>{m.name}</div>
-                  <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.5)' }}>{m.type} · <span style={{ color: 'rgba(255,255,255,0.38)' }}>{m.term}</span></div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#fff', marginBottom: 2 }}>{m.name}</div>
+                  <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.45)' }}>{m.type} · <span style={{ color: 'rgba(255,255,255,0.35)' }}>{m.term}</span></div>
                 </div>
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <div style={{ textAlign: 'right' }}>
                   <span style={{
-                    fontSize: 10.5, fontWeight: 900, color: m.color,
-                    background: `${m.color}18`, border: `1px solid ${m.color}45`,
-                    borderRadius: 7, padding: '3px 9px', boxShadow: `0 0 8px ${m.color}20`
+                    fontSize: 10, fontWeight: 700, color: m.color,
+                    background: `${m.color}14`, border: `1px solid ${m.color}30`,
+                    borderRadius: 6, padding: '2px 8px'
                   }}>
                     {m.status}
                   </span>
-                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 3 }}>{m.countdown}</div>
+                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>{m.countdown}</div>
                 </div>
 
                 <button
                   type="button"
                   onClick={() => showToast(m.actionToast, true)}
-                  className="ap-btn"
-                  style={{
-                    fontSize: 11.5, padding: '7px 13px', fontWeight: 800,
-                    background: 'rgba(255,255,255,0.07)', color: '#fff',
-                    border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, cursor: 'pointer'
-                  }}
+                  className="ap-btn ap-btn-ghost"
+                  style={{ fontSize: 11.5, padding: '6px 11px', fontWeight: 600 }}
                 >
                   {m.actionLabel}
                 </button>
@@ -2372,21 +2318,21 @@ function DashboardTab({ showToast, setTab, telemetry = {}, refreshOverviewStats,
 
       {/* ── ⚡ Real-Time Consortium System Activity & Governance Audit Log ── */}
       <div className="ap-activity-stream" style={{
-        background: 'linear-gradient(135deg, rgba(13, 20, 38, 0.9) 0%, rgba(20, 30, 60, 0.85) 100%)',
-        border: '1.5px solid rgba(255,255,255,0.1)',
-        borderRadius: 20, padding: '24px', backdropFilter: 'blur(18px)',
-        boxShadow: '0 8px 30px rgba(0,0,0,0.35)', marginBottom: 0
+        background: '#0d1527',
+        border: '1px solid rgba(255,255,255,0.08)',
+        borderRadius: 16, padding: '20px 22px',
+        boxShadow: '0 4px 18px rgba(0,0,0,0.2)', marginBottom: 0
       }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18, flexWrap: 'wrap', gap: 10 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{ width: 40, height: 40, borderRadius: 11, background: 'rgba(52,211,153,0.18)', border: '1.5px solid rgba(52,211,153,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, boxShadow: '0 0 14px rgba(52,211,153,0.2)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14, flexWrap: 'wrap', gap: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ width: 34, height: 34, borderRadius: 8, background: 'rgba(52,211,153,0.15)', border: '1px solid rgba(52,211,153,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17 }}>
               ⚡
             </div>
             <div>
-              <div style={{ color: '#fff', fontSize: 15, fontWeight: 900, letterSpacing: '-0.2px' }}>
+              <div style={{ color: '#fff', fontSize: 14, fontWeight: 700, letterSpacing: '-0.2px' }}>
                 Consortium Activity &amp; Governance Audit Log
               </div>
-              <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12 }}>
+              <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11.5 }}>
                 Real-time operational stream across Central Visayas regional nodes
               </div>
             </div>
@@ -2394,16 +2340,16 @@ function DashboardTab({ showToast, setTab, telemetry = {}, refreshOverviewStats,
 
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             <span style={{
-              fontSize: 11, fontWeight: 900, color: '#34d399',
-              background: 'rgba(52,211,153,0.15)', border: '1px solid rgba(52,211,153,0.35)',
-              borderRadius: 99, padding: '4px 11px'
+              fontSize: 10.5, fontWeight: 700, color: '#34d399',
+              background: 'rgba(52,211,153,0.12)', border: '1px solid rgba(52,211,153,0.25)',
+              borderRadius: 6, padding: '3px 8px'
             }}>
               Sync Active
             </span>
           </div>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {[
             { icon: '👥', title: 'Membership & User Directory', desc: `${stats.users.total} registered accounts (${stats.users.member} verified HEI members) across CIT-U, UP Cebu, and USC.`, time: 'Live Active', tag: 'Verified' },
             { icon: '📋', title: 'Application Pipeline', desc: stats.applications.pending > 0 ? `${stats.applications.pending} institutional membership application(s) awaiting administrative review.` : 'All institutional membership applications reviewed and verified.', time: stats.applications.pending > 0 ? 'Action Required' : 'Up to Date', tag: stats.applications.pending > 0 ? 'Urgent' : 'Clear' },
@@ -2411,33 +2357,32 @@ function DashboardTab({ showToast, setTab, telemetry = {}, refreshOverviewStats,
             { icon: '🦅', title: 'Haribon AI Multi-Language Gateway', desc: 'Cross-lingual neural translation active across 14 dialects with unified regional responses.', time: 'Online', tag: '100% Ready' },
           ].map((act, i) => (
             <div key={i} className="ap-activity-item" style={{
-              background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 14, padding: '12px 16px'
+              background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 10, padding: '10px 14px'
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <div style={{
-                  width: 36, height: 36, borderRadius: 10,
-                  background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, flexShrink: 0
+                  width: 32, height: 32, borderRadius: 8,
+                  background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, flexShrink: 0
                 }}>
                   {act.icon}
                 </div>
                 <div>
-                  <div style={{ fontSize: 13.5, fontWeight: 900, color: '#fff', marginBottom: 2 }}>{act.title}</div>
-                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.52)' }}>{act.desc}</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#fff', marginBottom: 2 }}>{act.title}</div>
+                  <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.45)' }}>{act.desc}</div>
                 </div>
               </div>
               <div style={{ textAlign: 'right', flexShrink: 0 }}>
                 <span style={{
-                  fontSize: 10.5, fontWeight: 900,
+                  fontSize: 10, fontWeight: 700,
                   color: act.tag === 'Urgent' ? '#fbbf24' : act.tag === 'Verified' ? '#60a5fa' : '#34d399',
-                  background: act.tag === 'Urgent' ? 'rgba(245,158,11,0.18)' : 'rgba(255,255,255,0.06)',
-                  border: `1px solid ${act.tag === 'Urgent' ? 'rgba(245,158,11,0.45)' : 'rgba(255,255,255,0.12)'}`,
-                  borderRadius: 7, padding: '3px 9px',
-                  boxShadow: act.tag === 'Urgent' ? '0 0 10px rgba(245,158,11,0.25)' : 'none'
+                  background: act.tag === 'Urgent' ? 'rgba(245,158,11,0.15)' : 'rgba(255,255,255,0.05)',
+                  border: `1px solid ${act.tag === 'Urgent' ? 'rgba(245,158,11,0.35)' : 'rgba(255,255,255,0.08)'}`,
+                  borderRadius: 6, padding: '2px 7px'
                 }}>
                   {act.tag}
                 </span>
-                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 4 }}>{act.time}</div>
+                <div style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.35)', marginTop: 3 }}>{act.time}</div>
               </div>
             </div>
           ))}
@@ -2447,29 +2392,29 @@ function DashboardTab({ showToast, setTab, telemetry = {}, refreshOverviewStats,
       {/* ── Upcoming Events Live Queue ── */}
       {events.length > 0 && (
         <div style={{
-          background: 'linear-gradient(135deg, rgba(13, 20, 38, 0.9) 0%, rgba(20, 30, 60, 0.85) 100%)',
-          border: '1.5px solid rgba(255,255,255,0.1)',
-          borderRadius: 20, padding: '22px', backdropFilter: 'blur(18px)',
+          background: '#0d1527',
+          border: '1px solid rgba(255,255,255,0.08)',
+          borderRadius: 16, padding: '18px 20px',
         }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-            <div style={{ fontSize: 14, fontWeight: 900, color: '#fff', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+            <div style={{ fontSize: 13.5, fontWeight: 700, color: '#fff', display: 'flex', alignItems: 'center', gap: 7 }}>
               <span>📅</span> Upcoming Consortium Events Queue
             </div>
-            <button onClick={() => setTab('events')} style={{ background: 'none', border: 'none', color: '#f97316', fontSize: 12.5, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit' }}>
+            <button onClick={() => setTab('events')} style={{ background: 'none', border: 'none', color: '#f97316', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
               Manage all events →
             </button>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 12 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 10 }}>
             {events.slice(0, 3).map(ev => (
               <div key={ev.id} style={{
-                background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)',
-                borderRadius: 14, padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.06)',
+                borderRadius: 11, padding: '12px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
               }}>
                 <div>
-                  <div style={{ fontSize: 13.5, fontWeight: 900, color: '#fff', marginBottom: 3 }}>{ev.title}</div>
-                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>📍 {ev.venue} · {ev.date}</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#fff', marginBottom: 2 }}>{ev.title}</div>
+                  <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.45)' }}>📍 {ev.venue} · {ev.date}</div>
                 </div>
-                <span className="ap-badge" style={{ background: 'rgba(168,85,247,0.22)', color: '#c084fc', border: '1px solid rgba(168,85,247,0.4)', flexShrink: 0, fontWeight: 800 }}>
+                <span className="ap-badge" style={{ background: 'rgba(168,85,247,0.18)', color: '#c084fc', border: '1px solid rgba(168,85,247,0.3)', flexShrink: 0, fontWeight: 700 }}>
                   {ev.enrolled}/{ev.total} Seats
                 </span>
               </div>
@@ -2480,16 +2425,16 @@ function DashboardTab({ showToast, setTab, telemetry = {}, refreshOverviewStats,
 
       {/* ── Expiring Memberships Alert ── */}
       {renewals.length > 0 && (
-        <div style={{ background:'rgba(245,158,11,0.08)', border:'1.5px solid rgba(245,158,11,0.3)', borderRadius:18, padding:'20px 22px' }}>
-          <div style={{ fontSize:13, fontWeight:900, color:'#fbbf24', marginBottom:14, display:'flex', alignItems:'center', gap:8 }}>
+        <div style={{ background:'rgba(245,158,11,0.06)', border:'1px solid rgba(245,158,11,0.22)', borderRadius:16, padding:'18px 20px' }}>
+          <div style={{ fontSize:12.5, fontWeight:800, color:'#fbbf24', marginBottom:12, display:'flex', alignItems:'center', gap:8 }}>
             <span>⚠️</span> Memberships Expiring Soon
-            <span style={{ background:'rgba(245,158,11,0.25)', borderRadius:99, padding:'2px 9px', fontSize:12, fontWeight:900 }}>{renewals.length}</span>
+            <span style={{ background:'rgba(245,158,11,0.2)', borderRadius:99, padding:'1px 8px', fontSize:11.5, fontWeight:800 }}>{renewals.length}</span>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {renewals.map(r => (
-              <div key={r.id} style={{ display:'flex', justifyContent:'space-between', fontSize:13, color:'rgba(255,255,255,0.8)', padding:'8px 0', borderBottom:'1px solid rgba(255,255,255,0.06)' }}>
+              <div key={r.id} style={{ display:'flex', justifyContent:'space-between', fontSize:12.5, color:'rgba(255,255,255,0.75)', padding:'6px 0', borderBottom:'1px solid rgba(255,255,255,0.04)' }}>
                 <span>{r.name} {r.institution ? `— ${r.institution}` : ''}</span>
-                <span style={{ color:'#fcd34d', fontWeight:800 }}>Due {r.renewal_due}</span>
+                <span style={{ color:'#fcd34d', fontWeight:700 }}>Due {r.renewal_due}</span>
               </div>
             ))}
           </div>
