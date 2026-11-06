@@ -75,10 +75,7 @@ export default function VerifyPassPage() {
           setItemData(res.data || res);
         }
       })
-      .catch(() => {})
-      .finally(() => {
-        if (active) setLoading(false);
-      });
+      .catch(() => {});
 
     return () => { active = false; };
   }, [resolvedId, resolvedType]);
