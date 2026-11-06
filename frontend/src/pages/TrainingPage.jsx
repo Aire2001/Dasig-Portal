@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PageHeader from '../components/PageHeader';
 import ParticleBackground from '../components/ParticleBackground';
@@ -76,7 +76,9 @@ export default function TrainingPage() {
           category: 'Training',
           path: `/verify-pass?title=${encodeURIComponent(updated.title)}&name=${encodeURIComponent(fname)}&type=training`,
         });
-      } catch (_) {}
+      } catch {
+        // Fallback silently
+      }
       setFormModal(null);
       setOkModal({ training: updated, name: fname, phone, institution, email, role: user.role });
     } catch (err) {

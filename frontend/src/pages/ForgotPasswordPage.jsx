@@ -96,7 +96,8 @@ export default function ForgotPasswordPage() {
       // Record real enterprise security alert
       try {
         recordSecurityAlert(cleanEmail, 'Password Reset');
-      } catch (alertErr) {
+      } catch {
+        // Fallback silently
       }
 
       setStep('done');

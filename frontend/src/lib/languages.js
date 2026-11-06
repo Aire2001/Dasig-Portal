@@ -501,7 +501,7 @@ export async function translateMessageText(text, targetLangKey = 'en') {
         }
       }
     }
-  } catch (clientErr) {
+  } catch {
     // Client direct network blocked by ad-blocker or CORS, fallback to API proxy
   }
 
@@ -512,7 +512,8 @@ export async function translateMessageText(text, targetLangKey = 'en') {
       clientTranslationCache.set(cacheKey, res.translatedText);
       return res.translatedText;
     }
-  } catch (apiErr) {
+  } catch {
+    // API proxy fallback
   }
 
   return text;

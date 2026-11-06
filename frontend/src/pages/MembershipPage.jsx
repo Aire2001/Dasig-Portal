@@ -720,20 +720,3 @@ export default function MembershipPage() {
     </div>
   );
 }
-
-function ApplyField({ label, value, onChange, placeholder, error }) {
-  return (
-    <div style={{ marginBottom: 16 }}>
-      <label style={{ display: 'block', fontSize: 11.5, fontWeight: 800, color: error ? '#f87171' : 'rgba(255,255,255,0.5)', marginBottom: 7, letterSpacing: '0.5px', textTransform: 'uppercase' }}>
-        {label} <span style={{ color: '#f43f5e' }}>*</span>
-      </label>
-      <input className="ms-input" value={value} onChange={onChange} placeholder={placeholder}
-        style={{ borderColor: error ? '#e11d48' : undefined }} />
-      {error && (
-        <div style={{ marginTop: 5, fontSize: 12, color: '#f87171', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
-          ⚠ {error}
-        </div>
-      )}
-    </div>
-  );
-}

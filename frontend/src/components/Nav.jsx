@@ -3,7 +3,6 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../api';
 import SunSeal from './SunSeal';
-import HaribonFace from './HaribonFace';
 import CommandPalette from './CommandPalette';
 import { getUserNotifications, saveUserNotifications } from '../lib/notifications';
 
@@ -138,7 +137,6 @@ export default function Nav() {
   const moreRef     = useRef(null);
   const notifRef    = useRef(null);
   const userMenuRef = useRef(null);
-  const [tilt, setTilt] = useState({ x: 0, y: 0 });
   const [logoHover, setLogoHover] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
@@ -254,7 +252,8 @@ export default function Nav() {
             return merged;
           });
         }
-      } catch (err) {
+      } catch {
+        // Fallback silently
       }
     }
 
@@ -316,21 +315,6 @@ export default function Nav() {
     }
     return () => clearTimeout(welcomeTimer.current);
   }, [user]);
-
-  function onLogoMove(e) {
-    const r  = logoRef.current.getBoundingClientRect();
-    const cx = r.left + r.width  / 2;
-    const cy = r.top  + r.height / 2;
-    setTilt({
-      x: -((e.clientY - cy) / (r.height / 2)) * 18,
-      y:  ((e.clientX - cx) / (r.width  / 2)) * 18,
-    });
-  }
-
-  function onLogoLeave() {
-    setLogoHover(false);
-    setTilt({ x: 0, y: 0 });
-  }
 
   function handleLogout() { setLogoutConfirm(true); }
   function confirmLogout() { setLogoutConfirm(false); logout(); navigate('/'); }

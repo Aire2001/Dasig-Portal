@@ -65,7 +65,9 @@ export function AuthProvider({ children }) {
     try {
       const u = await api.auth.me();
       if (u) applyUser(u);
-    } catch (_) {}
+    } catch {
+      // Refresh fallback
+    }
   }
 
   function updateUser(updated) {
@@ -76,7 +78,7 @@ export function AuthProvider({ children }) {
   async function logout() {
     try {
       await api.auth.logout();
-    } catch (_) {
+    } catch {
       // Ignore server-side logout errors; the client session should still be cleared.
     } finally {
       applyUser(null);

@@ -460,7 +460,6 @@ export default function ChatbotPage() {
   const navigate  = useNavigate();
   const { user }  = useAuth();
   const role      = user?.role || 'GUEST';
-  const quickChips = QUICK_CHIPS_BY_ROLE[role] || QUICK_CHIPS_BY_ROLE.GUEST;
   const rb        = ROLE_BADGE[role] || ROLE_BADGE.GUEST;
 
   const userKey = user ? `user_${user.id}` : 'guest';
@@ -473,7 +472,7 @@ export default function ChatbotPage() {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed)) return parsed;
       }
-    } catch (_) {}
+    } catch { /* fallback */ }
     return [];
   });
 
@@ -493,7 +492,7 @@ export default function ChatbotPage() {
     let initialLang = 'en';
     try {
       initialLang = localStorage.getItem('dasig_lang') || 'en';
-    } catch (_) {}
+    } catch { /* fallback */ }
     try {
       const saved = sessionStorage.getItem('haribon_resume');
       if (saved) {
@@ -504,7 +503,7 @@ export default function ChatbotPage() {
           return msgs.map(m => ({ ...m, time: m.time ? new Date(m.time) : new Date() }));
         }
       }
-    } catch (_) {}
+    } catch { /* fallback */ }
     return [{ from:'bot', text: getLocalizedGreeting(user, initialLang), time: new Date() }];
   });
   const [input, setInput]             = useState('');
@@ -634,7 +633,7 @@ export default function ChatbotPage() {
 
       try {
         localStorage.setItem(storageKey, JSON.stringify(updated));
-      } catch (_) {}
+      } catch { /* fallback */ }
       return updated;
     });
   }, [messages]);
@@ -668,7 +667,7 @@ export default function ChatbotPage() {
       const updated = prev.filter(s => s.id !== sessId);
       try {
         localStorage.setItem(storageKey, JSON.stringify(updated));
-      } catch (_) {}
+      } catch { /* fallback */ }
       return updated;
     });
     if (currentSessionId === sessId) {
@@ -681,7 +680,7 @@ export default function ChatbotPage() {
     setSessions([]);
     try {
       localStorage.removeItem(storageKey);
-    } catch (_) {}
+    } catch { /* fallback */ }
     startNewChat();
   }
 
@@ -980,7 +979,7 @@ export default function ChatbotPage() {
       await navigator.clipboard.writeText(text);
       setCopied(idx);
       setTimeout(() => setCopied(c => c === idx ? null : c), 2000);
-    } catch (_) {}
+    } catch { /* fallback */ }
   }
 
   function regenerateResponse(idx) {

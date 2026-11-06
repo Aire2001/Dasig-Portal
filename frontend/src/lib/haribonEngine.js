@@ -643,7 +643,7 @@ export function solveClientQuery(query, history = [], user = null) {
   // 1. Math computation check
   const math = evaluateMathExpression(q);
   if (math) {
-    let reply = '';
+    let reply;
     if (lang === 'bisaya') {
       reply = `🔢 **Kalkulasyon / Math:**\n\nAng resulta sa **${math.n1} ${math.op} ${math.n2}** kay: **${math.result}** ✨`;
     } else if (lang === 'tagalog') {
@@ -724,7 +724,7 @@ export function solveClientQuery(query, history = [], user = null) {
   }
 
   if (q.includes('artificial intelligence') || q.includes('what is ai') || q.includes('machine learning') || q.includes('llm')) {
-    let reply = '';
+    let reply;
     if (lang === 'bisaya') {
       reply = `🤖 **Artificial Intelligence (AI):**\n\nAng **AI** nagpasabot sa mga algorithms ug computer systems nga makat-on ug makasulbad og komplikadong mga problema sama sa natural language processing, computer vision, ug predictive modeling. Sa DASIG, nagtanyag kami og mga sertipikadong bootcamps sa AI kauban ang DICT ug DOST!`;
     } else if (lang === 'tagalog') {
@@ -784,7 +784,7 @@ export function solveClientQuery(query, history = [], user = null) {
   }
 
   // 6. Intelligent Cognitive Synthesis Fallback (Authoritative & Contextual)
-  let fallbackReply = '';
+  let fallbackReply;
   if (lang === 'bisaya') {
     fallbackReply = `🦅 **Haribon AI — Kaalam sa Konsorsyum:**\n\nNakasabot ko sa imong pangutana bahin sa **"${raw}"**.\n\nIsip opisyal nga virtual assistant sa **DASIG Regional Consortium (Central Visayas)**, makahatag ko og tabang sa mga mosunod:\n\n• 🏛️ **Mahitungod sa DASIG:** Konsorsyum sa CIT-U, UP Cebu, USC, DOST, ug DICT.\n• 📅 **Events & Summits:** Mga eskedyul ug rehistrasyon sa [Programs Module](/programs?tab=events).\n• 🎓 **Faculty Bootcamps:** Pagsasanay sa AI, Web, ug panukiduki.\n• 💰 **Research Grants:** Mga pondo gikan sa DOST-7.\n• 👥 **Membership:** Pag-apil isip opisyal nga miyembro sa [Membership](/membership).\n\n💡 *Unsay partikular nga bahin ang gusto nimong masayran?*`;
   } else if (lang === 'tagalog') {

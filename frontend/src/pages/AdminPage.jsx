@@ -773,7 +773,6 @@ function QuickJumpModal({ onClose, onSelectTab }) {
 
 /* ─── System Health & Node Telemetry Modal ──────────────────────── */
 function SystemHealthModal({ onClose, telemetry = {} }) {
-  const isOk = telemetry.status === 'ok';
   const latencyDisplay = telemetry.latency !== null ? `${telemetry.latency} ms (Round-Trip)` : 'Measuring...';
   const dbStatusDisplay = telemetry.dbStatus === 'connected' ? 'Connected' : telemetry.dbStatus === 'error' ? 'Degraded' : 'Checking';
   return (
@@ -839,7 +838,7 @@ function SystemHealthModal({ onClose, telemetry = {} }) {
 const VALID_TABS = ['dashboard','calendar','users','applications','events','news','training','policies','funding','partnerships','reports','messages'];
 
 export default function AdminPage() {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [toast, setToast] = useState(null);
@@ -4508,7 +4507,7 @@ function MessagesTab({ showToast }) {
     try {
       await api.contact.markRead(msg.id);
       setMsgs(p => p.map(m => m.id === msg.id ? { ...m, read: true } : m));
-    } catch (_) {}
+    } catch {}
   }
 
   async function markAllRead() {

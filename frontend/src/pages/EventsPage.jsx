@@ -238,7 +238,9 @@ export default function EventsPage() {
           category: 'Event',
           path: `/verify-pass?title=${encodeURIComponent(updated.title)}&name=${encodeURIComponent(fname)}&type=event`,
         });
-      } catch (_) {}
+      } catch {
+        // Notification fallback
+      }
       setFormModal(null);
       setOkModal({ event: updated, name: fname, phone, institution, email: user?.email || '', role: user?.role || 'GUEST' });
     } catch (err) {

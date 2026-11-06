@@ -8,7 +8,6 @@ export default function VerifyPassPage() {
   const [searchParams] = useSearchParams();
   const [verifiedTime, setVerifiedTime] = useState('');
   const [itemData, setItemData] = useState(null);
-  const [loading, setLoading] = useState(false);
   const [checkedIn, setCheckedIn] = useState(false);
   const [checkingIn, setCheckingIn] = useState(false);
 
@@ -20,7 +19,9 @@ export default function VerifyPassPage() {
       } else if (resolvedId) {
         await api.events.markAttendSelf(resolvedId).catch(() => {});
       }
-    } catch (_) {}
+    } catch {
+      // Check-in fallback
+    }
     setCheckedIn(true);
     setCheckingIn(false);
   }
@@ -28,7 +29,6 @@ export default function VerifyPassPage() {
   const refCode = searchParams.get('ref') || 'DSG-PASS-VERIFIED';
   const name    = searchParams.get('name') || 'Registered Attendee';
   const email   = searchParams.get('email') || '';
-  const phone   = searchParams.get('phone') || '';
   const role    = (searchParams.get('role') || 'GUEST').toUpperCase();
   const inst    = searchParams.get('inst') || '';
 
@@ -65,7 +65,6 @@ export default function VerifyPassPage() {
   useEffect(() => {
     if (!resolvedId) return;
     let active = true;
-    setLoading(true);
     const fetcher = resolvedType === 'training'
       ? api.training.get(resolvedId)
       : api.events.get(resolvedId);

@@ -290,9 +290,10 @@ export default function Chatbot() {
   const [messages, setMessages] = useState(() => {
     let initialLang = 'en';
     try {
-      initialLang = localStorage.getItem('dasig_lang') || 'en';
+      const stored = localStorage.getItem('dasig_lang');
+      if (stored) initialLang = stored;
     } catch {
-      initialLang = 'en';
+      // Ignore storage errors
     }
     return [{ from:'bot', text: getLocalizedGreeting(user, initialLang), time: new Date() }];
   });
@@ -450,7 +451,7 @@ export default function Chatbot() {
       await navigator.clipboard.writeText(text);
       setCopied(idx);
       setTimeout(() => setCopied(c => c === idx ? null : c), 2000);
-    } catch (_) {}
+    } catch { /* fallback */ }
   }
 
   function speakMessage(idx, text, langKey = activeLang) {

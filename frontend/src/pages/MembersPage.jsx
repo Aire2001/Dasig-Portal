@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import PageHeader from '../components/PageHeader';
 import ParticleBackground from '../components/ParticleBackground';
 import { api } from '../api';
@@ -437,7 +437,9 @@ export default function MembersPage() {
         await audio.play();
         return;
       }
-    } catch (_) {}
+    } catch {
+      // Audio stream fallback
+    }
 
     fallbackSpeak(m.abbr, clean);
   }
@@ -833,7 +835,7 @@ function ModalLogo({ asset, abbr, name }) {
   return <LogoImg asset={asset} abbr={abbr} name={name} size={110} style={{ filter: 'drop-shadow(0 6px 20px rgba(0,0,0,0.55))' }} />;
 }
 
-function MemberCard({ member: m, grad, index, onClick }) {
+function MemberCard({ member: m, grad, onClick }) {
   const [hov, setHov] = useState(false);
   const asset = MEMBER_ASSETS[m.abbr] || { logo: null, logo2: null, bg: grad, accent: '#f97316', emoji: '🏛️' };
   const info = INSTITUTION_ABOUT[m.abbr];

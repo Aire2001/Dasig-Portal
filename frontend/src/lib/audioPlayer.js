@@ -69,11 +69,11 @@ class MultilingualVoicePlayer {
   stop() {
     this.isCancelled = true;
     if (this.audio) {
-      try { this.audio.pause(); } catch (_) {}
+      try { this.audio.pause(); } catch { /* pause ignore */ }
       this.audio = null;
     }
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      try { window.speechSynthesis.cancel(); } catch (_) {}
+      try { window.speechSynthesis.cancel(); } catch { /* synth cancel ignore */ }
     }
     this.currentIdx = null;
     if (this.onStateChange) this.onStateChange(null);
@@ -94,9 +94,9 @@ class MultilingualVoicePlayer {
 
     const cleanText = (text || '')
       .replace(/https?:\/\/\S+/gi, '')
-      .replace(/[\*\_\~`#]/g, '')
+      .replace(/[*_~`#]/g, '')
       .replace(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '')
-      .replace(/^[•▸\-\*\d+\.]\s*/gm, '')
+      .replace(/^[•▸\-*\d+.]\s*/gm, '')
       .replace(/\s+/g, ' ')
       .trim();
 
@@ -169,14 +169,14 @@ class MultilingualVoicePlayer {
           audio.playbackRate = speed || 1.0;
           this.audio = audio;
           audio.onended = () => {
-            try { URL.revokeObjectURL(audioUrl); } catch (_) {}
+            try { URL.revokeObjectURL(audioUrl); } catch { /* revoke ignore */ }
             playNextChunk();
           };
           audio.onerror = () => playNextChunk();
           await audio.play();
           return;
         }
-      } catch (_) {
+      } catch {
         // Fall back to direct audio stream
       }
 

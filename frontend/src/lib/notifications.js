@@ -23,7 +23,8 @@ export function getUserNotifications(userId) {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed) && parsed.length > 0) return parsed;
     }
-  } catch (err) {
+  } catch {
+    // Storage fallback
   }
 
   // Initial welcome notification for new/first-time users
@@ -43,7 +44,9 @@ export function getUserNotifications(userId) {
 
   try {
     localStorage.setItem(getNotificationsKey(userId), JSON.stringify(initial));
-  } catch (_) {}
+  } catch {
+    // Storage fallback
+  }
 
   return initial;
 }
@@ -81,15 +84,15 @@ export function addNotification(userId, { title, msg, category = 'Update', path 
 /**
  * Helper to record a security alert (e.g. password reset, email change)
  */
-export function recordSecurityAlert(emailOrUserId, actionName) {
+export function recordSecurityAlert(emailOrUserId, actionName = 'Password Reset') {
   const now = new Date();
   const timeFormatted = now.toLocaleDateString('en-US', {
     month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
   });
 
   return addNotification(emailOrUserId, {
-    title: '🛡️ Security Alert: Password Updated',
-    msg: `Your account password was successfully reset on ${timeFormatted}. If you did not make this change, contact consortium security immediately.`,
+    title: `🛡️ Security Alert: ${actionName}`,
+    msg: `Your account security status was modified (${actionName}) on ${timeFormatted}. If you did not authorize this action, contact consortium security immediately.`,
     category: 'Security',
     path: '/profile',
     isSecurity: true,

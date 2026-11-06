@@ -187,7 +187,9 @@ export default function NewsPage() {
         await audio.play();
         return;
       }
-    } catch (_) {}
+    } catch {
+      // Audio fallback
+    }
 
     fallbackSpeak(a.id, clean);
   }
@@ -452,7 +454,7 @@ export default function NewsPage() {
 
                 {/* ── Article grid ── */}
                 <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(min(100%, 300px),1fr))', gap:20, marginTop: filter === 'All' && activeFeatured ? 20 : 0 }}>
-                  {(filter === 'All' ? restArticles : displayedArticles).map((a, i) => (
+                  {(filter === 'All' ? restArticles : displayedArticles).map((a) => (
                     <NewsCard
                       key={a.id}
                       article={a}
@@ -479,13 +481,9 @@ function FeaturedCard({
   article: a,
   topStories = [],
   currentIndex = 0,
-  isAutoPaused = false,
-  liveShuffle = true,
-  onToggleLiveShuffle,
   onNext,
   onPrev,
   onSelectIndex,
-  onShuffleRandom,
   onMouseEnter,
   onMouseLeave,
   isBookmarked,
