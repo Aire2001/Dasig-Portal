@@ -5471,6 +5471,9 @@ function ReportsTab({ showToast, onOpenReport }) {
   const [from, setFrom]         = useState('');
   const [to, setTo]             = useState('');
   const firstLoad               = useRef(true);
+  const [unmatchedSearch, setUnmatchedSearch] = useState('');
+  const [unmatchedFilter, setUnmatchedFilter] = useState('all'); // 'all' | 'questions' | 'short' | 'offtopic'
+  const [unmatchedPage, setUnmatchedPage]     = useState(1);
 
   const load = useCallback((isRefresh = false) => {
     if (isRefresh) setRef(true); else setLoading(true);
@@ -6000,26 +6003,273 @@ function ReportsTab({ showToast, onOpenReport }) {
         )}
       </div>
 
-      {/* Unmatched queries log */}
-      {chatbot?.unmatchedQueries?.length > 0 && (
-        <div style={{ background:'rgba(239,68,68,0.05)', border:'1px solid rgba(239,68,68,0.2)', borderRadius:16, padding:'22px 24px' }}>
-          <div style={{ fontSize:13, fontWeight:800, color:'rgba(255,255,255,0.75)', textTransform:'uppercase', letterSpacing:'.6px', marginBottom:14, display:'flex', alignItems:'center', gap:8 }}>
-            <span>❓ Recent Unmatched Chatbot Queries</span>
-            <span style={{ background:'rgba(239,68,68,0.2)', color:'#fca5a5', fontSize:11, padding:'2px 8px', borderRadius:99, fontWeight:800 }}>{chatbot.unmatchedQueries.length}</span>
-            <span style={{ fontSize:11, fontWeight:400, color:'rgba(255,255,255,0.4)', textTransform:'none', letterSpacing:0, marginLeft:'auto' }}>Use these to expand Haribon's knowledge base</span>
-          </div>
-          <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
-            {chatbot.unmatchedQueries.map((q, i) => (
-              <div key={i} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', background:'rgba(255,255,255,0.03)', borderRadius:8, padding:'9px 14px', border:'1px solid rgba(255,255,255,0.06)' }}>
-                <span style={{ fontSize:13, color:'rgba(255,255,255,0.85)', fontStyle:'italic' }}>"{q.message}"</span>
-                <span style={{ fontSize:11, color:'rgba(255,255,255,0.35)', flexShrink:0, marginLeft:12 }}>
-                  {new Date(q.time).toLocaleDateString('en-PH', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' })}
-                </span>
+      {/* ── Unmatched Queries Intelligence & Knowledge Base Expansion ── */}
+      {chatbot?.unmatchedQueries?.length > 0 && (() => {
+        const rawList = chatbot.unmatchedQueries;
+
+        function classifyQuery(msg) {
+          const m = (msg || '').trim().toLowerCase();
+          if (m.length <= 6 || /^[a-z]{1,4}$/.test(m) || /(.)\1{2,}/.test(m)) {
+            return { type: 'short', label: 'Low Signal / Short', color: '#94a3b8', bg: 'rgba(148,163,184,0.12)', border: 'rgba(148,163,184,0.25)', icon: '⚡' };
+          }
+          if (m.includes('?') || /\b(what|who|how|can|where|when|why|is|are|tell me|explain)\b/.test(m)) {
+            return { type: 'questions', label: 'Candidate FAQ / Inquiry', color: '#38bdf8', bg: 'rgba(56,189,248,0.14)', border: 'rgba(56,189,248,0.3)', icon: '❓' };
+          }
+          return { type: 'offtopic', label: 'Out of Scope / General', color: '#f43f5e', bg: 'rgba(244,63,94,0.14)', border: 'rgba(244,63,94,0.3)', icon: '🌐' };
+        }
+
+        const filteredList = rawList.filter(q => {
+          const msg = q.message || '';
+          if (unmatchedSearch.trim()) {
+            if (!msg.toLowerCase().includes(unmatchedSearch.trim().toLowerCase())) return false;
+          }
+          if (unmatchedFilter !== 'all') {
+            const c = classifyQuery(msg);
+            if (c.type !== unmatchedFilter) return false;
+          }
+          return true;
+        });
+
+        const PAGE_SIZE = 8;
+        const totalPages = Math.max(1, Math.ceil(filteredList.length / PAGE_SIZE));
+        const paginatedList = filteredList.slice((unmatchedPage - 1) * PAGE_SIZE, unmatchedPage * PAGE_SIZE);
+
+        const questionCount = rawList.filter(q => classifyQuery(q.message).type === 'questions').length;
+        const shortCount    = rawList.filter(q => classifyQuery(q.message).type === 'short').length;
+        const offtopicCount = rawList.filter(q => classifyQuery(q.message).type === 'offtopic').length;
+
+        function copyQueryText(msg) {
+          if (navigator.clipboard) {
+            navigator.clipboard.writeText(msg);
+            showToast('Copied query to clipboard!', true, msg);
+          }
+        }
+
+        return (
+          <div style={{
+            background: 'linear-gradient(145deg, rgba(23,14,28,0.85) 0%, rgba(13,11,24,0.95) 100%)',
+            border: '1px solid rgba(244,63,94,0.25)',
+            borderRadius: 22, padding: '24px 26px',
+            boxShadow: '0 16px 48px rgba(0,0,0,0.45)', position: 'relative', overflow: 'hidden'
+          }}>
+            {/* Top radiant pink/rose strip */}
+            <div style={{
+              position: 'absolute', top: 0, left: 0, right: 0, height: 3,
+              background: 'linear-gradient(90deg, #f43f5e, #fb7185, #fda4af)',
+              opacity: 0.85
+            }} />
+
+            {/* Header */}
+            <div style={{ display:'flex', flexWrap:'wrap', alignItems:'center', justifyContent:'space-between', gap:12, marginBottom:18 }}>
+              <div>
+                <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+                  <div style={{ width:34, height:34, borderRadius:10, background:'rgba(244,63,94,0.18)', border:'1px solid rgba(244,63,94,0.35)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:17 }}>
+                    ❓
+                  </div>
+                  <div>
+                    <h3 style={{ color:'#fff', fontWeight:900, fontSize:17, margin:0, letterSpacing:'-0.3px', display:'flex', alignItems:'center', gap:8 }}>
+                      Unmatched Queries Intelligence & Knowledge Expansion
+                      <span style={{ fontSize:10.5, fontWeight:800, color:'#fca5a5', background:'rgba(244,63,94,0.18)', border:'1px solid rgba(244,63,94,0.3)', borderRadius:6, padding:'2px 7px' }}>
+                        {rawList.length} Logged Fallbacks
+                      </span>
+                    </h3>
+                    <div style={{ fontSize:12, color:'rgba(255,255,255,0.45)', marginTop:2 }}>
+                      Analyze unclassified visitor requests to expand Haribon NLP intent datasets and FAQs
+                    </div>
+                  </div>
+                </div>
               </div>
-            ))}
+
+              {/* Search & Filter Toolbar */}
+              <div style={{ display:'flex', alignItems:'center', gap:8, flexWrap:'wrap' }}>
+                {/* Search */}
+                <div style={{ position:'relative', width:190 }}>
+                  <input
+                    type="text"
+                    value={unmatchedSearch}
+                    onChange={e => { setUnmatchedSearch(e.target.value); setUnmatchedPage(1); }}
+                    placeholder="Search queries…"
+                    className="ap-input"
+                    style={{ fontSize:12, padding:'6px 26px 6px 10px', background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.1)' }}
+                  />
+                  {unmatchedSearch && (
+                    <button
+                      type="button"
+                      onClick={() => setUnmatchedSearch('')}
+                      style={{ position:'absolute', right:8, top:'50%', transform:'translateY(-50%)', background:'none', border:'none', color:'rgba(255,255,255,0.5)', cursor:'pointer', fontSize:12 }}
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+
+                {/* Filter Pills */}
+                <div style={{
+                  display:'flex', background:'rgba(255,255,255,0.05)',
+                  border:'1px solid rgba(255,255,255,0.08)', borderRadius:9, padding:3, gap:2
+                }}>
+                  {[
+                    { id:'all', label:`All (${rawList.length})` },
+                    { id:'questions', label:`Inquiries (${questionCount})`, color:'#38bdf8' },
+                    { id:'short', label:`Low Signal (${shortCount})`, color:'#94a3b8' },
+                    { id:'offtopic', label:`Off-Topic (${offtopicCount})`, color:'#f87171' },
+                  ].map(tab => (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      onClick={() => { setUnmatchedFilter(tab.id); setUnmatchedPage(1); }}
+                      style={{
+                        padding:'5px 10px', borderRadius:7, border:'none',
+                        background: unmatchedFilter === tab.id ? 'rgba(255,255,255,0.15)' : 'transparent',
+                        color: unmatchedFilter === tab.id ? '#fff' : 'rgba(255,255,255,0.55)',
+                        fontWeight: unmatchedFilter === tab.id ? 800 : 600,
+                        fontSize:11.5, cursor:'pointer', transition:'all .14s'
+                      }}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* List of Queries */}
+            {filteredList.length === 0 ? (
+              <div style={{ textAlign:'center', padding:'36px 0', color:'rgba(255,255,255,0.4)' }}>
+                <div style={{ fontSize:28, marginBottom:6 }}>🔍</div>
+                <div style={{ fontSize:13.5, fontWeight:800, color:'#fff' }}>No unmatched queries match your criteria</div>
+                <div style={{ fontSize:12, color:'rgba(255,255,255,0.4)', marginTop:2 }}>Try clearing the search filter or switching to All</div>
+              </div>
+            ) : (
+              <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+                {paginatedList.map((q, i) => {
+                  const tag = classifyQuery(q.message);
+                  const timeFormatted = new Date(q.time).toLocaleDateString('en-PH', {
+                    month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'
+                  });
+
+                  return (
+                    <div
+                      key={i}
+                      style={{
+                        display:'flex', alignItems:'center', justifyContent:'space-between',
+                        background:'rgba(255,255,255,0.03)', borderRadius:12,
+                        padding:'11px 16px', border:'1px solid rgba(255,255,255,0.06)',
+                        gap:14, transition:'all .14s ease'
+                      }}
+                      onMouseEnter={e => {
+                        e.currentTarget.style.background = 'rgba(255,255,255,0.06)';
+                        e.currentTarget.style.borderColor = 'rgba(244,63,94,0.35)';
+                        e.currentTarget.style.transform = 'translateX(2px)';
+                      }}
+                      onMouseLeave={e => {
+                        e.currentTarget.style.background = 'rgba(255,255,255,0.03)';
+                        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)';
+                        e.currentTarget.style.transform = 'translateX(0)';
+                      }}
+                    >
+                      {/* Left: Tag + Query string */}
+                      <div style={{ display:'flex', alignItems:'center', gap:10, minWidth:0, flex:1 }}>
+                        <span style={{
+                          fontSize:10.5, fontWeight:800, color:tag.color,
+                          background:tag.bg, border:`1px solid ${tag.border}`,
+                          borderRadius:6, padding:'2px 7px', whiteSpace:'nowrap', flexShrink:0
+                        }}>
+                          {tag.icon} {tag.label}
+                        </span>
+
+                        <span style={{
+                          fontSize:13.5, fontWeight:600, color:'#fff',
+                          overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap'
+                        }}
+                        title={q.message}
+                        >
+                          "{q.message}"
+                        </span>
+                      </div>
+
+                      {/* Right: Timestamp & Action Buttons */}
+                      <div style={{ display:'flex', alignItems:'center', gap:10, flexShrink:0 }}>
+                        <span style={{ fontSize:11.5, color:'rgba(255,255,255,0.4)', fontWeight:500 }}>
+                          🕒 {timeFormatted}
+                        </span>
+
+                        <button
+                          type="button"
+                          onClick={() => copyQueryText(q.message)}
+                          style={{
+                            background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.12)',
+                            color:'rgba(255,255,255,0.85)', borderRadius:7, padding:'4px 9px',
+                            fontSize:11.5, fontWeight:700, cursor:'pointer', display:'flex', alignItems:'center', gap:4,
+                            transition:'all .12s'
+                          }}
+                          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.15)'; e.currentTarget.style.color = '#fff'; }}
+                          onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.color = 'rgba(255,255,255,0.85)'; }}
+                          title="Copy query string to clipboard"
+                        >
+                          <span>📋</span>
+                          <span>Copy</span>
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginTop:14, paddingTop:12, borderTop:'1px solid rgba(255,255,255,0.06)' }}>
+                <span style={{ fontSize:12, color:'rgba(255,255,255,0.45)' }}>
+                  Showing {(unmatchedPage-1)*PAGE_SIZE + 1}–{Math.min(unmatchedPage*PAGE_SIZE, filteredList.length)} of {filteredList.length} queries
+                </span>
+                <div style={{ display:'flex', gap:5 }}>
+                  <button
+                    type="button"
+                    onClick={() => setUnmatchedPage(p => Math.max(1, p - 1))}
+                    disabled={unmatchedPage === 1}
+                    style={{
+                      background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.1)',
+                      color: unmatchedPage === 1 ? 'rgba(255,255,255,0.3)' : '#fff',
+                      borderRadius:6, padding:'4px 10px', fontSize:11.5, cursor: unmatchedPage === 1 ? 'default' : 'pointer'
+                    }}
+                  >
+                    ← Prev
+                  </button>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
+                    <button
+                      key={p}
+                      type="button"
+                      onClick={() => setUnmatchedPage(p)}
+                      style={{
+                        background: p === unmatchedPage ? 'rgba(244,63,94,0.3)' : 'rgba(255,255,255,0.06)',
+                        border: `1px solid ${p === unmatchedPage ? 'rgba(244,63,94,0.6)' : 'rgba(255,255,255,0.1)'}`,
+                        color: p === unmatchedPage ? '#fff' : 'rgba(255,255,255,0.7)',
+                        borderRadius:6, padding:'4px 9px', fontSize:11.5, fontWeight: p === unmatchedPage ? 800 : 600,
+                        cursor:'pointer'
+                      }}
+                    >
+                      {p}
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => setUnmatchedPage(p => Math.min(totalPages, p + 1))}
+                    disabled={unmatchedPage === totalPages}
+                    style={{
+                      background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.1)',
+                      color: unmatchedPage === totalPages ? 'rgba(255,255,255,0.3)' : '#fff',
+                      borderRadius:6, padding:'4px 10px', fontSize:11.5, cursor: unmatchedPage === totalPages ? 'default' : 'pointer'
+                    }}
+                  >
+                    Next →
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
-        </div>
-      )}
+        );
+      })()}
     </div>
   );
 }
