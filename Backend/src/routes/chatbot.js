@@ -801,6 +801,35 @@ router.post('/message', asyncRoute(async (req, res) => {
     } catch (_) {}
   }
 
+  const sendFinalResponse = async ({ reply, matched = true, intent = 'general', score = 10, followups = null, navigate_to = null, suggestions = [] }) => {
+    let finalReply = reply || '';
+    if (effectiveLang && !['english', 'en', 'bisaya', 'ceb', 'tagalog', 'tl'].includes(effectiveLang.toLowerCase())) {
+      try {
+        finalReply = await translateServerText(finalReply, effectiveLang, 'en');
+      } catch (_) {}
+    }
+
+    let finalFollowups = followups && followups.length > 0 ? followups : getSmartFollowups(intent, lang);
+    if (effectiveLang && !['english', 'en', 'bisaya', 'ceb', 'tagalog', 'tl'].includes(effectiveLang.toLowerCase()) && finalFollowups.length > 0) {
+      try {
+        finalFollowups = await Promise.all(
+          finalFollowups.map(f => translateServerText(f, effectiveLang, 'en'))
+        );
+      } catch (_) {}
+    }
+
+    return res.json({
+      reply: finalReply,
+      matched,
+      intent,
+      score,
+      language: effectiveLang,
+      followups: finalFollowups,
+      navigate_to,
+      suggestions,
+    });
+  };
+
 
   // 2. Check if this is a Live Database Counts/Stats Query (e.g. "how many events", "how many members", "pila ka miyembro", "ilang events")
   if (
@@ -827,15 +856,12 @@ router.post('/message', asyncRoute(async (req, res) => {
           reply = `👥 **DASIG Consortium Membership Metrics:**\n\nThere are currently **${totalUsers} registered users and members** across partner universities (CIT-U, UP Cebu, USC) and government agencies in Region VII.\n\n👉 *You can apply or view criteria in the [Membership Module](/membership)!*`;
         }
 
-        return res.json({
+        return await sendFinalResponse({
           reply,
           matched: true,
           intent: 'members_count',
           score: 10,
-          language: lang,
-          followups: getSmartFollowups(match?.intent || 'events', lang),
           navigate_to: '/membership',
-          suggestions: []
         });
       }
 
@@ -849,15 +875,12 @@ router.post('/message', asyncRoute(async (req, res) => {
           reply = `📅 **DASIG Active Events Count:**\n\nThere are **${allEvents.length} active consortium symposiums and summits** on the portal right now.\n\n` + allEvents.slice(0, 3).map(e => `• **${e.title}** (${e.enrolled || 0}/${e.total || 50} slots registered)`).join('\n') + `\n\n👉 *Explore all events in the [Programs Module](/programs?tab=events)!*`;
         }
 
-        return res.json({
+        return await sendFinalResponse({
           reply,
           matched: true,
           intent: 'events_count',
           score: 10,
-          language: lang,
-          followups: getSmartFollowups(match?.intent || 'events', lang),
           navigate_to: '/programs?tab=events',
-          suggestions: []
         });
       }
 
@@ -871,15 +894,12 @@ router.post('/message', asyncRoute(async (req, res) => {
           reply = `🎓 **Faculty Training Programs Count:**\n\nThere are **${allTrainings.length} active training bootcamps** organized alongside DICT, DOST, and CIT-U.\n\n` + allTrainings.slice(0, 3).map(t => `• **${t.title}** (${t.duration})`).join('\n') + `\n\n👉 *Enroll directly in the [Training Module](/programs?tab=training)!*`;
         }
 
-        return res.json({
+        return await sendFinalResponse({
           reply,
           matched: true,
           intent: 'training_count',
           score: 10,
-          language: lang,
-          followups: getSmartFollowups(match?.intent || 'events', lang),
           navigate_to: '/programs?tab=training',
-          suggestions: []
         });
       }
     } catch (err) {
@@ -932,15 +952,12 @@ router.post('/message', asyncRoute(async (req, res) => {
           reply += `\n👉 *You can register directly in the [Programs Module](/programs?tab=events)!*`;
         }
 
-        return res.json({
+        return await sendFinalResponse({
           reply,
           matched: true,
           intent: 'events_month',
           score: 10,
-          language: lang,
-          followups: getSmartFollowups(match?.intent || 'events', lang),
           navigate_to: '/programs?tab=events',
-          suggestions: []
         });
       }
     } catch (err) {
@@ -998,15 +1015,11 @@ router.post('/message', asyncRoute(async (req, res) => {
             dynamicReply = `🔍 **I found relevant matches in the DASIG Consortium Database:**\n\n${hits.slice(0, 4).join('\n')}\n\n💡 *Would you like more details about any of these?*`;
           }
 
-          return res.json({
+          return await sendFinalResponse({
             reply: dynamicReply,
             matched: true,
             intent: 'database_search',
             score: 8.0,
-            language: lang,
-            followups: getSmartFollowups(match?.intent || 'events', lang),
-            navigate_to: null,
-            suggestions: []
           });
         }
       }
@@ -1033,15 +1046,12 @@ router.post('/message', asyncRoute(async (req, res) => {
     Promise.resolve(supabase.from('chatbot_logs').insert({ message: normalized, matched: inDomain, intent }))
       .catch(() => {});
 
-    return res.json({
+    return await sendFinalResponse({
       reply,
       matched: inDomain,
       intent,
       score: 0,
-      language: lang,
-      followups: getSmartFollowups(match?.intent || 'events', lang),
       navigate_to: null,
-      suggestions: []
     });
   }
 
@@ -1128,20 +1138,11 @@ router.post('/message', asyncRoute(async (req, res) => {
     haribon: '/chatbot', contact: '/contact-admin', member_institutions: '/members'
   };
 
-    // Translate final response into user's language if not English, Bisaya, or Tagalog
-  if (effectiveLang && !['english', 'en', 'bisaya', 'ceb', 'tagalog', 'tl'].includes(effectiveLang.toLowerCase())) {
-    try {
-      reply = await translateServerText(reply, effectiveLang, 'en');
-    } catch (_) {}
-  }
-
-  return res.json({
+    return await sendFinalResponse({
     reply,
     matched: true,
     intent: match ? match.intent : 'general',
     score: bestScore,
-    language: effectiveLang,
-    followups: getSmartFollowups(match?.intent || 'events', lang),
     navigate_to: match ? (PAGE_LINKS[match.intent] || null) : null,
   });
 }));
