@@ -7281,11 +7281,14 @@ function AdminCalendarTab({ showToast, setTab }) {
 /* ═══════════════════════════════════════════════════════════════════
    MESSAGES
 ═══════════════════════════════════════════════════════════════════ */
-function MessagesTab({ showToast }) {
+function MessagesTab({ showToast, refreshOverviewStats }) {
   const [msgs, setMsgs]         = useState([]);
   const [loading, setLoading]   = useState(true);
   const [open, setOpen]         = useState(null);
   const [deletingId, setDeletingId] = useState(null);
+  const [search, setSearch]     = useState('');
+  const [filterStatus, setFilterStatus] = useState('all'); // 'all' | 'unread' | 'read'
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
 
   useEffect(() => {
     api.contact.messages()
@@ -7294,11 +7297,17 @@ function MessagesTab({ showToast }) {
       .finally(() => setLoading(false));
   }, []);
 
-  async function markRead(msg) {
-    if (msg.read) return;
+  async function markRead(msg, targetState = true) {
+    if (msg.read === targetState) return;
     try {
-      await api.contact.markRead(msg.id);
-      setMsgs(p => p.map(m => m.id === msg.id ? { ...m, read: true } : m));
+      if (targetState) {
+        await api.contact.markRead(msg.id);
+      }
+      setMsgs(p => p.map(m => m.id === msg.id ? { ...m, read: targetState } : m));
+      if (open && open.id === msg.id) {
+        setOpen(prev => ({ ...prev, read: targetState }));
+      }
+      if (refreshOverviewStats) refreshOverviewStats();
     } catch {}
   }
 
@@ -7306,7 +7315,9 @@ function MessagesTab({ showToast }) {
     try {
       await api.contact.markAllRead();
       setMsgs(p => p.map(m => ({ ...m, read: true })));
-      showToast('All messages marked as read', true);
+      if (open) setOpen(prev => ({ ...prev, read: true }));
+      showToast('All contact inquiries marked as read', true);
+      if (refreshOverviewStats) refreshOverviewStats();
     } catch (e) { showToast(e.message, false); }
   }
 
@@ -7316,62 +7327,308 @@ function MessagesTab({ showToast }) {
       await api.contact.deleteMessage(msg.id);
       setMsgs(p => p.filter(m => m.id !== msg.id));
       if (open?.id === msg.id) setOpen(null);
-      showToast('Message deleted', true);
+      setDeleteConfirm(null);
+      showToast('Message deleted successfully', true);
+      if (refreshOverviewStats) refreshOverviewStats();
     } catch (e) { showToast(e.message, false); }
     finally { setDeletingId(null); }
   }
 
-  function openMsg(msg) { setOpen(msg); markRead(msg); }
+  function openMsg(msg) {
+    setOpen(msg);
+    if (!msg.read) markRead(msg, true);
+  }
 
-  const unread = msgs.filter(m => !m.read).length;
+  function exportMessagesCSV() {
+    if (!filteredMsgs.length) return;
+    const headers = ['Sender Name', 'Email', 'Category', 'Subject', 'Received Date', 'Status', 'Message'];
+    const rows = filteredMsgs.map(m => [
+      m.name || '',
+      m.email || '',
+      m.category || 'General Inquiry',
+      m.subject || '',
+      m.created_at ? new Date(m.created_at).toISOString().slice(0, 10) : '',
+      m.read ? 'Read' : 'Unread',
+      (m.message || '').replace(/\n/g, ' ')
+    ]);
+    const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+    a.download = 'dasig_contact_messages.csv';
+    a.click();
+    showToast('Exported contact messages to CSV', true);
+  }
+
+  const unreadCount = msgs.filter(m => !m.read).length;
+  const readCount = msgs.filter(m => m.read).length;
+
+  const filteredMsgs = msgs.filter(m => {
+    if (filterStatus === 'unread' && m.read) return false;
+    if (filterStatus === 'read' && !m.read) return false;
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      const name = (m.name || '').toLowerCase();
+      const email = (m.email || '').toLowerCase();
+      const subj = (m.subject || '').toLowerCase();
+      const body = (m.message || '').toLowerCase();
+      const cat = (m.category || '').toLowerCase();
+      if (!name.includes(q) && !email.includes(q) && !subj.includes(q) && !body.includes(q) && !cat.includes(q)) {
+        return false;
+      }
+    }
+    return true;
+  });
+
+  const CATEGORY_STYLES = {
+    'General Inquiry':   { color:'#38bdf8', bg:'rgba(56,189,248,0.14)', border:'rgba(56,189,248,0.3)', icon:'💬' },
+    'Partnership':       { color:'#a78bfa', bg:'rgba(167,139,250,0.14)', border:'rgba(167,139,250,0.3)', icon:'🤝' },
+    'Membership':        { color:'#fbbf24', bg:'rgba(251,191,36,0.14)', border:'rgba(251,191,36,0.3)', icon:'📋' },
+    'Technical Support': { color:'#f43f5e', bg:'rgba(244,63,94,0.14)', border:'rgba(244,63,94,0.3)', icon:'🛠️' },
+    'Research / R&D':    { color:'#34d399', bg:'rgba(52,211,153,0.14)', border:'rgba(52,211,153,0.3)', icon:'🔬' },
+  };
 
   return (
     <div>
+      {/* ── Page Header with Search, Filter & Actions ── */}
       <PageHeader
-        title="Contact Messages"
-        desc={unread > 0 ? `${unread} unread message${unread > 1 ? 's' : ''}` : 'All messages from the contact form'}
+        title="Contact Messages & Inquiries"
+        desc={unreadCount > 0 ? `${unreadCount} unread inquiry requires administrative response` : 'All public and institutional consortium inquiries processed'}
         action={
-          unread > 0 ? (
-            <button onClick={markAllRead} className="ap-btn ap-btn-ghost" style={{ fontSize:12.5, whiteSpace:'nowrap' }}>
-              ✓ Mark All Read
+          <div style={{ display:'flex', alignItems:'center', gap:10, flexWrap:'wrap' }}>
+            {/* Filter Pills */}
+            <div style={{
+              display:'flex', background:'rgba(255,255,255,0.05)',
+              border:'1px solid rgba(255,255,255,0.08)', borderRadius:10, padding:3, gap:2
+            }}>
+              {[
+                { id:'all', label:`All (${msgs.length})` },
+                { id:'unread', label:`Unread (${unreadCount})`, color: unreadCount > 0 ? '#f97316' : 'inherit' },
+                { id:'read', label:`Processed (${readCount})`, color: '#34d399' },
+              ].map(tab => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setFilterStatus(tab.id)}
+                  style={{
+                    padding:'5px 12px', borderRadius:7, border:'none',
+                    background: filterStatus === tab.id ? 'rgba(255,255,255,0.15)' : 'transparent',
+                    color: filterStatus === tab.id ? '#fff' : 'rgba(255,255,255,0.6)',
+                    fontWeight: filterStatus === tab.id ? 800 : 600,
+                    fontSize:12, cursor:'pointer', transition:'all .14s'
+                  }}
+                >
+                  <span style={{ color: tab.color || 'inherit' }}>{tab.label}</span>
+                </button>
+              ))}
+            </div>
+
+            {/* Search Input */}
+            <div style={{ position:'relative', width:220 }}>
+              <input
+                type="text"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder="Search sender, subject, email…"
+                className="ap-input"
+                style={{ fontSize:12, padding:'7px 28px 7px 11px', background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.1)' }}
+              />
+              {search ? (
+                <button
+                  type="button"
+                  onClick={() => setSearch('')}
+                  style={{ position:'absolute', right:8, top:'50%', transform:'translateY(-50%)', background:'none', border:'none', color:'rgba(255,255,255,0.5)', cursor:'pointer', fontSize:12 }}
+                >
+                  ✕
+                </button>
+              ) : (
+                <span style={{ position:'absolute', right:8, top:'50%', transform:'translateY(-50%)', fontSize:12, opacity:0.4, pointerEvents:'none' }}>🔍</span>
+              )}
+            </div>
+
+            {/* Export CSV */}
+            <button
+              onClick={exportMessagesCSV}
+              className="ap-btn ap-btn-ghost"
+              style={{ fontSize:12.5, whiteSpace:'nowrap', padding:'7px 13px' }}
+              title="Download inquiries as CSV"
+            >
+              ⬇ Export CSV
             </button>
-          ) : null
+
+            {/* Mark All Read */}
+            {unreadCount > 0 && (
+              <button
+                onClick={markAllRead}
+                className="ap-btn"
+                style={{
+                  fontSize:12.5, whiteSpace:'nowrap', padding:'7px 14px',
+                  background:'rgba(255,255,255,0.08)', border:'1px solid rgba(255,255,255,0.15)',
+                  color:'#fff', fontWeight:700, borderRadius:8, cursor:'pointer', transition:'all .14s'
+                }}
+                onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.16)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
+              >
+                ✓ Mark All Read
+              </button>
+            )}
+          </div>
         }
       />
 
+      {/* ── KPI Summary Cards ── */}
       <SectionKPIs items={[
-        { label: 'Unread Inquiries', value: unread, icon: '📬', color: '#f87171' },
-        { label: 'Processed / Read', value: msgs.filter(m => m.read).length, icon: '✅', color: '#34d399' },
-        { label: 'Total Inquiries', value: msgs.length, icon: '📋', color: '#60a5fa' },
+        { label: 'Unread Inquiries', value: unreadCount, icon: '📬', color: unreadCount > 0 ? '#f97316' : '#94a3b8' },
+        { label: 'Processed / Read', value: readCount, icon: '✅', color: '#34d399' },
+        { label: 'Total Received', value: msgs.length, icon: '📋', color: '#60a5fa' },
       ]} />
+
+      {/* ── Delete Confirmation Modal ── */}
+      {deleteConfirm && (
+        <ConfirmModal
+          msg={`Are you sure you want to permanently delete the message from "${deleteConfirm.name}" (${deleteConfirm.subject})?`}
+          onConfirm={() => deleteMsg(deleteConfirm)}
+          onCancel={() => setDeleteConfirm(null)}
+        />
+      )}
+
+      {/* ── Message Detail Reader Modal ── */}
       {open && (
-        <Modal title="Message Details" onClose={() => setOpen(null)}>
-          <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
-            {[
-              { l:'From',     v:`${open.name} <${open.email}>` },
-              { l:'Category', v:open.category },
-              { l:'Subject',  v:open.subject },
-              { l:'Received', v:new Date(open.created_at).toLocaleString('en-PH', { dateStyle:'medium', timeStyle:'short' }) },
-            ].map(r => (
-              <div key={r.l} style={{ display:'flex', gap:10, padding:'8px 12px', background:'rgba(255,255,255,0.04)', borderRadius:9 }}>
-                <span style={{ fontSize:11, fontWeight:700, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', width:70, flexShrink:0, paddingTop:2 }}>{r.l}</span>
-                <span style={{ fontSize:13, color:'#fff', fontWeight:600 }}>{r.v}</span>
+        <Modal title="Inquiry Inspection & Communication Dossier" onClose={() => setOpen(null)} wide>
+          <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
+            {/* Header banner */}
+            <div style={{
+              display:'flex', alignItems:'center', justifyContent:'space-between',
+              padding:'14px 18px', background:'rgba(255,255,255,0.035)',
+              border:'1px solid rgba(255,255,255,0.08)', borderRadius:14, gap:14
+            }}>
+              <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+                <div style={{
+                  width:46, height:46, borderRadius:12,
+                  background:'linear-gradient(135deg, #1e3a8a, #4f46e5)',
+                  border:'1.5px solid rgba(255,255,255,0.15)',
+                  display:'flex', alignItems:'center', justifyContent:'center',
+                  fontSize:17, fontWeight:900, color:'#fff', flexShrink:0,
+                  boxShadow:'0 4px 14px rgba(0,0,0,0.35)'
+                }}>
+                  {(open.name || 'U').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()}
+                </div>
+                <div>
+                  <div style={{ color:'#fff', fontWeight:900, fontSize:16, display:'flex', alignItems:'center', gap:8 }}>
+                    {open.name}
+                    {!open.read ? (
+                      <span style={{ fontSize:10, fontWeight:900, color:'#fff', background:'linear-gradient(90deg,#f97316,#e11d48)', borderRadius:5, padding:'2px 7px' }}>
+                        UNREAD
+                      </span>
+                    ) : (
+                      <span style={{ fontSize:10, fontWeight:800, color:'#34d399', background:'rgba(16,185,129,0.15)', borderRadius:5, padding:'2px 7px' }}>
+                        PROCESSED
+                      </span>
+                    )}
+                  </div>
+                  <div style={{ color:'rgba(255,255,255,0.55)', fontSize:12.5, marginTop:2, display:'flex', alignItems:'center', gap:6 }}>
+                    <span>✉ {open.email}</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (navigator.clipboard) {
+                          navigator.clipboard.writeText(open.email);
+                          showToast('Copied email to clipboard!', true, open.email);
+                        }
+                      }}
+                      style={{ background:'none', border:'none', color:'rgba(255,255,255,0.4)', cursor:'pointer', fontSize:11, padding:0 }}
+                      title="Copy email address"
+                    >
+                      📋
+                    </button>
+                  </div>
+                </div>
               </div>
-            ))}
-            <div style={{ background:'rgba(255,255,255,0.04)', borderRadius:9, padding:'12px 14px' }}>
-              <div style={{ fontSize:11, fontWeight:700, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', marginBottom:8 }}>Message</div>
-              <p style={{ color:'rgba(255,255,255,0.85)', fontSize:13.5, lineHeight:1.75, margin:0, whiteSpace:'pre-wrap' }}>{open.message}</p>
+
+              <div style={{ textAlign:'right', flexShrink:0 }}>
+                <div style={{ fontSize:10.5, fontWeight:800, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', letterSpacing:'.5px' }}>
+                  Received At
+                </div>
+                <div style={{ fontSize:12.5, color:'#fff', fontWeight:600, marginTop:2 }}>
+                  {new Date(open.created_at).toLocaleString('en-PH', { dateStyle:'medium', timeStyle:'short' })}
+                </div>
+              </div>
             </div>
-            <div style={{ display:'flex', gap:10, marginTop:4 }}>
-              <a href={`mailto:${open.email}?subject=Re: ${encodeURIComponent(open.subject)}`}
-                style={{ flex:3, display:'block', textAlign:'center', background:'linear-gradient(90deg,#f97316,#e11d48)', color:'#fff', textDecoration:'none', borderRadius:10, padding:'11px', fontSize:13.5, fontWeight:800 }}>
-                ✉ Reply to {open.name}
+
+            {/* Metadata Grid */}
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
+              <div style={{ background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:12, padding:'10px 14px' }}>
+                <div style={{ fontSize:10.5, fontWeight:800, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:4 }}>
+                  Inquiry Category
+                </div>
+                <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+                  <span style={{
+                    fontSize:11.5, fontWeight:800,
+                    color: (CATEGORY_STYLES[open.category] || CATEGORY_STYLES['General Inquiry']).color,
+                    background: (CATEGORY_STYLES[open.category] || CATEGORY_STYLES['General Inquiry']).bg,
+                    border: `1px solid ${(CATEGORY_STYLES[open.category] || CATEGORY_STYLES['General Inquiry']).border}`,
+                    borderRadius:6, padding:'2px 8px'
+                  }}>
+                    {(CATEGORY_STYLES[open.category] || CATEGORY_STYLES['General Inquiry']).icon} {open.category || 'General Inquiry'}
+                  </span>
+                </div>
+              </div>
+
+              <div style={{ background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:12, padding:'10px 14px' }}>
+                <div style={{ fontSize:10.5, fontWeight:800, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:4 }}>
+                  Message Subject
+                </div>
+                <div style={{ color:'#fff', fontWeight:800, fontSize:13.5, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+                  {open.subject || '(No subject provided)'}
+                </div>
+              </div>
+            </div>
+
+            {/* Message Body */}
+            <div style={{
+              background:'rgba(255,255,255,0.025)', border:'1px solid rgba(255,255,255,0.06)',
+              borderRadius:14, padding:'16px 18px'
+            }}>
+              <div style={{ fontSize:11, fontWeight:800, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', letterSpacing:'.6px', marginBottom:10 }}>
+                Inquiry Message Content
+              </div>
+              <p style={{
+                color:'rgba(255,255,255,0.9)', fontSize:13.5, lineHeight:1.8,
+                margin:0, whiteSpace:'pre-wrap', fontFamily:'inherit'
+              }}>
+                {open.message}
+              </p>
+            </div>
+
+            {/* Action Bar */}
+            <div style={{ display:'flex', gap:10, marginTop:4, flexWrap:'wrap' }}>
+              <a
+                href={`mailto:${open.email}?subject=Re: ${encodeURIComponent(open.subject || 'DASIG Consortium Inquiry')}&body=${encodeURIComponent(`Dear ${open.name},\n\nThank you for reaching out to the DASIG Higher Education Innovation Consortium (Region VII).\n\nRegarding your inquiry: "\${open.subject}":\n\n`)}`}
+                style={{
+                  flex: 3, display:'flex', alignItems:'center', justifyContent:'center', gap:8,
+                  background:'linear-gradient(90deg,#f97316,#e11d48)', color:'#fff', textDecoration:'none',
+                  borderRadius:11, padding:'12px', fontSize:13.5, fontWeight:800,
+                  boxShadow:'0 4px 16px rgba(249,115,22,0.35)', transition:'all .14s'
+                }}
+              >
+                <span>✉</span>
+                <span>Reply to {open.name} via Email</span>
               </a>
+
               <button
-                onClick={() => deleteMsg(open)}
+                type="button"
+                onClick={() => markRead(open, !open.read)}
+                className="ap-btn ap-btn-ghost"
+                style={{ flex: 1.5, padding:'12px', borderRadius:11, fontSize:12.5, fontWeight:700 }}
+              >
+                {open.read ? 'Mark as Unread' : '✓ Mark as Read'}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setDeleteConfirm(open)}
                 disabled={deletingId === open.id}
                 className="ap-btn ap-btn-red"
-                style={{ flex:1, padding:'11px', borderRadius:10 }}
+                style={{ padding:'12px 18px', borderRadius:11, fontSize:12.5 }}
               >
                 {deletingId === open.id ? '…' : '🗑 Delete'}
               </button>
@@ -7379,50 +7636,194 @@ function MessagesTab({ showToast }) {
           </div>
         </Modal>
       )}
-      {loading ? <Loading /> : msgs.length === 0 ? (
-        <div style={{ textAlign:'center', padding:'60px 0', color:'rgba(255,255,255,0.3)' }}>
-          <div style={{ fontSize:40, marginBottom:10 }}>📭</div>
-          <div style={{ fontSize:14 }}>No messages yet</div>
+
+      {/* ── Messages List Stream ── */}
+      {loading ? (
+        <Loading />
+      ) : filteredMsgs.length === 0 ? (
+        <div style={{
+          background:'rgba(11,19,38,0.7)', border:'1px solid rgba(255,255,255,0.08)',
+          borderRadius:18, padding:'64px 20px', textAlign:'center', backdropFilter:'blur(16px)'
+        }}>
+          <div style={{ fontSize:42, marginBottom:12 }}>📭</div>
+          <div style={{ fontSize:16, fontWeight:800, color:'#fff' }}>
+            {msgs.length === 0 ? 'No contact inquiries received yet' : 'No messages match your active filter'}
+          </div>
+          <div style={{ fontSize:12.5, color:'rgba(255,255,255,0.45)', marginTop:4 }}>
+            {msgs.length === 0
+              ? 'New inquiries submitted via the portal contact form will appear here in real time.'
+              : 'Try clearing your search query or switching to the All filter.'}
+          </div>
         </div>
       ) : (
-        <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-          {msgs.map(m => (
-            <div key={m.id} onClick={() => openMsg(m)} style={{
-              display:'flex', alignItems:'center', gap:14, padding:'12px 16px',
-              background: m.read ? 'rgba(255,255,255,0.03)' : 'rgba(249,115,22,0.07)',
-              border:`1px solid ${m.read ? 'rgba(255,255,255,0.07)' : 'rgba(249,115,22,0.25)'}`,
-              borderRadius:12, cursor:'pointer', transition:'background .12s',
-            }}
-            onMouseEnter={e => { e.currentTarget.style.background = m.read ? 'rgba(255,255,255,0.06)' : 'rgba(249,115,22,0.12)'; }}
-            onMouseLeave={e => { e.currentTarget.style.background = m.read ? 'rgba(255,255,255,0.03)' : 'rgba(249,115,22,0.07)'; }}>
-              <div style={{ width:38, height:38, borderRadius:10, background:'linear-gradient(135deg,#1e3a8a,#4f46e5)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, fontWeight:900, color:'#fff', flexShrink:0 }}>
-                {(m.name||'?')[0].toUpperCase()}
-              </div>
-              <div style={{ flex:1, minWidth:0 }}>
-                <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:2 }}>
-                  <span style={{ fontWeight: m.read ? 600 : 800, color:'#fff', fontSize:13.5 }}>{m.name}</span>
-                  {!m.read && <span style={{ background:'#f97316', color:'#fff', borderRadius:5, padding:'1px 7px', fontSize:10.5, fontWeight:800 }}>NEW</span>}
-                  <span style={{ fontSize:11.5, color:'rgba(255,255,255,0.35)', background:'rgba(255,255,255,0.07)', borderRadius:5, padding:'1px 7px' }}>{m.category}</span>
+        <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+          {filteredMsgs.map(m => {
+            const isUnread = !m.read;
+            const cat = CATEGORY_STYLES[m.category] || CATEGORY_STYLES['General Inquiry'];
+            const initials = (m.name || 'U').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
+            const dateStr = new Date(m.created_at).toLocaleDateString('en-PH', { month:'short', day:'numeric' });
+            const timeStr = new Date(m.created_at).toLocaleTimeString('en-PH', { hour:'2-digit', minute:'2-digit' });
+
+            return (
+              <div
+                key={m.id}
+                onClick={() => openMsg(m)}
+                style={{
+                  display:'flex', alignItems:'center', gap:16, padding:'14px 18px',
+                  background: isUnread
+                    ? 'linear-gradient(90deg, rgba(249,115,22,0.09) 0%, rgba(225,29,72,0.04) 100%)'
+                    : 'rgba(255,255,255,0.03)',
+                  border: `1px solid ${isUnread ? 'rgba(249,115,22,0.3)' : 'rgba(255,255,255,0.07)'}`,
+                  borderLeft: isUnread ? '4px solid #f97316' : '1px solid rgba(255,255,255,0.07)',
+                  borderRadius:14, cursor:'pointer', transition:'all .15s ease',
+                  boxShadow: isUnread ? '0 4px 16px rgba(249,115,22,0.08)' : 'none'
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.background = isUnread ? 'rgba(249,115,22,0.14)' : 'rgba(255,255,255,0.06)';
+                  e.currentTarget.style.borderColor = isUnread ? 'rgba(249,115,22,0.45)' : 'rgba(255,255,255,0.15)';
+                  e.currentTarget.style.transform = 'translateY(-1px)';
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.background = isUnread
+                    ? 'linear-gradient(90deg, rgba(249,115,22,0.09) 0%, rgba(225,29,72,0.04) 100%)'
+                    : 'rgba(255,255,255,0.03)';
+                  e.currentTarget.style.borderColor = isUnread ? 'rgba(249,115,22,0.3)' : 'rgba(255,255,255,0.07)';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                }}
+              >
+                {/* Avatar with unread indicator */}
+                <div style={{ position:'relative', flexShrink:0 }}>
+                  <div style={{
+                    width:42, height:42, borderRadius:12,
+                    background: isUnread ? 'linear-gradient(135deg, #ea580c, #dc2626)' : 'linear-gradient(135deg, #1e3a8a, #3b82f6)',
+                    border: '1.5px solid rgba(255,255,255,0.15)',
+                    display:'flex', alignItems:'center', justifyContent:'center',
+                    fontSize:14, fontWeight:900, color:'#fff',
+                    boxShadow: isUnread ? '0 2px 10px rgba(234,88,12,0.4)' : '0 2px 8px rgba(0,0,0,0.3)'
+                  }}>
+                    {initials}
+                  </div>
+                  {isUnread && (
+                    <span style={{
+                      position:'absolute', top:-3, right:-3, width:11, height:11,
+                      borderRadius:'50%', background:'#f97316', border:'2px solid #0b1326',
+                      boxShadow:'0 0 8px #f97316'
+                    }} />
+                  )}
                 </div>
-                <div style={{ fontWeight:700, color: m.read ? 'rgba(255,255,255,0.6)' : '#fff', fontSize:12.5, marginBottom:2 }}>{m.subject}</div>
-                <div style={{ color:'rgba(255,255,255,0.35)', fontSize:12, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{m.message}</div>
-              </div>
-              <div style={{ display:'flex', alignItems:'center', gap:10, flexShrink:0 }}>
-                <div style={{ fontSize:11.5, color:'rgba(255,255,255,0.3)' }}>
-                  {new Date(m.created_at).toLocaleDateString('en-PH', { month:'short', day:'numeric' })}
+
+                {/* Main Content */}
+                <div style={{ flex:1, minWidth:0 }}>
+                  {/* Top line: Name + Email + Badges */}
+                  <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:4, flexWrap:'wrap' }}>
+                    <span style={{ fontWeight: isUnread ? 800 : 700, color:'#fff', fontSize:14 }}>
+                      {m.name}
+                    </span>
+                    <span style={{ fontSize:12, color:'rgba(255,255,255,0.45)' }}>
+                      &lt;{m.email}&gt;
+                    </span>
+
+                    {isUnread && (
+                      <span style={{
+                        background:'linear-gradient(90deg,#f97316,#e11d48)', color:'#fff',
+                        borderRadius:5, padding:'1px 6px', fontSize:10, fontWeight:900, letterSpacing:'.4px'
+                      }}>
+                        NEW
+                      </span>
+                    )}
+
+                    <span style={{
+                      fontSize:10.5, fontWeight:800, color:cat.color,
+                      background:cat.bg, border:`1px solid ${cat.border}`,
+                      borderRadius:6, padding:'1px 7px', display:'flex', alignItems:'center', gap:4
+                    }}>
+                      <span>{cat.icon}</span>
+                      <span>{m.category || 'General Inquiry'}</span>
+                    </span>
+                  </div>
+
+                  {/* Subject */}
+                  <div style={{
+                    fontWeight: isUnread ? 800 : 600,
+                    color: isUnread ? '#fff' : 'rgba(255,255,255,0.8)',
+                    fontSize:13, marginBottom:3
+                  }}>
+                    {m.subject || '(No subject)'}
+                  </div>
+
+                  {/* Snippet */}
+                  <div style={{
+                    color:'rgba(255,255,255,0.45)', fontSize:12,
+                    overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', lineHeight:1.4
+                  }}>
+                    {m.message}
+                  </div>
                 </div>
-                <button
-                  onClick={e => { e.stopPropagation(); deleteMsg(m); }}
-                  disabled={deletingId === m.id}
-                  title="Delete message"
-                  className="ap-btn ap-btn-red"
-                  style={{ padding:'4px 8px', fontSize:11 }}
-                >
-                  {deletingId === m.id ? '…' : '🗑'}
-                </button>
+
+                {/* Right: Date, Time & Quick Action Buttons */}
+                <div style={{ display:'flex', alignItems:'center', gap:12, flexShrink:0 }}>
+                  <div style={{ textAlign:'right' }}>
+                    <div style={{ fontSize:12, color: isUnread ? '#fff' : 'rgba(255,255,255,0.6)', fontWeight: isUnread ? 800 : 600 }}>
+                      {dateStr}
+                    </div>
+                    <div style={{ fontSize:10.5, color:'rgba(255,255,255,0.35)', marginTop:1 }}>
+                      {timeStr}
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div style={{ display:'flex', alignItems:'center', gap:6 }} onClick={e => e.stopPropagation()}>
+                    <a
+                      href={`mailto:${m.email}?subject=Re: ${encodeURIComponent(m.subject || 'DASIG Consortium Inquiry')}`}
+                      style={{
+                        background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.12)',
+                        color:'rgba(255,255,255,0.85)', borderRadius:7, padding:'5px 9px',
+                        fontSize:11.5, fontWeight:700, textDecoration:'none', display:'flex', alignItems:'center', gap:4,
+                        transition:'all .12s'
+                      }}
+                      onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.15)'; e.currentTarget.style.color = '#fff'; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.color = 'rgba(255,255,255,0.85)'; }}
+                      title="Reply directly via default email client"
+                    >
+                      <span>✉</span>
+                      <span>Reply</span>
+                    </a>
+
+                    <button
+                      type="button"
+                      onClick={() => markRead(m, !m.read)}
+                      style={{
+                        background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.12)',
+                        color: m.read ? 'rgba(255,255,255,0.5)' : '#34d399', borderRadius:7, padding:'5px 8px',
+                        fontSize:11.5, fontWeight:700, cursor:'pointer', transition:'all .12s'
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.15)'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.06)'}
+                      title={m.read ? 'Mark as Unread' : 'Mark as Read'}
+                    >
+                      {m.read ? '⚪' : '✓'}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setDeleteConfirm(m)}
+                      disabled={deletingId === m.id}
+                      style={{
+                        background:'rgba(244,63,94,0.1)', border:'1px solid rgba(244,63,94,0.3)',
+                        color:'#f87171', borderRadius:7, padding:'5px 8px',
+                        fontSize:11.5, cursor:'pointer', transition:'all .12s'
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.background = 'rgba(244,63,94,0.2)'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'rgba(244,63,94,0.1)'}
+                      title="Delete message"
+                    >
+                      {deletingId === m.id ? '…' : '🗑'}
+                    </button>
+                  </div>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
