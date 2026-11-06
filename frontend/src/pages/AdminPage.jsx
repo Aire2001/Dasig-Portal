@@ -5697,6 +5697,58 @@ const TR_CAL_COLORS = {
   Governance:{ bg:'linear-gradient(90deg,rgba(139,92,246,0.65),rgba(167,139,250,0.45))', border:'rgba(167,139,250,0.7)', text:'#fff', icon:'⚖️' },
 };
 
+function exportCalendarICS(items, showToast) {
+  if (!items || !items.length) {
+    if (showToast) showToast('No calendar items to export', false);
+    return;
+  }
+  const pad = n => String(n).padStart(2, '0');
+  const formatICSDate = d => {
+    if (!d || isNaN(d.getTime())) return '20260101T000000Z';
+    return `${d.getUTCFullYear()}${pad(d.getUTCMonth()+1)}${pad(d.getUTCDate())}T${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}00Z`;
+  };
+
+  let ics = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//DASIG Region VII Higher Education Innovation Consortium//EN',
+    'CALSCALE:GREGORIAN',
+    'METHOD:PUBLISH',
+    'X-WR-CALNAME:DASIG Consortium Calendar',
+    'X-WR-TIMEZONE:Asia/Manila',
+  ];
+
+  items.forEach(it => {
+    const start = it.startDate || new Date();
+    const end = it.endDate || new Date(start.getTime() + 8 * 3600 * 1000);
+    const summary = (it.title || 'Consortium Event').replace(/[,;\\]/g, ' ');
+    const desc = (it.description || '').replace(/\n/g, '\\n').replace(/[,;\\]/g, ' ');
+    const loc = (it.venue || it.org || 'Region VII Central Visayas Node').replace(/[,;\\]/g, ' ');
+
+    ics.push('BEGIN:VEVENT');
+    ics.push(`UID:dasig-${it._type}-${it.id}-${start.getTime()}@dasig.ph`);
+    ics.push(`DTSTAMP:${formatICSDate(new Date())}`);
+    ics.push(`DTSTART:${formatICSDate(start)}`);
+    ics.push(`DTEND:${formatICSDate(end)}`);
+    ics.push(`SUMMARY:[DASIG] ${summary}`);
+    ics.push(`DESCRIPTION:${desc}`);
+    ics.push(`LOCATION:${loc}`);
+    ics.push('STATUS:CONFIRMED');
+    ics.push('END:VEVENT');
+  });
+
+  ics.push('END:VCALENDAR');
+
+  const blob = new Blob([ics.join('\r\n')], { type: 'text/calendar;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'dasig_consortium_calendar.ics';
+  a.click();
+  URL.revokeObjectURL(url);
+  if (showToast) showToast('Exported calendar to .ics (Google/Outlook/Apple)', true);
+}
+
 function AdminCalendarTab({ showToast, setTab }) {
   const today      = new Date();
   const [month, setMonth]         = useState(today.getMonth());
@@ -5708,6 +5760,8 @@ function AdminCalendarTab({ showToast, setTab }) {
   const [selectedDay, setSelectedDay] = useState(null);
   const [showEvents, setShowEvents]     = useState(true);
   const [showTraining, setShowTraining] = useState(true);
+  const [viewMode, setViewMode]         = useState('month'); // 'month' | 'agenda'
+  const [calSearch, setCalSearch]       = useState('');
 
   useEffect(() => {
     Promise.all([
@@ -5721,7 +5775,7 @@ function AdminCalendarTab({ showToast, setTab }) {
   }, []);
 
   // All calendar items
-  const allItems = [
+  const rawAllItems = [
     ...(showEvents ? events.map(e => {
       const r = parseAdminRange(e.date);
       const c = EV_CAL_COLORS[e.category] || EV_CAL_COLORS.Summit;
@@ -5733,6 +5787,15 @@ function AdminCalendarTab({ showToast, setTab }) {
       return { ...t, startDate:r?.start||null, endDate:r?.end||null, _type:'training', _bg:c.bg, _border:c.border, _text:c.text, _icon:c.icon };
     }) : []),
   ].filter(i => i.startDate);
+
+  const allItems = rawAllItems.filter(it => {
+    if (!calSearch.trim()) return true;
+    const q = calSearch.toLowerCase();
+    const title = (it.title || '').toLowerCase();
+    const loc = (it.venue || it.org || '').toLowerCase();
+    const cat = (it.category || '').toLowerCase();
+    return title.includes(q) || loc.includes(q) || cat.includes(q);
+  });
 
   function prevMon() { if (month===0){setMonth(11);setYear(y=>y-1);}else setMonth(m=>m-1); }
   function nextMon() { if (month===11){setMonth(0);setYear(y=>y+1);}else setMonth(m=>m+1); }
@@ -6009,12 +6072,12 @@ function AdminCalendarTab({ showToast, setTab }) {
         {/* Toolbar */}
         <div style={{
           display:'flex', alignItems:'center', justifyContent:'space-between',
-          gap:12, marginBottom:16, flexShrink:0,
+          gap:12, marginBottom:16, flexShrink:0, flexWrap:'wrap',
           background:'rgba(11, 19, 38, 0.85)', border:'1px solid rgba(255,255,255,0.08)',
           borderRadius:16, padding:'12px 18px', backdropFilter:'blur(14px)',
           boxShadow:'0 4px 20px rgba(0,0,0,0.25)'
         }}>
-          <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:10, flexWrap:'wrap' }}>
             <button onClick={goToday} style={{
               background:'linear-gradient(135deg,#f97316,#e11d48)',
               border:'none', borderRadius:9, padding:'8px 16px', color:'#fff',
@@ -6045,15 +6108,79 @@ function AdminCalendarTab({ showToast, setTab }) {
                 {MONTH_NAMES_LONG[month]} {year}
               </h2>
             </div>
+
+            {/* View Mode Switcher: Month vs Agenda */}
+            <div style={{
+              display:'flex', background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.1)',
+              borderRadius:9, padding:3, gap:2, marginLeft:8
+            }}>
+              <button
+                type="button"
+                onClick={() => setViewMode('month')}
+                style={{
+                  padding:'5px 12px', borderRadius:7, border:'none',
+                  background: viewMode === 'month' ? 'rgba(255,255,255,0.15)' : 'transparent',
+                  color: viewMode === 'month' ? '#fff' : 'rgba(255,255,255,0.55)',
+                  fontWeight: viewMode === 'month' ? 800 : 600,
+                  fontSize:12, cursor:'pointer', transition:'all .14s'
+                }}
+              >
+                ⊞ Month Grid
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode('agenda')}
+                style={{
+                  padding:'5px 12px', borderRadius:7, border:'none',
+                  background: viewMode === 'agenda' ? 'rgba(255,255,255,0.15)' : 'transparent',
+                  color: viewMode === 'agenda' ? '#fff' : 'rgba(255,255,255,0.55)',
+                  fontWeight: viewMode === 'agenda' ? 800 : 600,
+                  fontSize:12, cursor:'pointer', transition:'all .14s'
+                }}
+              >
+                📋 Agenda List
+              </button>
+            </div>
           </div>
 
-          <div style={{ display:'flex', gap:10, alignItems:'center' }}>
-            <span style={{ fontSize:12, fontWeight:700, color:'rgba(255,255,255,0.6)', background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.09)', borderRadius:8, padding:'6px 12px' }}>
-              {allItems.filter(i=>{ const m=i.startDate?.getMonth(); return m===month; }).length} items this month
-            </span>
+          <div style={{ display:'flex', gap:10, alignItems:'center', flexWrap:'wrap' }}>
+            {/* Search Input with Clear Button */}
+            <div style={{ position:'relative', width:180 }}>
+              <input
+                className="ap-input"
+                placeholder="Search schedule…"
+                value={calSearch}
+                onChange={e => setCalSearch(e.target.value)}
+                style={{ paddingRight: calSearch ? 26 : 10, fontSize:12, padding:'6px 10px' }}
+              />
+              {calSearch && (
+                <button
+                  type="button"
+                  onClick={() => setCalSearch('')}
+                  style={{
+                    position:'absolute', right:6, top:'50%', transform:'translateY(-50%)',
+                    background:'none', border:'none', color:'rgba(255,255,255,0.5)',
+                    cursor:'pointer', fontSize:12, padding:0
+                  }}
+                  title="Clear search"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+
+            <button
+              onClick={() => exportCalendarICS(allItems, showToast)}
+              className="ap-btn ap-btn-ghost"
+              style={{ fontSize:12, padding:'7px 12px' }}
+              title="Export consortium schedule as .ics file for Google Calendar, Outlook, or Apple Calendar"
+            >
+              ⬇ Export .ics
+            </button>
+
             <button onClick={() => setTab('events')} style={{
               background:'linear-gradient(90deg,#f97316,#e11d48)', color:'#fff',
-              border:'none', borderRadius:10, padding:'9px 18px', fontSize:13,
+              border:'none', borderRadius:10, padding:'8px 16px', fontSize:12.5,
               fontWeight:800, cursor:'pointer', fontFamily:'inherit',
               display:'flex', alignItems:'center', gap:6, boxShadow:'0 4px 16px rgba(249,115,22,0.35)'
             }}>
@@ -6062,123 +6189,225 @@ function AdminCalendarTab({ showToast, setTab }) {
           </div>
         </div>
 
-        {/* Day headers Mon–Sun */}
-        <div style={{
-          display:'grid', gridTemplateColumns:'repeat(7,1fr)',
-          background:'rgba(15,23,42,0.6)', border:'1px solid rgba(255,255,255,0.08)',
-          borderBottom:'none', borderRadius:'14px 14px 0 0',
-          padding:'10px 0', flexShrink:0
-        }}>
-          {DAY_LABELS.map((d,i) => (
-            <div key={d} style={{
-              textAlign:'center', fontSize:11.5, fontWeight:800,
-              color: i>=5 ? '#f87171' : 'rgba(255,255,255,0.7)',
-              letterSpacing:'.6px', textTransform:'uppercase'
-            }}>{d}</div>
-          ))}
-        </div>
+        {viewMode === 'month' ? (
+          <>
+            {/* Day headers Mon–Sun */}
+            <div style={{
+              display:'grid', gridTemplateColumns:'repeat(7,1fr)',
+              background:'rgba(15,23,42,0.6)', border:'1px solid rgba(255,255,255,0.08)',
+              borderBottom:'none', borderRadius:'14px 14px 0 0',
+              padding:'10px 0', flexShrink:0
+            }}>
+              {DAY_LABELS.map((d,i) => (
+                <div key={d} style={{
+                  textAlign:'center', fontSize:11.5, fontWeight:800,
+                  color: i>=5 ? '#f87171' : 'rgba(255,255,255,0.7)',
+                  letterSpacing:'.6px', textTransform:'uppercase'
+                }}>{d}</div>
+              ))}
+            </div>
 
-        {loading ? (
-          <div style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', color:'rgba(255,255,255,0.3)', background:'rgba(11,19,38,0.5)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:'0 0 14px 14px' }}>
-            <div style={{ textAlign:'center' }}><div style={{ fontSize:32, marginBottom:8 }}>⏳</div>Loading calendar…</div>
-          </div>
-        ) : (
-          /* Week rows */
-          <div style={{
-            flex:1, overflowY:'auto', display:'flex', flexDirection:'column',
-            background:'rgba(11,19,38,0.75)', border:'1px solid rgba(255,255,255,0.08)',
-            borderRadius:'0 0 14px 14px', backdropFilter:'blur(12px)'
-          }}>
-            {weeks.map((wDays, wi) => {
-              const bars = getWeekBars(wDays);
-              const maxRow = bars.reduce((mx,b)=>Math.max(mx,b.row), -1);
-              return (
-                <div key={wi} style={{
-                  flex:1, minHeight:105, borderBottom: wi < weeks.length - 1 ? '1px solid rgba(255,255,255,0.06)' : 'none',
-                  display:'flex', flexDirection:'column', position:'relative'
-                }}>
-                  {/* Event bars */}
-                  {bars.length > 0 && (
-                    <div style={{
-                      display:'grid', gridTemplateColumns:'repeat(7,1fr)',
-                      gridTemplateRows:`repeat(${maxRow+1}, 26px)`,
-                      gap:3, padding:'6px 6px 2px', flexShrink:0,
-                      minHeight:(maxRow+1)*28+10, zIndex:2,
+            {loading ? (
+              <div style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', color:'rgba(255,255,255,0.3)', background:'rgba(11,19,38,0.5)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:'0 0 14px 14px' }}>
+                <div style={{ textAlign:'center' }}><div style={{ fontSize:32, marginBottom:8 }}>⏳</div>Loading calendar…</div>
+              </div>
+            ) : (
+              /* Week rows */
+              <div style={{
+                flex:1, overflowY:'auto', display:'flex', flexDirection:'column',
+                background:'rgba(11,19,38,0.75)', border:'1px solid rgba(255,255,255,0.08)',
+                borderRadius:'0 0 14px 14px', backdropFilter:'blur(12px)'
+              }}>
+                {weeks.map((wDays, wi) => {
+                  const bars = getWeekBars(wDays);
+                  const maxRow = bars.reduce((mx,b)=>Math.max(mx,b.row), -1);
+                  return (
+                    <div key={wi} style={{
+                      flex:1, minHeight:105, borderBottom: wi < weeks.length - 1 ? '1px solid rgba(255,255,255,0.06)' : 'none',
+                      display:'flex', flexDirection:'column', position:'relative'
                     }}>
-                      {bars.map((item,ii) => {
-                        const lR = item.isStart ? 8 : 0;
-                        const rR = item.isEnd   ? 8 : 0;
-                        return (
-                          <div
-                            key={`${item.id}-w${wi}-${ii}`}
-                            title={`${item.title} (${item.date || item.schedule})`}
-                            onClick={() => setDetail(item)}
-                            style={{
-                              gridColumnStart: item.sCol+1, gridColumnEnd: item.eCol+2,
-                              gridRowStart: item.row+1,
-                              background: item._bg,
-                              border: `1px solid ${item._border}`,
-                              borderRadius: `${lR}px ${rR}px ${rR}px ${lR}px`,
-                              padding: '2px 9px',
-                              cursor:'pointer', overflow:'hidden',
-                              display:'flex', alignItems:'center', gap:6,
-                              boxShadow:'0 2px 8px rgba(0,0,0,0.3)',
-                              transition:'all .15s ease',
-                            }}
-                            onMouseEnter={e=>{
-                              e.currentTarget.style.transform='translateY(-1px)';
-                              e.currentTarget.style.filter='brightness(1.2)';
-                              e.currentTarget.style.boxShadow='0 4px 14px rgba(0,0,0,0.5)';
-                            }}
-                            onMouseLeave={e=>{
-                              e.currentTarget.style.transform='translateY(0)';
-                              e.currentTarget.style.filter='none';
-                              e.currentTarget.style.boxShadow='0 2px 8px rgba(0,0,0,0.3)';
-                            }}
-                          >
-                            <span style={{ fontSize:11, flexShrink:0 }}>{item._icon || (item._type === 'training' ? '🎓' : '📅')}</span>
-                            {!item.isStart && <span style={{ fontSize:9, color:item._text, opacity:0.6, flexShrink:0 }}>◀</span>}
-                            <span style={{ fontSize:12, fontWeight:800, color:item._text, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', flex:1 }}>
-                              {item.title}
+                      {/* Event bars */}
+                      {bars.length > 0 && (
+                        <div style={{
+                          display:'grid', gridTemplateColumns:'repeat(7,1fr)',
+                          gridTemplateRows:`repeat(${maxRow+1}, 26px)`,
+                          gap:3, padding:'6px 6px 2px', flexShrink:0,
+                          minHeight:(maxRow+1)*28+10, zIndex:2,
+                        }}>
+                          {bars.map((item,ii) => {
+                            const lR = item.isStart ? 8 : 0;
+                            const rR = item.isEnd   ? 8 : 0;
+                            return (
+                              <div
+                                key={`${item.id}-w${wi}-${ii}`}
+                                title={`${item.title} (${item.date || item.schedule})`}
+                                onClick={() => setDetail(item)}
+                                style={{
+                                  gridColumnStart: item.sCol+1, gridColumnEnd: item.eCol+2,
+                                  gridRowStart: item.row+1,
+                                  background: item._bg,
+                                  border: `1px solid ${item._border}`,
+                                  borderRadius: `${lR}px ${rR}px ${rR}px ${lR}px`,
+                                  padding: '2px 9px',
+                                  cursor:'pointer', overflow:'hidden',
+                                  display:'flex', alignItems:'center', gap:6,
+                                  boxShadow:'0 2px 8px rgba(0,0,0,0.3)',
+                                  transition:'all .15s ease',
+                                }}
+                                onMouseEnter={e=>{
+                                  e.currentTarget.style.transform='translateY(-1px)';
+                                  e.currentTarget.style.filter='brightness(1.2)';
+                                  e.currentTarget.style.boxShadow='0 4px 14px rgba(0,0,0,0.5)';
+                                }}
+                                onMouseLeave={e=>{
+                                  e.currentTarget.style.transform='translateY(0)';
+                                  e.currentTarget.style.filter='none';
+                                  e.currentTarget.style.boxShadow='0 2px 8px rgba(0,0,0,0.3)';
+                                }}
+                              >
+                                <span style={{ fontSize:11, flexShrink:0 }}>{item._icon || (item._type === 'training' ? '🎓' : '📅')}</span>
+                                {!item.isStart && <span style={{ fontSize:9, color:item._text, opacity:0.6, flexShrink:0 }}>◀</span>}
+                                <span style={{ fontSize:12, fontWeight:800, color:item._text, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', flex:1 }}>
+                                  {item.title}
+                                </span>
+                                {item.isEnd && (
+                                  <span style={{ fontSize:9.5, opacity:0.85, fontWeight:700, color:'#fff', background:'rgba(0,0,0,0.25)', borderRadius:4, padding:'1px 4px', flexShrink:0 }}>
+                                    {item.category || item.level}
+                                  </span>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                      {/* Day number cells */}
+                      <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', flex:1, position:'absolute', inset:0, zIndex:1, pointerEvents:'none' }}>
+                        {wDays.map((d, di) => {
+                          const inM = d >= 1 && d <= daysInMon;
+                          const isT = inM && d===today.getDate() && month===today.getMonth() && year===today.getFullYear();
+                          const isWE = di >= 5;
+                          return (
+                            <div key={di} style={{
+                              borderLeft: di>0 ? '1px solid rgba(255,255,255,0.04)' : 'none',
+                              padding:'6px 8px',
+                              background: isT ? 'rgba(249,115,22,0.06)' : isWE ? 'rgba(255,255,255,0.012)' : 'transparent'
+                            }}>
+                              <div style={{
+                                width:26, height:26, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center',
+                                background: isT ? 'linear-gradient(135deg,#f97316,#e11d48)' : 'transparent',
+                                fontSize:12.5, fontWeight: isT ? 900 : 700,
+                                color: isT ? '#fff' : inM ? (isWE ? '#f87171' : 'rgba(255,255,255,0.85)') : 'rgba(255,255,255,0.15)',
+                                boxShadow: isT ? '0 0 12px rgba(249,115,22,0.6)' : 'none'
+                              }}>
+                                {inM ? d : ''}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </>
+        ) : (
+          /* Agenda / Chronological Schedule List View */
+          <div style={{
+            flex:1, overflowY:'auto',
+            background:'rgba(11,19,38,0.75)', border:'1px solid rgba(255,255,255,0.08)',
+            borderRadius:14, padding:'16px 20px', backdropFilter:'blur(12px)',
+            display:'flex', flexDirection:'column', gap:10
+          }}>
+            {allItems.length === 0 ? (
+              <div style={{ textAlign:'center', padding:'60px 0', color:'rgba(255,255,255,0.4)' }}>
+                <div style={{ fontSize:36, marginBottom:10 }}>📋</div>
+                <div style={{ fontSize:15, fontWeight:800, color:'#fff' }}>No scheduled items found</div>
+                <div style={{ fontSize:12.5, color:'rgba(255,255,255,0.4)', marginTop:4 }}>Try clearing search or toggling events/training in the sidebar.</div>
+              </div>
+            ) : (
+              allItems
+                .sort((a,b) => (a.startDate?.getTime() || 0) - (b.startDate?.getTime() || 0))
+                .map(it => {
+                  const dateStr = it.date || it.schedule || 'TBA';
+                  const loc = it.venue || it.org || 'Region VII Central Node';
+                  return (
+                    <div
+                      key={it._type + it.id}
+                      onClick={() => setDetail(it)}
+                      style={{
+                        display:'flex', alignItems:'center', justifyContent:'space-between',
+                        padding:'14px 18px', borderRadius:12,
+                        background:'rgba(255,255,255,0.035)', border:'1px solid rgba(255,255,255,0.07)',
+                        cursor:'pointer', transition:'all .15s ease', gap:14
+                      }}
+                      onMouseEnter={e => {
+                        e.currentTarget.style.background = 'rgba(255,255,255,0.065)';
+                        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)';
+                        e.currentTarget.style.transform = 'translateY(-1px)';
+                      }}
+                      onMouseLeave={e => {
+                        e.currentTarget.style.background = 'rgba(255,255,255,0.035)';
+                        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)';
+                        e.currentTarget.style.transform = 'translateY(0)';
+                      }}
+                    >
+                      <div style={{ display:'flex', alignItems:'center', gap:14, minWidth:0, flex:1 }}>
+                        <div style={{
+                          width:42, height:42, borderRadius:11,
+                          background: it._type==='event' ? 'rgba(129,140,248,0.15)' : 'rgba(52,211,153,0.15)',
+                          border:`1px solid ${it._type==='event' ? 'rgba(129,140,248,0.35)' : 'rgba(52,211,153,0.35)'}`,
+                          display:'flex', alignItems:'center', justifyContent:'center', fontSize:20, flexShrink:0
+                        }}>
+                          {it._icon || (it._type==='event' ? '📅' : '🎓')}
+                        </div>
+                        <div style={{ minWidth:0, flex:1 }}>
+                          <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:3 }}>
+                            <span style={{ color:'#fff', fontWeight:800, fontSize:14.5 }}>{it.title}</span>
+                            <span style={{
+                              fontSize:10.5, fontWeight:800, padding:'2px 7px', borderRadius:6,
+                              background: it._type==='event' ? 'rgba(129,140,248,0.18)' : 'rgba(52,211,153,0.18)',
+                              color: it._type==='event' ? '#a5b4fc' : '#6ee7b7'
+                            }}>
+                              {it._type==='event' ? 'Event' : 'Training'} · {it.category || it.level}
                             </span>
-                            {item.isEnd && (
-                              <span style={{ fontSize:9.5, opacity:0.85, fontWeight:700, color:'#fff', background:'rgba(0,0,0,0.25)', borderRadius:4, padding:'1px 4px', flexShrink:0 }}>
-                                {item.category || item.level}
-                              </span>
+                          </div>
+                          <div style={{ fontSize:12, color:'rgba(255,255,255,0.5)', display:'flex', alignItems:'center', gap:10, flexWrap:'wrap' }}>
+                            <span>📅 {dateStr}</span>
+                            <span>·</span>
+                            <span>📍 {loc}</span>
+                            {it.enrolled !== undefined && (
+                              <>
+                                <span>·</span>
+                                <span style={{ color:'#34d399', fontWeight:700 }}>👥 {it.enrolled}/{it.total} Enrolled</span>
+                              </>
                             )}
                           </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                  {/* Day number cells */}
-                  <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', flex:1, position:'absolute', inset:0, zIndex:1, pointerEvents:'none' }}>
-                    {wDays.map((d, di) => {
-                      const inM = d >= 1 && d <= daysInMon;
-                      const isT = inM && d===today.getDate() && month===today.getMonth() && year===today.getFullYear();
-                      const isWE = di >= 5;
-                      return (
-                        <div key={di} style={{
-                          borderLeft: di>0 ? '1px solid rgba(255,255,255,0.04)' : 'none',
-                          padding:'6px 8px',
-                          background: isT ? 'rgba(249,115,22,0.06)' : isWE ? 'rgba(255,255,255,0.012)' : 'transparent'
-                        }}>
-                          <div style={{
-                            width:26, height:26, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center',
-                            background: isT ? 'linear-gradient(135deg,#f97316,#e11d48)' : 'transparent',
-                            fontSize:12.5, fontWeight: isT ? 900 : 700,
-                            color: isT ? '#fff' : inM ? (isWE ? '#f87171' : 'rgba(255,255,255,0.85)') : 'rgba(255,255,255,0.15)',
-                            boxShadow: isT ? '0 0 12px rgba(249,115,22,0.6)' : 'none'
-                          }}>
-                            {inM ? d : ''}
-                          </div>
                         </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              );
-            })}
+                      </div>
+
+                      <div style={{ display:'flex', alignItems:'center', gap:8, flexShrink:0 }}>
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); setDetail(it); }}
+                          className="ap-btn ap-btn-ghost"
+                          style={{ padding:'6px 12px', fontSize:11.5 }}
+                        >
+                          View Details
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); setTab(it._type==='event'?'events':'training'); }}
+                          className="ap-btn ap-btn-blue"
+                          style={{ padding:'6px 12px', fontSize:11.5 }}
+                        >
+                          Manage →
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })
+            )}
           </div>
         )}
       </div>
