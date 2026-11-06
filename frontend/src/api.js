@@ -21,7 +21,7 @@ async function request(path, options = {}) {
     throw new Error('Network error: Unable to reach DASIG cloud API. Please check your connection or wait a moment while the cloud node initializes.');
   }
 
-  let data = {};
+  let data = null;
   const contentType = res.headers?.get('content-type') || '';
   if (contentType.includes('application/json')) {
     try {

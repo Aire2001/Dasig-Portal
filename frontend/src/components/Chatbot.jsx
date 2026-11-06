@@ -32,40 +32,6 @@ const NAV_CARD_INFO = {
   '/admin':        { icon: '🛡️', title: 'Admin Command Center', desc: 'Open executive portal administration and control modules' },
 };
 
-/* ── Role-based quick chips (Trilingual: English, Bisaya, Tagalog) ─ */
-const QUICK_BY_ROLE = {
-  GUEST: [
-    { label: '📅 Upcoming Events',          q: 'What events are coming up?' },
-    { label: '🇵🇭 (Bisaya) Mga Events',      q: 'Maayong adlaw! Unsay mga umaabot nga events sa DASIG?' },
-    { label: '🇵🇭 (Tagalog) Mga Kaganapan',   q: 'Magandang araw! May mga paparating bang event sa DASIG?' },
-    { label: '🎓 Training Programs',        q: 'What training programs are available?' },
-    { label: '🇵🇭 (Bisaya) Unsaon Pag-apil', q: 'Unsaon pag-apil sa DASIG membership?' },
-    { label: '💰 Funding Grants',           q: 'What funding opportunities are available?' },
-    { label: '🏛 Member Institutions',      q: 'Who are the DASIG member institutions?' },
-    { label: '🦅 About Haribon',            q: 'Who are you and what languages can you speak?' },
-  ],
-  MEMBER: [
-    { label: '📅 Upcoming Events',          q: 'What events are coming up?' },
-    { label: '🇵🇭 (Bisaya) Mga Events',      q: 'Unsay mga umaabot nga kalihokan sa DASIG?' },
-    { label: '🎓 Enroll in Training',       q: 'What training programs can I enroll in?' },
-    { label: '💰 Open Funding',             q: 'What funding opportunities are open?' },
-    { label: '🤝 Partnerships',             q: 'Tell me about DASIG partnerships' },
-    { label: '📋 View Policies',            q: 'What governance policies are available?' },
-    { label: '🇵🇭 (Tagalog) Research Grants', q: 'May available bang research grants para sa unibersidad?' },
-    { label: '🏛 Member Institutions',      q: 'Who are the DASIG member institutions?' },
-  ],
-  ADMIN: [
-    { label: '📅 All Events',               q: 'What events are coming up?' },
-    { label: '🎓 Training Programs',        q: 'What training programs are available?' },
-    { label: '👥 Member Management',        q: 'What can the admin panel manage?' },
-    { label: '🤖 Trilingual AI Engine',     q: 'What languages can Haribon understand?' },
-    { label: '💰 Funding Opportunities',    q: 'What funding opportunities exist?' },
-    { label: '📋 Governance Policies',      q: 'What governance policies are available?' },
-    { label: '🤝 Partnerships',             q: 'Tell me about DASIG partnerships' },
-    { label: '🦅 Haribon Capabilities',     q: 'How does the trilingual Haribon AI work?' },
-  ],
-};
-
 /* ── Role-based greeting ──────────────────────────────────────── */
 function formatTime(d) {
   if (!d) return '';
@@ -387,7 +353,8 @@ export default function Chatbot() {
               isShowingTranslated: true,
             }
           }));
-        } catch (err) {
+        } catch {
+          // Ignore translation errors
         } finally {
           setTranslatingIdx(null);
         }

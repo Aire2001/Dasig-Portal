@@ -578,7 +578,8 @@ export default function ChatbotPage() {
               isShowingTranslated: true,
             }
           }));
-        } catch (err) {
+        } catch {
+          // Ignore translation errors
         } finally {
           setTranslatingIdx(null);
         }
