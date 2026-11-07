@@ -69,7 +69,7 @@ const HOME_CSS = `
   }
   @keyframes dasig-float {
     0%,100% { transform: translateY(0px); }
-    50%      { transform: translateY(-18px); }
+    50%      { transform: translateY(-14px); }
   }
   @keyframes fadeUp {
     from { transform: translateY(22px); opacity: 0; }
@@ -79,6 +79,15 @@ const HOME_CSS = `
     0%   { background-position: -200% center; }
     100% { background-position:  200% center; }
   }
+  @keyframes btnShimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(200%); }
+  }
+  @keyframes livePulse {
+    0%,100% { box-shadow: 0 0 6px rgba(16,185,129,0.6); }
+    50%      { box-shadow: 0 0 16px rgba(16,185,129,1); }
+  }
+  .live-pulse { animation: livePulse 2s ease-in-out infinite; }
   .haribon-float { animation: dasig-float 5s ease-in-out infinite; }
   .dasig-ring {
     position: absolute; border-radius: 50%;
@@ -86,57 +95,67 @@ const HOME_CSS = `
     animation: dasig-ring 3.5s ease-out infinite;
     pointer-events: none;
   }
+  .home-btn-shimmer {
+    position: relative;
+    overflow: hidden;
+  }
+  .home-btn-shimmer::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.22), transparent);
+    animation: btnShimmer 3s infinite;
+  }
+  .hero-bento-tile {
+    transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+  }
+  .hero-bento-tile:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 36px rgba(0,0,0,0.55);
+  }
   .mod-card {
-    border-radius: 18px; padding: 22px;
+    border-radius: 20px; padding: 24px;
     cursor: pointer; position: relative; overflow: hidden;
-    transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+    transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
     border: 1px solid rgba(255,255,255,0.08);
   }
   .mod-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 45px rgba(0,0,0,0.6);
+  }
+  .mod-card:hover .mod-arrow-btn {
+    transform: translateX(4px);
+    opacity: 1 !important;
+  }
+  .news-mini:hover {
     transform: translateY(-3px);
-    box-shadow: 0 16px 36px rgba(0,0,0,0.5);
+    box-shadow: 0 12px 36px rgba(0,0,0,0.45);
     border-color: rgba(249,115,22,0.4);
   }
-  .mod-card::after {
-    content: ''; position: absolute; inset: 0;
-    background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 55%);
-    pointer-events: none;
-  }
-  .news-mini:hover { transform: translateY(-3px); box-shadow: 0 10px 32px rgba(0,0,0,0.35); border-color: rgba(249,115,22,0.35); }
-  .news-mini { transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease; }
+  .news-mini { transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease; }
 
-  @media (max-width: 860px) {
+  @media (max-width: 960px) {
     .home-hero-grid {
       grid-template-columns: 1fr !important;
-      gap: 28px !important;
-      text-align: center;
+      gap: 36px !important;
     }
-    .home-hero-content {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+    .home-stats-bento {
+      grid-template-columns: repeat(2, 1fr) !important;
     }
-    .home-hero-illustration {
-      margin: 0 auto;
-      max-width: 240px;
+    .home-modules-grid {
+      grid-template-columns: repeat(2, 1fr) !important;
     }
-    .home-stats-bar {
-      display: grid !important;
-      grid-template-columns: 1fr 1fr !important;
-      gap: 14px !important;
-      width: 100% !important;
-    }
-    .home-stats-item {
-      border-right: none !important;
-      padding: 10px !important;
-      text-align: center !important;
-      border-bottom: 1px solid rgba(255,255,255,0.06);
+    .home-nodes-grid {
+      grid-template-columns: repeat(2, 1fr) !important;
     }
     .home-cta-card {
       grid-template-columns: 1fr !important;
     }
     .home-cta-left {
-      padding: 32px 20px !important;
+      padding: 32px 24px !important;
       text-align: center;
     }
     .home-cta-actions {
@@ -149,9 +168,18 @@ const HOME_CSS = `
     }
   }
 
-  @media (max-width: 480px) {
+  @media (max-width: 580px) {
+    .home-stats-bento {
+      grid-template-columns: 1fr !important;
+    }
+    .home-modules-grid {
+      grid-template-columns: 1fr !important;
+    }
+    .home-nodes-grid {
+      grid-template-columns: 1fr !important;
+    }
     .home-hero-title {
-      font-size: 34px !important;
+      font-size: 36px !important;
       letter-spacing: -1px !important;
     }
     .home-cta-actions {
@@ -171,6 +199,7 @@ const modules = [
     desc: 'Institutional membership management, tier-based access, renewals & status tracking.',
     icon: '👥',
     color: '#3b82f6',
+    gradient: 'linear-gradient(135deg, #2563eb, #1d4ed8)',
     route: '/membership',
   },
   {
@@ -179,6 +208,7 @@ const modules = [
     desc: 'Regional workshop and summit discovery, attendee registration, and calendar sync.',
     icon: '📅',
     color: '#8b5cf6',
+    gradient: 'linear-gradient(135deg, #7c3aed, #5b21b6)',
     route: '/programs?tab=events',
   },
   {
@@ -187,6 +217,7 @@ const modules = [
     desc: 'Consortium announcements, policy updates, and regional academic publications archive.',
     icon: '📰',
     color: '#10b981',
+    gradient: 'linear-gradient(135deg, #059669, #047857)',
     route: '/news',
   },
   {
@@ -195,6 +226,7 @@ const modules = [
     desc: 'Consortium charters, governance frameworks, and regional compliance guidelines.',
     icon: '📋',
     color: '#f59e0b',
+    gradient: 'linear-gradient(135deg, #d97706, #b45309)',
     route: '/policies',
   },
   {
@@ -203,6 +235,7 @@ const modules = [
     desc: 'Government research grants, scholarship programs, and institutional funding opportunities.',
     icon: '💰',
     color: '#10b981',
+    gradient: 'linear-gradient(135deg, #10b981, #059669)',
     route: '/funding',
   },
   {
@@ -210,7 +243,8 @@ const modules = [
     tag: 'Professional Dev',
     desc: 'Accredited technical bootcamps and executive leadership development programs.',
     icon: '🎓',
-    color: '#ec4899',
+    color: '#f97316',
+    gradient: 'linear-gradient(135deg, #ea580c, #c2410c)',
     route: '/programs?tab=training',
   },
   {
@@ -219,6 +253,7 @@ const modules = [
     desc: 'Regional academic, government, and industry cross-institutional collaboration explorer.',
     icon: '🤝',
     color: '#06b6d4',
+    gradient: 'linear-gradient(135deg, #0891b2, #0e7490)',
     route: '/partnerships',
   },
   {
@@ -227,6 +262,7 @@ const modules = [
     desc: 'Browse all Region VII consortium state universities, agencies, and regional campuses.',
     icon: '🏛️',
     color: '#a855f7',
+    gradient: 'linear-gradient(135deg, #9333ea, #6b21a8)',
     route: '/members',
   },
   {
@@ -235,6 +271,7 @@ const modules = [
     desc: 'AI Assistant scoped to DASIG regional knowledge — ask about events, training & policies.',
     icon: '🦅',
     color: '#f97316',
+    gradient: 'linear-gradient(135deg, #f97316, #e11d48)',
     route: '/chatbot',
   },
 ];
@@ -249,73 +286,82 @@ function ModuleCard({ mod }) {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
-        background: 'rgba(8, 14, 28, 0.75)',
-        backdropFilter: 'blur(12px)',
-        border: `1px solid ${hovered ? mod.color : 'rgba(255, 255, 255, 0.08)'}`,
-        borderRadius: 18,
-        padding: '22px 24px',
+        background: 'linear-gradient(135deg, rgba(10, 18, 38, 0.85) 0%, rgba(13, 23, 48, 0.78) 100%)',
+        backdropFilter: 'blur(16px)',
+        border: `1px solid ${hovered ? mod.color + '85' : 'rgba(255, 255, 255, 0.08)'}`,
+        borderRadius: 20,
+        padding: '24px 24px',
         cursor: 'pointer',
         position: 'relative',
         overflow: 'hidden',
-        boxShadow: hovered ? `0 16px 40px rgba(0,0,0,0.6), 0 0 20px ${mod.color}25` : '0 4px 16px rgba(0,0,0,0.3)',
+        boxShadow: hovered ? `0 18px 45px rgba(0,0,0,0.65), 0 0 24px ${mod.color}25` : '0 8px 24px rgba(0,0,0,0.35)',
         transform: hovered ? 'translateY(-4px)' : 'none',
-        transition: 'all 0.18s cubic-bezier(.34,1.2,.64,1)',
+        transition: 'all 0.22s cubic-bezier(.16, 1, .3, 1)',
         display: 'flex',
         flexDirection: 'column',
       }}
     >
+      {/* Top glowing accent line */}
+      <div style={{
+        position: 'absolute', top: 0, left: 0, right: 0, height: 3,
+        background: `linear-gradient(90deg, transparent, ${mod.color}, transparent)`,
+      }} />
+
       {/* Ambient background glow */}
       <div style={{
-        position: 'absolute', top: -30, right: -30, width: 100, height: 100,
-        borderRadius: '50%', background: `radial-gradient(circle, ${mod.color}20, transparent 70%)`,
+        position: 'absolute', top: -30, right: -30, width: 110, height: 110,
+        borderRadius: '50%', background: `radial-gradient(circle, ${mod.color}22, transparent 70%)`,
         pointerEvents: 'none',
       }} />
 
-      {/* Top row: Icon + Tag */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+      {/* Top row: 3D Icon + Tag */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <div style={{
-          width: 44, height: 44, borderRadius: 12,
-          background: `${mod.color}15`,
-          border: `1px solid ${mod.color}35`,
+          width: 46, height: 46, borderRadius: 13,
+          background: mod.gradient || `${mod.color}15`,
+          border: `1px solid ${mod.color}50`,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 20, flexShrink: 0,
+          fontSize: 22, flexShrink: 0,
+          boxShadow: `0 6px 16px ${mod.color}35`,
         }}>
           {mod.icon}
         </div>
         <span style={{
-          background: `${mod.color}12`,
+          background: `${mod.color}16`,
           color: mod.color,
-          border: `1px solid ${mod.color}30`,
+          border: `1px solid ${mod.color}35`,
           borderRadius: 20, padding: '3px 10px',
-          fontSize: 10.5, fontWeight: 800, letterSpacing: '.4px',
+          fontSize: 11, fontWeight: 800, letterSpacing: '.4px',
         }}>
           {mod.tag}
         </span>
       </div>
 
       {/* Title */}
-      <div style={{ fontWeight: 800, fontSize: 16, color: '#fff', marginBottom: 6 }}>
+      <div style={{ fontWeight: 900, fontSize: 17, color: '#fff', marginBottom: 6, letterSpacing: '-0.3px' }}>
         {mod.title}
       </div>
 
       {/* Description */}
-      <div style={{ fontSize: 13, color: 'rgba(255, 255, 255, 0.55)', lineHeight: 1.6, flex: 1, marginBottom: 14 }}>
+      <div style={{ fontSize: 13, color: 'rgba(255, 255, 255, 0.6)', lineHeight: 1.6, flex: 1, marginBottom: 16 }}>
         {mod.desc}
       </div>
 
       {/* Footer Link */}
       <div style={{
-        display: 'flex', alignItems: 'center', gap: 6,
-        fontSize: 12.5, fontWeight: 700,
-        color: hovered ? mod.color : 'rgba(255, 255, 255, 0.45)',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        fontSize: 12.5, fontWeight: 800,
+        color: hovered ? mod.color : 'rgba(255, 255, 255, 0.65)',
+        borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 12,
         transition: 'color 0.15s ease',
       }}>
         <span>Explore module</span>
-        <span style={{ transform: hovered ? 'translateX(3px)' : 'none', transition: 'transform 0.15s ease' }}>→</span>
+        <span className="mod-arrow-btn" style={{ fontSize: 14, transform: hovered ? 'translateX(4px)' : 'none', transition: 'transform 0.18s ease' }}>→</span>
       </div>
     </div>
   );
 }
+
 
 const ADMIN_MODULES = [
   {
@@ -1126,7 +1172,18 @@ export default function HomePage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [ctaToast, setCtaToast] = useState('');
-  const [stats, setStats] = useState({ members: 6, events: 4, trainings: 4, news: 8 });
+  const [stats, setStats] = useState({ members: 7, events: 7, trainings: 4, news: 8 });
+  const [currentTime, setCurrentTime] = useState('');
+
+  useEffect(() => {
+    const updateTime = () => {
+      const now = new Date();
+      setCurrentTime(now.toLocaleTimeString('en-US', { timeZone: 'Asia/Manila', hour: '2-digit', minute: '2-digit', second: '2-digit' }) + ' PHT');
+    };
+    updateTime();
+    const interval = setInterval(updateTime, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Fetch live stats for homepage counters
   useEffect(() => {
@@ -1137,7 +1194,7 @@ export default function HomePage() {
     ]).then(([ev, tr, nw]) => {
       setStats({
         members: 7, // 7 consortium partner institutions & government agencies
-        events:   ev.status === 'fulfilled' ? (ev.value.total ?? 4) : 4,
+        events:   ev.status === 'fulfilled' ? (ev.value.total ?? 7) : 7,
         trainings: tr.status === 'fulfilled' ? (tr.value.total ?? 4) : 4,
         news:     nw.status === 'fulfilled' ? (nw.value.total ?? 8) : 8,
       });
@@ -1165,324 +1222,741 @@ export default function HomePage() {
 
   if (user?.role === 'ADMIN') return <AdminHomePage navigate={navigate} user={user} />;
 
+  const consortiumPartners = [
+    { name: 'CIT-University', role: 'Central Host Node', code: 'CIT-U', color: '#f97316' },
+    { name: 'University of the Philippines Cebu', role: 'Data Science Node', code: 'UP Cebu', color: '#8b5cf6' },
+    { name: 'University of San Carlos', role: 'STEM & Physics Node', code: 'USC', color: '#0ea5e9' },
+    { name: 'DOST Region VII', role: 'Science & Tech Partner', code: 'DOST-7', color: '#10b981' },
+    { name: 'DICT Region VII', role: 'ICT Infrastructure Node', code: 'DICT-7', color: '#06b6d4' },
+    { name: 'DTI Region VII', role: 'MSME & Innovation Hub', code: 'DTI-7', color: '#f59e0b' },
+    { name: 'DepEd Region VII', role: 'Basic Education Node', code: 'DepEd-7', color: '#f43f5e' },
+  ];
+
+  const userInitials = (user?.name || user?.email || 'M')
+    .split(' ')
+    .filter(Boolean)
+    .map(p => p[0].toUpperCase())
+    .slice(0, 2)
+    .join('');
+
   return (
-    <div style={{ background: 'linear-gradient(180deg,#000d30 0%,#020817 100%)', minHeight: '100vh', position: 'relative' }}>
+    <div style={{ background: 'linear-gradient(180deg,#000924 0%,#020817 320px,#070d1e 100%)', minHeight: '100vh', position: 'relative' }}>
       <style>{HOME_CSS}</style>
-      <ParticleBackground density={55} />
+      <ParticleBackground density={50} />
       <div style={{ position: 'relative', zIndex: 1 }}>
 
-      {/* ── MEMBER STATUS BANNER ── */}
+      {/* ── MEMBER STATUS COMMAND BANNER ── */}
       {user?.role === 'MEMBER' && (
         <div style={{
-          background: 'linear-gradient(90deg,rgba(16,185,129,0.12),rgba(5,150,105,0.08))',
-          borderBottom: '1px solid rgba(16,185,129,0.2)',
-          padding: '9px 24px',
+          background: 'linear-gradient(90deg, rgba(16,185,129,0.14) 0%, rgba(5,150,105,0.08) 50%, rgba(6,182,212,0.12) 100%)',
+          backdropFilter: 'blur(16px)',
+          borderBottom: '1px solid rgba(16,185,129,0.28)',
+          padding: '10px 24px',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
         }}>
-          <div style={{ maxWidth: 1120, margin: '0 auto', display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#10b981', boxShadow: '0 0 8px rgba(16,185,129,0.8)', flexShrink: 0 }} />
-            <span style={{ color: '#10b981', fontSize: 12.5, fontWeight: 700 }}>
-              ✓ Member Access — {user?.name || user?.email}
-            </span>
-            <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 12 }}>·</span>
-            <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12 }}>
-              {user?.institution || 'DASIG Consortium'} · Full module access unlocked
-            </span>
-            <div style={{ flex: 1 }} />
-            <button onClick={() => navigate('/membership')} style={{
-              background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.3)',
-              color: '#10b981', borderRadius: 7, padding: '4px 12px', fontSize: 13,
-              fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
-            }}>My Card →</button>
+          <div style={{ maxWidth: 1220, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+              <div style={{
+                width: 32, height: 32, borderRadius: 9,
+                background: 'linear-gradient(135deg, #10b981, #059669)',
+                color: '#fff', fontSize: 12, fontWeight: 900,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                boxShadow: '0 2px 8px rgba(16,185,129,0.4)',
+                border: '1px solid rgba(255,255,255,0.2)'
+              }}>
+                {userInitials}
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                <span className="live-pulse" style={{ width: 8, height: 8, borderRadius: '50%', background: '#10b981', flexShrink: 0 }} />
+                <span style={{ color: '#34d399', fontSize: 13, fontWeight: 800, letterSpacing: '0.3px' }}>
+                  Member Access Unlocked
+                </span>
+                <span style={{ color: 'rgba(255,255,255,0.25)' }}>•</span>
+                <span style={{ color: '#fff', fontSize: 13, fontWeight: 700 }}>
+                  {user?.name || user?.email}
+                </span>
+                <span style={{ color: 'rgba(255,255,255,0.25)' }}>•</span>
+                <span style={{ color: 'rgba(255,255,255,0.65)', fontSize: 12.5, fontWeight: 600 }}>
+                  {user?.institution || 'Region VII Academic Node'}
+                </span>
+              </div>
+
+              <span style={{
+                fontSize: 10.5, fontWeight: 800, color: '#38bdf8',
+                background: 'rgba(14,165,233,0.14)', border: '1px solid rgba(14,165,233,0.35)',
+                borderRadius: 6, padding: '2px 8px', letterSpacing: '0.4px'
+              }}>
+                Tier 2 Clearances Active
+              </span>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              {currentTime && (
+                <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', fontWeight: 600, marginRight: 4 }}>
+                  🕒 {currentTime}
+                </span>
+              )}
+              <button
+                onClick={() => navigate('/membership')}
+                style={{
+                  background: 'linear-gradient(90deg, #10b981, #059669)',
+                  border: 'none', color: '#fff',
+                  borderRadius: 8, padding: '6px 14px', fontSize: 12.5,
+                  fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit',
+                  boxShadow: '0 2px 10px rgba(16,185,129,0.35)',
+                  display: 'flex', alignItems: 'center', gap: 6,
+                  transition: 'all 0.15s'
+                }}
+                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 4px 14px rgba(16,185,129,0.5)'; }}
+                onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 2px 10px rgba(16,185,129,0.35)'; }}
+              >
+                <span>💳 Digital ID Dossier</span>
+                <span>→</span>
+              </button>
+            </div>
           </div>
         </div>
       )}
 
       {/* ── HERO ── */}
       <section style={{
-        background: 'linear-gradient(135deg,#000d30 0%,#001d5c 50%,#1a3878 100%)',
-        padding: '0 24px', position: 'relative', overflow: 'hidden', minHeight: 530,
+        background: 'linear-gradient(135deg,#000a26 0%,#001338 45%,#071947 80%,#0a1d52 100%)',
+        padding: '52px 24px 48px', position: 'relative', overflow: 'hidden', minHeight: 560,
+        borderBottom: '1px solid rgba(255,255,255,0.08)',
+        boxShadow: '0 20px 50px rgba(0,0,0,0.4)',
       }}>
         <ParticleCanvas />
         {[0, 1.2, 2.4].map(d => (
-          <div key={d} className="dasig-ring" style={{ width: 140, height: 140, right: 90, bottom: 60, animationDelay: `${d}s` }} />
+          <div key={d} className="dasig-ring" style={{ width: 180, height: 180, right: 120, top: '40%', animationDelay: `${d}s` }} />
         ))}
+        {/* Ambient lighting glows */}
+        <div style={{ position: 'absolute', width: 620, height: 620, borderRadius: '50%', background: 'radial-gradient(circle, rgba(249,115,22,0.14) 0%, transparent 68%)', right: -120, top: -140, pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', width: 480, height: 480, borderRadius: '50%', background: 'radial-gradient(circle, rgba(59,130,246,0.12) 0%, transparent 68%)', left: -100, bottom: -120, pointerEvents: 'none' }} />
         <div style={{
           position: 'absolute', inset: 0,
-          backgroundImage: 'linear-gradient(rgba(255,255,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.025) 1px,transparent 1px)',
-          backgroundSize: '40px 40px', pointerEvents: 'none',
+          backgroundImage: 'linear-gradient(rgba(255,255,255,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.02) 1px,transparent 1px)',
+          backgroundSize: '44px 44px', pointerEvents: 'none',
         }} />
-        <div className="home-hero-grid" style={{
-          maxWidth: 1120, margin: '0 auto',
-          display: 'grid', gridTemplateColumns: '1fr 300px',
-          gap: 40, alignItems: 'flex-end',
-          padding: '64px 0 0', position: 'relative', zIndex: 1,
-        }}>
-          <div className="home-hero-content">
-            <div style={{
-              display: 'inline-flex', alignItems: 'center', gap: 8,
-              background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.14)',
-              borderRadius: 24, padding: '5px 14px 5px 5px', marginBottom: 20,
-            }}>
-              <div style={{
-                width: 22, height: 22, borderRadius: 11,
-                background: 'linear-gradient(90deg,#f97316,#e11d48)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12,
-              }}>🏛</div>
-              <span style={{ color: 'rgba(255,255,255,0.75)', fontSize: 13, fontWeight: 600, letterSpacing: '0.5px' }}>
-                CENTRAL VISAYAS CONSORTIUM · REGION VII · 7 INSTITUTIONS &amp; AGENCIES
-              </span>
-            </div>
-            <h1 className="home-hero-title" style={{ color: '#fff', fontSize: 50, fontWeight: 900, lineHeight: 1.07, letterSpacing: '-2px', marginBottom: 18 }}>
-              The Smarter Way to{' '}
-              <span style={{
-                background: 'linear-gradient(90deg,#f97316,#e11d48)',
-                WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-              }}>Run Your Consortium</span>
-            </h1>
-            <p style={{ color: 'rgba(255,255,255,0.62)', fontSize: 15.5, lineHeight: 1.75, marginBottom: 32, maxWidth: 500 }}>
-              DASIG unifies membership, events, funding, training, and governance for CIT-U, UP Cebu, University of San Carlos (USC), DOST, DICT, DTI, and DepEd Region VII — all in one secure, role-based platform.
-            </p>
-            <div style={{ display: 'flex', gap: 12, marginBottom: 40, flexWrap: 'wrap' }}>
-              <button onClick={() => navigate('/membership')} style={{
-                background: 'linear-gradient(90deg,#f97316,#e11d48)', color: '#fff',
-                border: 'none', borderRadius: 10, padding: '13px 26px', fontSize: 14.5, fontWeight: 700,
-                cursor: 'pointer', boxShadow: '0 4px 20px rgba(249,115,22,0.42)', transition: 'all 0.2s', fontFamily: 'inherit',
-              }}
-              onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 28px rgba(249,115,22,0.55)'; }}
-              onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 20px rgba(249,115,22,0.42)'; }}
-              >Get Started Free →</button>
-              <button onClick={() => navigate('/members')} style={{
-                color: 'rgba(255,255,255,0.82)', background: 'rgba(255,255,255,0.07)',
-                border: '1.5px solid rgba(255,255,255,0.18)', borderRadius: 10, padding: '13px 26px',
-                fontSize: 14.5, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.2s',
-              }}
-              onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.14)'}
-              onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.07)'}
-              >View all modules</button>
-            </div>
-            <div className="home-stats-bar" style={{ display: 'flex', borderTop: '1px solid rgba(255,255,255,0.09)', paddingTop: 26 }}>
-              {[
-                { v: String(stats.members), l: 'Institutions' },
-                { v: String(stats.events), l: 'Events' },
-                { v: String(stats.trainings), l: 'Programs' },
-                { v: String(stats.news), l: 'Articles' },
-              ].map((s, i) => (
-                <div key={i} className="home-stats-item" style={{
-                  flex: 1,
-                  borderRight: i < 3 ? '1px solid rgba(255,255,255,0.09)' : 'none',
-                  padding: i === 0 ? '0 20px 0 0' : '0 20px',
+
+        <div style={{ maxWidth: 1220, margin: '0 auto', position: 'relative', zIndex: 1 }}>
+          <div className="home-hero-grid" style={{
+            display: 'grid', gridTemplateColumns: 'minmax(0,1.3fr) minmax(0,1fr)',
+            gap: 40, alignItems: 'center',
+          }}>
+            <div className="home-hero-content">
+              {/* Executive Beacon Badge */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 18 }}>
+                <div style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 8,
+                  background: 'rgba(249,115,22,0.12)', border: '1px solid rgba(249,115,22,0.35)',
+                  borderRadius: 24, padding: '5px 14px',
+                  boxShadow: '0 2px 10px rgba(249,115,22,0.15)'
                 }}>
                   <div style={{
-                    fontSize: 30, fontWeight: 900, letterSpacing: '-1px',
+                    width: 20, height: 20, borderRadius: 10,
                     background: 'linear-gradient(90deg,#f97316,#e11d48)',
-                    WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-                  }}>{s.v}</div>
-                  <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 12.5, marginTop: 4 }}>{s.l}</div>
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11,
+                  }}>🏛</div>
+                  <span style={{ color: '#fb923c', fontSize: 11.5, fontWeight: 800, letterSpacing: '0.8px', textTransform: 'uppercase' }}>
+                    Central Visayas Consortium · Region VII Academic Node
+                  </span>
                 </div>
-              ))}
+
+                <div style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 6,
+                  background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.28)',
+                  borderRadius: 20, padding: '4px 12px', color: '#34d399', fontSize: 11, fontWeight: 700
+                }}>
+                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#10b981' }} />
+                  CIT-U Central Host Node · Active
+                </div>
+              </div>
+
+              {/* Dynamic Title based on Member vs Public */}
+              {user?.role === 'MEMBER' ? (
+                <>
+                  <h1 className="home-hero-title" style={{ color: '#fff', fontSize: 46, fontWeight: 900, lineHeight: 1.12, letterSpacing: '-1.5px', marginBottom: 16 }}>
+                    Empowering Central Visayas{' '}
+                    <span style={{
+                      background: 'linear-gradient(90deg,#f97316 0%,#fb7185 50%,#e11d48 100%)',
+                      WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+                    }}>Academe & Research</span>
+                  </h1>
+                  <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: 15, lineHeight: 1.7, marginBottom: 28, maxWidth: 540 }}>
+                    Welcome back, <strong style={{ color: '#fff' }}>{user?.name || 'Academic Member'}</strong>. Direct institutional access to 7 member state universities and agencies, certified faculty development bootcamps, DOST research funding calls, and Haribon AI intelligence.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <h1 className="home-hero-title" style={{ color: '#fff', fontSize: 48, fontWeight: 900, lineHeight: 1.1, letterSpacing: '-1.8px', marginBottom: 16 }}>
+                    The Smarter Way to{' '}
+                    <span style={{
+                      background: 'linear-gradient(90deg,#f97316 0%,#fb7185 50%,#e11d48 100%)',
+                      WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+                    }}>Run Your Consortium</span>
+                  </h1>
+                  <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: 15, lineHeight: 1.7, marginBottom: 28, maxWidth: 540 }}>
+                    DASIG unifies membership, events, funding, training, and governance for CIT-U, UP Cebu, University of San Carlos (USC), DOST, DICT, DTI, and DepEd Region VII — all in one secure, role-based platform.
+                  </p>
+                </>
+              )}
+
+              {/* Action Buttons */}
+              <div style={{ display: 'flex', gap: 12, marginBottom: 36, flexWrap: 'wrap', alignItems: 'center' }}>
+                {user?.role === 'MEMBER' ? (
+                  <>
+                    <button
+                      onClick={() => navigate('/programs')}
+                      className="home-btn-shimmer"
+                      style={{
+                        background: 'linear-gradient(90deg,#ea580c 0%,#f97316 40%,#e11d48 100%)',
+                        color: '#fff', border: 'none', borderRadius: 12, padding: '13px 26px',
+                        fontSize: 14.5, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit',
+                        boxShadow: '0 8px 24px rgba(249,115,22,0.45)', transition: 'all 0.2s',
+                        display: 'flex', alignItems: 'center', gap: 8,
+                      }}
+                      onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 12px 30px rgba(249,115,22,0.6)'; }}
+                      onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(249,115,22,0.45)'; }}
+                    >
+                      <span>⚡ Explore Academic Programs</span>
+                      <span>→</span>
+                    </button>
+
+                    <button
+                      onClick={() => navigate('/membership')}
+                      style={{
+                        color: 'rgba(255,255,255,0.9)', background: 'rgba(255,255,255,0.06)',
+                        border: '1px solid rgba(255,255,255,0.18)', borderRadius: 12, padding: '13px 22px',
+                        fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.18s',
+                        display: 'flex', alignItems: 'center', gap: 7,
+                      }}
+                      onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.12)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)'; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.18)'; }}
+                    >
+                      <span>💳 My Member Card</span>
+                    </button>
+
+                    <button
+                      onClick={() => navigate('/chatbot')}
+                      style={{
+                        color: '#fb923c', background: 'rgba(249,115,22,0.12)',
+                        border: '1px solid rgba(249,115,22,0.3)', borderRadius: 12, padding: '13px 20px',
+                        fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.18s',
+                        display: 'flex', alignItems: 'center', gap: 6,
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.background = 'rgba(249,115,22,0.22)'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'rgba(249,115,22,0.12)'}
+                    >
+                      <span>🦅 Ask Haribon</span>
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => navigate('/membership')}
+                      className="home-btn-shimmer"
+                      style={{
+                        background: 'linear-gradient(90deg,#ea580c 0%,#f97316 40%,#e11d48 100%)',
+                        color: '#fff', border: 'none', borderRadius: 12, padding: '13px 26px',
+                        fontSize: 14.5, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit',
+                        boxShadow: '0 8px 24px rgba(249,115,22,0.45)', transition: 'all 0.2s',
+                        display: 'flex', alignItems: 'center', gap: 8,
+                      }}
+                      onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 12px 30px rgba(249,115,22,0.6)'; }}
+                      onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(249,115,22,0.45)'; }}
+                    >
+                      <span>🚀 Apply for Membership</span>
+                      <span>→</span>
+                    </button>
+
+                    <button
+                      onClick={() => navigate('/members')}
+                      style={{
+                        color: 'rgba(255,255,255,0.9)', background: 'rgba(255,255,255,0.06)',
+                        border: '1px solid rgba(255,255,255,0.18)', borderRadius: 12, padding: '13px 22px',
+                        fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.18s',
+                        display: 'flex', alignItems: 'center', gap: 7,
+                      }}
+                      onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.12)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)'; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.18)'; }}
+                    >
+                      <span>🏛️ View Member HEIs</span>
+                    </button>
+
+                    <button
+                      onClick={() => navigate('/chatbot')}
+                      style={{
+                        color: '#fb923c', background: 'rgba(249,115,22,0.12)',
+                        border: '1px solid rgba(249,115,22,0.3)', borderRadius: 12, padding: '13px 20px',
+                        fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.18s',
+                        display: 'flex', alignItems: 'center', gap: 6,
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.background = 'rgba(249,115,22,0.22)'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'rgba(249,115,22,0.12)'}
+                    >
+                      <span>🦅 Ask Haribon</span>
+                    </button>
+                  </>
+                )}
+              </div>
+
+              {/* ── 4-QUADRANT BENTO METRICS BAR ── */}
+              <div className="home-stats-bento" style={{
+                display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12,
+                borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 24,
+              }}>
+                {[
+                  { v: String(stats.members), l: 'Member HEIs & Agencies', icon: '🏛️', sub: 'Region VII Nodes', color: '#f97316', route: '/members' },
+                  { v: String(stats.events), l: 'Consortium Summits', icon: '📅', sub: '560 Seats Roster', color: '#8b5cf6', route: '/programs?tab=events' },
+                  { v: String(stats.trainings), l: 'Faculty Bootcamps', icon: '🎓', sub: 'Accredited Tracks', color: '#10b981', route: '/programs?tab=training' },
+                  { v: String(stats.news), l: 'Official Bulletins', icon: '📰', sub: 'Memos & Releases', color: '#0ea5e9', route: '/news' },
+                ].map((s, i) => (
+                  <div
+                    key={i}
+                    className="hero-bento-tile"
+                    onClick={() => navigate(s.route)}
+                    style={{
+                      background: 'rgba(255,255,255,0.035)',
+                      border: '1px solid rgba(255,255,255,0.08)',
+                      borderRadius: 14, padding: '14px 14px',
+                      display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+                      transition: 'all 0.18s'
+                    }}
+                    onMouseEnter={e => {
+                      e.currentTarget.style.borderColor = s.color + '70';
+                      e.currentTarget.style.background = 'rgba(255,255,255,0.06)';
+                      e.currentTarget.style.boxShadow = `0 10px 24px rgba(0,0,0,0.4), 0 0 16px ${s.color}25`;
+                    }}
+                    onMouseLeave={e => {
+                      e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)';
+                      e.currentTarget.style.background = 'rgba(255,255,255,0.035)';
+                      e.currentTarget.style.boxShadow = 'none';
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                      <span style={{ fontSize: 18 }}>{s.icon}</span>
+                      <span style={{
+                        fontSize: 9.5, color: s.color, background: s.color + '15',
+                        border: `1px solid ${s.color}35`, borderRadius: 5, padding: '1px 6px', fontWeight: 800
+                      }}>
+                        {s.sub}
+                      </span>
+                    </div>
+                    <div style={{ fontSize: 24, fontWeight: 900, color: '#fff', letterSpacing: '-0.8px', lineHeight: 1.1 }}>
+                      {s.v}
+                    </div>
+                    <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.6)', marginTop: 3, fontWeight: 600 }}>
+                      {s.l}
+                    </div>
+                    <div style={{
+                      marginTop: 8, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                      borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: 6,
+                      fontSize: 10.5, color: s.color, fontWeight: 800
+                    }}>
+                      <span>View details</span>
+                      <span>→</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* ── HERO RIGHT: HARIBON AI INTELLIGENCE SHOWCASE ── */}
+            <div style={{
+              background: 'linear-gradient(135deg, rgba(10, 18, 38, 0.85) 0%, rgba(13, 23, 48, 0.75) 100%)',
+              backdropFilter: 'blur(20px)',
+              border: '1px solid rgba(255,255,255,0.12)',
+              borderRadius: 24, padding: '24px 22px',
+              display: 'flex', flexDirection: 'column', alignItems: 'center',
+              boxShadow: '0 24px 60px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.12)',
+              position: 'relative', overflow: 'hidden'
+            }}>
+              {/* Top ambient lighting header */}
+              <div style={{
+                position: 'absolute', top: 0, left: 0, right: 0, height: 3,
+                background: 'linear-gradient(90deg, transparent, #f97316, transparent)'
+              }} />
+
+              <div style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                width: '100%', marginBottom: 12
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ fontSize: 16 }}>🦅</span>
+                  <span style={{ fontSize: 12.5, fontWeight: 800, color: '#fff' }}>Haribon AI Intelligence</span>
+                </div>
+                <span style={{
+                  fontSize: 10.5, color: '#10b981', background: 'rgba(16,185,129,0.15)',
+                  border: '1px solid rgba(16,185,129,0.3)', borderRadius: 20, padding: '2px 8px', fontWeight: 800,
+                  display: 'flex', alignItems: 'center', gap: 5
+                }}>
+                  <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#10b981' }} />
+                  91% Precision
+                </span>
+              </div>
+
+              {/* Holographic Mascot Frame */}
+              <div style={{ position: 'relative', padding: '10px 0', display: 'flex', justifyContent: 'center' }}>
+                <div style={{
+                  position: 'absolute', bottom: 10, width: 140, height: 26,
+                  borderRadius: '50%', background: 'radial-gradient(circle, rgba(249,115,22,0.45) 0%, transparent 70%)',
+                  filter: 'blur(4px)', pointerEvents: 'none'
+                }} />
+                <div className="haribon-float" style={{ cursor: 'pointer' }} onClick={() => navigate('/chatbot')}>
+                  <HaribonFull width={230} />
+                </div>
+              </div>
+
+              {/* Interactive prompt pills */}
+              <div style={{ width: '100%', marginTop: 8, display: 'flex', flexDirection: 'column', gap: 7 }}>
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: 2 }}>
+                  Ask Haribon instant questions:
+                </div>
+                {[
+                  { text: '📅 What summits are coming up?', q: 'What summits are coming up?' },
+                  { text: '💰 Active DOST research grants', q: 'Active DOST research grants' },
+                  { text: '🎓 Faculty development bootcamps', q: 'Faculty development bootcamps' },
+                ].map((pr, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => navigate('/chatbot?q=' + encodeURIComponent(pr.q))}
+                    style={{
+                      background: 'rgba(255,255,255,0.05)',
+                      border: '1px solid rgba(255,255,255,0.08)',
+                      borderRadius: 10, padding: '7px 12px',
+                      color: 'rgba(255,255,255,0.85)', fontSize: 12, fontWeight: 600,
+                      textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit',
+                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                      transition: 'all 0.15s'
+                    }}
+                    onMouseEnter={e => {
+                      e.currentTarget.style.background = 'rgba(249,115,22,0.15)';
+                      e.currentTarget.style.borderColor = 'rgba(249,115,22,0.35)';
+                      e.currentTarget.style.color = '#fff';
+                    }}
+                    onMouseLeave={e => {
+                      e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
+                      e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)';
+                      e.currentTarget.style.color = 'rgba(255,255,255,0.85)';
+                    }}
+                  >
+                    <span>{pr.text}</span>
+                    <span style={{ fontSize: 11, color: '#f97316' }}>→</span>
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
-          <div className="haribon-float home-hero-illustration"><HaribonFull width={280} /></div>
         </div>
       </section>
 
-      {/* ── MEMBER STRIP ── */}
+      {/* ── REGION VII MEMBERS INSTITUTIONAL STRIP ── */}
       <div style={{
-        background: 'rgba(255,255,255,0.03)',
-        borderTop: '1px solid rgba(255,255,255,0.06)',
-        borderBottom: '1px solid rgba(255,255,255,0.06)',
-        padding: '0 24px',
+        background: 'linear-gradient(135deg, rgba(8, 14, 30, 0.9) 0%, rgba(11, 19, 40, 0.95) 100%)',
+        borderTop: '1px solid rgba(255,255,255,0.08)',
+        borderBottom: '1px solid rgba(255,255,255,0.08)',
+        padding: '16px 24px',
+        boxShadow: '0 8px 24px rgba(0,0,0,0.3)'
       }}>
         <div style={{
-          maxWidth: 1120, margin: '0 auto', minHeight: 52, padding: '10px 0',
-          display: 'flex', alignItems: 'center', gap: 14, overflowX: 'auto', WebkitOverflowScrolling: 'touch',
+          maxWidth: 1220, margin: '0 auto',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          flexWrap: 'wrap', gap: 14,
         }}>
-          <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 12, fontWeight: 800, letterSpacing: '1.2px', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
-            Region VII Members
-          </span>
-          <div style={{ width: 1, height: 14, background: 'rgba(255,255,255,0.1)', flexShrink: 0 }} />
-          <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap' }}>
-            {['CIT-University', 'University of the Philippines Cebu', 'University of San Carlos', 'DOST Region VII', 'DICT Region VII', 'DTI Region VII', 'DepEd Region VII'].map(m => (
-              <div key={m} style={{
-                background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)',
-                borderRadius: 6, padding: '4px 12px', fontSize: 13,
-                color: 'rgba(255,255,255,0.6)', fontWeight: 600, whiteSpace: 'nowrap',
-              }}>{m}</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#38bdf8', boxShadow: '0 0 10px rgba(56,189,248,0.8)' }} />
+            <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: 12, fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+              Region VII Consortium Nodes:
+            </span>
+          </div>
+
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+            {consortiumPartners.map(p => (
+              <div
+                key={p.code}
+                onClick={() => navigate('/members')}
+                style={{
+                  background: 'rgba(255,255,255,0.04)',
+                  border: '1px solid rgba(255,255,255,0.09)',
+                  borderRadius: 9, padding: '5px 12px',
+                  display: 'inline-flex', alignItems: 'center', gap: 7,
+                  cursor: 'pointer', transition: 'all 0.16s'
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.borderColor = p.color + '70';
+                  e.currentTarget.style.background = 'rgba(255,255,255,0.08)';
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.09)';
+                  e.currentTarget.style.background = 'rgba(255,255,255,0.04)';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                }}
+              >
+                <span style={{
+                  fontSize: 10, fontWeight: 900, color: p.color,
+                  background: p.color + '18', borderRadius: 4, padding: '1px 6px'
+                }}>
+                  {p.code}
+                </span>
+                <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap' }}>
+                  {p.name}
+                </span>
+              </div>
             ))}
           </div>
         </div>
       </div>
 
       {/* ── FEATURE HIGHLIGHTS ── */}
-      <section style={{ padding: '56px 24px' }}>
-        <div style={{ maxWidth: 1120, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 18 }}>
+      <section style={{ padding: '56px 24px 32px' }}>
+        <div style={{ maxWidth: 1220, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 20 }}>
           {[
             {
               icon: '🦅', title: 'Powered by Haribon AI',
               desc: 'Our intelligent NLP assistant handles consortium queries scoped directly to official DASIG knowledge. Ask Haribon anything about events, training, funding, or membership.',
-              grad: 'linear-gradient(135deg,#000d30,#001d5c)', border: 'rgba(79,70,229,0.25)',
-              iconGrad: 'linear-gradient(135deg,rgba(249,115,22,0.25),rgba(225,29,72,0.15))',
+              grad: 'linear-gradient(135deg, rgba(10, 18, 38, 0.85) 0%, rgba(17, 24, 60, 0.78) 100%)',
+              border: 'rgba(249,115,22,0.3)',
+              color: '#f97316',
+              iconGrad: 'linear-gradient(135deg, #ea580c, #c2410c)',
+              tag: 'Regional NLP AI',
             },
             {
-              icon: '🏛', title: 'Built for 7 Region VII Institutions',
-              desc: 'One platform connecting CIT-University (Host), UP Cebu, USC, CTU, DOST-7, DICT-7, DTI-7, and DepEd-7 with unified RBAC.',
-              grad: 'linear-gradient(135deg,#0d1445,#1a3878)', border: 'rgba(59,130,246,0.25)',
-              iconGrad: 'linear-gradient(135deg,rgba(79,70,229,0.25),rgba(125,211,252,0.15))',
+              icon: '🏛️', title: 'Built for 7 Region VII Institutions',
+              desc: 'One unified platform connecting CIT-University (Host), UP Cebu, USC, DOST-7, DICT-7, DTI-7, and DepEd-7 with unified RBAC and institutional data mesh.',
+              grad: 'linear-gradient(135deg, rgba(10, 18, 38, 0.85) 0%, rgba(13, 23, 52, 0.78) 100%)',
+              border: 'rgba(56,189,248,0.3)',
+              color: '#38bdf8',
+              iconGrad: 'linear-gradient(135deg, #0284c7, #0369a1)',
+              tag: 'Multi-HEI Network',
             },
             {
-              icon: '🔐', title: 'Enterprise-grade security',
-              desc: 'OAuth 2.0 RFC 6749, JWT authentication, and RBAC middleware — every access point is verified, auditable, and secure.',
-              grad: 'linear-gradient(135deg,#1e1b4b,#312e81)', border: 'rgba(139,92,246,0.25)',
-              iconGrad: 'linear-gradient(135deg,rgba(139,92,246,0.25),rgba(99,102,241,0.15))',
+              icon: '🔐', title: 'Enterprise-Grade Security',
+              desc: 'OAuth 2.0 RFC 6749, JWT authentication, and RBAC middleware — every access point is verified, auditable, and compliant with Republic Act 10173.',
+              grad: 'linear-gradient(135deg, rgba(10, 18, 38, 0.85) 0%, rgba(20, 16, 48, 0.78) 100%)',
+              border: 'rgba(168,85,247,0.3)',
+              color: '#c084fc',
+              iconGrad: 'linear-gradient(135deg, #7c3aed, #5b21b6)',
+              tag: 'RA 10173 Certified',
             },
           ].map((f, i) => (
             <div key={i}
-              onClick={() => i === 0 && navigate('/chatbot')}
+              onClick={() => i === 0 ? navigate('/chatbot') : navigate('/members')}
               style={{
-                background: f.grad, borderRadius: 20, padding: 28,
+                background: f.grad, borderRadius: 22, padding: 28,
                 border: `1px solid ${f.border}`,
                 position: 'relative', overflow: 'hidden',
-                boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
-                animation: `fadeUp 0.5s ease ${i * 0.1}s both`,
-                cursor: i === 0 ? 'pointer' : 'default',
-                transition: 'transform 0.22s, box-shadow 0.22s',
+                boxShadow: '0 10px 32px rgba(0,0,0,0.35)',
+                cursor: 'pointer',
+                transition: 'all 0.22s',
               }}
-              onMouseEnter={e => { if (i === 0) { e.currentTarget.style.transform = 'translateY(-5px)'; e.currentTarget.style.boxShadow = '0 20px 48px rgba(0,0,0,0.5)'; } }}
-              onMouseLeave={e => { if (i === 0) { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 8px 32px rgba(0,0,0,0.3)'; } }}
+              onMouseEnter={e => {
+                e.currentTarget.style.transform = 'translateY(-4px)';
+                e.currentTarget.style.boxShadow = `0 18px 45px rgba(0,0,0,0.55), 0 0 24px ${f.color}25`;
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 10px 32px rgba(0,0,0,0.35)';
+              }}
             >
-              <div style={{ position: 'absolute', top: -30, right: -20, fontSize: 100, opacity: 0.05, lineHeight: 1 }}>{f.icon}</div>
+              {/* Glowing Top Accent Line */}
               <div style={{
-                width: 48, height: 48, borderRadius: 14, background: f.iconGrad,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 22, marginBottom: 18, border: '1px solid rgba(255,255,255,0.1)',
-              }}>{f.icon}</div>
-              <div style={{ fontSize: 17, fontWeight: 800, marginBottom: 10, letterSpacing: '-0.3px', color: '#fff' }}>{f.title}</div>
-              <div style={{ fontSize: 13.5, lineHeight: 1.7, color: 'rgba(255,255,255,0.58)' }}>{f.desc}</div>
-              {i === 0 && (
-                <div style={{ marginTop: 14, fontSize: 12, color: 'rgba(249,115,22,0.8)', fontWeight: 700 }}>Try Haribon →</div>
-              )}
+                position: 'absolute', top: 0, left: 0, right: 0, height: 3,
+                background: `linear-gradient(90deg, transparent, ${f.color}, transparent)`
+              }} />
+
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
+                <div style={{
+                  width: 48, height: 48, borderRadius: 14, background: f.iconGrad,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 22, border: '1px solid rgba(255,255,255,0.2)',
+                  boxShadow: `0 6px 16px ${f.color}35`,
+                }}>{f.icon}</div>
+
+                <span style={{
+                  fontSize: 10.5, fontWeight: 800, color: f.color,
+                  background: f.color + '15', border: `1px solid ${f.color}35`,
+                  borderRadius: 6, padding: '2px 8px'
+                }}>
+                  {f.tag}
+                </span>
+              </div>
+
+              <div style={{ fontSize: 18, fontWeight: 900, marginBottom: 8, letterSpacing: '-0.3px', color: '#fff' }}>
+                {f.title}
+              </div>
+              <div style={{ fontSize: 13.5, lineHeight: 1.7, color: 'rgba(255,255,255,0.6)', marginBottom: 16 }}>
+                {f.desc}
+              </div>
+
+              <div style={{
+                fontSize: 12.5, color: f.color, fontWeight: 800,
+                display: 'flex', alignItems: 'center', gap: 5,
+                borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 12
+              }}>
+                <span>{i === 0 ? 'Launch Haribon AI' : 'Explore Architecture'}</span>
+                <span>→</span>
+              </div>
             </div>
           ))}
         </div>
       </section>
 
       {/* ── PLATFORM MODULES ── */}
-      <section style={{ padding: '8px 24px 60px' }}>
-        <div style={{ maxWidth: 1120, margin: '0 auto' }}>
-          <div style={{ marginBottom: 36 }}>
-            <p style={{
-              fontSize: 13, fontWeight: 800, letterSpacing: '1.2px', textTransform: 'uppercase', marginBottom: 8,
-              background: 'linear-gradient(90deg,#f97316,#e11d48)',
-              WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-            }}>Platform Modules</p>
-            <h2 style={{
-              fontSize: 34, fontWeight: 900, letterSpacing: '-1px', marginBottom: 10,
-              background: 'linear-gradient(90deg,#fff 40%,rgba(255,255,255,0.5))',
-              WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-            }}>Everything your consortium needs</h2>
-            <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: 15, lineHeight: 1.65, maxWidth: 520 }}>
-              Nine integrated modules — unified under one secure, role-based platform built on clean architecture.
+      <section style={{ padding: '36px 24px 60px' }}>
+        <div style={{ maxWidth: 1220, margin: '0 auto' }}>
+          <div style={{ marginBottom: 32, display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
+            <div>
+              <p style={{
+                fontSize: 12, fontWeight: 800, letterSpacing: '1.2px', textTransform: 'uppercase', marginBottom: 6,
+                color: '#f97316'
+              }}>Regional Architecture</p>
+              <h2 style={{
+                fontSize: 34, fontWeight: 900, letterSpacing: '-1px', color: '#fff', margin: 0
+              }}>Everything Your Consortium Needs</h2>
+            </div>
+            <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 14.5, lineHeight: 1.6, maxWidth: 480, margin: 0 }}>
+              Nine integrated modules unified under one role-based platform designed for multi-HEI research orchestration.
             </p>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 14 }}>
+
+          <div className="home-modules-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 18 }}>
             {modules.map(mod => <ModuleCard key={mod.title} mod={mod} />)}
           </div>
         </div>
       </section>
 
       {/* ── NEWS ── */}
-      <section style={{ padding: '8px 24px 60px' }}>
-        <div style={{ maxWidth: 1120, margin: '0 auto' }}>
-          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 28 }}>
+      <section style={{ padding: '0 24px 64px' }}>
+        <div style={{ maxWidth: 1220, margin: '0 auto' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 26, flexWrap: 'wrap', gap: 12 }}>
             <div>
               <p style={{
-                fontSize: 13, fontWeight: 800, letterSpacing: '1.2px', textTransform: 'uppercase', marginBottom: 8,
-                background: 'linear-gradient(90deg,#f97316,#e11d48)',
-                WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-              }}>Consortium News</p>
+                fontSize: 12, fontWeight: 800, letterSpacing: '1.2px', textTransform: 'uppercase', marginBottom: 6,
+                color: '#0ea5e9'
+              }}>Consortium News &amp; Bulletins</p>
               <h2 style={{
-                fontSize: 34, fontWeight: 900, letterSpacing: '-1px',
-                background: 'linear-gradient(90deg,#fff 40%,rgba(255,255,255,0.5))',
-                WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-              }}>Stay informed</h2>
+                fontSize: 32, fontWeight: 900, letterSpacing: '-0.8px', color: '#fff', margin: 0
+              }}>Stay Informed Across Region VII</h2>
             </div>
             <button onClick={() => navigate('/news')} style={{
-              color: '#f97316', background: 'rgba(249,115,22,0.1)',
-              border: '1px solid rgba(249,115,22,0.25)',
-              borderRadius: 9, padding: '8px 18px',
+              color: '#38bdf8', background: 'rgba(14,165,233,0.12)',
+              border: '1px solid rgba(14,165,233,0.3)',
+              borderRadius: 10, padding: '9px 18px',
               fontSize: 13, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit',
-              transition: 'all 0.18s',
+              transition: 'all 0.18s', display: 'flex', alignItems: 'center', gap: 6,
             }}
-            onMouseEnter={e => e.currentTarget.style.background = 'rgba(249,115,22,0.18)'}
-            onMouseLeave={e => e.currentTarget.style.background = 'rgba(249,115,22,0.1)'}
-            >All news →</button>
+            onMouseEnter={e => e.currentTarget.style.background = 'rgba(14,165,233,0.22)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'rgba(14,165,233,0.12)'}
+            >
+              <span>View All News</span>
+              <span>→</span>
+            </button>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1.75fr 1fr', gap: 16 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr', gap: 18 }}>
             {/* Feature card */}
-            <div onClick={() => navigate('/news?title=' + encodeURIComponent('DASIG Annual Summit 2026 Registration Now Open'))} style={{
-              borderRadius: 20, overflow: 'hidden',
-              border: '1px solid rgba(255,255,255,0.08)',
-              cursor: 'pointer', transition: 'all 0.22s',
-              boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
-            }}
-            onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 20px 48px rgba(0,0,0,0.4)'; }}
-            onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 8px 32px rgba(0,0,0,0.3)'; }}
+            <div
+              onClick={() => navigate('/news?title=' + encodeURIComponent('DASIG Annual Summit 2026 Registration Now Open'))}
+              style={{
+                borderRadius: 22, overflow: 'hidden',
+                border: '1px solid rgba(255,255,255,0.09)',
+                cursor: 'pointer', transition: 'all 0.22s',
+                boxShadow: '0 10px 32px rgba(0,0,0,0.4)',
+                background: 'linear-gradient(135deg, rgba(10, 18, 38, 0.9) 0%, rgba(13, 23, 48, 0.85) 100%)',
+                display: 'flex', flexDirection: 'column'
+              }}
+              onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 20px 48px rgba(0,0,0,0.55)'; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 10px 32px rgba(0,0,0,0.4)'; }}
             >
               <div style={{
-                height: 210, position: 'relative',
-                background: 'linear-gradient(135deg,#001d5c,#1a56db 55%,#4f46e5)',
-                display: 'flex', alignItems: 'flex-end', padding: 22,
+                height: 220, position: 'relative',
+                background: 'linear-gradient(135deg,#001d5c 0%,#1a56db 55%,#4f46e5 100%)',
+                display: 'flex', alignItems: 'flex-end', padding: 26,
               }}>
-                <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.15)' }} />
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 30%, rgba(0,0,0,0.7) 100%)' }} />
                 <div style={{ position: 'relative', zIndex: 1 }}>
                   <span style={{
-                    background: 'rgba(255,255,255,0.15)', color: '#fff',
-                    border: '1px solid rgba(255,255,255,0.25)',
-                    borderRadius: 5, padding: '3px 9px', fontSize: 12, fontWeight: 700,
-                    display: 'block', width: 'fit-content', marginBottom: 7,
-                  }}>📣 Announcement</span>
-                  <div style={{ color: 'rgba(255,255,255,0.55)', fontSize: 13, marginBottom: 4 }}>May 20, 2026</div>
-                  <h3 style={{ color: '#fff', fontWeight: 800, fontSize: 19, lineHeight: 1.22, maxWidth: 360, letterSpacing: '-0.3px' }}>
+                    background: 'rgba(249,115,22,0.25)', color: '#fed7aa',
+                    border: '1px solid rgba(249,115,22,0.4)',
+                    borderRadius: 6, padding: '3px 10px', fontSize: 11.5, fontWeight: 800,
+                    display: 'block', width: 'fit-content', marginBottom: 8,
+                  }}>📣 Official Summit Announcement</span>
+                  <div style={{ color: 'rgba(255,255,255,0.75)', fontSize: 12.5, marginBottom: 4, fontWeight: 600 }}>May 20, 2026 · Cebu City</div>
+                  <h3 style={{ color: '#fff', fontWeight: 900, fontSize: 22, lineHeight: 1.25, letterSpacing: '-0.4px', margin: 0 }}>
                     DASIG Annual Summit 2026 Registration Now Open
                   </h3>
                 </div>
               </div>
-              <div style={{ padding: 22, background: 'rgba(255,255,255,0.04)' }}>
-                <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 14, lineHeight: 1.75, marginBottom: 16 }}>
-                  The annual summit gathers all six Region VII consortium institutions for a three-day innovation forum, research showcase, and networking event in Cebu City.
+              <div style={{ padding: 24, flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: 14, lineHeight: 1.7, marginBottom: 20 }}>
+                  The annual summit gathers all Region VII consortium state universities and agency partners for a three-day innovation forum, inter-HEI research showcase, and high-level networking event in Cebu City.
                 </p>
-                <button onClick={e => { e.stopPropagation(); navigate('/news?title=' + encodeURIComponent('DASIG Annual Summit 2026 Registration Now Open')); }} style={{
-                  background: 'linear-gradient(90deg,#f97316,#e11d48)', color: '#fff',
-                  border: 'none', borderRadius: 10, padding: '8px 18px',
-                  fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
-                }}>Read more →</button>
+                <div style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 14
+                }}>
+                  <span style={{ color: '#f97316', fontSize: 13, fontWeight: 800 }}>Read Full Dossier →</span>
+                  <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12 }}>3 min read</span>
+                </div>
               </div>
             </div>
 
             {/* Mini cards */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               {[
-                { icon: '📋', grad: 'linear-gradient(135deg,#78350f,#b45309)', badge: 'Policy', date: 'May 14, 2026',
-                  title: 'Updated Membership Renewal Guidelines for AY 2026–2027', excerpt: 'Revised criteria now available for institutional review.' },
-                { icon: '💰', grad: 'linear-gradient(135deg,#064e3b,#059669)', badge: 'Funding', date: 'May 8, 2026',
-                  title: 'DOST Region VII Scholarship Window Now Open', excerpt: 'Apply via the Funding portal before June 15.' },
-              ].map((n, i) => (
-                <div key={i} className="news-mini" onClick={() => navigate('/news?title=' + encodeURIComponent(n.title))} style={{
-                  background: n.grad, borderRadius: 18, padding: 18,
-                  cursor: 'pointer', border: '1px solid rgba(255,255,255,0.08)',
-                  position: 'relative', overflow: 'hidden', flex: 1,
-                }}>
-                  <div style={{ position: 'absolute', bottom: -10, right: -5, fontSize: 60, opacity: 0.1, lineHeight: 1 }}>{n.icon}</div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                    <span style={{
-                      background: 'rgba(255,255,255,0.2)', color: '#fff',
-                      borderRadius: 5, padding: '3px 10px', fontSize: 12, fontWeight: 800,
-                    }}>{n.badge}</span>
-                    <span style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.45)' }}>{n.date}</span>
+                {
+                  icon: '🔬', tag: 'Research', color: '#a855f7',
+                  title: 'DASIG Launches Joint Research Initiative 2026',
+                  desc: 'Six consortium institutions will collaborate on a DOST-funded grant for marine AI research.',
+                  date: 'May 15, 2026',
+                },
+                {
+                  icon: '📋', tag: 'Policy', color: '#f59e0b',
+                  title: 'Updated Membership Renewal Guidelines',
+                  desc: 'The DASIG Secretariat has released revised renewal criteria for Tier 1 and Tier 2 members.',
+                  date: 'May 14, 2026',
+                },
+                {
+                  icon: '💰', tag: 'Funding', color: '#10b981',
+                  title: 'DOST Region VII Scholarship Window Opens',
+                  desc: 'Applications are now being accepted for graduate research grants across partner universities.',
+                  date: 'May 8, 2026',
+                },
+              ].map((item, i) => (
+                <div
+                  key={i}
+                  className="news-mini"
+                  onClick={() => navigate('/news?title=' + encodeURIComponent(item.title))}
+                  style={{
+                    background: 'linear-gradient(135deg, rgba(10, 18, 38, 0.85) 0%, rgba(13, 23, 48, 0.8) 100%)',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    borderRadius: 16, padding: '16px 18px',
+                    cursor: 'pointer', display: 'flex', gap: 14, alignItems: 'flex-start'
+                  }}
+                >
+                  <div style={{
+                    width: 40, height: 40, borderRadius: 10,
+                    background: item.color + '18', border: `1px solid ${item.color}40`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 18, flexShrink: 0
+                  }}>{item.icon}</div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                      <span style={{
+                        fontSize: 10, fontWeight: 800, color: item.color,
+                        background: item.color + '15', borderRadius: 4, padding: '1px 6px'
+                      }}>{item.tag}</span>
+                      <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)' }}>{item.date}</span>
+                    </div>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', marginBottom: 4, lineHeight: 1.3 }}>
+                      {item.title}
+                    </div>
+                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', lineHeight: 1.5 }}>
+                      {item.desc}
+                    </div>
                   </div>
-                  <div style={{ fontWeight: 800, fontSize: 14, color: '#fff', lineHeight: 1.35, marginBottom: 6 }}>{n.title}</div>
-                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', lineHeight: 1.55 }}>{n.excerpt}</div>
                 </div>
               ))}
             </div>
@@ -1490,105 +1964,118 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── CTA ── */}
-      <section style={{ padding: '8px 24px 80px' }}>
-        <div className="home-cta-card" style={{
-          background: 'linear-gradient(135deg,#001d5c,#1a56db 55%,#4f46e5)',
-          borderRadius: 22, overflow: 'hidden', position: 'relative',
-          display: 'grid', gridTemplateColumns: '1fr 1fr',
-          maxWidth: 1120, margin: '0 auto',
-          boxShadow: '0 24px 64px rgba(0,29,92,0.6)',
-        }}>
-          <div style={{ position: 'absolute', width: 380, height: 380, borderRadius: '50%', background: 'radial-gradient(rgba(79,70,229,0.3),transparent 70%)', right: -80, top: -100, pointerEvents: 'none' }} />
-          <div style={{ position: 'absolute', width: 280, height: 280, borderRadius: '50%', background: 'radial-gradient(rgba(249,115,22,0.2),transparent 70%)', left: -40, bottom: -60, pointerEvents: 'none' }} />
-          <div className="home-cta-left" style={{ padding: 48, position: 'relative', zIndex: 1 }}>
-            <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12.5, fontWeight: 700, letterSpacing: '1px', marginBottom: 10, textTransform: 'uppercase' }}>
-              Join Region VII Consortium
+      {/* ── BOTTOM CTA SECTION ── */}
+      <section style={{ padding: '0 24px 72px' }}>
+        <div style={{
+          maxWidth: 1220, margin: '0 auto',
+          background: 'linear-gradient(135deg, rgba(10, 18, 38, 0.95) 0%, rgba(13, 23, 52, 0.9) 100%)',
+          backdropFilter: 'blur(20px)',
+          border: '1px solid rgba(255,255,255,0.1)',
+          borderRadius: 24, overflow: 'hidden',
+          boxShadow: '0 24px 60px rgba(0,0,0,0.5)',
+          display: 'grid', gridTemplateColumns: '1.3fr 1fr',
+        }} className="home-cta-card">
+          <div style={{ padding: '44px 40px', position: 'relative' }} className="home-cta-left">
+            <span style={{
+              fontSize: 11.5, fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase',
+              color: '#f97316', marginBottom: 10, display: 'block'
+            }}>Institutional Governance</span>
+            <h3 style={{ fontSize: 32, fontWeight: 900, color: '#fff', letterSpacing: '-0.8px', marginBottom: 14, lineHeight: 1.2 }}>
+              Join the Region VII Academic &amp; Research Consortium
+            </h3>
+            <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: 14.5, lineHeight: 1.7, marginBottom: 28, maxWidth: 500 }}>
+              Access institutional funding programs, coordinate state university summits, and collaborate with leading Visayas researchers in one unified digital node.
             </p>
-            <h2 style={{ color: '#fff', fontSize: 32, fontWeight: 900, lineHeight: 1.1, letterSpacing: '-1px', marginBottom: 13 }}>
-              Ready to connect your institution?
-            </h2>
-            <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 15, lineHeight: 1.75, marginBottom: 28 }}>
-              Register and unlock all nine modules, events, funding, and governance tools. Free to start.
-            </p>
-            <div className="home-cta-actions" style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-              <button onClick={() => navigate('/membership')} style={{
-                background: 'linear-gradient(90deg,#f97316,#e11d48)', color: '#fff',
-                border: 'none', borderRadius: 10, padding: '12px 24px',
-                fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
-                boxShadow: '0 4px 20px rgba(249,115,22,0.4)', transition: 'all 0.2s',
-              }}
-              onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
-              onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
-              >Apply for Membership</button>
-              <button onClick={() => navigate('/contact-admin')} style={{
-                color: 'rgba(255,255,255,0.82)', background: 'rgba(255,255,255,0.07)',
-                border: '1.5px solid rgba(255,255,255,0.18)',
-                borderRadius: 10, padding: '12px 24px', fontSize: 14,
-                cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.2s',
-              }}
-              onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.14)'}
-              onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.07)'}
-              >Contact Admin</button>
+            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }} className="home-cta-actions">
+              <button
+                onClick={() => navigate('/membership')}
+                className="home-btn-shimmer"
+                style={{
+                  background: 'linear-gradient(90deg,#ea580c 0%,#f97316 40%,#e11d48 100%)',
+                  color: '#fff', border: 'none', borderRadius: 12, padding: '13px 26px',
+                  fontSize: 14, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit',
+                  boxShadow: '0 8px 24px rgba(249,115,22,0.4)', transition: 'all 0.18s'
+                }}
+                onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
+                onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
+              >
+                {user?.role === 'MEMBER' ? 'View My Member Dossier' : 'Apply for Membership'}
+              </button>
+              <button
+                onClick={() => navigate('/contact-admin')}
+                style={{
+                  color: 'rgba(255,255,255,0.85)', background: 'rgba(255,255,255,0.06)',
+                  border: '1px solid rgba(255,255,255,0.18)', borderRadius: 12, padding: '13px 22px',
+                  fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.18s'
+                }}
+                onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.12)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.06)'}
+              >
+                Contact Secretariat
+              </button>
             </div>
           </div>
-          <div className="home-cta-right" style={{
-            borderLeft: '1px solid rgba(255,255,255,0.1)',
-            padding: 36, display: 'flex', flexDirection: 'column',
-            gap: 10, justifyContent: 'center', position: 'relative', zIndex: 1,
-          }}>
+
+          <div style={{
+            borderLeft: '1px solid rgba(255,255,255,0.08)',
+            padding: '36px 32px', display: 'flex', flexDirection: 'column',
+            gap: 12, justifyContent: 'center', position: 'relative'
+          }} className="home-cta-right">
             {ctaToast && (
               <div style={{
-                position: 'absolute', top: 12, left: 12, right: 12,
+                position: 'absolute', top: 12, left: 16, right: 16,
                 background: 'rgba(15,23,42,0.97)', border: '1px solid rgba(16,185,129,0.35)',
                 borderRadius: 10, padding: '10px 16px', fontSize: 12.5, fontWeight: 600,
-                color: 'rgba(255,255,255,0.85)', zIndex: 10,
-                animation: 'fadeUp 0.25s ease',
+                color: 'rgba(255,255,255,0.9)', zIndex: 10,
               }}>{ctaToast}</div>
             )}
             {[
-              { icon: '🦅', title: 'Ask Haribon',       sub: 'NLP AI chatbot, 100% accuracy',    route: '/chatbot',    accent: 'rgba(249,115,22,0.2)',  border: 'rgba(249,115,22,0.4)',  adminOnly: false },
-              { icon: '🔒', title: 'Role-Based Access',  sub: 'GUEST · MEMBER · ADMIN',            route: '/membership', accent: 'rgba(79,70,229,0.2)',   border: 'rgba(79,70,229,0.4)',   adminOnly: false },
-              { icon: '📊', title: 'Live Analytics',     sub: 'Real-time dashboards',               route: '/admin',      accent: 'rgba(16,185,129,0.2)',  border: 'rgba(16,185,129,0.4)',  adminOnly: true  },
-              { icon: '🌐', title: 'OAuth 2.0 SSO',      sub: 'RFC 6749 compliant',                route: '/login',      accent: 'rgba(96,165,250,0.2)',  border: 'rgba(96,165,250,0.4)',  adminOnly: false },
+              { icon: '🦅', title: 'Ask Haribon AI',       sub: 'Regional NLP Assistant · Live',    route: '/chatbot',    color: '#f97316', adminOnly: false },
+              { icon: '🔒', title: 'Role-Based Access',    sub: 'GUEST · MEMBER · ADMIN Clearances', route: '/membership', color: '#8b5cf6', adminOnly: false },
+              { icon: '📊', title: 'Executive Analytics',  sub: 'Consortium KPIs & seat telemetry', route: '/admin',      color: '#10b981', adminOnly: true  },
+              { icon: '🌐', title: 'OAuth 2.0 Central SSO', sub: 'RFC 6749 Compliant Auth',         route: '/login',      color: '#38bdf8', adminOnly: false },
             ].map(f => (
-              <div key={f.title}
+              <div
+                key={f.title}
                 onClick={() => handleCtaClick(f.route)}
                 style={{
-                  background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)',
-                  borderRadius: 12, padding: '13px 16px', display: 'flex', alignItems: 'center', gap: 12,
-                  transition: 'all 0.2s', cursor: 'pointer',
+                  background: 'rgba(255,255,255,0.04)',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  borderRadius: 14, padding: '12px 16px',
+                  display: 'flex', alignItems: 'center', gap: 12,
+                  transition: 'all 0.18s', cursor: 'pointer'
                 }}
                 onMouseEnter={e => {
-                  e.currentTarget.style.background = f.accent;
-                  e.currentTarget.style.borderColor = f.border;
+                  e.currentTarget.style.background = f.color + '15';
+                  e.currentTarget.style.borderColor = f.color + '50';
                   e.currentTarget.style.transform = 'translateX(4px)';
                 }}
                 onMouseLeave={e => {
-                  e.currentTarget.style.background = 'rgba(255,255,255,0.07)';
-                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
+                  e.currentTarget.style.background = 'rgba(255,255,255,0.04)';
+                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)';
                   e.currentTarget.style.transform = 'translateX(0)';
                 }}
               >
                 <div style={{
-                  width: 34, height: 34, borderRadius: 8, background: 'rgba(255,255,255,0.12)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0,
+                  width: 38, height: 38, borderRadius: 10, background: f.color + '20',
+                  border: `1px solid ${f.color}40`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0
                 }}>{f.icon}</div>
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                    <span style={{ color: 'rgba(255,255,255,0.88)', fontSize: 13, fontWeight: 700 }}>{f.title}</span>
+                    <span style={{ color: '#fff', fontSize: 13.5, fontWeight: 800 }}>{f.title}</span>
                     {f.adminOnly && (
                       <span style={{
-                        fontSize: 9, fontWeight: 800, letterSpacing: '0.6px',
+                        fontSize: 9, fontWeight: 900,
                         background: 'rgba(225,29,72,0.2)', color: '#fca5a5',
-                        border: '1px solid rgba(225,29,72,0.3)', borderRadius: 4,
-                        padding: '1px 6px', textTransform: 'uppercase',
+                        border: '1px solid rgba(225,29,72,0.4)', borderRadius: 4,
+                        padding: '1px 5px', textTransform: 'uppercase'
                       }}>Admin</span>
                     )}
                   </div>
-                  <div style={{ color: 'rgba(255,255,255,0.42)', fontSize: 13, marginTop: 2 }}>{f.sub}</div>
+                  <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12, marginTop: 2 }}>{f.sub}</div>
                 </div>
-                <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 13 }}>
+                <div style={{ color: f.color, fontSize: 14, fontWeight: 800 }}>
                   {f.adminOnly && user?.role !== 'ADMIN' ? '🔒' : '→'}
                 </div>
               </div>
@@ -1596,7 +2083,9 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
       </div>
     </div>
   );
 }
+
