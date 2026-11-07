@@ -1174,6 +1174,7 @@ export default function HomePage() {
   const [ctaToast, setCtaToast] = useState('');
   const [stats, setStats] = useState({ members: 7, events: 7, trainings: 4, news: 8 });
   const [currentTime, setCurrentTime] = useState('');
+  const [haribonQuery, setHaribonQuery] = useState('');
 
   useEffect(() => {
     const updateTime = () => {
@@ -1220,16 +1221,25 @@ export default function HomePage() {
     navigate(route);
   }
 
+  function handleHaribonSubmit(e) {
+    e.preventDefault();
+    if (haribonQuery.trim()) {
+      navigate('/chatbot?q=' + encodeURIComponent(haribonQuery.trim()));
+    } else {
+      navigate('/chatbot');
+    }
+  }
+
   if (user?.role === 'ADMIN') return <AdminHomePage navigate={navigate} user={user} />;
 
   const consortiumPartners = [
-    { name: 'CIT-University', role: 'Central Host Node', code: 'CIT-U', color: '#f97316' },
-    { name: 'University of the Philippines Cebu', role: 'Data Science Node', code: 'UP Cebu', color: '#8b5cf6' },
-    { name: 'University of San Carlos', role: 'STEM & Physics Node', code: 'USC', color: '#0ea5e9' },
-    { name: 'DOST Region VII', role: 'Science & Tech Partner', code: 'DOST-7', color: '#10b981' },
-    { name: 'DICT Region VII', role: 'ICT Infrastructure Node', code: 'DICT-7', color: '#06b6d4' },
-    { name: 'DTI Region VII', role: 'MSME & Innovation Hub', code: 'DTI-7', color: '#f59e0b' },
-    { name: 'DepEd Region VII', role: 'Basic Education Node', code: 'DepEd-7', color: '#f43f5e' },
+    { name: 'CIT-University', role: 'Central Host Node', code: 'CIT-U', ping: '12ms', color: '#f97316' },
+    { name: 'University of the Philippines Cebu', role: 'Data Science Node', code: 'UP Cebu', ping: '18ms', color: '#8b5cf6' },
+    { name: 'University of San Carlos', role: 'STEM & Physics Node', code: 'USC', ping: '24ms', color: '#0ea5e9' },
+    { name: 'DOST Region VII', role: 'Science & Tech Partner', code: 'DOST-7', ping: '31ms', color: '#10b981' },
+    { name: 'DICT Region VII', role: 'ICT Infrastructure Node', code: 'DICT-7', ping: '16ms', color: '#06b6d4' },
+    { name: 'DTI Region VII', role: 'MSME & Innovation Hub', code: 'DTI-7', ping: '27ms', color: '#f59e0b' },
+    { name: 'DepEd Region VII', role: 'Basic Education Node', code: 'DepEd-7', ping: '22ms', color: '#f43f5e' },
   ];
 
   const userInitials = (user?.name || user?.email || 'M')
@@ -1248,18 +1258,18 @@ export default function HomePage() {
       {/* ── MEMBER STATUS COMMAND BANNER ── */}
       {user?.role === 'MEMBER' && (
         <div style={{
-          background: 'linear-gradient(90deg, rgba(16,185,129,0.14) 0%, rgba(5,150,105,0.08) 50%, rgba(6,182,212,0.12) 100%)',
+          background: 'linear-gradient(90deg, rgba(16,185,129,0.12) 0%, rgba(10,18,38,0.9) 60%, rgba(6,182,212,0.12) 100%)',
           backdropFilter: 'blur(16px)',
-          borderBottom: '1px solid rgba(16,185,129,0.28)',
-          padding: '10px 24px',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+          borderBottom: '1px solid rgba(16,185,129,0.25)',
+          padding: '8px 24px',
+          boxShadow: '0 4px 18px rgba(0,0,0,0.3)',
         }}>
-          <div style={{ maxWidth: 1220, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+          <div style={{ maxWidth: 1220, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
               <div style={{
-                width: 32, height: 32, borderRadius: 9,
+                width: 28, height: 28, borderRadius: 8,
                 background: 'linear-gradient(135deg, #10b981, #059669)',
-                color: '#fff', fontSize: 12, fontWeight: 900,
+                color: '#fff', fontSize: 11, fontWeight: 900,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 boxShadow: '0 2px 8px rgba(16,185,129,0.4)',
                 border: '1px solid rgba(255,255,255,0.2)'
@@ -1268,41 +1278,41 @@ export default function HomePage() {
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                <span className="live-pulse" style={{ width: 8, height: 8, borderRadius: '50%', background: '#10b981', flexShrink: 0 }} />
-                <span style={{ color: '#34d399', fontSize: 13, fontWeight: 800, letterSpacing: '0.3px' }}>
+                <span className="live-pulse" style={{ width: 7, height: 7, borderRadius: '50%', background: '#10b981', flexShrink: 0 }} />
+                <span style={{ color: '#34d399', fontSize: 12, fontWeight: 800, letterSpacing: '0.4px', textTransform: 'uppercase' }}>
                   Member Access Unlocked
                 </span>
-                <span style={{ color: 'rgba(255,255,255,0.25)' }}>•</span>
-                <span style={{ color: '#fff', fontSize: 13, fontWeight: 700 }}>
+                <span style={{ color: 'rgba(255,255,255,0.2)' }}>•</span>
+                <span style={{ color: '#fff', fontSize: 13, fontWeight: 800 }}>
                   {user?.name || user?.email}
                 </span>
-                <span style={{ color: 'rgba(255,255,255,0.25)' }}>•</span>
-                <span style={{ color: 'rgba(255,255,255,0.65)', fontSize: 12.5, fontWeight: 600 }}>
+                <span style={{ color: 'rgba(255,255,255,0.2)' }}>•</span>
+                <span style={{ color: 'rgba(255,255,255,0.65)', fontSize: 12, fontWeight: 600 }}>
                   {user?.institution || 'Region VII Academic Node'}
                 </span>
               </div>
 
               <span style={{
-                fontSize: 10.5, fontWeight: 800, color: '#38bdf8',
-                background: 'rgba(14,165,233,0.14)', border: '1px solid rgba(14,165,233,0.35)',
-                borderRadius: 6, padding: '2px 8px', letterSpacing: '0.4px'
+                fontSize: 10.5, fontWeight: 800, color: '#34d399',
+                background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.3)',
+                borderRadius: 6, padding: '2px 8px', letterSpacing: '0.3px'
               }}>
                 Tier 2 Clearances Active
               </span>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               {currentTime && (
-                <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', fontWeight: 600, marginRight: 4 }}>
+                <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', fontWeight: 600 }}>
                   🕒 {currentTime}
                 </span>
               )}
               <button
                 onClick={() => navigate('/membership')}
                 style={{
-                  background: 'linear-gradient(90deg, #10b981, #059669)',
+                  background: 'linear-gradient(90deg, #059669, #10b981)',
                   border: 'none', color: '#fff',
-                  borderRadius: 8, padding: '6px 14px', fontSize: 12.5,
+                  borderRadius: 7, padding: '5px 13px', fontSize: 12,
                   fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit',
                   boxShadow: '0 2px 10px rgba(16,185,129,0.35)',
                   display: 'flex', alignItems: 'center', gap: 6,
@@ -1322,51 +1332,47 @@ export default function HomePage() {
       {/* ── HERO ── */}
       <section style={{
         background: 'linear-gradient(135deg,#000a26 0%,#001338 45%,#071947 80%,#0a1d52 100%)',
-        padding: '52px 24px 48px', position: 'relative', overflow: 'hidden', minHeight: 560,
+        padding: '38px 24px 34px', position: 'relative', overflow: 'hidden',
         borderBottom: '1px solid rgba(255,255,255,0.08)',
         boxShadow: '0 20px 50px rgba(0,0,0,0.4)',
       }}>
         <ParticleCanvas />
         {[0, 1.2, 2.4].map(d => (
-          <div key={d} className="dasig-ring" style={{ width: 180, height: 180, right: 120, top: '40%', animationDelay: `${d}s` }} />
+          <div key={d} className="dasig-ring" style={{ width: 160, height: 160, right: 120, top: '35%', animationDelay: `${d}s` }} />
         ))}
         {/* Ambient lighting glows */}
-        <div style={{ position: 'absolute', width: 620, height: 620, borderRadius: '50%', background: 'radial-gradient(circle, rgba(249,115,22,0.14) 0%, transparent 68%)', right: -120, top: -140, pointerEvents: 'none' }} />
-        <div style={{ position: 'absolute', width: 480, height: 480, borderRadius: '50%', background: 'radial-gradient(circle, rgba(59,130,246,0.12) 0%, transparent 68%)', left: -100, bottom: -120, pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', width: 560, height: 560, borderRadius: '50%', background: 'radial-gradient(circle, rgba(249,115,22,0.13) 0%, transparent 68%)', right: -100, top: -120, pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', width: 440, height: 440, borderRadius: '50%', background: 'radial-gradient(circle, rgba(59,130,246,0.11) 0%, transparent 68%)', left: -80, bottom: -100, pointerEvents: 'none' }} />
         <div style={{
           position: 'absolute', inset: 0,
           backgroundImage: 'linear-gradient(rgba(255,255,255,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.02) 1px,transparent 1px)',
-          backgroundSize: '44px 44px', pointerEvents: 'none',
+          backgroundSize: '40px 40px', pointerEvents: 'none',
         }} />
 
         <div style={{ maxWidth: 1220, margin: '0 auto', position: 'relative', zIndex: 1 }}>
           <div className="home-hero-grid" style={{
-            display: 'grid', gridTemplateColumns: 'minmax(0,1.3fr) minmax(0,1fr)',
-            gap: 40, alignItems: 'center',
+            display: 'grid', gridTemplateColumns: 'minmax(0,1.35fr) minmax(0,1fr)',
+            gap: 32, alignItems: 'center',
           }}>
             <div className="home-hero-content">
-              {/* Executive Beacon Badge */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 18 }}>
+              {/* Executive Beacon Badges Strip */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 14 }}>
                 <div style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 8,
+                  display: 'inline-flex', alignItems: 'center', gap: 7,
                   background: 'rgba(249,115,22,0.12)', border: '1px solid rgba(249,115,22,0.35)',
-                  borderRadius: 24, padding: '5px 14px',
+                  borderRadius: 20, padding: '4px 12px',
                   boxShadow: '0 2px 10px rgba(249,115,22,0.15)'
                 }}>
-                  <div style={{
-                    width: 20, height: 20, borderRadius: 10,
-                    background: 'linear-gradient(90deg,#f97316,#e11d48)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11,
-                  }}>🏛</div>
-                  <span style={{ color: '#fb923c', fontSize: 11.5, fontWeight: 800, letterSpacing: '0.8px', textTransform: 'uppercase' }}>
-                    Central Visayas Consortium · Region VII Academic Node
+                  <span style={{ fontSize: 11 }}>🏛️</span>
+                  <span style={{ color: '#fb923c', fontSize: 11, fontWeight: 800, letterSpacing: '0.6px', textTransform: 'uppercase' }}>
+                    Central Visayas Consortium · Region VII Node
                   </span>
                 </div>
 
                 <div style={{
                   display: 'inline-flex', alignItems: 'center', gap: 6,
                   background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.28)',
-                  borderRadius: 20, padding: '4px 12px', color: '#34d399', fontSize: 11, fontWeight: 700
+                  borderRadius: 20, padding: '4px 11px', color: '#34d399', fontSize: 11, fontWeight: 700
                 }}>
                   <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#10b981' }} />
                   CIT-U Central Host Node · Active
@@ -1376,34 +1382,34 @@ export default function HomePage() {
               {/* Dynamic Title based on Member vs Public */}
               {user?.role === 'MEMBER' ? (
                 <>
-                  <h1 className="home-hero-title" style={{ color: '#fff', fontSize: 46, fontWeight: 900, lineHeight: 1.12, letterSpacing: '-1.5px', marginBottom: 16 }}>
+                  <h1 className="home-hero-title" style={{ color: '#fff', fontSize: 44, fontWeight: 900, lineHeight: 1.12, letterSpacing: '-1.4px', marginBottom: 12 }}>
                     Empowering Central Visayas{' '}
                     <span style={{
                       background: 'linear-gradient(90deg,#f97316 0%,#fb7185 50%,#e11d48 100%)',
                       WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-                    }}>Academe & Research</span>
+                    }}>Academe &amp; Research</span>
                   </h1>
-                  <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: 15, lineHeight: 1.7, marginBottom: 28, maxWidth: 540 }}>
+                  <p style={{ color: 'rgba(255,255,255,0.72)', fontSize: 14.5, lineHeight: 1.65, marginBottom: 22, maxWidth: 540 }}>
                     Welcome back, <strong style={{ color: '#fff' }}>{user?.name || 'Academic Member'}</strong>. Direct institutional access to 7 member state universities and agencies, certified faculty development bootcamps, DOST research funding calls, and Haribon AI intelligence.
                   </p>
                 </>
               ) : (
                 <>
-                  <h1 className="home-hero-title" style={{ color: '#fff', fontSize: 48, fontWeight: 900, lineHeight: 1.1, letterSpacing: '-1.8px', marginBottom: 16 }}>
+                  <h1 className="home-hero-title" style={{ color: '#fff', fontSize: 46, fontWeight: 900, lineHeight: 1.1, letterSpacing: '-1.6px', marginBottom: 12 }}>
                     The Smarter Way to{' '}
                     <span style={{
                       background: 'linear-gradient(90deg,#f97316 0%,#fb7185 50%,#e11d48 100%)',
                       WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
                     }}>Run Your Consortium</span>
                   </h1>
-                  <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: 15, lineHeight: 1.7, marginBottom: 28, maxWidth: 540 }}>
+                  <p style={{ color: 'rgba(255,255,255,0.72)', fontSize: 14.5, lineHeight: 1.65, marginBottom: 22, maxWidth: 540 }}>
                     DASIG unifies membership, events, funding, training, and governance for CIT-U, UP Cebu, University of San Carlos (USC), DOST, DICT, DTI, and DepEd Region VII — all in one secure, role-based platform.
                   </p>
                 </>
               )}
 
-              {/* Action Buttons */}
-              <div style={{ display: 'flex', gap: 12, marginBottom: 36, flexWrap: 'wrap', alignItems: 'center' }}>
+              {/* Action Buttons (Aligned on a clean row) */}
+              <div style={{ display: 'flex', gap: 10, marginBottom: 26, flexWrap: 'wrap', alignItems: 'center' }}>
                 {user?.role === 'MEMBER' ? (
                   <>
                     <button
@@ -1411,25 +1417,25 @@ export default function HomePage() {
                       className="home-btn-shimmer"
                       style={{
                         background: 'linear-gradient(90deg,#ea580c 0%,#f97316 40%,#e11d48 100%)',
-                        color: '#fff', border: 'none', borderRadius: 12, padding: '13px 26px',
-                        fontSize: 14.5, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit',
-                        boxShadow: '0 8px 24px rgba(249,115,22,0.45)', transition: 'all 0.2s',
+                        color: '#fff', border: 'none', borderRadius: 10, padding: '11px 22px',
+                        fontSize: 14, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit',
+                        boxShadow: '0 6px 20px rgba(249,115,22,0.4)', transition: 'all 0.2s',
                         display: 'flex', alignItems: 'center', gap: 8,
                       }}
-                      onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 12px 30px rgba(249,115,22,0.6)'; }}
-                      onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(249,115,22,0.45)'; }}
+                      onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 10px 26px rgba(249,115,22,0.55)'; }}
+                      onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(249,115,22,0.4)'; }}
                     >
-                      <span>⚡ Explore Academic Programs</span>
+                      <span>⚡ Explore Programs</span>
                       <span>→</span>
                     </button>
 
                     <button
                       onClick={() => navigate('/membership')}
                       style={{
-                        color: 'rgba(255,255,255,0.9)', background: 'rgba(255,255,255,0.06)',
-                        border: '1px solid rgba(255,255,255,0.18)', borderRadius: 12, padding: '13px 22px',
-                        fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.18s',
-                        display: 'flex', alignItems: 'center', gap: 7,
+                        color: 'rgba(255,255,255,0.92)', background: 'rgba(255,255,255,0.06)',
+                        border: '1px solid rgba(255,255,255,0.18)', borderRadius: 10, padding: '11px 18px',
+                        fontSize: 13.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.18s',
+                        display: 'flex', alignItems: 'center', gap: 6,
                       }}
                       onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.12)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)'; }}
                       onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.18)'; }}
@@ -1438,17 +1444,17 @@ export default function HomePage() {
                     </button>
 
                     <button
-                      onClick={() => navigate('/chatbot')}
+                      onClick={() => navigate('/members')}
                       style={{
-                        color: '#fb923c', background: 'rgba(249,115,22,0.12)',
-                        border: '1px solid rgba(249,115,22,0.3)', borderRadius: 12, padding: '13px 20px',
-                        fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.18s',
+                        color: 'rgba(255,255,255,0.7)', background: 'transparent',
+                        border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '11px 16px',
+                        fontSize: 13.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.18s',
                         display: 'flex', alignItems: 'center', gap: 6,
                       }}
-                      onMouseEnter={e => e.currentTarget.style.background = 'rgba(249,115,22,0.22)'}
-                      onMouseLeave={e => e.currentTarget.style.background = 'rgba(249,115,22,0.12)'}
+                      onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = '#fff'; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(255,255,255,0.7)'; }}
                     >
-                      <span>🦅 Ask Haribon</span>
+                      <span>🏛️ Member HEIs</span>
                     </button>
                   </>
                 ) : (
@@ -1458,13 +1464,13 @@ export default function HomePage() {
                       className="home-btn-shimmer"
                       style={{
                         background: 'linear-gradient(90deg,#ea580c 0%,#f97316 40%,#e11d48 100%)',
-                        color: '#fff', border: 'none', borderRadius: 12, padding: '13px 26px',
-                        fontSize: 14.5, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit',
-                        boxShadow: '0 8px 24px rgba(249,115,22,0.45)', transition: 'all 0.2s',
+                        color: '#fff', border: 'none', borderRadius: 10, padding: '11px 22px',
+                        fontSize: 14, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit',
+                        boxShadow: '0 6px 20px rgba(249,115,22,0.4)', transition: 'all 0.2s',
                         display: 'flex', alignItems: 'center', gap: 8,
                       }}
-                      onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 12px 30px rgba(249,115,22,0.6)'; }}
-                      onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(249,115,22,0.45)'; }}
+                      onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 10px 26px rgba(249,115,22,0.55)'; }}
+                      onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(249,115,22,0.4)'; }}
                     >
                       <span>🚀 Apply for Membership</span>
                       <span>→</span>
@@ -1473,29 +1479,15 @@ export default function HomePage() {
                     <button
                       onClick={() => navigate('/members')}
                       style={{
-                        color: 'rgba(255,255,255,0.9)', background: 'rgba(255,255,255,0.06)',
-                        border: '1px solid rgba(255,255,255,0.18)', borderRadius: 12, padding: '13px 22px',
-                        fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.18s',
-                        display: 'flex', alignItems: 'center', gap: 7,
+                        color: 'rgba(255,255,255,0.92)', background: 'rgba(255,255,255,0.06)',
+                        border: '1px solid rgba(255,255,255,0.18)', borderRadius: 10, padding: '11px 18px',
+                        fontSize: 13.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.18s',
+                        display: 'flex', alignItems: 'center', gap: 6,
                       }}
                       onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.12)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)'; }}
                       onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.18)'; }}
                     >
                       <span>🏛️ View Member HEIs</span>
-                    </button>
-
-                    <button
-                      onClick={() => navigate('/chatbot')}
-                      style={{
-                        color: '#fb923c', background: 'rgba(249,115,22,0.12)',
-                        border: '1px solid rgba(249,115,22,0.3)', borderRadius: 12, padding: '13px 20px',
-                        fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.18s',
-                        display: 'flex', alignItems: 'center', gap: 6,
-                      }}
-                      onMouseEnter={e => e.currentTarget.style.background = 'rgba(249,115,22,0.22)'}
-                      onMouseLeave={e => e.currentTarget.style.background = 'rgba(249,115,22,0.12)'}
-                    >
-                      <span>🦅 Ask Haribon</span>
                     </button>
                   </>
                 )}
@@ -1503,14 +1495,14 @@ export default function HomePage() {
 
               {/* ── 4-QUADRANT BENTO METRICS BAR ── */}
               <div className="home-stats-bento" style={{
-                display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12,
-                borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 24,
+                display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10,
+                borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 18,
               }}>
                 {[
-                  { v: String(stats.members), l: 'Member HEIs & Agencies', icon: '🏛️', sub: 'Region VII Nodes', color: '#f97316', route: '/members' },
-                  { v: String(stats.events), l: 'Consortium Summits', icon: '📅', sub: '560 Seats Roster', color: '#8b5cf6', route: '/programs?tab=events' },
-                  { v: String(stats.trainings), l: 'Faculty Bootcamps', icon: '🎓', sub: 'Accredited Tracks', color: '#10b981', route: '/programs?tab=training' },
-                  { v: String(stats.news), l: 'Official Bulletins', icon: '📰', sub: 'Memos & Releases', color: '#0ea5e9', route: '/news' },
+                  { v: String(stats.members), l: 'Member HEIs', icon: '🏛️', sub: 'Region VII', color: '#f97316', route: '/members' },
+                  { v: String(stats.events), l: 'Summits', icon: '📅', sub: '560 Seats', color: '#8b5cf6', route: '/programs?tab=events' },
+                  { v: String(stats.trainings), l: 'Bootcamps', icon: '🎓', sub: 'Accredited', color: '#10b981', route: '/programs?tab=training' },
+                  { v: String(stats.news), l: 'Bulletins', icon: '📰', sub: 'Memos', color: '#0ea5e9', route: '/news' },
                 ].map((s, i) => (
                   <div
                     key={i}
@@ -1519,14 +1511,14 @@ export default function HomePage() {
                     style={{
                       background: 'rgba(255,255,255,0.035)',
                       border: '1px solid rgba(255,255,255,0.08)',
-                      borderRadius: 14, padding: '14px 14px',
+                      borderRadius: 12, padding: '10px 12px',
                       display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
                       transition: 'all 0.18s'
                     }}
                     onMouseEnter={e => {
                       e.currentTarget.style.borderColor = s.color + '70';
                       e.currentTarget.style.background = 'rgba(255,255,255,0.06)';
-                      e.currentTarget.style.boxShadow = `0 10px 24px rgba(0,0,0,0.4), 0 0 16px ${s.color}25`;
+                      e.currentTarget.style.boxShadow = `0 8px 20px rgba(0,0,0,0.4), 0 0 14px ${s.color}25`;
                     }}
                     onMouseLeave={e => {
                       e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)';
@@ -1534,27 +1526,27 @@ export default function HomePage() {
                       e.currentTarget.style.boxShadow = 'none';
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-                      <span style={{ fontSize: 18 }}>{s.icon}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                      <span style={{ fontSize: 16 }}>{s.icon}</span>
                       <span style={{
                         fontSize: 9.5, color: s.color, background: s.color + '15',
-                        border: `1px solid ${s.color}35`, borderRadius: 5, padding: '1px 6px', fontWeight: 800
+                        border: `1px solid ${s.color}35`, borderRadius: 5, padding: '1px 5px', fontWeight: 800
                       }}>
                         {s.sub}
                       </span>
                     </div>
-                    <div style={{ fontSize: 24, fontWeight: 900, color: '#fff', letterSpacing: '-0.8px', lineHeight: 1.1 }}>
+                    <div style={{ fontSize: 22, fontWeight: 900, color: '#fff', letterSpacing: '-0.6px', lineHeight: 1.1 }}>
                       {s.v}
                     </div>
-                    <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.6)', marginTop: 3, fontWeight: 600 }}>
+                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.65)', marginTop: 2, fontWeight: 700 }}>
                       {s.l}
                     </div>
                     <div style={{
-                      marginTop: 8, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                      borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: 6,
-                      fontSize: 10.5, color: s.color, fontWeight: 800
+                      marginTop: 6, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                      borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: 4,
+                      fontSize: 10, color: s.color, fontWeight: 800
                     }}>
-                      <span>View details</span>
+                      <span>View</span>
                       <span>→</span>
                     </div>
                   </div>
@@ -1562,14 +1554,14 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* ── HERO RIGHT: HARIBON AI INTELLIGENCE SHOWCASE ── */}
+            {/* ── HERO RIGHT: HARIBON AI INTELLIGENCE INTERACTIVE TERMINAL ── */}
             <div style={{
-              background: 'linear-gradient(135deg, rgba(10, 18, 38, 0.85) 0%, rgba(13, 23, 48, 0.75) 100%)',
+              background: 'linear-gradient(135deg, rgba(10, 18, 38, 0.88) 0%, rgba(13, 23, 48, 0.82) 100%)',
               backdropFilter: 'blur(20px)',
               border: '1px solid rgba(255,255,255,0.12)',
-              borderRadius: 24, padding: '24px 22px',
-              display: 'flex', flexDirection: 'column', alignItems: 'center',
-              boxShadow: '0 24px 60px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.12)',
+              borderRadius: 20, padding: '18px 18px',
+              display: 'flex', flexDirection: 'column',
+              boxShadow: '0 20px 50px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.12)',
               position: 'relative', overflow: 'hidden'
             }}>
               {/* Top ambient lighting header */}
@@ -1578,67 +1570,127 @@ export default function HomePage() {
                 background: 'linear-gradient(90deg, transparent, #f97316, transparent)'
               }} />
 
+              {/* Header */}
               <div style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                 width: '100%', marginBottom: 12
               }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span style={{ fontSize: 16 }}>🦅</span>
-                  <span style={{ fontSize: 12.5, fontWeight: 800, color: '#fff' }}>Haribon AI Intelligence</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                  <div style={{
+                    width: 28, height: 28, borderRadius: 8,
+                    background: 'rgba(249,115,22,0.15)', border: '1px solid rgba(249,115,22,0.3)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14
+                  }}>🦅</div>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 900, color: '#fff', letterSpacing: '-0.2px' }}>
+                      Haribon AI Assistant
+                    </div>
+                    <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', fontWeight: 600 }}>
+                      Region VII Official Intelligence
+                    </div>
+                  </div>
                 </div>
+
                 <span style={{
-                  fontSize: 10.5, color: '#10b981', background: 'rgba(16,185,129,0.15)',
+                  fontSize: 10, color: '#10b981', background: 'rgba(16,185,129,0.15)',
                   border: '1px solid rgba(16,185,129,0.3)', borderRadius: 20, padding: '2px 8px', fontWeight: 800,
-                  display: 'flex', alignItems: 'center', gap: 5
+                  display: 'flex', alignItems: 'center', gap: 4
                 }}>
                   <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#10b981' }} />
-                  91% Precision
+                  91% Accuracy
                 </span>
               </div>
 
-              {/* Holographic Mascot Frame */}
-              <div style={{ position: 'relative', padding: '10px 0', display: 'flex', justifyContent: 'center' }}>
-                <div style={{
-                  position: 'absolute', bottom: 10, width: 140, height: 26,
-                  borderRadius: '50%', background: 'radial-gradient(circle, rgba(249,115,22,0.45) 0%, transparent 70%)',
-                  filter: 'blur(4px)', pointerEvents: 'none'
-                }} />
-                <div className="haribon-float" style={{ cursor: 'pointer' }} onClick={() => navigate('/chatbot')}>
-                  <HaribonFull width={230} />
+              {/* Middle Section: Compact Mascot + Interactive Query Box */}
+              <div style={{
+                background: 'rgba(255,255,255,0.03)',
+                border: '1px solid rgba(255,255,255,0.07)',
+                borderRadius: 14, padding: '12px 14px', marginBottom: 12,
+                display: 'flex', alignItems: 'center', gap: 14
+              }}>
+                <div
+                  className="haribon-float"
+                  style={{ cursor: 'pointer', flexShrink: 0, display: 'flex', justifyContent: 'center' }}
+                  onClick={() => navigate('/chatbot')}
+                  title="Click to open Haribon AI"
+                >
+                  <HaribonFull width={85} />
+                </div>
+
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 12, fontWeight: 800, color: '#fff', marginBottom: 3 }}>
+                    Ask about summits, grants, or rules
+                  </div>
+                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', lineHeight: 1.4, marginBottom: 8 }}>
+                    Official knowledge base of Region VII consortium institutions.
+                  </div>
+
+                  {/* Real interactive form input */}
+                  <form onSubmit={handleHaribonSubmit} style={{ display: 'flex', gap: 6 }}>
+                    <input
+                      type="text"
+                      value={haribonQuery}
+                      onChange={e => setHaribonQuery(e.target.value)}
+                      placeholder="Ask Haribon AI..."
+                      style={{
+                        flex: 1, minWidth: 0,
+                        background: 'rgba(0,0,0,0.4)',
+                        border: '1px solid rgba(255,255,255,0.14)',
+                        borderRadius: 8, padding: '6px 10px', fontSize: 11.5,
+                        color: '#fff', fontFamily: 'inherit', outline: 'none',
+                        transition: 'border-color 0.15s'
+                      }}
+                      onFocus={e => e.target.style.borderColor = '#f97316'}
+                      onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.14)'}
+                    />
+                    <button
+                      type="submit"
+                      style={{
+                        background: 'linear-gradient(90deg, #ea580c, #f97316)',
+                        border: 'none', borderRadius: 8, padding: '0 12px',
+                        color: '#fff', fontSize: 11.5, fontWeight: 800,
+                        cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0,
+                        transition: 'all 0.15s'
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.boxShadow = '0 2px 10px rgba(249,115,22,0.4)'}
+                      onMouseLeave={e => e.currentTarget.style.boxShadow = 'none'}
+                    >
+                      Ask ⚡
+                    </button>
+                  </form>
                 </div>
               </div>
 
               {/* Interactive prompt pills */}
-              <div style={{ width: '100%', marginTop: 8, display: 'flex', flexDirection: 'column', gap: 7 }}>
-                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: 2 }}>
-                  Ask Haribon instant questions:
+              <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.45)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.6px' }}>
+                  Quick query suggestions:
                 </div>
                 {[
-                  { text: '📅 What summits are coming up?', q: 'What summits are coming up?' },
-                  { text: '💰 Active DOST research grants', q: 'Active DOST research grants' },
-                  { text: '🎓 Faculty development bootcamps', q: 'Faculty development bootcamps' },
+                  { text: '📅 Upcoming consortium summits & venues', q: 'What summits are coming up?' },
+                  { text: '💰 Active DOST & DICT research grants', q: 'Active DOST research grants' },
                 ].map((pr, idx) => (
                   <button
                     key={idx}
                     onClick={() => navigate('/chatbot?q=' + encodeURIComponent(pr.q))}
                     style={{
-                      background: 'rgba(255,255,255,0.05)',
-                      border: '1px solid rgba(255,255,255,0.08)',
-                      borderRadius: 10, padding: '7px 12px',
-                      color: 'rgba(255,255,255,0.85)', fontSize: 12, fontWeight: 600,
+                      background: 'rgba(255,255,255,0.04)',
+                      border: '1px solid rgba(255,255,255,0.07)',
+                      borderRadius: 8, padding: '6px 10px',
+                      color: 'rgba(255,255,255,0.8)', fontSize: 11.5, fontWeight: 600,
                       textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit',
                       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                       transition: 'all 0.15s'
                     }}
                     onMouseEnter={e => {
-                      e.currentTarget.style.background = 'rgba(249,115,22,0.15)';
-                      e.currentTarget.style.borderColor = 'rgba(249,115,22,0.35)';
+                      e.currentTarget.style.background = 'rgba(249,115,22,0.12)';
+                      e.currentTarget.style.borderColor = 'rgba(249,115,22,0.3)';
                       e.currentTarget.style.color = '#fff';
                     }}
                     onMouseLeave={e => {
-                      e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
-                      e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)';
-                      e.currentTarget.style.color = 'rgba(255,255,255,0.85)';
+                      e.currentTarget.style.background = 'rgba(255,255,255,0.04)';
+                      e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)';
+                      e.currentTarget.style.color = 'rgba(255,255,255,0.8)';
                     }}
                   >
                     <span>{pr.text}</span>
@@ -1656,17 +1708,17 @@ export default function HomePage() {
         background: 'linear-gradient(135deg, rgba(8, 14, 30, 0.9) 0%, rgba(11, 19, 40, 0.95) 100%)',
         borderTop: '1px solid rgba(255,255,255,0.08)',
         borderBottom: '1px solid rgba(255,255,255,0.08)',
-        padding: '16px 24px',
+        padding: '14px 24px',
         boxShadow: '0 8px 24px rgba(0,0,0,0.3)'
       }}>
         <div style={{
           maxWidth: 1220, margin: '0 auto',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          flexWrap: 'wrap', gap: 14,
+          flexWrap: 'wrap', gap: 12,
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#38bdf8', boxShadow: '0 0 10px rgba(56,189,248,0.8)' }} />
-            <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: 12, fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+            <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#38bdf8', boxShadow: '0 0 10px rgba(56,189,248,0.8)' }} />
+            <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: 11.5, fontWeight: 800, letterSpacing: '0.8px', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
               Region VII Consortium Nodes:
             </span>
           </div>
@@ -1679,8 +1731,8 @@ export default function HomePage() {
                 style={{
                   background: 'rgba(255,255,255,0.04)',
                   border: '1px solid rgba(255,255,255,0.09)',
-                  borderRadius: 9, padding: '5px 12px',
-                  display: 'inline-flex', alignItems: 'center', gap: 7,
+                  borderRadius: 8, padding: '5px 11px',
+                  display: 'inline-flex', alignItems: 'center', gap: 6,
                   cursor: 'pointer', transition: 'all 0.16s'
                 }}
                 onMouseEnter={e => {
@@ -1696,12 +1748,16 @@ export default function HomePage() {
               >
                 <span style={{
                   fontSize: 10, fontWeight: 900, color: p.color,
-                  background: p.color + '18', borderRadius: 4, padding: '1px 6px'
+                  background: p.color + '18', borderRadius: 4, padding: '1px 5px'
                 }}>
                   {p.code}
                 </span>
                 <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap' }}>
                   {p.name}
+                </span>
+                <span style={{ fontSize: 9.5, color: '#34d399', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 3 }}>
+                  <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#10b981' }} />
+                  {p.ping}
                 </span>
               </div>
             ))}
@@ -1710,8 +1766,8 @@ export default function HomePage() {
       </div>
 
       {/* ── FEATURE HIGHLIGHTS ── */}
-      <section style={{ padding: '56px 24px 32px' }}>
-        <div style={{ maxWidth: 1220, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 20 }}>
+      <section style={{ padding: '52px 24px 28px' }}>
+        <div style={{ maxWidth: 1220, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 18 }}>
           {[
             {
               icon: '🦅', title: 'Powered by Haribon AI',
@@ -1744,7 +1800,7 @@ export default function HomePage() {
             <div key={i}
               onClick={() => i === 0 ? navigate('/chatbot') : navigate('/members')}
               style={{
-                background: f.grad, borderRadius: 22, padding: 28,
+                background: f.grad, borderRadius: 20, padding: 26,
                 border: `1px solid ${f.border}`,
                 position: 'relative', overflow: 'hidden',
                 boxShadow: '0 10px 32px rgba(0,0,0,0.35)',
@@ -1766,11 +1822,11 @@ export default function HomePage() {
                 background: `linear-gradient(90deg, transparent, ${f.color}, transparent)`
               }} />
 
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
                 <div style={{
-                  width: 48, height: 48, borderRadius: 14, background: f.iconGrad,
+                  width: 44, height: 44, borderRadius: 12, background: f.iconGrad,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 22, border: '1px solid rgba(255,255,255,0.2)',
+                  fontSize: 20, border: '1px solid rgba(255,255,255,0.2)',
                   boxShadow: `0 6px 16px ${f.color}35`,
                 }}>{f.icon}</div>
 
@@ -1783,10 +1839,10 @@ export default function HomePage() {
                 </span>
               </div>
 
-              <div style={{ fontSize: 18, fontWeight: 900, marginBottom: 8, letterSpacing: '-0.3px', color: '#fff' }}>
+              <div style={{ fontSize: 17, fontWeight: 900, marginBottom: 8, letterSpacing: '-0.3px', color: '#fff' }}>
                 {f.title}
               </div>
-              <div style={{ fontSize: 13.5, lineHeight: 1.7, color: 'rgba(255,255,255,0.6)', marginBottom: 16 }}>
+              <div style={{ fontSize: 13, lineHeight: 1.65, color: 'rgba(255,255,255,0.6)', marginBottom: 14 }}>
                 {f.desc}
               </div>
 
@@ -1804,19 +1860,19 @@ export default function HomePage() {
       </section>
 
       {/* ── PLATFORM MODULES ── */}
-      <section style={{ padding: '36px 24px 60px' }}>
+      <section style={{ padding: '32px 24px 56px' }}>
         <div style={{ maxWidth: 1220, margin: '0 auto' }}>
-          <div style={{ marginBottom: 32, display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
+          <div style={{ marginBottom: 28, display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
             <div>
               <p style={{
-                fontSize: 12, fontWeight: 800, letterSpacing: '1.2px', textTransform: 'uppercase', marginBottom: 6,
+                fontSize: 11.5, fontWeight: 800, letterSpacing: '1.2px', textTransform: 'uppercase', marginBottom: 6,
                 color: '#f97316'
               }}>Regional Architecture</p>
               <h2 style={{
-                fontSize: 34, fontWeight: 900, letterSpacing: '-1px', color: '#fff', margin: 0
+                fontSize: 32, fontWeight: 900, letterSpacing: '-0.8px', color: '#fff', margin: 0
               }}>Everything Your Consortium Needs</h2>
             </div>
-            <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 14.5, lineHeight: 1.6, maxWidth: 480, margin: 0 }}>
+            <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 14, lineHeight: 1.6, maxWidth: 480, margin: 0 }}>
               Nine integrated modules unified under one role-based platform designed for multi-HEI research orchestration.
             </p>
           </div>
@@ -1830,20 +1886,20 @@ export default function HomePage() {
       {/* ── NEWS ── */}
       <section style={{ padding: '0 24px 64px' }}>
         <div style={{ maxWidth: 1220, margin: '0 auto' }}>
-          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 26, flexWrap: 'wrap', gap: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
             <div>
               <p style={{
-                fontSize: 12, fontWeight: 800, letterSpacing: '1.2px', textTransform: 'uppercase', marginBottom: 6,
+                fontSize: 11.5, fontWeight: 800, letterSpacing: '1.2px', textTransform: 'uppercase', marginBottom: 6,
                 color: '#0ea5e9'
               }}>Consortium News &amp; Bulletins</p>
               <h2 style={{
-                fontSize: 32, fontWeight: 900, letterSpacing: '-0.8px', color: '#fff', margin: 0
+                fontSize: 30, fontWeight: 900, letterSpacing: '-0.8px', color: '#fff', margin: 0
               }}>Stay Informed Across Region VII</h2>
             </div>
             <button onClick={() => navigate('/news')} style={{
               color: '#38bdf8', background: 'rgba(14,165,233,0.12)',
               border: '1px solid rgba(14,165,233,0.3)',
-              borderRadius: 10, padding: '9px 18px',
+              borderRadius: 10, padding: '8px 16px',
               fontSize: 13, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit',
               transition: 'all 0.18s', display: 'flex', alignItems: 'center', gap: 6,
             }}
@@ -1860,7 +1916,7 @@ export default function HomePage() {
             <div
               onClick={() => navigate('/news?title=' + encodeURIComponent('DASIG Annual Summit 2026 Registration Now Open'))}
               style={{
-                borderRadius: 22, overflow: 'hidden',
+                borderRadius: 20, overflow: 'hidden',
                 border: '1px solid rgba(255,255,255,0.09)',
                 cursor: 'pointer', transition: 'all 0.22s',
                 boxShadow: '0 10px 32px rgba(0,0,0,0.4)',
@@ -1871,40 +1927,40 @@ export default function HomePage() {
               onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 10px 32px rgba(0,0,0,0.4)'; }}
             >
               <div style={{
-                height: 220, position: 'relative',
+                height: 200, position: 'relative',
                 background: 'linear-gradient(135deg,#001d5c 0%,#1a56db 55%,#4f46e5 100%)',
-                display: 'flex', alignItems: 'flex-end', padding: 26,
+                display: 'flex', alignItems: 'flex-end', padding: 24,
               }}>
-                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 30%, rgba(0,0,0,0.7) 100%)' }} />
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 30%, rgba(0,0,0,0.75) 100%)' }} />
                 <div style={{ position: 'relative', zIndex: 1 }}>
                   <span style={{
                     background: 'rgba(249,115,22,0.25)', color: '#fed7aa',
                     border: '1px solid rgba(249,115,22,0.4)',
-                    borderRadius: 6, padding: '3px 10px', fontSize: 11.5, fontWeight: 800,
+                    borderRadius: 6, padding: '3px 10px', fontSize: 11, fontWeight: 800,
                     display: 'block', width: 'fit-content', marginBottom: 8,
                   }}>📣 Official Summit Announcement</span>
-                  <div style={{ color: 'rgba(255,255,255,0.75)', fontSize: 12.5, marginBottom: 4, fontWeight: 600 }}>May 20, 2026 · Cebu City</div>
-                  <h3 style={{ color: '#fff', fontWeight: 900, fontSize: 22, lineHeight: 1.25, letterSpacing: '-0.4px', margin: 0 }}>
+                  <div style={{ color: 'rgba(255,255,255,0.75)', fontSize: 12, marginBottom: 4, fontWeight: 600 }}>May 20, 2026 · Cebu City</div>
+                  <h3 style={{ color: '#fff', fontWeight: 900, fontSize: 21, lineHeight: 1.25, letterSpacing: '-0.4px', margin: 0 }}>
                     DASIG Annual Summit 2026 Registration Now Open
                   </h3>
                 </div>
               </div>
-              <div style={{ padding: 24, flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: 14, lineHeight: 1.7, marginBottom: 20 }}>
+              <div style={{ padding: 22, flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: 13.5, lineHeight: 1.7, marginBottom: 18 }}>
                   The annual summit gathers all Region VII consortium state universities and agency partners for a three-day innovation forum, inter-HEI research showcase, and high-level networking event in Cebu City.
                 </p>
                 <div style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 14
+                  borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 12
                 }}>
-                  <span style={{ color: '#f97316', fontSize: 13, fontWeight: 800 }}>Read Full Dossier →</span>
-                  <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12 }}>3 min read</span>
+                  <span style={{ color: '#f97316', fontSize: 12.5, fontWeight: 800 }}>Read Full Dossier →</span>
+                  <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11.5 }}>3 min read</span>
                 </div>
               </div>
             </div>
 
             {/* Mini cards */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {[
                 {
                   icon: '🔬', tag: 'Research', color: '#a855f7',
@@ -1932,28 +1988,28 @@ export default function HomePage() {
                   style={{
                     background: 'linear-gradient(135deg, rgba(10, 18, 38, 0.85) 0%, rgba(13, 23, 48, 0.8) 100%)',
                     border: '1px solid rgba(255,255,255,0.08)',
-                    borderRadius: 16, padding: '16px 18px',
-                    cursor: 'pointer', display: 'flex', gap: 14, alignItems: 'flex-start'
+                    borderRadius: 14, padding: '14px 16px',
+                    cursor: 'pointer', display: 'flex', gap: 12, alignItems: 'flex-start'
                   }}
                 >
                   <div style={{
-                    width: 40, height: 40, borderRadius: 10,
+                    width: 38, height: 38, borderRadius: 10,
                     background: item.color + '18', border: `1px solid ${item.color}40`,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 18, flexShrink: 0
+                    fontSize: 17, flexShrink: 0
                   }}>{item.icon}</div>
                   <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
                       <span style={{
-                        fontSize: 10, fontWeight: 800, color: item.color,
-                        background: item.color + '15', borderRadius: 4, padding: '1px 6px'
+                        fontSize: 9.5, fontWeight: 800, color: item.color,
+                        background: item.color + '15', borderRadius: 4, padding: '1px 5px'
                       }}>{item.tag}</span>
-                      <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)' }}>{item.date}</span>
+                      <span style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.45)' }}>{item.date}</span>
                     </div>
-                    <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', marginBottom: 4, lineHeight: 1.3 }}>
+                    <div style={{ fontSize: 13.5, fontWeight: 800, color: '#fff', marginBottom: 3, lineHeight: 1.3 }}>
                       {item.title}
                     </div>
-                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', lineHeight: 1.5 }}>
+                    <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.5)', lineHeight: 1.5 }}>
                       {item.desc}
                     </div>
                   </div>
@@ -1971,30 +2027,30 @@ export default function HomePage() {
           background: 'linear-gradient(135deg, rgba(10, 18, 38, 0.95) 0%, rgba(13, 23, 52, 0.9) 100%)',
           backdropFilter: 'blur(20px)',
           border: '1px solid rgba(255,255,255,0.1)',
-          borderRadius: 24, overflow: 'hidden',
+          borderRadius: 22, overflow: 'hidden',
           boxShadow: '0 24px 60px rgba(0,0,0,0.5)',
           display: 'grid', gridTemplateColumns: '1.3fr 1fr',
         }} className="home-cta-card">
-          <div style={{ padding: '44px 40px', position: 'relative' }} className="home-cta-left">
+          <div style={{ padding: '40px 38px', position: 'relative' }} className="home-cta-left">
             <span style={{
-              fontSize: 11.5, fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase',
-              color: '#f97316', marginBottom: 10, display: 'block'
+              fontSize: 11, fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase',
+              color: '#f97316', marginBottom: 8, display: 'block'
             }}>Institutional Governance</span>
-            <h3 style={{ fontSize: 32, fontWeight: 900, color: '#fff', letterSpacing: '-0.8px', marginBottom: 14, lineHeight: 1.2 }}>
+            <h3 style={{ fontSize: 30, fontWeight: 900, color: '#fff', letterSpacing: '-0.8px', marginBottom: 12, lineHeight: 1.2 }}>
               Join the Region VII Academic &amp; Research Consortium
             </h3>
-            <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: 14.5, lineHeight: 1.7, marginBottom: 28, maxWidth: 500 }}>
+            <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: 14, lineHeight: 1.7, marginBottom: 24, maxWidth: 480 }}>
               Access institutional funding programs, coordinate state university summits, and collaborate with leading Visayas researchers in one unified digital node.
             </p>
-            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }} className="home-cta-actions">
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }} className="home-cta-actions">
               <button
                 onClick={() => navigate('/membership')}
                 className="home-btn-shimmer"
                 style={{
                   background: 'linear-gradient(90deg,#ea580c 0%,#f97316 40%,#e11d48 100%)',
-                  color: '#fff', border: 'none', borderRadius: 12, padding: '13px 26px',
-                  fontSize: 14, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit',
-                  boxShadow: '0 8px 24px rgba(249,115,22,0.4)', transition: 'all 0.18s'
+                  color: '#fff', border: 'none', borderRadius: 10, padding: '12px 24px',
+                  fontSize: 13.5, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit',
+                  boxShadow: '0 6px 20px rgba(249,115,22,0.4)', transition: 'all 0.18s'
                 }}
                 onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
                 onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
@@ -2005,8 +2061,8 @@ export default function HomePage() {
                 onClick={() => navigate('/contact-admin')}
                 style={{
                   color: 'rgba(255,255,255,0.85)', background: 'rgba(255,255,255,0.06)',
-                  border: '1px solid rgba(255,255,255,0.18)', borderRadius: 12, padding: '13px 22px',
-                  fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.18s'
+                  border: '1px solid rgba(255,255,255,0.18)', borderRadius: 10, padding: '12px 20px',
+                  fontSize: 13.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.18s'
                 }}
                 onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.12)'}
                 onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.06)'}
@@ -2018,8 +2074,8 @@ export default function HomePage() {
 
           <div style={{
             borderLeft: '1px solid rgba(255,255,255,0.08)',
-            padding: '36px 32px', display: 'flex', flexDirection: 'column',
-            gap: 12, justifyContent: 'center', position: 'relative'
+            padding: '32px 28px', display: 'flex', flexDirection: 'column',
+            gap: 10, justifyContent: 'center', position: 'relative'
           }} className="home-cta-right">
             {ctaToast && (
               <div style={{
@@ -2041,7 +2097,7 @@ export default function HomePage() {
                 style={{
                   background: 'rgba(255,255,255,0.04)',
                   border: '1px solid rgba(255,255,255,0.08)',
-                  borderRadius: 14, padding: '12px 16px',
+                  borderRadius: 12, padding: '11px 14px',
                   display: 'flex', alignItems: 'center', gap: 12,
                   transition: 'all 0.18s', cursor: 'pointer'
                 }}
@@ -2057,13 +2113,13 @@ export default function HomePage() {
                 }}
               >
                 <div style={{
-                  width: 38, height: 38, borderRadius: 10, background: f.color + '20',
+                  width: 36, height: 36, borderRadius: 9, background: f.color + '20',
                   border: `1px solid ${f.color}40`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, flexShrink: 0
                 }}>{f.icon}</div>
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                    <span style={{ color: '#fff', fontSize: 13.5, fontWeight: 800 }}>{f.title}</span>
+                    <span style={{ color: '#fff', fontSize: 13, fontWeight: 800 }}>{f.title}</span>
                     {f.adminOnly && (
                       <span style={{
                         fontSize: 9, fontWeight: 900,
@@ -2073,9 +2129,9 @@ export default function HomePage() {
                       }}>Admin</span>
                     )}
                   </div>
-                  <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12, marginTop: 2 }}>{f.sub}</div>
+                  <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11.5, marginTop: 1 }}>{f.sub}</div>
                 </div>
-                <div style={{ color: f.color, fontSize: 14, fontWeight: 800 }}>
+                <div style={{ color: f.color, fontSize: 13, fontWeight: 800 }}>
                   {f.adminOnly && user?.role !== 'ADMIN' ? '🔒' : '→'}
                 </div>
               </div>
