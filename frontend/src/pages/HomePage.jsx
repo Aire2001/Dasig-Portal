@@ -1122,11 +1122,15 @@ function AdminHomePage({ navigate, user }) {
 
           <div className="admin-nodes-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
             {consortiumNodes.map((nd, idx) => (
-              <div key={idx} style={{
+              <div key={idx}
+              onClick={() => navigate('/members?abbr=' + encodeURIComponent(nd.code.replace(/[-_\s].*/, '')))}
+              title={`Inspect ${nd.name} dossier`}
+              style={{
                 background: 'rgba(255,255,255,0.025)',
                 border: '1px solid rgba(255,255,255,0.06)',
                 borderRadius: 12, padding: '12px 14px',
                 display: 'flex', flexDirection: 'column', gap: 4,
+                cursor: 'pointer',
                 transition: 'all 0.15s'
               }}
               onMouseEnter={e => {
@@ -1763,7 +1767,8 @@ export default function HomePage() {
             {consortiumPartners.map(p => (
               <div
                 key={p.code}
-                onClick={() => navigate('/members')}
+                onClick={() => navigate('/members?abbr=' + encodeURIComponent(p.code.replace(/[-_\s].*/, '')))}
+                title={`Inspect ${p.name} dossier`}
                 style={{
                   background: 'rgba(255,255,255,0.04)',
                   border: '1px solid rgba(255,255,255,0.09)',

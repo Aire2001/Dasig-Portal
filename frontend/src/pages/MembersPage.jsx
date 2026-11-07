@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import PageHeader from '../components/PageHeader';
 import ParticleBackground from '../components/ParticleBackground';
 import { api } from '../api';
@@ -343,12 +344,31 @@ const MEMBERS_CSS = `
 `;
 
 export default function MembersPage() {
+  const [searchParams] = useSearchParams();
   const [members, setMembers]   = useState([]);
   const [loading, setLoading]   = useState(true);
   const [selected, setSelected] = useState(null);
   const [search, setSearch]     = useState('');
   const [typeF, setTypeF]       = useState('All');
   const [readingId, setReadingId] = useState(null);
+
+  // Auto-open member dossier modal or filter when navigated with ?abbr=... or ?search=...
+  useEffect(() => {
+    const targetAbbr = searchParams.get('abbr');
+    const targetSearch = searchParams.get('search');
+    if (targetAbbr && members.length > 0) {
+      const cleanAbbr = targetAbbr.replace(/[-_\s].*/, '').toLowerCase();
+      const found = members.find(m => 
+        m.abbr?.toLowerCase() === cleanAbbr || 
+        m.abbr?.toLowerCase() === targetAbbr.toLowerCase() ||
+        m.name?.toLowerCase().includes(cleanAbbr) ||
+        m.full_name?.toLowerCase().includes(cleanAbbr)
+      );
+      if (found) setSelected(found);
+    } else if (targetSearch) {
+      setSearch(targetSearch);
+    }
+  }, [searchParams, members]);
 
   useEffect(() => {
     api.members.list()

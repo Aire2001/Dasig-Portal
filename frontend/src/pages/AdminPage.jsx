@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../api';
@@ -2717,13 +2717,31 @@ function UsersTab({ showToast }) {
 
   const load = useCallback(() => {
     setLoading(true);
-    api.admin.users({ search, role: roleF })
+    api.admin.users({ limit: 500 })
       .then(r => { setUsers(r.data || []); setPage(1); })
       .catch(() => showToast('Failed to load users', false))
       .finally(() => setLoading(false));
-  }, [search, roleF]);
+  }, []);
 
   useEffect(() => { load(); }, [load]);
+
+  const filteredUsers = useMemo(() => {
+    return users.filter(u => {
+      const matchesRole = roleF === 'All' || u.role === roleF;
+      const q = search.trim().toLowerCase();
+      const matchesSearch = !q || (
+        (u.name || '').toLowerCase().includes(q) ||
+        (u.email || '').toLowerCase().includes(q) ||
+        (u.institution || '').toLowerCase().includes(q) ||
+        (u.campus || '').toLowerCase().includes(q)
+      );
+      return matchesRole && matchesSearch;
+    });
+  }, [users, roleF, search]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [roleF, search]);
 
   async function changeRole(u, role) {
     setActing(u.id + 'r');
@@ -3075,12 +3093,12 @@ function UsersTab({ showToast }) {
       {loading ? (
         <Loading />
       ) : (() => {
-        const totalPages = Math.max(1, Math.ceil(users.length / PAGE_SIZE));
-        const paged = users.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+        const totalPages = Math.max(1, Math.ceil(filteredUsers.length / PAGE_SIZE));
+        const paged = filteredUsers.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
         return (
           <>
             <DataTable head={['User & Credentials','Institution & Node','Consortium Role','Account Status','Joined Date','Actions']}>
-              {users.length === 0 ? (
+              {filteredUsers.length === 0 ? (
                 <EmptyTR cols={6} title="No users found" desc="No consortium user accounts match your search or role filter." />
               ) : paged.map(u => {
                 const rc = ROLE_CONFIG[u.role] || ROLE_CONFIG.GUEST;
@@ -3251,7 +3269,7 @@ function UsersTab({ showToast }) {
             {totalPages > 1 && (
               <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginTop:16, flexWrap:'wrap', gap:8 }}>
                 <span style={{ fontSize:12.5, color:'rgba(255,255,255,0.4)' }}>
-                  Showing {(page-1)*PAGE_SIZE+1}–{Math.min(page*PAGE_SIZE, users.length)} of {users.length} users
+                  Showing {(page-1)*PAGE_SIZE+1}–{Math.min(page*PAGE_SIZE, filteredUsers.length)} of {filteredUsers.length} users
                 </span>
                 <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
                   <button onClick={() => setPage(p => Math.max(1,p-1))} disabled={page===1} className="ap-btn ap-btn-ghost" style={{ opacity:page===1?0.4:1 }}>← Prev</button>
