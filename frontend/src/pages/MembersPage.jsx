@@ -326,6 +326,18 @@ const MEMBERS_CSS = `
     gap: 7px;
   }
 
+  .members-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-bottom: 32px;
+  }
+  @media (max-width: 768px) {
+    .members-stats-grid {
+      grid-template-columns: 1fr !important;
+    }
+  }
+
   @media (max-width: 640px) {
     .member-modal-overlay {
       padding: 36px 12px 24px !important;
@@ -633,7 +645,7 @@ export default function MembersPage() {
           <div style={{ maxWidth: 1120, margin: '0 auto' }}>
 
             {/* Stats bar */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 14, marginBottom: 32 }}>
+            <div className="members-stats-grid">
               {[
                 { label: 'Member Institutions', value: members.length || 6, icon: '🏛️', color: '#60a5fa' },
                 { label: 'Regional Scope',       value: 'Region VII',       icon: '📍', color: '#34d399' },
