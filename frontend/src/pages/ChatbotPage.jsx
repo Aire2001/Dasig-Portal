@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import PageHeader from '../components/PageHeader';
 import ParticleBackground from '../components/ParticleBackground';
 import HaribonFace from '../components/HaribonFace';
@@ -458,6 +458,8 @@ const ROLE_BADGE = {
 
 export default function ChatbotPage() {
   const navigate  = useNavigate();
+  const [searchParams] = useSearchParams();
+  const initialQueryHandled = useRef(false);
   const { user }  = useAuth();
   const role      = user?.role || 'GUEST';
   const rb        = ROLE_BADGE[role] || ROLE_BADGE.GUEST;
@@ -845,6 +847,17 @@ export default function ChatbotPage() {
       setTimeout(() => inputRef.current?.focus(), 50);
     }
   }
+
+  // Auto-send query if navigated from Home page or external links with ?q=...
+  useEffect(() => {
+    const q = searchParams.get('q');
+    if (q && !initialQueryHandled.current) {
+      initialQueryHandled.current = true;
+      setTimeout(() => {
+        send(q);
+      }, 120);
+    }
+  }, [searchParams]);
 
   function onKey(e) {
     if (e.key === 'Enter' && !e.shiftKey) {

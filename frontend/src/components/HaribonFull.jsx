@@ -9,7 +9,7 @@ export default function HaribonFull({ width = 280, style = {} }) {
         ...style,
       }}
     >
-      <ellipse cx="120" cy="324" rx="52" ry="7" fill="#1a3878" opacity="0.35"/>
+      <ellipse cx="120" cy="324" rx="52" ry="7" fill="rgba(0,0,0,0.35)" opacity="0.5"/>
       <ellipse cx="94" cy="307" rx="22" ry="8" fill="#D4A017"/>
       <ellipse cx="146" cy="307" rx="22" ry="8" fill="#D4A017"/>
       <rect x="74" y="296" width="40" height="13" rx="7" fill="#C49015"/>
