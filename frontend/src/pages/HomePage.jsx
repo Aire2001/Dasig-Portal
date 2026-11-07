@@ -1255,74 +1255,67 @@ export default function HomePage() {
       <ParticleBackground density={50} />
       <div style={{ position: 'relative', zIndex: 1 }}>
 
-      {/* ── MEMBER STATUS COMMAND BANNER ── */}
+      {/* ── PROFESSIONAL MEMBER STATUS STRIP ── */}
       {user?.role === 'MEMBER' && (
         <div style={{
-          background: 'linear-gradient(90deg, rgba(16,185,129,0.12) 0%, rgba(10,18,38,0.9) 60%, rgba(6,182,212,0.12) 100%)',
+          background: 'rgba(8, 14, 28, 0.72)',
           backdropFilter: 'blur(16px)',
-          borderBottom: '1px solid rgba(16,185,129,0.25)',
-          padding: '8px 24px',
-          boxShadow: '0 4px 18px rgba(0,0,0,0.3)',
+          borderBottom: '1px solid rgba(255,255,255,0.07)',
+          padding: '7px 24px',
         }}>
           <div style={{ maxWidth: 1220, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 9, flexWrap: 'wrap' }}>
               <div style={{
-                width: 28, height: 28, borderRadius: 8,
-                background: 'linear-gradient(135deg, #10b981, #059669)',
-                color: '#fff', fontSize: 11, fontWeight: 900,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                boxShadow: '0 2px 8px rgba(16,185,129,0.4)',
-                border: '1px solid rgba(255,255,255,0.2)'
+                display: 'inline-flex', alignItems: 'center', gap: 6,
+                background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.25)',
+                borderRadius: 20, padding: '2px 10px',
               }}>
-                {userInitials}
+                <span className="live-pulse" style={{ width: 6, height: 6, borderRadius: '50%', background: '#10b981', flexShrink: 0 }} />
+                <span style={{ color: '#34d399', fontSize: 11, fontWeight: 800, letterSpacing: '0.5px', textTransform: 'uppercase' }}>
+                  Active Academic Node
+                </span>
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                <span className="live-pulse" style={{ width: 7, height: 7, borderRadius: '50%', background: '#10b981', flexShrink: 0 }} />
-                <span style={{ color: '#34d399', fontSize: 12, fontWeight: 800, letterSpacing: '0.4px', textTransform: 'uppercase' }}>
-                  Member Access Unlocked
-                </span>
-                <span style={{ color: 'rgba(255,255,255,0.2)' }}>•</span>
-                <span style={{ color: '#fff', fontSize: 13, fontWeight: 800 }}>
-                  {user?.name || user?.email}
-                </span>
-                <span style={{ color: 'rgba(255,255,255,0.2)' }}>•</span>
-                <span style={{ color: 'rgba(255,255,255,0.65)', fontSize: 12, fontWeight: 600 }}>
-                  {user?.institution || 'Region VII Academic Node'}
-                </span>
-              </div>
+              <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: 12.5, fontWeight: 700 }}>
+                {user?.institution ? (user.institution.toLowerCase().includes('cebu') ? user.institution : `${user.institution} — University of the Philippines Cebu`) : 'Region VII Academic Node'}
+              </span>
+
+              <span style={{ color: 'rgba(255,255,255,0.2)' }}>•</span>
 
               <span style={{
-                fontSize: 10.5, fontWeight: 800, color: '#34d399',
-                background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.3)',
-                borderRadius: 6, padding: '2px 8px', letterSpacing: '0.3px'
+                fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.6)',
+                background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
+                borderRadius: 6, padding: '2px 8px'
               }}>
-                Tier 2 Clearances Active
+                Tier 2 Clearances
               </span>
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              {currentTime && (
-                <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', fontWeight: 600 }}>
-                  🕒 {currentTime}
-                </span>
-              )}
               <button
                 onClick={() => navigate('/membership')}
                 style={{
-                  background: 'linear-gradient(90deg, #059669, #10b981)',
-                  border: 'none', color: '#fff',
-                  borderRadius: 7, padding: '5px 13px', fontSize: 12,
-                  fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit',
-                  boxShadow: '0 2px 10px rgba(16,185,129,0.35)',
+                  background: 'rgba(255,255,255,0.04)',
+                  border: '1px solid rgba(255,255,255,0.14)',
+                  color: 'rgba(255,255,255,0.85)',
+                  borderRadius: 7, padding: '4px 12px', fontSize: 11.5,
+                  fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
                   display: 'flex', alignItems: 'center', gap: 6,
                   transition: 'all 0.15s'
                 }}
-                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 4px 14px rgba(16,185,129,0.5)'; }}
-                onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 2px 10px rgba(16,185,129,0.35)'; }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.background = 'rgba(16,185,129,0.14)';
+                  e.currentTarget.style.borderColor = 'rgba(16,185,129,0.4)';
+                  e.currentTarget.style.color = '#34d399';
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.background = 'rgba(255,255,255,0.04)';
+                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.14)';
+                  e.currentTarget.style.color = 'rgba(255,255,255,0.85)';
+                }}
               >
-                <span>💳 Digital ID Dossier</span>
-                <span>→</span>
+                <span>Digital ID Dossier</span>
+                <span style={{ fontSize: 12 }}>→</span>
               </button>
             </div>
           </div>
