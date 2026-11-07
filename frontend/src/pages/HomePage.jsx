@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
 import HaribonFull from '../components/HaribonFull';
+import HaribonFace from '../components/HaribonFace';
 import ParticleBackground from '../components/ParticleBackground';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../api';
@@ -1575,12 +1576,12 @@ export default function HomePage() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
                   <div style={{
                     width: 32, height: 32, borderRadius: 10,
-                    background: 'linear-gradient(135deg, #f97316, #ea580c)',
-                    color: '#fff', fontSize: 16,
+                    background: 'linear-gradient(135deg, rgba(249,115,22,0.2) 0%, rgba(225,29,72,0.25) 100%)',
+                    color: '#fb923c', fontSize: 15,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    boxShadow: '0 4px 12px rgba(249,115,22,0.4)',
-                    border: '1px solid rgba(255,255,255,0.25)'
-                  }}>🦅</div>
+                    boxShadow: '0 4px 14px rgba(249,115,22,0.3)',
+                    border: '1px solid rgba(249,115,22,0.4)'
+                  }}>✨</div>
                   <div>
                     <div style={{ fontSize: 13.5, fontWeight: 900, color: '#fff', letterSpacing: '-0.2px' }}>
                       Haribon AI Assistant
@@ -1611,17 +1612,18 @@ export default function HomePage() {
                 <div
                   className="haribon-float"
                   style={{
-                    width: 48, height: 48, borderRadius: '50%',
-                    background: 'radial-gradient(circle, rgba(249,115,22,0.2) 0%, rgba(0,0,0,0.4) 80%)',
-                    border: '1px solid rgba(249,115,22,0.3)',
+                    width: 46, height: 46, borderRadius: '50%',
+                    background: 'radial-gradient(circle, rgba(249,115,22,0.25) 0%, rgba(13,23,48,0.85) 100%)',
+                    border: '1.5px solid rgba(249,115,22,0.4)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     cursor: 'pointer', flexShrink: 0,
-                    boxShadow: '0 4px 16px rgba(249,115,22,0.2)'
+                    boxShadow: '0 4px 16px rgba(249,115,22,0.3), inset 0 1px 0 rgba(255,255,255,0.2)',
+                    overflow: 'hidden'
                   }}
                   onClick={() => navigate('/chatbot')}
                   title="Open Haribon AI Chat"
                 >
-                  <HaribonFull width={40} />
+                  <HaribonFace size={38} />
                 </div>
 
                 <div style={{ flex: 1, minWidth: 0 }}>
@@ -1637,7 +1639,7 @@ export default function HomePage() {
               {/* Full-width clean prompt search input form */}
               <form onSubmit={handleHaribonSubmit} style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
                 <div style={{ position: 'relative', flex: 1 }}>
-                  <span style={{ position: 'absolute', left: 11, top: '50%', transform: 'translateY(-50%)', fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>
+                  <span style={{ position: 'absolute', left: 11, top: '50%', transform: 'translateY(-50%)', fontSize: 12, color: 'rgba(255,255,255,0.45)' }}>
                     🔍
                   </span>
                   <input
@@ -1647,46 +1649,51 @@ export default function HomePage() {
                     placeholder="Ask Haribon AI anything..."
                     style={{
                       width: '100%', boxSizing: 'border-box',
-                      height: 38,
+                      height: 40,
                       background: 'rgba(0,0,0,0.45)',
                       border: '1px solid rgba(255,255,255,0.14)',
-                      borderRadius: 9, padding: '0 12px 0 32px', fontSize: 12,
+                      borderRadius: 10, padding: '0 54px 0 32px', fontSize: 12.5,
                       color: '#fff', fontFamily: 'inherit', outline: 'none',
                       transition: 'border-color 0.15s, box-shadow 0.15s'
                     }}
                     onFocus={e => {
                       e.target.style.borderColor = '#f97316';
-                      e.target.style.boxShadow = '0 0 12px rgba(249,115,22,0.25)';
+                      e.target.style.boxShadow = '0 0 14px rgba(249,115,22,0.3)';
                     }}
                     onBlur={e => {
                       e.target.style.borderColor = 'rgba(255,255,255,0.14)';
                       e.target.style.boxShadow = 'none';
                     }}
                   />
+                  <span style={{
+                    position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)',
+                    fontSize: 10, color: 'rgba(255,255,255,0.35)', background: 'rgba(255,255,255,0.06)',
+                    borderRadius: 5, padding: '2px 6px', pointerEvents: 'none', fontWeight: 600
+                  }}>↵ Enter</span>
                 </div>
                 <button
                   type="submit"
                   style={{
-                    height: 38,
+                    height: 40,
                     background: 'linear-gradient(90deg, #ea580c, #f97316)',
-                    border: 'none', borderRadius: 9, padding: '0 15px',
-                    color: '#fff', fontSize: 12.5, fontWeight: 800,
+                    border: 'none', borderRadius: 10, padding: '0 18px',
+                    color: '#fff', fontSize: 13, fontWeight: 800,
                     cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0,
                     display: 'flex', alignItems: 'center', gap: 6,
-                    boxShadow: '0 4px 14px rgba(249,115,22,0.4)',
+                    boxShadow: '0 4px 16px rgba(249,115,22,0.45)',
                     transition: 'all 0.15s'
                   }}
                   onMouseEnter={e => {
                     e.currentTarget.style.transform = 'translateY(-1px)';
-                    e.currentTarget.style.boxShadow = '0 6px 18px rgba(249,115,22,0.55)';
+                    e.currentTarget.style.boxShadow = '0 6px 20px rgba(249,115,22,0.6)';
                   }}
                   onMouseLeave={e => {
                     e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.boxShadow = '0 4px 14px rgba(249,115,22,0.4)';
+                    e.currentTarget.style.boxShadow = '0 4px 16px rgba(249,115,22,0.45)';
                   }}
                 >
                   <span>Ask</span>
-                  <span style={{ fontSize: 13 }}>⚡</span>
+                  <span style={{ fontSize: 13, fontWeight: 900, color: '#fff' }}>⚡</span>
                 </button>
               </form>
 
@@ -1698,6 +1705,7 @@ export default function HomePage() {
                 {[
                   { icon: '📅', text: 'Upcoming consortium summits & venues', q: 'What summits are coming up?' },
                   { icon: '💰', text: 'Active DOST & DICT research grants', q: 'Active DOST research grants' },
+                  { icon: '🏛️', text: 'Region VII institutional charters & nodes', q: 'Who are the consortium members?' },
                 ].map((pr, idx) => (
                   <button
                     key={idx}
