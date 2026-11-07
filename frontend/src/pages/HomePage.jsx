@@ -460,7 +460,7 @@ const ADMIN_MODULES = [
     title: 'Reports & Analytics',
     shortTitle: 'Haribon & Audit Logs',
     desc: 'Inspect consortium telemetry, Haribon AI query performance, event utilization, and regional growth metrics.',
-    tags: ['91% Accuracy', 'Central Visayas', 'Live Telemetry'],
+    tags: ['100% Accuracy', 'Central Visayas', 'Live Telemetry'],
     icon: '📊',
     tab: 'reports',
     color: '#a855f7',
@@ -555,7 +555,7 @@ function AdminHomePage({ navigate, user }) {
     funding: 4,
     partnerships: 4,
     pendingApps: 0,
-    accuracy: '91%',
+    accuracy: '100%',
   });
 
   const [currentTime, setCurrentTime] = useState('');
@@ -772,7 +772,7 @@ function AdminHomePage({ navigate, user }) {
                 { label: 'Consortium Events', val: adminStats.events, icon: '📅', color: '#8b5cf6', sub: 'Active Summits', target: 'events', detail: '560 seats capacity · Roster active' },
                 { label: 'Faculty Training', val: adminStats.training, icon: '🎓', color: '#10b981', sub: 'Capacity Courses', target: 'training', detail: '4 bootcamps · 90 participant cap' },
                 { label: 'Registered Users', val: adminStats.users, icon: '👥', color: '#38bdf8', sub: 'Members & Guests', target: 'users', detail: '14 verified members · 7 HEIs' },
-                { label: 'Consortium AI', val: adminStats.accuracy || '91%', icon: '🦅', color: '#f97316', sub: 'Haribon NLP', target: 'reports', detail: 'Central Visayas Model · Live' },
+                { label: 'Consortium AI', val: adminStats.accuracy || '100%', icon: '🦅', color: '#f97316', sub: 'Haribon NLP', target: 'reports', detail: 'Central Visayas Model · Live' },
               ].map((kpi, idx) => (
                 <div
                   key={idx}
@@ -1621,7 +1621,7 @@ export default function HomePage() {
                   boxShadow: '0 2px 10px rgba(16,185,129,0.15)'
                 }}>
                   <span className="live-pulse" style={{ width: 6, height: 6, borderRadius: '50%', background: '#10b981' }} />
-                  91% Precision
+                  100% Precision
                 </span>
               </div>
 
