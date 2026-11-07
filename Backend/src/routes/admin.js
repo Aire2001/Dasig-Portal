@@ -298,7 +298,7 @@ router.get('/reports/chatbot', async (req, res) => {
   const data = logsResult.data || [];
   const total = data.length;
   const matched = data.filter(l => l.matched).length;
-  const accuracy = total > 0 ? Math.round((matched / total) * 100) : 0;
+  const accuracy = total > 0 ? Math.round((matched / total) * 100) : 100;
 
   const intentCounts = {};
   data.filter(l => l.matched && l.intent).forEach(l => {
