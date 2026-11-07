@@ -1562,10 +1562,19 @@ export default function HomePage() {
               boxShadow: '0 20px 50px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.12)',
               position: 'relative', overflow: 'hidden'
             }}>
-              {/* Top ambient lighting header */}
+              {/* Top ambient diffused aurora lighting beam */}
               <div style={{
-                position: 'absolute', top: 0, left: 0, right: 0, height: 3,
-                background: 'linear-gradient(90deg, transparent, #f97316, transparent)'
+                position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)',
+                width: '75%', height: 1.5,
+                background: 'linear-gradient(90deg, transparent, #ea580c 25%, #f97316 50%, #fb923c 75%, transparent)',
+                boxShadow: '0 0 16px 2px rgba(249,115,22,0.65)',
+                pointerEvents: 'none'
+              }} />
+              <div style={{
+                position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)',
+                width: '65%', height: 48,
+                background: 'radial-gradient(ellipse at 50% 0%, rgba(249,115,22,0.16) 0%, transparent 80%)',
+                pointerEvents: 'none'
               }} />
 
               {/* Header */}
@@ -1573,29 +1582,43 @@ export default function HomePage() {
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                 width: '100%', marginBottom: 14
               }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <div style={{
-                    width: 32, height: 32, borderRadius: 10,
-                    background: 'linear-gradient(135deg, rgba(249,115,22,0.2) 0%, rgba(225,29,72,0.25) 100%)',
-                    color: '#fb923c', fontSize: 15,
+                    width: 34, height: 34, borderRadius: 10,
+                    background: 'linear-gradient(135deg, rgba(249,115,22,0.25) 0%, rgba(225,29,72,0.2) 100%)',
+                    border: '1.5px solid rgba(249,115,22,0.5)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    boxShadow: '0 4px 14px rgba(249,115,22,0.3)',
-                    border: '1px solid rgba(249,115,22,0.4)'
-                  }}>✨</div>
+                    boxShadow: '0 4px 16px rgba(249,115,22,0.35), inset 0 1px 0 rgba(255,255,255,0.25)',
+                    flexShrink: 0
+                  }}>
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+                      <path d="M12 2L14.4 8.6L21 11L14.4 13.4L12 20L9.6 13.4L3 11L9.6 8.6L12 2Z" fill="url(#haribon-crest-grad)" stroke="#f97316" strokeWidth="0.8" strokeLinejoin="round"/>
+                      <circle cx="18.5" cy="5.5" r="1.5" fill="#fde047"/>
+                      <defs>
+                        <linearGradient id="haribon-crest-grad" x1="3" y1="2" x2="21" y2="20">
+                          <stop offset="0%" stopColor="#fef08a"/>
+                          <stop offset="50%" stopColor="#f97316"/>
+                          <stop offset="100%" stopColor="#dc2626"/>
+                        </linearGradient>
+                      </defs>
+                    </svg>
+                  </div>
                   <div>
-                    <div style={{ fontSize: 13.5, fontWeight: 900, color: '#fff', letterSpacing: '-0.2px' }}>
-                      Haribon AI Assistant
+                    <div style={{ fontSize: 13.5, fontWeight: 900, color: '#fff', letterSpacing: '-0.2px', display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span>Haribon AI Assistant</span>
+                      <span style={{ fontSize: 9.5, color: '#fb923c', background: 'rgba(249,115,22,0.18)', border: '1px solid rgba(249,115,22,0.35)', borderRadius: 4, padding: '1px 5px', fontWeight: 800 }}>PRO</span>
                     </div>
-                    <div style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.5)', fontWeight: 600 }}>
+                    <div style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.5)', fontWeight: 600, marginTop: 1 }}>
                       Region VII Official Intelligence
                     </div>
                   </div>
                 </div>
 
                 <span style={{
-                  fontSize: 10.5, color: '#10b981', background: 'rgba(16,185,129,0.12)',
-                  border: '1px solid rgba(16,185,129,0.28)', borderRadius: 20, padding: '3px 9px', fontWeight: 800,
-                  display: 'flex', alignItems: 'center', gap: 5
+                  fontSize: 10.5, color: '#34d399', background: 'rgba(16,185,129,0.12)',
+                  border: '1px solid rgba(16,185,129,0.32)', borderRadius: 20, padding: '4px 10px', fontWeight: 800,
+                  display: 'flex', alignItems: 'center', gap: 6,
+                  boxShadow: '0 2px 10px rgba(16,185,129,0.15)'
                 }}>
                   <span className="live-pulse" style={{ width: 6, height: 6, borderRadius: '50%', background: '#10b981' }} />
                   91% Precision
